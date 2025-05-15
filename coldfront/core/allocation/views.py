@@ -173,8 +173,8 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
         context['allocation_changes_enabled'] = allocation_obj.is_changeable
 
         # Can the user update the project?
-        context['is_allowed_to_update_project'] = allocation_obj.project.has_perm(self.request.user, ProjectPermission.UPDATE, 'change_project')
-
+        is_allowed_to_update_project = allocation_obj.project.has_perm(self.request.user, ProjectPermission.UPDATE, 'change_project')
+        context['is_allowed_to_update_project'] = is_allowed_to_update_project
         context['allocation_user_roles_enabled'] = check_if_roles_are_enabled(allocation_obj)
         context['allocation_invoices'] = allocation_obj.allocationinvoice_set.all()
 
@@ -196,8 +196,16 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
         context['user_exists_in_allocation'] = allocation_obj.allocationuser_set.filter(
             user=self.request.user, status__name__in=['Active', 'Pending - Remove', 'Invited', 'Pending', 'Disabled', 'Retired']).exists()
 
+        context['can_move_allocation'] = False
+        if 'coldfront.plugins.movable_allocations' in settings.INSTALLED_APPS:
+            context['can_move_allocation'] = check_if_groups_in_review_groups(
+                allocation_obj.get_parent_resource.review_groups.all(),
+                self.request.user.groups.all(),
+                'can_move_allocations'
+            )
+
         context['project'] = allocation_obj.project
-        context['notes'] = notes
+        context['notes'] = notes.order_by("-created")
         context['ALLOCATION_ENABLE_ALLOCATION_RENEWAL'] = ALLOCATION_ENABLE_ALLOCATION_RENEWAL
         context['ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING'] = ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING
         context['ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING'] = ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING
@@ -1331,11 +1339,22 @@ class AllocationRequestListView(LoginRequiredMixin, UserPassesTestMixin, Templat
         context = super().get_context_data(**kwargs)
         if self.request.user.is_superuser:
             allocation_list = Allocation.objects.filter(
-                status__name__in=['New', 'Renewal Requested', 'Paid', 'Billing Information Submitted']
+                status__name__in=[
+                    'New', 'Paid', 'Billing Information Submitted', 'Contacted By Admin', 'Waiting For Admin Approval'
+                ]
+            ).exclude(project__status__name__in=['Archived', 'Renewal Denied'])
+            allocation_renewal_list = Allocation.objects.filter(
+                status__name='Renewal Requested'
             ).exclude(project__status__name__in=['Archived', 'Renewal Denied'])
         else:
             allocation_list = Allocation.objects.filter(
-                status__name__in=['New', 'Renewal Requested', 'Paid', 'Billing Information Submitted'],
+                status__name__in=[
+                    'New', 'Paid', 'Billing Information Submitted', 'Contacted By Admin', 'Waiting For Admin Approval'
+                ],
+                resources__review_groups__in=list(self.request.user.groups.all())
+            ).exclude(project__status__name__in=['Archived', 'Renewal Denied']).distinct()
+            allocation_renewal_list = Allocation.objects.filter(
+                status__name='Renewal Requested',
                 resources__review_groups__in=list(self.request.user.groups.all())
             ).exclude(project__status__name__in=['Archived', 'Renewal Denied']).distinct()
 

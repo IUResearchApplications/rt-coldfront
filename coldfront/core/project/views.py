@@ -229,6 +229,12 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         context['ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING'] = ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING
         context['ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING'] = ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING
         context['enable_customizable_forms'] = 'coldfront.plugins.customizable_forms' in settings.INSTALLED_APPS
+        project_messages = project_obj.projectusermessage_set
+        if self.request.user.is_superuser or self.request.user.has_perm('project.view_projectusermessage'):
+            project_messages = project_messages.all()
+        else:
+            project_messages = project_messages.filter(is_private=False)
+        context['project_messages'] = project_messages.order_by('-created')
 
         try:
             context['ondemand_url'] = settings.ONDEMAND_URL
@@ -480,6 +486,18 @@ class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     def get_form(self, form_class = None):
         form = super().get_form(form_class)
         form.fields['pi_username'].required = not check_if_pi_eligible(self.request.user)
+        form.fields['description'].widget.attrs.update(
+            {
+                "placeholder": (
+                    "EXAMPLE: Our research involves the collection, storage, and analysis of rat "
+                    "colony behaviorial footage to study rat social patterns in natural settings. "
+                    "We intend to store the footage in a shared Slate-Project directory, perform "
+                    "cleaning of the footage with the Python library Pillow, and then perform "
+                    "video classification analysis on the footage using Python libraries such as "
+                    "TorchVision using Quartz and Big Red 200."
+                )
+            }
+        )
         return form
 
     def get_context_data(self, **kwargs):
@@ -1778,8 +1796,10 @@ class ProjectReviewListView(LoginRequiredMixin, UserPassesTestMixin, TemplateVie
         
         pi_project_objs = Project.objects.filter(
             pi__in=pis,
-            status__name='Active'
-        )
+            status__name__in=[
+                'Active', 'Waiting For Admin Approval', 'Contacted By Admin', 'Review Pending'
+            ]
+        ).order_by('status__name')
         pi_projects = []
         for pi_project_obj in pi_project_objs:
             pi_projects.append(
@@ -1788,6 +1808,7 @@ class ProjectReviewListView(LoginRequiredMixin, UserPassesTestMixin, TemplateVie
                     'title': pi_project_obj.title,
                     'pi': pi_project_obj.pi.username,
                     'description': pi_project_obj.description,
+                    'status': pi_project_obj.status.name,
                     'display': 'false' 
                 }
             )
