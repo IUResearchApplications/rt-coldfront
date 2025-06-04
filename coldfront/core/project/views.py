@@ -1787,7 +1787,7 @@ class ProjectReviewListView(LoginRequiredMixin, UserPassesTestMixin, TemplateVie
         context = super().get_context_data(**kwargs)
 
         project_reviews = ProjectReview.objects.filter(
-            status__name__in=['Pending', 'Contacted By Admin', ])
+            status__name__in=['Pending', 'Contacted By Admin', ]).order_by('created')
         pi_eligibilities = check_if_pis_eligible(
             set([project_review.project.pi for project_review in project_reviews]))
         context['project_review_list'] = project_reviews
@@ -1795,14 +1795,23 @@ class ProjectReviewListView(LoginRequiredMixin, UserPassesTestMixin, TemplateVie
 
         projects = Project.objects.filter(
             status__name__in=['Waiting For Admin Approval', 'Contacted By Admin', ]
-        )
+        ).order_by('created')
         context['project_request_list'] = projects
+
         pis = set([project.pi for project in projects])
+        pis = pis.union(set([project_review.project.pi for project_review in project_reviews]))
         pi_project_objs = Project.objects.filter(
-            pi__in=pis,
-            status__name__in=[
-                'Active', 'Waiting For Admin Approval', 'Contacted By Admin', 'Review Pending'
-            ]
+            Q(
+                pi__in=pis,
+                status__name__in=[
+                    'Active', 'Waiting For Admin Approval', 'Contacted By Admin', 'Review Pending'
+                ],
+            ) |
+            Q(
+                pi__in=pis,
+                status__name='Expired',
+                end_date__gt=datetime.datetime.now() - datetime.timedelta(days=PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING)
+            )
         ).order_by('status__name')
         pi_projects = []
         for pi_project_obj in pi_project_objs:
