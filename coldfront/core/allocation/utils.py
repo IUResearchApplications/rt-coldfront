@@ -9,7 +9,7 @@ from coldfront.core.allocation.models import (AllocationUser,
                                               AllocationUserRoleChoice)
 from coldfront.core.resource.models import Resource
 from coldfront.core.utils.common import get_domain_url, import_from_settings
-from coldfront.core.utils.mail import send_email_template
+from coldfront.core.utils.mail import get_email_template, send_email_template
 
 EMAIL_ENABLED = import_from_settings('EMAIL_ENABLED', False)
 if EMAIL_ENABLED:
@@ -122,12 +122,14 @@ def send_added_user_email(request, allocation_obj, users, users_emails):
             'users': users,
             'project_title': allocation_obj.project.title,
             'url': url,
-            'signature': EMAIL_SIGNATURE
+            'signature': EMAIL_SIGNATURE,
+            'slurm_account_name': allocation_obj.project.slurm_account_name
         }
+        email_template = get_email_template(allocation_obj, "added_user")
 
         send_email_template(
             'Added to Allocation',
-            'email/allocation_added_users.txt',
+            email_template,
             template_context,
             EMAIL_TICKET_SYSTEM_ADDRESS,
             users_emails
@@ -143,10 +145,11 @@ def send_removed_user_email(allocation_obj, users, users_emails):
             'project_title': allocation_obj.project.title,
             'signature': EMAIL_SIGNATURE
         }
+        email_template = get_email_template(allocation_obj, "removed_user")
 
         send_email_template(
             'Removed From Allocation',
-            'email/allocation_removed_users.txt',
+            email_template,
             template_context,
             EMAIL_TICKET_SYSTEM_ADDRESS,
             users_emails

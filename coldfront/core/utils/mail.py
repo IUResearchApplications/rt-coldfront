@@ -19,6 +19,7 @@ EMAIL_SIGNATURE = import_from_settings('EMAIL_SIGNATURE')
 EMAIL_CENTER_NAME = import_from_settings('CENTER_NAME')
 CENTER_BASE_URL = import_from_settings('CENTER_BASE_URL')
 EMAIL_GROUP_TO_EMAIL_MAPPING = import_from_settings('EMAIL_GROUP_TO_EMAIL_MAPPING', {})
+EMAIL_RESOURCE_EMAIL_TEMPLATES = import_from_settings('EMAIL_RESOURCE_EMAIL_TEMPLATES', {})
 
 
 def send_email(subject, body, sender, receiver_list, cc=[]):
@@ -119,12 +120,13 @@ def send_allocation_admin_email(allocation_obj, subject, template_name, url_path
         ctx,
     )
 
-def send_allocation_customer_email(allocation_obj, subject, template_name, url_path='', domain_url='', addtl_context=None):
+def send_allocation_customer_email(allocation_obj, subject, action, url_path='', domain_url='', addtl_context=None):
     """Send allocation customer emails
     """
     if not url_path:
         url_path = reverse('allocation-detail', kwargs={'pk': allocation_obj.pk})
 
+    template_name = get_email_template(allocation_obj, action)
     url = build_link(url_path, domain_url=domain_url)
     ctx = email_template_context()
     ctx['resource'] = allocation_obj.get_parent_resource
@@ -162,3 +164,33 @@ def get_email_recipient_from_groups(groups):
             return email
 
     return EMAIL_TICKET_SYSTEM_ADDRESS
+
+
+def get_email_template(allocation_obj, action):
+    all_email_templates = EMAIL_RESOURCE_EMAIL_TEMPLATES.get(
+        allocation_obj.get_parent_resource.name)
+    defaults_templates = {
+        'added_user': 'email/allocation_added_users.txt',
+        'removed_user': 'email/allocation_removed_users.txt',
+        'approved_allocation': 'email/allocation_activated.txt',
+        'denied_allocation': 'email/allocation_denied.txt',
+        'revoked_allocation': 'email/allocation_revoked.txt',
+        'approved_allocation_change': 'email/allocation_change_approved.txt',
+        'denied_allocation_change': 'email/allocation_change_denied.txt'
+    }
+    if 'coldfront.plugins.allocation_removal_requests' in settings.INSTALLED_APPS:
+        defaults_templates.update({
+            'removed_allocation': 'allocation_removal_requests/allocation_removed.txt',
+            'denied_allocation_removal': 'allocation_removal_requests/allocation_removal_denied.txt'
+        })
+    if 'coldfront.plugins.movable_allocations' in settings.INSTALLED_APPS:
+        defaults_templates.update({'moved_allocation': 'movable_allocations/email/moved_allocation.txt'})
+
+    if not all_email_templates:
+        return defaults_templates.get(action)
+
+    email_template = all_email_templates.get(action)
+    if not email_template:
+        return defaults_templates.get(action)
+
+    return email_template

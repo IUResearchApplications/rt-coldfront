@@ -309,36 +309,12 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
             for allocation_user in allocation_users:
                 allocation_activate_user.send(
                     sender=self.__class__, allocation_user_pk=allocation_user.pk)
-            
-            # TODO - Could be improved?
-            resource_email_template_lookup_table = {
-                'Quartz': {
-                    'template': 'email/allocation_quartz_activated.txt',
-                    'addtl_context': {
-                        'help_url': EMAIL_TICKET_SYSTEM_ADDRESS,
-                        'slurm_account_name': allocation_obj.get_attribute('slurm_account_name')
-                    },
-                },
-                'Big Red 200': {
-                    'template': 'email/allocation_bigred200_activated.txt',
-                    'addtl_context': {
-                        'help_url': EMAIL_TICKET_SYSTEM_ADDRESS,
-                        'slurm_account_name': allocation_obj.get_attribute('slurm_account_name')
-                    },
-                }
+
+            addtl_context = {
+                'help_url': EMAIL_TICKET_SYSTEM_ADDRESS,
+                'details': allocation_obj.get_information
             }
-
-            addtl_context = {}
-            resource_email_template = resource_email_template_lookup_table.get(
-                allocation_obj.get_parent_resource.name
-            )
-            if resource_email_template is None:
-                email_template = 'email/allocation_activated.txt'
-            else:
-                email_template = resource_email_template['template']
-                addtl_context = resource_email_template['addtl_context']
-
-            send_allocation_customer_email(allocation_obj, 'Allocation Activated', email_template, domain_url=get_domain_url(self.request), addtl_context=addtl_context)
+            send_allocation_customer_email(allocation_obj, 'Allocation Activated', 'approved_allocation', domain_url=get_domain_url(self.request), addtl_context=addtl_context)
             if action != 'auto-approve':
                 messages.success(request, 'Allocation Activated!')
             logger.info(
@@ -359,16 +335,16 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
                     allocation_remove_user.send(
                         sender=self.__class__, allocation_user_pk=allocation_user.pk)
             if allocation_obj.status.name == 'Denied':
-                send_allocation_customer_email(allocation_obj, 'Allocation Denied', 'email/allocation_denied.txt', domain_url=get_domain_url(self.request))
+                send_allocation_customer_email(allocation_obj, 'Allocation Denied', 'denied_allocation', domain_url=get_domain_url(self.request))
                 messages.success(request, 'Allocation Denied!')
             elif allocation_obj.status.name == 'Revoked':
-                send_allocation_customer_email(allocation_obj, 'Allocation Revoked', 'email/allocation_revoked.txt', domain_url=get_domain_url(self.request))
+                send_allocation_customer_email(allocation_obj, 'Allocation Revoked', 'revoked_allocation', domain_url=get_domain_url(self.request))
                 messages.success(request, 'Allocation Revoked!')
             elif allocation_obj.status.name == 'Removed':
                 if 'coldfront.plugins.allocation_removal_requests' in settings.INSTALLED_APPS:
                     from coldfront.plugins.allocation_removal_requests.signals import allocation_remove
                     allocation_remove.send(sender=self.__class__, allocation_pk=allocation_obj.pk)
-                send_allocation_customer_email(allocation_obj, 'Allocation Removed', 'allocation_removal_requests/allocation_removed.txt', domain_url=get_domain_url(self.request))
+                send_allocation_customer_email(allocation_obj, 'Allocation Removed', 'removed_allocation', domain_url=get_domain_url(self.request))
                 messages.success(request, 'Allocation Removed!')
             else:
                 messages.success(request, 'Allocation updated!')
@@ -2090,7 +2066,7 @@ class AllocationChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, FormVi
 
             send_allocation_customer_email(allocation_change_obj.allocation,
                                            'Allocation Change Denied',
-                                           'email/allocation_change_denied.txt',
+                                           'denied_allocation_change',
                                            domain_url=get_domain_url(self.request))
 
             logger.info(
@@ -2198,7 +2174,7 @@ class AllocationChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, FormVi
 
             send_allocation_customer_email(allocation_change_obj.allocation,
                                            'Allocation Change Approved',
-                                           'email/allocation_change_approved.txt',
+                                           'approved_allocation_change',
                                            domain_url=get_domain_url(self.request))
             
             logger.info(

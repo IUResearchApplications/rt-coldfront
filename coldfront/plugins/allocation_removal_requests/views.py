@@ -178,7 +178,7 @@ class AllocationRemoveView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
         send_allocation_customer_email(
             allocation_obj,
             'Allocation Removed',
-            'allocation_removal_requests/allocation_removed.txt',
+            'removed_allocation',
             addtl_context={'resource': allocation_obj.get_parent_resource}
         )
 
@@ -267,7 +267,7 @@ class AllocationApproveRemovalRequestView(LoginRequiredMixin, UserPassesTestMixi
         send_allocation_customer_email(
             allocation_obj,
             'Allocation Removal Approved',
-            'allocation_removal_requests/allocation_removed.txt',
+            'removed_allocation',
             addtl_context={'resource': allocation_obj.get_parent_resource}
         )
 
@@ -322,7 +322,7 @@ class AllocationDenyRemovalRequestView(LoginRequiredMixin, UserPassesTestMixin, 
         send_allocation_customer_email(
             allocation_obj,
             'Allocation Removal Denied',
-            'allocation_removal_requests/allocation_removal_denied.txt',
+            'denied_allocation_removal',
             addtl_context={'resource': allocation_obj.get_parent_resource}
         )
 

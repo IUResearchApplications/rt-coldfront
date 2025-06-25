@@ -228,7 +228,7 @@ class AllocationMoveView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         send_allocation_customer_email(
             allocation_obj,
             "Allocation Moved",
-            "movable_allocations/email/moved_allocation.txt",
+            "moved_allocation",
             addtl_context=addtl_context,
         )
         send_allocation_admin_email(
