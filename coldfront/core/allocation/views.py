@@ -276,7 +276,12 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
             return HttpResponseBadRequest("Invalid request")
         
         form_data = form.cleaned_data
-        create_admin_action(request.user, form_data, allocation_obj)
+        if action == 'auto-approve':
+            # Allocations with the auto-approve action only have the status included in form data so
+            # we should make sure only that field is taken into account
+            create_admin_action(request.user, {'status': form_data.get('status')}, allocation_obj)
+        else:
+            create_admin_action(request.user, form_data, allocation_obj)
         old_status = allocation_obj.status.name
 
         if action in ['update', 'approve', 'deny']:
@@ -301,6 +306,7 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
             if 'approve' in action or not allocation_obj.end_date:
                 allocation_obj.end_date = allocation_obj.project.end_date
 
+            create_admin_action(request.user, {'status': old_status}, allocation_obj)
             allocation_obj.save()
 
             allocation_activate.send(
@@ -348,6 +354,7 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
 
         elif old_status != allocation_obj.status.name in ['Denied', 'New', 'Revoked', 'Removed']:
             allocation_obj.end_date = datetime.datetime.now() if allocation_obj.status.name != 'New' else None
+            create_admin_action(request.user, {'status': old_status}, allocation_obj)
             allocation_obj.save()
 
             if allocation_obj.status.name in ['Denied', 'Revoked', 'Removed']:
