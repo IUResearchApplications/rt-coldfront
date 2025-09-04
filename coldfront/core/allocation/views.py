@@ -276,10 +276,10 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
             return HttpResponseBadRequest("Invalid request")
         
         form_data = form.cleaned_data
-        create_admin_action(request.user, form_data, allocation_obj)
         old_status = allocation_obj.status.name
 
         if action in ['update', 'approve', 'deny']:
+            create_admin_action(request.user, form_data, allocation_obj)
             allocation_obj.end_date = form_data.get('end_date')
             allocation_obj.start_date = form_data.get('start_date')
             allocation_obj.description = form_data.get('description')
@@ -288,9 +288,13 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
             allocation_obj.status = form_data.get('status')
 
         if 'approve' in action:
-            allocation_obj.status = AllocationStatusChoice.objects.get(name='Active')
+            active_status = AllocationStatusChoice.objects.get(name='Active')
+            create_admin_action(request.user, {'status': active_status}, allocation_obj)
+            allocation_obj.status = active_status
         elif action == 'deny':
-            allocation_obj.status = AllocationStatusChoice.objects.get(name='Denied')
+            deny_status = AllocationStatusChoice.objects.get(name='Denied')
+            create_admin_action(request.user, {'status': deny_status}, allocation_obj)
+            allocation_obj.status = deny_status
 
         if old_status != 'Active' == allocation_obj.status.name:
             if allocation_obj.project.status.name != "Active":
