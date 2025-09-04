@@ -282,7 +282,8 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
             create_admin_action(request.user, {'status': form_data.get('status')}, allocation_obj)
         else:
             create_admin_action(request.user, form_data, allocation_obj)
-        old_status = allocation_obj.status.name
+        old_status_obj = allocation_obj.status
+        old_status = old_status_obj.name
 
         if action in ['update', 'approve', 'deny']:
             allocation_obj.end_date = form_data.get('end_date')
@@ -306,7 +307,7 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
             if 'approve' in action or not allocation_obj.end_date:
                 allocation_obj.end_date = allocation_obj.project.end_date
 
-            create_admin_action(request.user, {'status': old_status}, allocation_obj)
+            create_admin_action(request.user, {'status': old_status_obj}, allocation_obj)
             allocation_obj.save()
 
             allocation_activate.send(
@@ -354,7 +355,7 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
 
         elif old_status != allocation_obj.status.name in ['Denied', 'New', 'Revoked', 'Removed']:
             allocation_obj.end_date = datetime.datetime.now() if allocation_obj.status.name != 'New' else None
-            create_admin_action(request.user, {'status': old_status}, allocation_obj)
+            create_admin_action(request.user, {'status': old_status_obj}, allocation_obj)
             allocation_obj.save()
 
             if allocation_obj.status.name in ['Denied', 'Revoked', 'Removed']:
