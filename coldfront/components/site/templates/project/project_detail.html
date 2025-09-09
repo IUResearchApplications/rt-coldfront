@@ -328,13 +328,13 @@ Project Detail
                 <td>{{allocation.end_date|date:"Y-m-d"}}</td>
               {% endif %}
               <td class="text-nowrap">
-                <a title="Details" data-toggle="tooltip" data-delay="250" href="{% url 'allocation-detail' allocation.pk %}">
-                  <i class="far fa-folder-open" aria-hidden="true"></i><span class="sr-only">Details</span>
+                <a class="btn btn-primary" href="{% url 'allocation-detail' allocation.pk %}" role="button">
+                  <i class="far fa-folder-open" aria-hidden="true"></i> Details
                 </a>
                 {% if is_allowed_to_update_project and allocation.status.name in 'Active, New, Renewal Requested, Billing Information Submitted' and not allocation.is_locked %}
                   {% if not allocation.get_parent_resource.name == 'Geode-Project' %}
-                    <a title="Add Users" data-toggle="tooltip" data-delay="250" href="{% url 'allocation-add-users' allocation.pk %}">
-                      <i class="fas fa-user-plus" aria-hidden="true"></i><span class="sr-only">Add Users</span>
+                    <a class="btn btn-success" href="{% url 'allocation-add-users' allocation.pk %}" role="button">
+                      <i class="fas fa-user-plus" aria-hidden="true"></i> Add Users
                     </a>
                   {% endif %}
                 {% endif %}
