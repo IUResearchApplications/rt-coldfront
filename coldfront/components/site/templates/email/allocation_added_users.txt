@@ -3,8 +3,9 @@ Dear {{ center_name }} user,
 These users have been added to an allocation for {{ resource }} in project "{{ project_title }}".
 {% for user in users %}{{ user.first_name }} {{ user.last_name}} ({{ user.username}})
 {% endfor %}
-They can view the allocation here:
-{{ url }}
+Allocation Info:
+URL: {{ url }}
+{% for type, value in allocation_identifiers %}{{ type }}: {{ value }}{% endfor %}
 
 Thank you,
 {{ signature }}

@@ -316,10 +316,7 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
                 allocation_activate_user.send(
                     sender=self.__class__, allocation_user_pk=allocation_user.pk)
             
-            addtl_context = {
-                'help_url': EMAIL_TICKET_SYSTEM_ADDRESS,
-                'allocation_identifiers': allocation_obj.get_identifiers().items()
-            }
+            addtl_context = {'help_url': EMAIL_TICKET_SYSTEM_ADDRESS}
             email_template = EMAIL_RESOURCE_EMAIL_TEMPLATES.get(
                 allocation_obj.get_parent_resource.name, {}
             ).get('allocation_activated', 'email/allocation_activated.txt'),

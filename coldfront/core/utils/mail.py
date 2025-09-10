@@ -129,6 +129,7 @@ def send_allocation_customer_email(allocation_obj, subject, template_name, url_p
     ctx = email_template_context()
     ctx['resource'] = allocation_obj.get_parent_resource
     ctx['url'] = url
+    ctx['allocation_identifiers'] = allocation_obj.get_identifiers().items()
 
     if addtl_context:
         ctx.update(addtl_context)
