@@ -34,6 +34,8 @@ ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings(
     'ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING', 60)
 ALLOCATION_ENABLE_ALLOCATION_RENEWAL = import_from_settings(
     'ALLOCATION_ENABLE_ALLOCATION_RENEWAL', True)
+ALLOCATION_ATTRIBUTE_IDENTIFIERS = import_from_settings(
+    'ALLOCATION_ATTRIBUTE_IDENTIFIERS', [])
 
 EMAIL_ENABLED = import_from_settings('EMAIL_ENABLED', False)
 if EMAIL_ENABLED:
@@ -149,15 +151,15 @@ class Allocation(TimeStampedModel):
 
         super().save(*args, **kwargs)
 
-    def get_information_dict(self):
+    def get_identifiers(self):
         """ 
         Returns:
-            dict: the allocation's attribute types and their values
+            list: the allocation's attribute types and their values
         """
 
         info = {}
         for attribute in self.allocationattribute_set.all():
-            if attribute.allocation_attribute_type.name in ALLOCATION_ATTRIBUTE_VIEW_LIST:
+            if attribute.allocation_attribute_type.name in ALLOCATION_ATTRIBUTE_IDENTIFIERS:
                 info[attribute.allocation_attribute_type.name] = attribute.value
 
         return info

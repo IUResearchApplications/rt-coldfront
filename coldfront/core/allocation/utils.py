@@ -123,10 +123,9 @@ def send_added_user_email(request, allocation_obj, users, users_emails):
             'users': users,
             'project_title': allocation_obj.project.title,
             'url': url,
-            'signature': EMAIL_SIGNATURE
+            'signature': EMAIL_SIGNATURE,
+            'allocation_identifiers': allocation_obj.get_identifiers().items()
         }
-        for key, value in allocation_obj.get_information_dict().items():
-            template_context.update({key.replace(' ', '_').replace('-', '_'): value})
 
         send_email_template(
             'Added to Allocation',
@@ -146,10 +145,9 @@ def send_removed_user_email(allocation_obj, users, users_emails):
             'resource': allocation_obj.get_parent_resource.name,
             'users': users,
             'project_title': allocation_obj.project.title,
-            'signature': EMAIL_SIGNATURE
+            'signature': EMAIL_SIGNATURE,
+            'allocation_identifiers': allocation_obj.get_identifiers().items()
         }
-        for key, value in allocation_obj.get_information_dict().items():
-            template_context.update({key.replace(' ', '_').replace('-', '_'): value})
 
         send_email_template(
             'Removed From Allocation',

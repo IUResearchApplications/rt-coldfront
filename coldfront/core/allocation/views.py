@@ -317,10 +317,9 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
                     sender=self.__class__, allocation_user_pk=allocation_user.pk)
             
             addtl_context = {
-                'help_url': EMAIL_TICKET_SYSTEM_ADDRESS
+                'help_url': EMAIL_TICKET_SYSTEM_ADDRESS,
+                'allocation_identifiers': allocation_obj.get_identifiers().items()
             }
-            for key, value in allocation_obj.get_information_dict().items():
-                addtl_context.update({key.replace(' ', '_').replace('-', '_'): value})
             email_template = EMAIL_RESOURCE_EMAIL_TEMPLATES.get(
                 allocation_obj.get_parent_resource.name, {}
             ).get('allocation_activated', 'email/allocation_activated.txt'),

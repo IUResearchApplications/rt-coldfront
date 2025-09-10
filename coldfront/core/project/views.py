@@ -1326,6 +1326,7 @@ class ProjectRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
             request.POST, initial=users_to_remove, prefix='userform')
 
         removed_user_objs = []
+        removed_users_breakdown = {}
         if formset.is_valid():
             project_user_removed_status_choice = ProjectUserStatusChoice.objects.get(
                 name='Removed')
@@ -1360,6 +1361,15 @@ class ProjectRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                                 remove_user_from_project = False
                                 continue
 
+                            if not removed_users_breakdown.get(allocation_user_obj.user.username):
+                                removed_users_breakdown[allocation_user_obj.user.username] = []
+                            removed_users_breakdown[allocation_user_obj.user.username].append(
+                                (
+                                    allocation.get_parent_resource.name,
+                                    allocation.get_identifiers().values()
+                                )
+                            )
+                            
                             allocation_user_obj.status = allocation_user_removed_status_choice
                             allocation_user_obj.save()
 
@@ -1372,6 +1382,8 @@ class ProjectRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                         project_user_obj.status = project_user_removed_status_choice
                         project_user_obj.save()
                         removed_user_objs.append(project_user_obj)
+                        if not removed_users_breakdown.get(project_user_obj.user.username):
+                            removed_users_breakdown[project_user_obj.user.username] = [(None, ())]
 
             if removed_user_objs:
                 if EMAIL_ENABLED:
@@ -1382,8 +1394,10 @@ class ProjectRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                         'center_name': EMAIL_CENTER_NAME,
                         'project_title': project_obj.title,
                         'removed_users': removed_user_objs,
+                        'removed_users_breakdown': removed_users_breakdown,
                         'signature': EMAIL_SIGNATURE
                     }
+                    print(removed_users_breakdown)
                     send_email_template(
                         'Removed From Project',
                         'email/project_removed_users.txt',

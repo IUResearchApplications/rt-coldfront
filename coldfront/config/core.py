@@ -41,6 +41,7 @@ ALLOCATION_ENABLE_ALLOCATION_RENEWAL = ENV.bool('ALLOCATION_ENABLE_ALLOCATION_RE
 ALLOCATION_FUNCS_ON_EXPIRE = ['coldfront.core.allocation.utils.test_allocation_function', ]
 ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING = ENV.int('ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING', default=60)
 ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING = ENV.int('ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING', default=30)
+ALLOCATION_ATTRIBUTE_IDENTIFIERS = ENV.list('ALLOCATION_ATTRIBUTE_IDENTIFIERS', default=[])
 #------------------------------------------------------------------------------
 # Resource related
 #------------------------------------------------------------------------------
