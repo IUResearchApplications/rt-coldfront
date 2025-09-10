@@ -149,6 +149,19 @@ class Allocation(TimeStampedModel):
 
         super().save(*args, **kwargs)
 
+    def get_information_dict(self):
+        """ 
+        Returns:
+            dict: the allocation's attribute types and their values
+        """
+
+        info = {}
+        for attribute in self.allocationattribute_set.all():
+            if attribute.allocation_attribute_type.name in ALLOCATION_ATTRIBUTE_VIEW_LIST:
+                info[attribute.allocation_attribute_type.name] = attribute.value
+
+        return info
+
     @property
     def get_allocation_attributes(self):
         return self.allocationattribute_set.all()

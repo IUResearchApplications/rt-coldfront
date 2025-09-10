@@ -98,6 +98,8 @@ ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings(
 
 EMAIL_TICKET_SYSTEM_ADDRESS = import_from_settings(
     'EMAIL_TICKET_SYSTEM_ADDRESS', '')
+EMAIL_RESOURCE_EMAIL_TEMPLATES = import_from_settings(
+    'EMAIL_RESOURCE_EMAIL_TEMPLATES', {})
 
 PROJECT_ENABLE_PROJECT_REVIEW = import_from_settings(
     'PROJECT_ENABLE_PROJECT_REVIEW', False)
@@ -314,34 +316,14 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
                 allocation_activate_user.send(
                     sender=self.__class__, allocation_user_pk=allocation_user.pk)
             
-            # TODO - Could be improved?
-            resource_email_template_lookup_table = {
-                'Quartz': {
-                    'template': 'email/allocation_quartz_activated.txt',
-                    'addtl_context': {
-                        'help_url': EMAIL_TICKET_SYSTEM_ADDRESS,
-                        'slurm_account_name': allocation_obj.get_attribute('slurm_account_name')
-                    },
-                },
-                'Big Red 200': {
-                    'template': 'email/allocation_bigred200_activated.txt',
-                    'addtl_context': {
-                        'help_url': EMAIL_TICKET_SYSTEM_ADDRESS,
-                        'slurm_account_name': allocation_obj.get_attribute('slurm_account_name')
-                    },
-                }
+            addtl_context = {
+                'help_url': EMAIL_TICKET_SYSTEM_ADDRESS
             }
-
-            addtl_context = {}
-            resource_email_template = resource_email_template_lookup_table.get(
-                allocation_obj.get_parent_resource.name
-            )
-            if resource_email_template is None:
-                email_template = 'email/allocation_activated.txt'
-            else:
-                email_template = resource_email_template['template']
-                addtl_context = resource_email_template['addtl_context']
-
+            for key, value in allocation_obj.get_information_dict().items():
+                addtl_context.update({key.replace(' ', '_').replace('-', '_'): value})
+            email_template = EMAIL_RESOURCE_EMAIL_TEMPLATES.get(
+                allocation_obj.get_parent_resource.name, {}
+            ).get('allocation_activated', 'email/allocation_activated.txt'),
             send_allocation_customer_email(allocation_obj, 'Allocation Activated', email_template, domain_url=get_domain_url(self.request), addtl_context=addtl_context)
             if action != 'auto-approve':
                 messages.success(request, 'Allocation Activated!')

@@ -20,6 +20,7 @@ if EMAIL_ENABLED:
         'EMAIL_OPT_OUT_INSTRUCTION_URL')
     EMAIL_SIGNATURE = import_from_settings('EMAIL_SIGNATURE')
     EMAIL_CENTER_NAME = import_from_settings('CENTER_NAME')
+    EMAIL_RESOURCE_EMAIL_TEMPLATES = import_from_settings('EMAIL_RESOURCE_EMAIL_TEMPLATES', {})
 
 
 def set_allocation_user_status_to_error(allocation_user_pk):
@@ -124,10 +125,14 @@ def send_added_user_email(request, allocation_obj, users, users_emails):
             'url': url,
             'signature': EMAIL_SIGNATURE
         }
+        for key, value in allocation_obj.get_information_dict().items():
+            template_context.update({key.replace(' ', '_').replace('-', '_'): value})
 
         send_email_template(
             'Added to Allocation',
-            'email/allocation_added_users.txt',
+            EMAIL_RESOURCE_EMAIL_TEMPLATES.get(
+                allocation_obj.get_parent_resource.name, {}
+            ).get('added_user', 'email/allocation_added_users.txt'),
             template_context,
             EMAIL_TICKET_SYSTEM_ADDRESS,
             users_emails
@@ -143,10 +148,14 @@ def send_removed_user_email(allocation_obj, users, users_emails):
             'project_title': allocation_obj.project.title,
             'signature': EMAIL_SIGNATURE
         }
+        for key, value in allocation_obj.get_information_dict().items():
+            template_context.update({key.replace(' ', '_').replace('-', '_'): value})
 
         send_email_template(
             'Removed From Allocation',
-            'email/allocation_removed_users.txt',
+            EMAIL_RESOURCE_EMAIL_TEMPLATES.get(
+                allocation_obj.get_parent_resource.name, {}
+            ).get('removed_user', 'email/allocation_removed_users.txt'),
             template_context,
             EMAIL_TICKET_SYSTEM_ADDRESS,
             users_emails
