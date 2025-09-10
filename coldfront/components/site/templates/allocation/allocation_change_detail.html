@@ -112,6 +112,10 @@ Allocation Change Detail
                 <td><i class="fas fa-lock-open" aria-hidden="true"></i></td>
               {% endif %}
             </tr>
+            <tr>
+              <th scope="row" class="text-nowrap">Additional Information</th>
+              <td>{{ allocation_change.allocation.get_information }}</td>
+            </tr>
           </table>
         </div>
     </div>
