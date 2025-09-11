@@ -1110,7 +1110,6 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
                             if allocations_added_to.get(allocation) is None:
                                 allocations_added_to[allocation] = []
 
-                            resource_name = allocation.get_parent_resource.name
                             # If the user does not have an account on the resource in the allocation then do not add them to it.
                             accounts = selected_users_accounts.get(username)
                             account_exists, reason = allocation.get_parent_resource.check_accounts(accounts).values()
@@ -1123,13 +1122,6 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
                                     if allocation.get_parent_resource.name not in no_accounts[username]:
                                         no_accounts[username].append(allocation.get_parent_resource.name)
                                 continue
-
-                            requires_user_request = allocation.get_parent_resource.get_attribute('requires_user_request')
-                            if requires_user_request is not None and requires_user_request == 'Yes':
-                                resources_requiring_user_request.setdefault(resource_name, set())
-                                resources_requiring_user_request[resource_name].add(username)
-                                allocation_user_status_choice = AllocationUserStatusChoice.objects.get(
-                                    name='Pending - Add')
                                 
                             allocation_user_role_obj = AllocationUserRoleChoice.objects.filter(
                                 resources=allocation.get_parent_resource, name=cleaned_data['role'])
@@ -1153,9 +1145,6 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
 
                             allocation_activate_user.send(sender=self.__class__,
                                                         allocation_user_pk=allocation_user_obj.pk)
-
-                            requires_user_request = allocation.get_parent_resource.get_attribute(
-                                'requires_user_request')
 
                             allocation_user_request_obj = allocation.create_user_request(
                                 requestor_user=requestor_user,
@@ -1349,18 +1338,6 @@ class ProjectRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                         status__name__in=['Active', 'New', 'Renewal Requested', 'Expired'])
                     for allocation in allocations_to_remove_user_from:
                         for allocation_user_obj in allocation.allocationuser_set.filter(user=user_obj).exclude(status__name='Removed'):
-                            resource = allocation.get_parent_resource
-                            requires_user_requests = resource.get_attribute('requires_user_request')
-
-                            # Users will still be removed from allocations that do not require a
-                            # user review.
-                            if requires_user_requests is not None and requires_user_requests == 'Yes':
-                                resources_requiring_user_request.setdefault(resource.name, set())
-                                resources_requiring_user_request[resource.name].add(
-                                    allocation_user_obj.user.username)
-                                remove_user_from_project = False
-                                continue
-
                             if not removed_users_breakdown.get(allocation_user_obj.user.username):
                                 removed_users_breakdown[allocation_user_obj.user.username] = []
                             removed_users_breakdown[allocation_user_obj.user.username].append(

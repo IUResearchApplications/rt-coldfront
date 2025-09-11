@@ -355,44 +355,14 @@ class GenericView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     def add_users(self, users, allocation_obj, resource_obj):
         new_user_requests = []
         allocation_user_active_status_choice = AllocationUserStatusChoice.objects.get(name='Active')
-        requires_user_request = allocation_obj.get_parent_resource.get_attribute('requires_user_request')
-        requestor_user = User.objects.get(username=self.request.user.username)
-        if requires_user_request is not None and requires_user_request == 'Yes':
-            allocation_user_pending_status_choice = AllocationUserStatusChoice.objects.get(
-                name='Pending - Add'
+        for user in users:
+            allocation_user_obj = AllocationUser.objects.create(
+                allocation=allocation_obj,
+                user=user,
+                status=allocation_user_active_status_choice
             )
-            for user in users:
-                if user.username == self.request.user.username or user.username == allocation_obj.project.pi.username:
-                    allocation_user_obj = AllocationUser.objects.create(
-                        allocation=allocation_obj,
-                        user=user,
-                        status=allocation_user_active_status_choice
-                    )
-                else:
-                    allocation_user_obj = AllocationUser.objects.create(
-                        allocation=allocation_obj,
-                        user=user,
-                        status=allocation_user_pending_status_choice
-                    )
 
-                    allocation_obj.create_user_request(
-                        requestor_user=requestor_user,
-                        allocation_user=allocation_user_obj,
-                        allocation_user_status=allocation_user_pending_status_choice
-                    )
-
-                    new_user_requests.append(user.username)
-
-                set_default_allocation_user_role(resource_obj, allocation_user_obj)
-        else:
-            for user in users:
-                allocation_user_obj = AllocationUser.objects.create(
-                    allocation=allocation_obj,
-                    user=user,
-                    status=allocation_user_active_status_choice
-                )
-
-                set_default_allocation_user_role(resource_obj, allocation_user_obj)
+            set_default_allocation_user_role(resource_obj, allocation_user_obj)
 
         return new_user_requests
 

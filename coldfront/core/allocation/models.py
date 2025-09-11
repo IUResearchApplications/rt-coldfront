@@ -409,30 +409,6 @@ class Allocation(TimeStampedModel):
         perms = self.user_permissions(user, addtl_perm)
         return perm in perms
 
-    def create_user_request(self, requestor_user, allocation_user, allocation_user_status):
-        """ 
-        Params:
-            request_user (User): User who requested the change
-            allocation_user (AllocationUser): User who had the requested change
-            allocation_user_status (AllocationUserStatusChoice): Type of requested change
-
-        Returns:
-            AllocationUserRequest or None: A new AllocationUserRequest object or None if the 'requires_user_request' resource
-            attribute is not 'Yes'
-        """
-        requires_user_request = self.get_parent_resource.get_attribute('requires_user_request')
-        if requires_user_request is not None and requires_user_request == 'Yes':
-            allocation_user_request_obj = AllocationUserRequest.objects.create(
-                requestor_user=requestor_user,
-                allocation_user=allocation_user,
-                allocation_user_status=allocation_user_status,
-                status=AllocationUserRequestStatusChoice.objects.get(name='Pending')
-            )
-
-            return allocation_user_request_obj
-
-        return None
-
     def get_user_roles(self):
         return AllocationUserRoleChoice.objects.filter(resources=self.get_parent_resource)
 

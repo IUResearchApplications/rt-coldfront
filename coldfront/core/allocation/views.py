@@ -844,12 +844,6 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                     return HttpResponseRedirect(reverse('allocation-detail', kwargs={'pk': pk}))
 
             allocation_user_status_choice = AllocationUserStatusChoice.objects.get(name='Active')
-            requires_user_request = allocation_obj.get_parent_resource.get_attribute('requires_user_request')
-
-            if requires_user_request is not None and requires_user_request == 'Yes':
-                allocation_user_status_choice = AllocationUserStatusChoice.objects.get(name='Pending - Add')
-
-            requestor_user = User.objects.get(username=request.user)
             selected_user_objs = []
             for username, role in selected_users.items():
 
@@ -870,50 +864,30 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                         role=role  
                     )
 
-                allocation_obj.create_user_request(
-                    requestor_user=requestor_user,
-                    allocation_user=allocation_user_obj,
-                    allocation_user_status=allocation_user_status_choice
-                )
-
                 allocation_activate_user.send(sender=self.__class__,
                                                 allocation_user_pk=allocation_user_obj.pk)
 
             if selected_users:
-                if allocation_user_status_choice.name == 'Pending - Add':
-                    email_recipient = get_email_recipient_from_groups(
-                        allocation_obj.get_parent_resource.review_groups.all())
-                    send_allocation_user_request_email(
-                        self.request, selected_users.keys(), allocation_obj.get_parent_resource.name, email_recipient)
-                    messages.success(
-                        request, 'Pending addition of user(s) {} to the allocation.'.format(', '.join(selected_users.keys())))
+                if not allocation_obj.status.name == 'New':
+                    allocation_added_users_emails = list(allocation_obj.project.projectuser_set.filter(
+                        user__in=selected_user_objs, enable_notifications=True
+                    ).values_list('user__email', flat=True))
+                    if allocation_obj.project.pi.email not in allocation_added_users_emails:
+                        allocation_added_users_emails.append(allocation_obj.project.pi.email)
 
-                    logger.info(
-                        f'User {request.user.username} requested to add {len(selected_users)} user(s) '
-                        f'to a {allocation_obj.get_parent_resource.name} allocation '
-                        f'(allocation pk={allocation_obj.pk})'
-                    )
-                else:
-                    if not allocation_obj.status.name == 'New':
-                        allocation_added_users_emails = list(allocation_obj.project.projectuser_set.filter(
-                            user__in=selected_user_objs, enable_notifications=True
-                        ).values_list('user__email', flat=True))
-                        if allocation_obj.project.pi.email not in allocation_added_users_emails:
-                            allocation_added_users_emails.append(allocation_obj.project.pi.email)
+                    send_added_user_email(request, allocation_obj, selected_user_objs, allocation_added_users_emails)
 
-                        send_added_user_email(request, allocation_obj, selected_user_objs, allocation_added_users_emails)
+                is_plural = len(selected_users.keys()) > 1
+                messages.success(
+                    request,
+                    f'User{"s" if is_plural else ""} added to the allocation: {", ".join(selected_users.keys())}'
+                )
 
-                    is_plural = len(selected_users.keys()) > 1
-                    messages.success(
-                        request,
-                        f'User{"s" if is_plural else ""} added to the allocation: {", ".join(selected_users.keys())}'
-                    )
-
-                    logger.info(
-                        f'User {request.user.username} added {", ".join(selected_users.keys())} '
-                        f'to a {allocation_obj.get_parent_resource.name} allocation '
-                        f'(allocation pk={allocation_obj.pk})'
-                    )
+                logger.info(
+                    f'User {request.user.username} added {", ".join(selected_users.keys())} '
+                    f'to a {allocation_obj.get_parent_resource.name} allocation '
+                    f'(allocation pk={allocation_obj.pk})'
+                )
         else:
             for error in formset.errors:
                 if error.get('__all__'):
@@ -1004,17 +978,9 @@ class AllocationRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, Templat
         if formset.is_valid():
             allocation_user_removed_status_choice = AllocationUserStatusChoice.objects.get(
                 name='Removed')
-            allocation_user_pending_remove_status_choice = AllocationUserStatusChoice.objects.get(
-                name='Pending - Remove')
-
             allocation_user_status_choice = allocation_user_removed_status_choice
-            requires_user_request = allocation_obj.get_parent_resource.get_attribute('requires_user_request')
-
-            if requires_user_request is not None and requires_user_request == 'Yes':
-                allocation_user_status_choice = allocation_user_pending_remove_status_choice
 
             removed_user_objs = []
-            requestor_user = User.objects.get(username=request.user)
             for form in formset:
                 user_form_data = form.cleaned_data
                 if user_form_data['selected']:
@@ -1034,12 +1000,6 @@ class AllocationRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, Templat
                     allocation_user_obj.save()
                     allocation_remove_user.send(sender=self.__class__,
                                                 allocation_user_pk=allocation_user_obj.pk)
-
-                    allocation_user_request_obj = allocation_obj.create_user_request(
-                        requestor_user=requestor_user,
-                        allocation_user=allocation_user_obj,
-                        allocation_user_status=allocation_user_status_choice
-                    )
 
             if removed_user_objs:
                 removed_users = [removed_user_obj.username for removed_user_obj in removed_user_objs]
@@ -2622,255 +2582,6 @@ class AllocationUserDetailView(LoginRequiredMixin, UserPassesTestMixin, Template
                         kwargs={'pk': allocation_obj.pk, 'allocation_user_pk': allocation_user_pk}
                     )
                 )
-
-
-class AllocationUserRequestListView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
-    template_name = 'allocation/allocation_user_request_list.html'
-    login_url = '/'
-
-    def test_func(self):
-        if self.request.user.is_superuser:
-            return True
-
-        if self.request.user.has_perm('allocation.view_allocationuserrequest'):
-            return True
-
-        messages.error(self.request, 'You do not have access to view allocation user requests.')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        if self.request.user.is_superuser:
-            context['request_list'] = AllocationUserRequest.objects.filter(
-                status__name='Pending')
-        else:
-            context['request_list'] = AllocationUserRequest.objects.filter(
-                status__name='Pending',
-                allocation_user__allocation__resources__review_groups__in=list(self.request.user.groups.all())
-            )
-
-        return context
-
-
-class AllocationUserApproveRequestView(LoginRequiredMixin, UserPassesTestMixin, View):
-    login_url = '/'
-
-    def test_func(self):
-        if self.request.user.is_superuser:
-            return True
-
-        allocation_user_request_obj = get_object_or_404(AllocationUserRequest, pk=self.kwargs.get('pk'))
-        allocation_obj = allocation_user_request_obj.allocation_user.allocation
-        group_exists = check_if_groups_in_review_groups(
-            allocation_obj.get_parent_resource.review_groups.all(),
-            self.request.user.groups.all(),
-            'change_allocationuserrequest'
-        )
-        if group_exists:
-            return True
-
-        messages.error('You do not have access to approve allocation user requests.')
-
-    def get(self, request, *args, **kwargs):
-        pk = kwargs.get('pk')
-        allocation_user_request = get_object_or_404(AllocationUserRequest, pk=pk)
-        allocation_user = allocation_user_request.allocation_user
-
-        current_status = allocation_user.status.name
-        action = current_status.split(' ')[2]
-
-        allocation_user_status_choice = AllocationUserStatusChoice.objects.get(
-            name='Removed')
-        if action == 'Add':
-            allocation_user_status_choice = AllocationUserStatusChoice.objects.get(
-                name='Active')
-
-        allocation_user_request_status_choice = AllocationUserRequestStatusChoice.objects.get(
-            name='Approved')
-
-        create_admin_action(
-            request.user,
-            {'status': allocation_user_request_status_choice},
-            allocation_user.allocation,
-            allocation_user_request
-        )
-
-        allocation_user.status = allocation_user_status_choice
-        allocation_user.save()
-
-        allocation_user_request.status = allocation_user_request_status_choice
-        allocation_user_request.save()
-
-        # if EMAIL_ENABLED:
-        #     domain_url = get_domain_url(request)
-        #     url = '{}{}'.format(domain_url, reverse(
-        #         'allocation-detail', kwargs={'pk': allocation_user.allocation.pk})
-        #     )
-        #     template_context = {
-        #         'center_name': EMAIL_CENTER_NAME,
-        #         'user': allocation_user.user.username,
-        #         'project': allocation_user.allocation.project.title,
-        #         'allocation': allocation_user.allocation.get_parent_resource,
-        #         'url': url,
-        #         'signature': EMAIL_SIGNATURE
-        #     }
-
-        #     if action == 'Add':
-        #         email_receiver_list = list(allocation_user.allocation.project.projectuser_set.filter(
-        #             user__in=[allocation_user.user, allocation_user_request.requestor_user],
-        #             enable_notifications=True
-        #         ).values_list('user__email', flat=True))
-        #         send_email_template(
-        #             'Add User Request Approved',
-        #             'email/add_allocation_user_request_approved.txt',
-        #             template_context,
-        #             EMAIL_TICKET_SYSTEM_ADDRESS,
-        #             email_receiver_list
-        #         )
-        #     else:
-        #         email_receiver_list = list(allocation_user.allocation.project.projectuser_set.filter(
-        #             user__in=[allocation_user.user, allocation_user_request.requestor_user],
-        #             enable_notifications=True
-        #         ).values_list('user__email', flat=True))
-
-        #         send_email_template(
-        #             'Remove User Request Approved',
-        #             'email/remove_allocation_user_request_approved.txt',
-        #             template_context,
-        #             EMAIL_TICKET_SYSTEM_ADDRESS,
-        #             email_receiver_list
-        #         )
-
-        logger.info(
-            f'Admin {request.user.username} approved a {allocation_user.allocation.get_parent_resource.name} '
-            f'allocation user request (allocation pk={allocation_user.allocation.pk})'
-        )
-        messages.success(request, 'User {}\'s status has been APPROVED'.format(allocation_user.user.username))
-
-        return HttpResponseRedirect(reverse('allocation-user-request-list'))
-
-
-class AllocationUserDenyRequestView(LoginRequiredMixin, UserPassesTestMixin, View):
-    login_url = '/'
-
-    def test_func(self):
-        if self.request.user.is_superuser:
-            return True
-
-        allocation_user_request_obj = get_object_or_404(AllocationUserRequest, pk=self.kwargs.get('pk'))
-        allocation_obj = allocation_user_request_obj.allocation_user.allocation
-        group_exists = check_if_groups_in_review_groups(
-            allocation_obj.get_parent_resource.review_groups.all(),
-            self.request.user.groups.all(),
-            'change_allocationuserrequest'
-        )
-        if group_exists:
-            return True
-
-        messages.error(self.request, 'You do not have access to deny allocation user requests.')
-
-    def get(self, request, *args, **kwargs):
-        pk = kwargs.get('pk')
-        allocation_user_request = get_object_or_404(AllocationUserRequest, pk=pk)
-        allocation_user = allocation_user_request.allocation_user
-
-        current_status = allocation_user.status.name
-        action = current_status.split(' ')[2]
-
-        allocation_user_status_choice = AllocationUserStatusChoice.objects.get(
-            name='Removed')
-        if action == 'Remove':
-            allocation_user_status_choice = AllocationUserStatusChoice.objects.get(
-                name='Active')
-
-        allocation_user_request_status_choice = AllocationUserRequestStatusChoice.objects.get(
-            name='Denied')
-
-        create_admin_action(
-            request.user,
-            {'status': allocation_user_request_status_choice},
-            allocation_user.allocation,
-            allocation_user_request
-        )
-
-        allocation_user.status = allocation_user_status_choice
-        allocation_user.save()
-
-        allocation_user_request.status = allocation_user_request_status_choice
-        allocation_user_request.save()
-
-        # if EMAIL_ENABLED:
-        #     domain_url = get_domain_url(request)
-        #     url = '{}{}'.format(domain_url, reverse(
-        #         'allocation-detail', kwargs={'pk': allocation_user.allocation.pk})
-        #     )
-        #     template_context = {
-        #         'center_name': EMAIL_CENTER_NAME,
-        #         'user': allocation_user.user.username,
-        #         'project': allocation_user.allocation.project.title,
-        #         'allocation': allocation_user.allocation.get_parent_resource,
-        #         'url': url,
-        #         'signature': EMAIL_SIGNATURE
-        #     }
-
-        #     if action == 'Add':
-        #         email_receiver_list = [
-        #             allocation_user_request.requestor_user.email
-        #         ]
-
-        #         send_email_template(
-        #             'Add User Request Denied',
-        #             'email/add_allocation_user_request_denied.txt',
-        #             template_context,
-        #             EMAIL_TICKET_SYSTEM_ADDRESS,
-        #             email_receiver_list
-        #         )
-        #     else:
-        #         email_receiver_list = [
-        #             allocation_user_request.requestor_user.email
-        #         ]
-
-        #         send_email_template(
-        #             'Remove User Request Denied',
-        #             'email/remove_allocation_user_request_denied.txt',
-        #             template_context,
-        #             EMAIL_TICKET_SYSTEM_ADDRESS,
-        #             email_receiver_list
-        #         )
-
-        logger.info(
-            f'Admin {request.user.username} denied a {allocation_user.allocation.get_parent_resource.name} '
-            f'allocation user request (allocation pk={allocation_user.allocation.pk})'
-        )
-        messages.success(request, 'User {}\'s status has been DENIED'.format(allocation_user.user.username))
-
-        return HttpResponseRedirect(reverse('allocation-user-request-list'))
-
-
-class AllocationUserRequestInfoView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
-    template_name = 'allocation/allocation_user_request_info.html'
-
-    def test_func(self):
-        if self.request.user.is_superuser:
-            return True
-
-        allocation_user_request_obj = get_object_or_404(AllocationUserRequest, pk=self.kwargs.get('pk'))
-        allocation_obj = allocation_user_request_obj.allocation_user.allocation
-        group_exists = check_if_groups_in_review_groups(
-            allocation_obj.get_parent_resource.review_groups.all(),
-            self.request.user.groups.all(),
-            'view_allocationuserrequest'
-        )
-        if group_exists:
-            return True
-
-        messages.error(self.request, 'You do not have access to view allocation user request info.')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        pk = self.kwargs.get('pk')
-        context['request_info'] = get_object_or_404(AllocationUserRequest, pk=pk)
-
-        return context
 
 
 class AllocationAttributeUpdateView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
