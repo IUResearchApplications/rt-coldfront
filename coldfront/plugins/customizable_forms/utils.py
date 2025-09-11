@@ -15,8 +15,7 @@ def add_additional_forms():
         view_module, view_class = additional_form.get('view').rsplit('.', 1)
         view_class = getattr(importlib.import_module(view_module), view_class)
 
-        resource_name = additional_form.get('resource_name')
-        resource_name = re.sub('[^A-Za-z0-9]+', '', resource_name)
+        resource_name = standardize_resource_name(additional_form.get('resource').get('name'))
         urlpatterns.append(
             path(
                 f'project/<int:project_pk>/create/<int:resource_pk>/{resource_name}',
@@ -31,3 +30,7 @@ def add_additional_forms():
             name='resource-form'
         )
     )
+
+
+def standardize_resource_name(resource_name):
+    return re.sub('[^A-Za-z0-9]+', '', resource_name)

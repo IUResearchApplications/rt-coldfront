@@ -30,6 +30,7 @@ from coldfront.core.resource.models import ResourceAttribute
 from coldfront.core.utils.common import get_domain_url, import_from_settings
 from coldfront.core.utils.slack import send_message
 from coldfront.core.utils.mail import send_email_template, get_email_recipient_from_groups
+from coldfront.plugins.customizable_forms.utils import standardize_resource_name
 from coldfront.plugins.ldap_user_info.utils import get_user_info
 
 
@@ -225,7 +226,10 @@ class DispatchView(LoginRequiredMixin, View):
             self.reverse_with_params(
                 reverse(
                     'resource-form',
-                    kwargs={'project_pk': project_pk, 'resource_pk': resource_pk, 'resource_name': resource_name}
+                    kwargs={
+                        'project_pk': project_pk,
+                        'resource_pk': resource_pk,
+                        'resource_name': standardize_resource_name(resource_obj.name)}
                 ),
                 after_project_creation = self.request.GET.get('after_project_creation')
             )
