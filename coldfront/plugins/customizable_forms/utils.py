@@ -6,7 +6,6 @@ from django.urls import path
 from coldfront.core.utils.common import import_from_settings
 from coldfront.plugins.customizable_forms.urls import urlpatterns
 from coldfront.plugins.customizable_forms.views import GenericView
-from coldfront.plugins.customizable_forms.forms import BaseForm
 
 ADDITIONAL_CUSTOM_FORMS = import_from_settings('ADDITIONAL_CUSTOM_FORMS', [])
 
