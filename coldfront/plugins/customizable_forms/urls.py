@@ -27,11 +27,11 @@ urlpatterns = [
 ]
 
 def add_additional_forms():
-    for additional_form in ADDITIONAL_CUSTOM_FORMS:
-        view_module, view_class = additional_form.get('view').rsplit('.', 1)
+    for resource_name, values in ADDITIONAL_CUSTOM_FORMS.items():
+        view_module, view_class = values.get('view').rsplit('.', 1)
         view_class = getattr(importlib.import_module(view_module), view_class)
 
-        resource_name = standardize_resource_name(additional_form.get('resource_name'))
+        resource_name = standardize_resource_name(resource_name)
         urlpatterns[-1:-1] = [
             path(
                 f'project/<int:project_pk>/create/<int:resource_pk>/{resource_name}',

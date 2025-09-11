@@ -31,7 +31,6 @@ from coldfront.core.utils.common import get_domain_url, import_from_settings
 from coldfront.core.utils.slack import send_message
 from coldfront.core.utils.mail import send_email_template, get_email_recipient_from_groups
 from coldfront.plugins.customizable_forms.utils import standardize_resource_name
-from coldfront.plugins.ldap_user_info.utils import get_user_info
 
 
 ADDITIONAL_CUSTOM_FORMS = import_from_settings(
@@ -85,102 +84,74 @@ class AllocationResourceSelectionView(LoginRequiredMixin, UserPassesTestMixin, T
             return HttpResponseRedirect(reverse('project-detail', kwargs={'pk': project_obj.pk}))
 
         return super().dispatch(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        project_obj = get_object_or_404(Project, pk=self.kwargs.get('project_pk'))
-
-        persistant_values = {}
-        for variable, func in ADDITIONAL_PERSISTANCE_FUNCTIONS.items():
-            func_module, func = func.rsplit('.', 1)
-            func = getattr(importlib.import_module(func_module), func)
-            persistant_values[variable] = func(project_obj)
-
-        project_resource_count = persistant_values['project_resource_count']
-        pi_resource_count = persistant_values['pi_resource_count']
-
-        resource_objs = get_user_resources(self.request.user).prefetch_related(
-            'resource_type', 'resourceattribute_set').order_by('resource_type')
-        accounts = get_user_info(self.request.user.username, ['memberOf']).get('memberOf')
+    
+    def get_resource_categories(cls, resource_objs):
         resource_categories = {}
         for resource_obj in resource_objs:
             resource_type_name = resource_obj.resource_type.name
             if not resource_categories.get(resource_type_name):
                 resource_categories[resource_type_name] = {'allocated': set(), 'resources': []}
 
-            limit_reached = False
-            limit_description = ''
-            limit_title = ''
-            allocation_limit_objs = resource_obj.resourceattribute_set.filter(
-                resource_attribute_type__name='allocation_limit'
-            )
-            current_resource_count = project_resource_count.get(resource_obj.name)
-            if current_resource_count is not None:
-                resource_categories[resource_type_name]['allocated'].add(resource_obj.name)
-                if allocation_limit_objs.exists():
-                    allocation_limit = int(allocation_limit_objs[0].value)
-                    if current_resource_count >= allocation_limit:
-                        limit_reached = True
-                        limit_title = 'Project Resource Limit'
-                        limit_description = f'Can only have {allocation_limit} per project'
+        return resource_categories
+    
+    def get_project_resource_count(cls, project_obj):
+        project_allocations = project_obj.allocation_set.filter(
+            status__name__in=[
+                "Active",
+                "New",
+                "Renewal Requested",
+                "Billing Information Submitted",
+                "Paid",
+                "Payment Pending",
+                "Payment Requested",
+            ]
+        )
+        project_resource_count = {}
+        for project_allocation in project_allocations:
+            resource_name = project_allocation.get_parent_resource.name
+            current_count = project_resource_count.get(resource_name, 0)
+            project_resource_count[resource_name] = current_count + 1
 
-            allocation_per_pi_limit_objs = resource_obj.resourceattribute_set.filter(
-                resource_attribute_type__name='allocation_limit_per_pi'
-            )
-            current_resource_count = pi_resource_count.get(resource_obj.name)
-            if current_resource_count is not None:
-                if allocation_per_pi_limit_objs.exists():
-                    allocation_per_pi_limit = int(allocation_per_pi_limit_objs[0].value)
-                    if current_resource_count >= allocation_per_pi_limit:
-                        limit_reached = True
-                        limit_title = 'PI Resource Limit'
-                        limit_description = f'Can only have {allocation_per_pi_limit} per PI'
+        return project_resource_count
 
-            allocation_pending_request_limit_per_pi_obj = resource_obj.resourceattribute_set.filter(
-                resource_attribute_type__name='allocation_pending_request_limit_per_pi'
-            )
-            if allocation_pending_request_limit_per_pi_obj.exists():
-                allocation_pending_request_limit_per_pi_limit = int(allocation_pending_request_limit_per_pi_obj[0].value)
-                pending_requests = Allocation.objects.filter(
-                    resources=resource_obj, status__name='New', project__pi=self.request.user).count()
-                if pending_requests >= allocation_pending_request_limit_per_pi_limit:
-                    limit_reached = True
-                    limit_title = 'Pending Resource Allocation Request Limit'
-                    limit_description = f'Can only have {allocation_pending_request_limit_per_pi_limit} pending request(s) per user'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        project_obj = get_object_or_404(Project, pk=self.kwargs.get('project_pk'))
+        project_resource_count = self.get_project_resource_count(project_obj)
 
-            help_url = resource_obj.resourceattribute_set.filter(resource_attribute_type__name='help_url')
-            if help_url.exists():
-                help_url = help_url[0].value
-            else:
-                help_url = None
+        persistant_values = {}
+        for variable, func in ADDITIONAL_PERSISTANCE_FUNCTIONS.items():
+            func_module, func = func.rsplit('.', 1)
+            func = getattr(importlib.import_module(func_module), func)
+            persistant_values[variable] = func(self.request, project_obj)
+        persistant_values['user'] = self.request.user
+        persistant_values['project'] = project_obj
+        persistant_values['project_resource_count'] = project_resource_count
 
-            has_account = True
-            if not resource_obj.check_accounts(accounts).get('exists'):
-                has_account = False
+        resource_objs = get_user_resources(self.request.user).prefetch_related(
+            'resource_type', 'resourceattribute_set').order_by('resource_type')
+        resource_categories = self.get_resource_categories(resource_objs)
+        for resource_obj in resource_objs:
+            resource_type_name = resource_obj.resource_type.name
 
-            pi_request_only = resource_obj.resourceattribute_set.filter(resource_attribute_type__name='pi_request_only')
-            if not pi_request_only.exists() or self.request.user.is_superuser:
-                can_request = True
-            else:
-                can_request = True
-                if pi_request_only[0].value.lower() == 'true' and project_obj.pi != self.request.user:
-                    can_request = False
-
-            if resource_obj.name in project_obj.get_env.get('forbidden_resources'):
-                can_request = False
-
-            if resource_obj.name == 'Quartz - Hopper' and not project_obj.allocation_set.filter(resources__name='Quartz', status__name='Active'):
-                can_request = False
+            info_url = ""
+            rule_result = {'passed': True, 'title': '', 'description': ''}
+            custom_form = ADDITIONAL_CUSTOM_FORMS.get(resource_obj.name)
+            if custom_form:
+                info_url = custom_form.get('info_url')
+                for rule_func in custom_form.get('rule_functions'):
+                    rule_func_module, rule_func = rule_func.rsplit('.', 1)
+                    rule_func = getattr(importlib.import_module(rule_func_module), rule_func)
+                    rule_result = rule_func(resource_obj, persistant_values)
+                    if not rule_result.get('passed'):
+                        break
 
             resource_categories[resource_type_name]['resources'].append(
                 {
                     'resource': resource_obj,
-                    'info_link': help_url,
-                    'limit_reached': limit_reached,
-                    'has_account': has_account,
-                    'can_request': can_request,
-                    'limit_description': limit_description,
-                    'limit_title': limit_title
+                    'resource_count': project_resource_count.get(resource_obj.name),
+                    'info_url': info_url,
+                    'rule_result': rule_result
                 }
             )
 
