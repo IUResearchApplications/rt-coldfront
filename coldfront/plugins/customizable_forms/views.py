@@ -1,4 +1,4 @@
-import re
+import importlib
 import logging
 import urllib
 
@@ -34,6 +34,12 @@ from coldfront.plugins.customizable_forms.utils import standardize_resource_name
 from coldfront.plugins.ldap_user_info.utils import get_user_info
 
 
+ADDITIONAL_CUSTOM_FORMS = import_from_settings(
+    'ADDITIONAL_CUSTOM_FORMS', []
+)
+ADDITIONAL_PERSISTANCE_FUNCTIONS = import_from_settings(
+    'ADDITIONAL_PERSISTANCE_FUNCTIONS', {}
+)
 ALLOCATION_ENABLE_CHANGE_REQUESTS_BY_DEFAULT = import_from_settings(
     'ALLOCATION_ENABLE_CHANGE_REQUESTS_BY_DEFAULT', True
 )
@@ -82,45 +88,16 @@ class AllocationResourceSelectionView(LoginRequiredMixin, UserPassesTestMixin, T
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        project_obj = get_object_or_404(
-            Project, pk=self.kwargs.get('project_pk')
-        )
-        project_allocations = project_obj.allocation_set.filter(
-            status__name__in=[
-                'Active',
-                'New',
-                'Renewal Requested',
-                'Billing Information Submitted',
-                'Paid',
-                'Payment Pending',
-                'Payment Requested'
-            ]
-        )
-        project_resource_count = {}
-        for project_allocation in project_allocations:
-            resource_name = project_allocation.get_parent_resource.name
-            if project_resource_count.get(resource_name) is None:
-                project_resource_count[resource_name] = 0
-            project_resource_count[resource_name] += 1
+        project_obj = get_object_or_404(Project, pk=self.kwargs.get('project_pk'))
 
-        pi_allocations = Allocation.objects.filter(
-            project__pi=project_obj.pi,
-            status__name__in=[
-                'Active',
-                'New',
-                'Renewal Requested',
-                'Billing Information Submitted',
-                'Paid',
-                'Payment Pending',
-                'Payment Requested'
-            ]
-        )
-        pi_resource_count = {}
-        for pi_allocation in pi_allocations:
-            resource_name = pi_allocation.get_parent_resource.name
-            if pi_resource_count.get(resource_name) is None:
-                pi_resource_count[resource_name] = 0
-            pi_resource_count[resource_name] += 1
+        persistant_values = {}
+        for variable, func in ADDITIONAL_PERSISTANCE_FUNCTIONS.items():
+            func_module, func = func.rsplit('.', 1)
+            func = getattr(importlib.import_module(func_module), func)
+            persistant_values[variable] = func(project_obj)
+
+        project_resource_count = persistant_values['project_resource_count']
+        pi_resource_count = persistant_values['pi_resource_count']
 
         resource_objs = get_user_resources(self.request.user).prefetch_related(
             'resource_type', 'resourceattribute_set').order_by('resource_type')
