@@ -13,10 +13,8 @@ ADDITIONAL_CUSTOM_FORMS = import_from_settings('ADDITIONAL_CUSTOM_FORMS', [])
 
 def add_additional_forms():
     for additional_form in ADDITIONAL_CUSTOM_FORMS:
-        view_module = additional_form.get('view_module')
-        view_module = importlib.import_module(view_module)
-        view_class = additional_form.get('view_class')
-        view_class = getattr(view_module, view_class)
+        view_module, view_class = additional_form.get('view').rsplit('.', 1)
+        view_class = getattr(importlib.import_module(view_module), view_class)
 
         resource_name = additional_form.get('resource_name')
         resource_name = re.sub('[^A-Za-z0-9]+', '', resource_name)
