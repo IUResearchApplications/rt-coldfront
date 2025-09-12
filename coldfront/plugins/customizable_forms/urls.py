@@ -6,6 +6,7 @@ from coldfront.plugins.customizable_forms.utils import standardize_resource_name
 from coldfront.plugins.customizable_forms.views import AllocationResourceSelectionView, DispatchView, GenericView
 
 ADDITIONAL_CUSTOM_FORMS = import_from_settings('ADDITIONAL_CUSTOM_FORMS', [])
+ADDITIONAL_CUSTOM_GENERIC_FORM = import_from_settings('ADDITIONAL_CUSTOM_GENERIC_FORM', '')
 
 
 urlpatterns = [
@@ -39,3 +40,17 @@ def add_additional_forms():
                 name=f'{resource_name.lower()}-form'
             )
         ]
+
+
+def replace_generic_form():
+    if ADDITIONAL_CUSTOM_GENERIC_FORM:
+        view_module, view_class = ADDITIONAL_CUSTOM_GENERIC_FORM.rsplit('.', 1)
+        view_class = getattr(importlib.import_module(view_module), view_class)
+        urlpatterns.pop()
+        urlpatterns.append(
+            path(
+                'project/<int:project_pk>/create/<int:resource_pk>/<str:resource_name>',
+                view_class.as_view(),
+                name='resource-form'
+            )
+        )
