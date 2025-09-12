@@ -79,19 +79,6 @@ def test_allocation_function(allocation_pk):
     print('test_allocation_function', allocation_pk)
 
 
-def compute_prorated_amount(total_cost):
-    current_date = datetime.now()
-    expire_date = datetime(current_date.year, 7, 1)
-    if expire_date < current_date:
-        expire_date = expire_date.replace(year=expire_date.year + 1)
-
-    difference = abs(expire_date - current_date)
-    # Take into account leap years.
-    one_year = expire_date - expire_date.replace(year=expire_date.year - 1)
-    cost_per_day = total_cost / one_year.days
-    return round(cost_per_day * difference.days + cost_per_day)
-
-
 def send_added_user_email(request, allocation_obj, users, users_emails):
     if EMAIL_ENABLED:
         domain_url = get_domain_url(request)
