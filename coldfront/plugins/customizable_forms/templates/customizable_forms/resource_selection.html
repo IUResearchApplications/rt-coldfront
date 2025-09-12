@@ -32,7 +32,7 @@ Choose a Resource for Your Allocation
                   {% endif %}
                   <div class="float-right">
                     {% if not resource.rule_result.passed %}
-                      {{ resource.rule_result.title }}
+                      {{ resource.rule_result.title|safe }}
                       <a href="#" data-toggle="popover" data-trigger="hover" title="{{ resource.rule_result.title }}" data-content="{{ resource.rule_result.description }}">
                         <i class="fas fa-question-circle" aria-hidden="true"></i>
                       </a>
