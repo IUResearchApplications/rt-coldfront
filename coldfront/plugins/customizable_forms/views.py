@@ -15,7 +15,7 @@ from coldfront.core.project.models import ProjectPermission
 from coldfront.core.resource.models import Resource
 from coldfront.core.allocation.utils import get_user_resources
 from coldfront.core.utils.common import import_from_settings
-from coldfront.plugins.customizable_forms.utils import standardize_resource_name
+from coldfront.plugins.customizable_forms.utils import get_rules, standardize_resource_name
 
 
 CUSTOMIZABLE_FORMS_ALLOCATION_VIEWS = import_from_settings(
@@ -123,9 +123,7 @@ class AllocationResourceSelectionView(LoginRequiredMixin, UserPassesTestMixin, T
             custom_form = CUSTOMIZABLE_FORMS_ALLOCATION_VIEWS.get(resource_obj.name)
             if custom_form:
                 info_url = custom_form.get("info_url")
-                for rule_func in custom_form.get("rule_functions"):
-                    rule_func_module, rule_func = rule_func.rsplit(".", 1)
-                    rule_func = getattr(importlib.import_module(rule_func_module), rule_func)
+                for rule_func in get_rules(resource_obj.name):
                     rule_result = rule_func(resource_obj, persistant_values)
                     if not rule_result.get("passed"):
                         break
