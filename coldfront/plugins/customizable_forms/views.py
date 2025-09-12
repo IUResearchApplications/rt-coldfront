@@ -18,11 +18,11 @@ from coldfront.core.utils.common import import_from_settings
 from coldfront.plugins.customizable_forms.utils import standardize_resource_name
 
 
-ADDITIONAL_CUSTOM_FORMS = import_from_settings(
-    'ADDITIONAL_CUSTOM_FORMS', []
+CUSTOMIZABLE_FORMS_ALLOCATION_VIEWS = import_from_settings(
+    'CUSTOMIZABLE_FORMS_ALLOCATION_VIEWS', []
 )
-ADDITIONAL_PERSISTANCE_FUNCTIONS = import_from_settings(
-    'ADDITIONAL_PERSISTANCE_FUNCTIONS', {}
+CUSTOMIZABLE_FORMS_ADDITIONAL_PERSISTANCE_FUNCTIONS = import_from_settings(
+    'CUSTOMIZABLE_FORMS_ADDITIONAL_PERSISTANCE_FUNCTIONS', {}
 )
 
 logger = logging.getLogger(__name__)
@@ -93,7 +93,7 @@ class AllocationResourceSelectionView(LoginRequiredMixin, UserPassesTestMixin, T
         project_resource_count = self.get_project_resource_count(project_obj)
 
         persistant_values = {}
-        for variable, func in ADDITIONAL_PERSISTANCE_FUNCTIONS.items():
+        for variable, func in CUSTOMIZABLE_FORMS_ADDITIONAL_PERSISTANCE_FUNCTIONS.items():
             func_module, func = func.rsplit('.', 1)
             func = getattr(importlib.import_module(func_module), func)
             persistant_values[variable] = func(self.request, project_obj)
@@ -109,7 +109,7 @@ class AllocationResourceSelectionView(LoginRequiredMixin, UserPassesTestMixin, T
 
             info_url = ""
             rule_result = {'passed': True, 'title': '', 'description': ''}
-            custom_form = ADDITIONAL_CUSTOM_FORMS.get(resource_obj.name)
+            custom_form = CUSTOMIZABLE_FORMS_ALLOCATION_VIEWS.get(resource_obj.name)
             if custom_form:
                 info_url = custom_form.get('info_url')
                 for rule_func in custom_form.get('rule_functions'):

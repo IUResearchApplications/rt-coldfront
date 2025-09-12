@@ -5,8 +5,8 @@ from coldfront.core.utils.common import import_from_settings
 from coldfront.plugins.customizable_forms.utils import standardize_resource_name
 from coldfront.plugins.customizable_forms.views import AllocationResourceSelectionView, DispatchView, GenericView
 
-ADDITIONAL_CUSTOM_FORMS = import_from_settings('ADDITIONAL_CUSTOM_FORMS', [])
-ADDITIONAL_CUSTOM_GENERIC_FORM = import_from_settings('ADDITIONAL_CUSTOM_GENERIC_FORM', '')
+CUSTOMIZABLE_FORMS_ALLOCATION_VIEWS = import_from_settings('CUSTOMIZABLE_FORMS_ALLOCATION_VIEWS', [])
+CUSTOMIZABLE_FORMS_GENERIC_ALLOCATION_VIEW = import_from_settings('CUSTOMIZABLE_FORMS_GENERIC_ALLOCATION_VIEW', '')
 
 
 urlpatterns = [
@@ -28,7 +28,7 @@ urlpatterns = [
 ]
 
 def add_additional_forms():
-    for resource_name, values in ADDITIONAL_CUSTOM_FORMS.items():
+    for resource_name, values in CUSTOMIZABLE_FORMS_ALLOCATION_VIEWS.items():
         view_module, view_class = values.get('view').rsplit('.', 1)
         view_class = getattr(importlib.import_module(view_module), view_class)
 
@@ -43,8 +43,8 @@ def add_additional_forms():
 
 
 def replace_generic_form():
-    if ADDITIONAL_CUSTOM_GENERIC_FORM:
-        view_module, view_class = ADDITIONAL_CUSTOM_GENERIC_FORM.rsplit('.', 1)
+    if CUSTOMIZABLE_FORMS_GENERIC_ALLOCATION_VIEW:
+        view_module, view_class = CUSTOMIZABLE_FORMS_GENERIC_ALLOCATION_VIEW.rsplit('.', 1)
         view_class = getattr(importlib.import_module(view_module), view_class)
         urlpatterns.pop()
         urlpatterns.append(
