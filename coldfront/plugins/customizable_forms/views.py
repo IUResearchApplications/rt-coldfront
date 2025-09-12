@@ -73,7 +73,6 @@ class AllocationResourceSelectionView(LoginRequiredMixin, UserPassesTestMixin, T
                 "Active",
                 "New",
                 "Renewal Requested",
-                "Billing Information Submitted",
                 "Paid",
                 "Payment Pending",
                 "Payment Requested",
