@@ -63,7 +63,6 @@ from coldfront.core.allocation.signals import (allocation_new,
                                                visit_allocation_detail)
 from coldfront.core.allocation.utils import (generate_guauge_data_from_usage,
                                              get_user_resources,
-                                             send_allocation_user_request_email,
                                              create_admin_action,
                                              create_admin_action_for_deletion,
                                              create_admin_action_for_creation,
@@ -998,41 +997,21 @@ class AllocationRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, Templat
 
             if removed_user_objs:
                 removed_users = [removed_user_obj.username for removed_user_obj in removed_user_objs]
-                if allocation_user_status_choice.name == 'Pending - Remove':
-                    email_recipient = get_email_recipient_from_groups(
-                        allocation_obj.get_parent_resource.review_groups.all()
-                    )
-                    send_allocation_user_request_email(
-                        self.request,
-                        removed_users,
-                        allocation_obj.get_parent_resource.name,
-                        email_recipient
-                    )
-                    messages.success(
-                        request, 'Pending removal of user(s) {} from allocation.'.format(', '.join(removed_users))
-                    )
+                allocation_removed_users_emails = list(allocation_obj.project.projectuser_set.filter(
+                    user__in=removed_user_objs,
+                    enable_notifications=True
+                ).values_list('user__email', flat=True))
+                if allocation_obj.project.pi.email not in allocation_removed_users_emails:
+                    allocation_removed_users_emails.append(allocation_obj.project.pi.email)
 
-                    logger.info(
-                        f'User {request.user.username} requested to remove {len(removed_users)} '
-                        f'user(s) from a {allocation_obj.get_parent_resource.name} allocation '
-                        f'(allocation pk={allocation_obj.pk})'
-                    )
-                else:
-                    allocation_removed_users_emails = list(allocation_obj.project.projectuser_set.filter(
-                        user__in=removed_user_objs,
-                        enable_notifications=True
-                    ).values_list('user__email', flat=True))
-                    if allocation_obj.project.pi.email not in allocation_removed_users_emails:
-                        allocation_removed_users_emails.append(allocation_obj.project.pi.email)
+                send_removed_user_email(allocation_obj, removed_user_objs, allocation_removed_users_emails)
+                messages.success(
+                    request, 'Removed user(s) {} from allocation.'.format(', '.join(removed_users)))
 
-                    send_removed_user_email(allocation_obj, removed_user_objs, allocation_removed_users_emails)
-                    messages.success(
-                        request, 'Removed user(s) {} from allocation.'.format(', '.join(removed_users)))
-
-                    logger.info(
-                        f'User {request.user.username} removed {", ".join(removed_users)} from a '
-                        f'{allocation_obj.get_parent_resource.name} allocation (allocation pk={allocation_obj.pk})'
-                    )
+                logger.info(
+                    f'User {request.user.username} removed {", ".join(removed_users)} from a '
+                    f'{allocation_obj.get_parent_resource.name} allocation (allocation pk={allocation_obj.pk})'
+                )
         else:
             for error in formset.errors:
                 messages.error(request, error)

@@ -22,7 +22,6 @@ from coldfront.core.project.models import ProjectPermission
 from coldfront.core.resource.models import Resource
 from coldfront.plugins.customizable_forms.forms import GenericForm
 from coldfront.core.allocation.utils import (set_default_allocation_user_role,
-                                             send_allocation_user_request_email,
                                              send_added_user_email,
                                              get_user_resources)
 from coldfront.core.allocation.signals import allocation_new
@@ -405,30 +404,25 @@ class GenericView(LoginRequiredMixin, UserPassesTestMixin, FormView):
                 [email_recipient, ]
             )
 
-            if new_user_requests:
-                send_allocation_user_request_email(
-                    self.request, new_user_requests, resource_name, email_recipient
+            users.remove(self.request.user)
+            if project_obj.pi in users:
+                users.remove(project_obj.pi)
+
+            if users:
+                allocations_added_users = [user.username for user in users]
+                allocations_added_users_emails = list(project_obj.projectuser_set.filter(
+                    user__in=users,
+                    enable_notifications=True
+                ).values_list('user__email', flat=True))
+                if project_obj.pi.email not in allocations_added_users_emails:
+                    allocations_added_users_emails.append(project_obj.pi.email)
+
+                send_added_user_email(
+                    self.request,
+                    allocation_obj,
+                    allocations_added_users,
+                    allocations_added_users_emails
                 )
-            else:
-                users.remove(self.request.user)
-                if project_obj.pi in users:
-                    users.remove(project_obj.pi)
-
-                if users:
-                    allocations_added_users = [user.username for user in users]
-                    allocations_added_users_emails = list(project_obj.projectuser_set.filter(
-                        user__in=users,
-                        enable_notifications=True
-                    ).values_list('user__email', flat=True))
-                    if project_obj.pi.email not in allocations_added_users_emails:
-                        allocations_added_users_emails.append(project_obj.pi.email)
-
-                    send_added_user_email(
-                        self.request,
-                        allocation_obj,
-                        allocations_added_users,
-                        allocations_added_users_emails
-                    )
 
         return users
     

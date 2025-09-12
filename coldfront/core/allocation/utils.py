@@ -92,27 +92,6 @@ def compute_prorated_amount(total_cost):
     return round(cost_per_day * difference.days + cost_per_day)
 
 
-def send_allocation_user_request_email(request, usernames, parent_resource_name, email_receiver_list):
-    if EMAIL_ENABLED:
-        domain_url = get_domain_url(request)
-        url = '{}{}'.format(domain_url, reverse('allocation-user-request-list'))
-        template_context = {
-            'center_name': EMAIL_CENTER_NAME,
-            'resource': parent_resource_name,
-            'url': url,
-            'signature': EMAIL_SIGNATURE,
-            'users': usernames
-        }
-
-        send_email_template(
-            'New Allocation User Request(s)',
-            'email/new_allocation_user_requests.txt',
-            template_context,
-            EMAIL_SENDER,
-            email_receiver_list
-        )
-
-
 def send_added_user_email(request, allocation_obj, users, users_emails):
     if EMAIL_ENABLED:
         domain_url = get_domain_url(request)
