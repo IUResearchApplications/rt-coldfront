@@ -9,6 +9,8 @@ class CustomizableFormsConfig(AppConfig):
             add_additional_forms,
             replace_generic_form,
         )
+        from coldfront.plugins.customizable_forms.utils import initialize_rules
 
         add_additional_forms()
         replace_generic_form()
+        initialize_rules()
