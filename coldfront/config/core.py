@@ -30,7 +30,16 @@ PROJECT_DAYS_TO_REVIEW_BEFORE_EXPIRING = ENV.int('PROJECT_DAYS_TO_REVIEW_BEFORE_
 PROJECT_END_DATE_CARRYOVER_DAYS = ENV.int('PROJECT_END_DATE_CARRYOVER_DAYS', default=90)
 PROJECT_PI_ELIGIBLE_ADS_GROUPS = ENV.str('PROJECT_PI_ELIGIBLE_ADS_GROUPS', default=[])
 PROJECT_ENABLE_PERMISSIONS_PER_TYPE = ENV.bool('PROJECT_ENABLE_PERMISSIONS_PER_TYPE', default=False)
-PROJECT_PERMISSIONS_PER_TYPE = ENV.dict('PROJECT_PERMISSIONS_PER_TYPE', default={})
+PROJECT_PERMISSIONS_PER_TYPE = ENV.dict('PROJECT_PERMISSIONS_PER_TYPE', default={
+    'Default': {
+        'renewable': True,
+        'expiry_dates': [(6, 30), ],
+        'forbidden_resources': [],
+        'allowed_per_pi': -1,
+        'addtl_fields': [],
+        'forbidden_features': []
+    },
+})
 
 #------------------------------------------------------------------------------
 # Allocation related
