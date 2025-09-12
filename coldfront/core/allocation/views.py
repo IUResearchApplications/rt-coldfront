@@ -51,10 +51,7 @@ from coldfront.core.allocation.models import (Allocation,
                                               AllocationStatusChoice,
                                               AllocationUser,
                                               AllocationUserNote,
-                                              AllocationUserRequestStatusChoice,
-                                              AllocationUserRequest,
-                                              AllocationUserStatusChoice,
-                                              AllocationInvoice)
+                                              AllocationUserStatusChoice)
 from coldfront.core.allocation.signals import (allocation_new,
                                                allocation_activate,
                                                allocation_activate_user,
@@ -72,8 +69,7 @@ from coldfront.core.allocation.utils import (generate_guauge_data_from_usage,
                                              create_admin_action_for_creation,
                                              send_added_user_email,
                                              send_removed_user_email,
-                                             check_if_roles_are_enabled,
-                                             get_default_allocation_user_role)
+                                             check_if_roles_are_enabled)
 from coldfront.core.project.models import (Project, ProjectUser, ProjectPermission,
                                            ProjectUserStatusChoice)
 from coldfront.core.resource.models import Resource
@@ -178,7 +174,6 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
         is_allowed_to_update_project = allocation_obj.project.has_perm(self.request.user, ProjectPermission.UPDATE, 'change_project')
         context['is_allowed_to_update_project'] = is_allowed_to_update_project
         context['allocation_user_roles_enabled'] = check_if_roles_are_enabled(allocation_obj)
-        context['allocation_invoices'] = allocation_obj.allocationinvoice_set.all()
 
         noteset = allocation_obj.allocationusernote_set
         if self.request.user.is_superuser or self.request.user.has_perm('allocation.view_allocationusernote'):
@@ -1538,117 +1533,107 @@ class AllocationInvoiceListView(LoginRequiredMixin, UserPassesTestMixin, ListVie
 # each view class has a view template that renders
 class AllocationInvoiceDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     model = Allocation
-    template_name = 'allocation/allocation_invoice_detail.html'
-    context_object_name = 'allocation'
+    template_name = "allocation/allocation_invoice_detail.html"
+    context_object_name = "allocation"
 
     def test_func(self):
-        """ UserPassesTestMixin Tests"""
+        """UserPassesTestMixin Tests"""
         if self.request.user.is_superuser:
             return True
 
-        if self.request.user.has_perm('allocation.can_manage_invoice'):
+        if self.request.user.has_perm("allocation.can_manage_invoice"):
             return True
 
-        messages.error(self.request, 'You do not have permission to view invoices.')
+        messages.error(self.request, "You do not have permission to view invoices.")
         return False
 
     def get_context_data(self, **kwargs):
-        """Create all the variables for allocation_invoice_detail.html
-
-        """
+        """Create all the variables for allocation_invoice_detail.html"""
         context = super().get_context_data(**kwargs)
-        pk = self.kwargs.get('pk')
+        pk = self.kwargs.get("pk")
         allocation_obj = get_object_or_404(Allocation, pk=pk)
-        allocation_users = allocation_obj.allocationuser_set.exclude(
-            status__name__in=['Removed']).order_by('user__username')
+        allocation_users = allocation_obj.allocationuser_set.exclude(status__name__in=["Removed"]).order_by(
+            "user__username"
+        )
 
-        alloc_attr_set = allocation_obj.get_attribute_set(self.request.user, 'view_allocationattribute')
+        alloc_attr_set = allocation_obj.get_attribute_set(self.request.user)
 
-        attributes_with_usage = [a for a in alloc_attr_set if hasattr(a, 'allocationattributeusage')]
+        attributes_with_usage = [a for a in alloc_attr_set if hasattr(a, "allocationattributeusage")]
         attributes = [a for a in alloc_attr_set]
 
         guage_data = []
         invalid_attributes = []
         for attribute in attributes_with_usage:
             try:
-                guage_data.append(generate_guauge_data_from_usage(attribute.allocation_attribute_type.name,
-                            float(attribute.value), float(attribute.allocationattributeusage.value)))
+                guage_data.append(
+                    generate_guauge_data_from_usage(
+                        attribute.allocation_attribute_type.name,
+                        float(attribute.value),
+                        float(attribute.allocationattributeusage.value),
+                    )
+                )
             except ValueError:
-                logger.error("Allocation attribute '%s' is not an int but has a usage",
-                            attribute.allocation_attribute_type.name)
+                logger.error(
+                    "Allocation attribute '%s' is not an int but has a usage", attribute.allocation_attribute_type.name
+                )
                 invalid_attributes.append(attribute)
 
         for a in invalid_attributes:
             attributes_with_usage.remove(a)
 
-        context['guage_data'] = guage_data
-        context['attributes_with_usage'] = attributes_with_usage
-        context['attributes'] = attributes
+        context["guage_data"] = guage_data
+        context["attributes_with_usage"] = attributes_with_usage
+        context["attributes"] = attributes
 
         # Can the user update the project?
-        context['is_allowed_to_update_project'] = allocation_obj.project.has_perm(self.request.user, ProjectPermission.UPDATE)
-        context['allocation_users'] = allocation_users
+        context["is_allowed_to_update_project"] = allocation_obj.project.has_perm(
+            self.request.user, ProjectPermission.UPDATE
+        )
+        context["allocation_users"] = allocation_users
 
         if self.request.user.is_superuser:
             notes = allocation_obj.allocationusernote_set.all()
         else:
-            notes = allocation_obj.allocationusernote_set.filter(
-                is_private=False)
+            notes = allocation_obj.allocationusernote_set.filter(is_private=False)
 
-        context['notes'] = notes
-        context['ALLOCATION_ENABLE_ALLOCATION_RENEWAL'] = ALLOCATION_ENABLE_ALLOCATION_RENEWAL
+        context["notes"] = notes
+        context["ALLOCATION_ENABLE_ALLOCATION_RENEWAL"] = ALLOCATION_ENABLE_ALLOCATION_RENEWAL
         return context
 
     def get(self, request, *args, **kwargs):
-        pk = self.kwargs.get('pk')
+        pk = self.kwargs.get("pk")
         allocation_obj = get_object_or_404(Allocation, pk=pk)
 
         initial_data = {
-            'status': allocation_obj.status,
+            "status": allocation_obj.status,
         }
 
         form = AllocationInvoiceUpdateForm(initial=initial_data)
 
         context = self.get_context_data()
-        context['form'] = form
-        context['allocation'] = allocation_obj
+        context["form"] = form
+        context["allocation"] = allocation_obj
 
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
-        pk = self.kwargs.get('pk')
+        pk = self.kwargs.get("pk")
         allocation_obj = get_object_or_404(Allocation, pk=pk)
 
-        initial_data = {'status': allocation_obj.status,}
+        initial_data = {
+            "status": allocation_obj.status,
+        }
         form = AllocationInvoiceUpdateForm(request.POST, initial=initial_data)
 
         if form.is_valid():
             form_data = form.cleaned_data
-            status = form_data.get('status')
-
-            if initial_data.get('status') != status and allocation_obj.project.status.name != "Active":
-                messages.error(request, 'Project must be approved first before you can update this allocation\'s status!')
-                return HttpResponseRedirect(reverse('allocation-invoice-detail', kwargs={'pk': pk}))
-
-            # if initial_data.get('status') != status and status.name in ['Paid', ]:
-            #     AllocationInvoice.objects.create(
-            #         allocation=allocation_obj,
-            #         account_number=allocation_obj.account_number,
-            #         sub_account_number=allocation_obj.sub_account_number,
-            #         status=status
-            #     )
-
-            logger.info(
-                f'Admin {request.user.username} updated an invoice\'s status (allocation pk={allocation_obj.pk})')
-            create_admin_action(request.user, {'status': status}, allocation_obj)
-
-            allocation_obj.status = status
+            allocation_obj.status = form_data.get("status")
             allocation_obj.save()
-            messages.success(request, 'Allocation updated!')
+            messages.success(request, "Allocation updated!")
         else:
             for error in form.errors:
                 messages.error(request, error)
-        return HttpResponseRedirect(reverse('allocation-invoice-detail', kwargs={'pk': pk}))
+        return HttpResponseRedirect(reverse("allocation-invoice-detail", kwargs={"pk": pk}))
 
 
 class AllocationAddInvoiceNoteView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
@@ -2742,160 +2727,3 @@ class AllocationNoteUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPass
         logger.info(
             f'Admin {self.request.user.username} updated an allocation note (allocation pk={self.object.allocation.pk})')
         return reverse('allocation-detail', kwargs={'pk': self.object.allocation.pk})
-
-
-class AllocationAllInvoicesListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
-    model = AllocationInvoice
-    template_name = 'allocation/allocation_all_invoices_list.html'
-    context_object_name = 'allocation_invoice_list'
-    paginate_by = 25
-
-    def test_func(self):
-        """ UserPassesTestMixin Tests"""
-        if self.request.user.is_superuser:
-            return True
-
-        if self.request.user.has_perm('allocation.can_manage_invoice'):
-            return True
-
-        messages.error(self.request, 'You do not have permission to manage invoices.')
-        return False
-
-    def get_queryset(self):
-        order_by = self.request.GET.get('order_by')
-        if order_by:
-            direction = self.request.GET.get('direction')
-            if direction == 'asc':
-                direction = ''
-            elif direction == 'des':
-                direction = '-'
-            order_by = direction + order_by
-        else:
-            order_by = 'id'
-
-        allocation_invoice_search_form = AllocationInvoiceSearchForm(self.request.GET)
-
-        if allocation_invoice_search_form.is_valid():
-            data = allocation_invoice_search_form.cleaned_data
-
-            if self.request.user.is_superuser:
-                invoices = AllocationInvoice.objects.all().order_by(order_by)
-            else:
-                invoices = AllocationInvoice.objects.filter(
-                    allocation__resources__review_groups__in=list(self.request.user.groups.all())
-                ).order_by(order_by)
-
-            # Resource Type
-            if data.get('resource_type'):
-                invoices = invoices.filter(
-                    allocation__resources__resource_type=data.get('resource_type'))
-
-            # Resource Name
-            if data.get('resource_name'):
-                invoices = invoices.filter(
-                    allocation__resources__in=data.get('resource_name'))
-
-            # Start Date
-            if data.get('start_date'):
-                invoices = invoices.filter(
-                    created__gt=data.get('start_date')).order_by('created')
-
-            # End Date
-            if data.get('end_date'):
-                invoices = invoices.filter(
-                    created__lt=data.get('end_date')).order_by('created')
-
-        else:
-            if self.request.user.is_superuser:
-                invoices = AllocationInvoice.objects.all().order_by(order_by)
-            else:
-                invoices = AllocationInvoice.objects.filter(
-                    allocation__resources__review_groups__in=list(self.request.user.groups.all())
-                ).order_by(order_by)
-
-        return invoices
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-
-        allocation_invoice_search_form = AllocationInvoiceSearchForm(self.request.GET)
-        if allocation_invoice_search_form.is_valid():
-            context['allocation_invoice_search_form'] = allocation_invoice_search_form
-            data = allocation_invoice_search_form.cleaned_data
-            filter_parameters = ''
-            for key, value in data.items():
-                if value:
-                    if isinstance(value, QuerySet):
-                        for ele in value:
-                            filter_parameters += '{}={}&'.format(key, ele.pk)
-                    elif hasattr(value, 'pk'):
-                        filter_parameters += '{}={}&'.format(key, value.pk)
-                    else:
-                        filter_parameters += '{}={}&'.format(key, value)
-        else:
-            filter_parameters = ''
-            context['allocation_invoice_search_form'] - AllocationInvoiceSearchForm()
-
-        order_by = self.request.GET.get('order_by')
-        if order_by:
-            direction = self.request.GET.get('direction')
-            filter_parameters_with_order_by = filter_parameters + \
-                'order_by={}&direction={}&'.format(order_by, direction)
-        else:
-            filter_parameters_with_order_by = filter_parameters
-
-        if filter_parameters:
-            context['expand_accordion'] = 'show'
-
-        context['filter_parameters'] = filter_parameters
-        context['filter_parameters_with_order_by'] = filter_parameters_with_order_by
-
-        allocation_invoice_list = context.get('allocation_invoice_list')
-        paginator = Paginator(allocation_invoice_list, self.paginate_by)
-
-        page = self.request.GET.get('page')
-
-        try:
-            allocation_invoice_list = paginator.page(page)
-        except PageNotAnInteger:
-            allocation_invoice_list = paginator.page(1)
-        except EmptyPage:
-            allocation_invoice_list = paginator.page(paginator.num_pages)
-
-        if self.request.user.is_superuser:
-            resource_objs = Resource.objects.filter(requires_payment=True)
-        else:
-            resource_objs = Resource.objects.filter(
-                review_groups__in=list(self.request.user.groups.all()),
-                requires_payment=True
-            )
-
-        resources = []
-        for resource in resource_objs:
-            resources.append((resource.name, resource.name))
-
-        return context
-
-
-class AllocationAllInvoicesDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
-    template_name = 'allocation/allocation_all_invoices_detail.html'
-
-    def test_func(self):
-        """ UserPassesTestMixin Tests"""
-        if self.request.user.is_superuser:
-            return True
-
-        if self.request.user.has_perm('allocation.can_manage_invoice'):
-            return True
-
-        messages.error(
-            self.request, 'You do not have permission to manage invoices.')
-        return False
-
-    def get_context_data(self, **kwargs):
-        pk = self.kwargs.get('pk')
-        invoice_obj = get_object_or_404(AllocationInvoice, pk=pk)
-
-        context = super().get_context_data(**kwargs)
-        context['invoice'] = invoice_obj
-        return context
