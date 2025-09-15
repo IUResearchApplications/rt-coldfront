@@ -222,11 +222,11 @@ def get_default_allocation_user_role(resource, project_obj, user):
         if is_manager:
             return AllocationUserRoleChoice.objects.filter(
                 resources=resource, is_manager_default=True
-            )
+            ).first()
         else:
             return AllocationUserRoleChoice.objects.filter(
                 resources=resource, is_user_default=True
-            )
+            ).first()
         
     return AllocationUserRoleChoice.objects.none()
 
@@ -234,6 +234,6 @@ def set_default_allocation_user_role(resource, allocation_user):
     role_choice_queryset = get_default_allocation_user_role(
         resource, allocation_user.allocation.project, allocation_user.user
     )
-    if role_choice_queryset.exists():
-        allocation_user.role = role_choice_queryset[0]
+    if role_choice_queryset:
+        allocation_user.role = role_choice_queryset
         allocation_user.save()
