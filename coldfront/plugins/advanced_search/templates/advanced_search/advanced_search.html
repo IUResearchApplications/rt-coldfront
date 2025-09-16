@@ -137,6 +137,36 @@ Project and Allocation Export List
   }
 
   $(document).ready(function () {
+    $("#select_all_project_displays").click(function () {
+      $("input[name*='project_search-display__project']").prop('checked', $(this).prop('checked'));
+    });
+
+    $("input[name*='project_search-display__project']").click(function (ele) {
+      var id = $(this).attr('id');
+      if (id != "select_all_project_displays") {
+        $("#select_all_project_displays").prop('checked', false);
+      }
+    });
+
+     if ($("input[name*='project_search-display__project']:checked").length === $("input[name*='project_search-display__project']").length) {
+      $("#select_all_project_displays").prop('checked', true);
+     }
+
+    $("#select_all_displays").click(function () {
+      $("input[name*='allocation_search-display__project']").prop('checked', $(this).prop('checked'));
+    });
+
+    $("input[name*='allocation_search-display__project']").click(function (ele) {
+      var id = $(this).attr('id');
+      if (id != "select_all_allocation_displays") {
+        $("#select_all_allocation_displays").prop('checked', false);
+      }
+    });
+
+    if ($("input[name*='allocation_search-display__project']:checked").length === $("input[name*='allocation_search-display__project']").length) {
+      $("#select_all_displays").prop('checked', true);
+     }
+
     var date = new Date();
     var currentYear = date.getFullYear();
     $(".datepicker")

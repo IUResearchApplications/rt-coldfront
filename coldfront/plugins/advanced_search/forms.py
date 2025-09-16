@@ -201,6 +201,14 @@ class ProjectSearchForm(forms.Form):
             Accordion(
                 AccordionGroup(
                     'Displays',
+                    HTML(
+                        '<div class="form-group">'
+                        '<div id="div_id_select_all_project_displays" class="form-check"> '
+                        '<input type="checkbox" name="select_all_project_displays" class="checkboxinput form-check-input" id="select_all_project_displays"> '
+                        '<label for="select_all_project_displays" class="form-check-label">'
+                        '<strong>Select All</strong>'
+                        '</label> </div> </div>'
+                    ),
                     'display__project__id',
                     'display__project__title',
                     'display__project__description',
@@ -216,6 +224,7 @@ class ProjectSearchForm(forms.Form):
                     'display__project__end_date',
                     'display__project__resources',
                     active=False,
+                    css_id='project_search_displays'
                 ),
             ),
             FormActions(
@@ -474,6 +483,14 @@ class AllocationSearchForm(forms.Form):
                     Accordion(
                         AccordionGroup(
                             'Displays',
+                            HTML(
+                                '<div class="form-group">'
+                                '<div id="div_id_select_all_displays" class="form-check"> '
+                                '<input type="checkbox" name="select_all_displays" class="checkboxinput form-check-input" id="select_all_displays"> '
+                                '<label for="select_all_displays" class="form-check-label">'
+                                '<strong>Select All</strong>'
+                                '</label> </div> </div>'
+                            ),
                             'display__project__id',
                             'display__project__title',
                             'display__project__description',
