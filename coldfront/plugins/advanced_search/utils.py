@@ -1,7 +1,7 @@
 import datetime
 from django.contrib.auth.models import User
 
-from coldfront.core.project.models import Project, ProjectUser
+from coldfront.core.project.models import Project, ProjectAttribute, ProjectAttributeUsage, ProjectUser
 from coldfront.core.allocation.models import (Allocation,
                                               AllocationAttribute,
                                               AllocationAttributeUsage,
@@ -11,24 +11,16 @@ from coldfront.core.user.models import UserProfile
 
 
 class ProjectTable:
-    def __init__(self, data):
+    def __init__(self, form_data, project_attribute_form_data):
         self.project_queryset = None
+        self.project_attribute_queryset = None
         self.columns = []
         self.rows = {}
-        self.data = data
+        self.form_data = form_data
+        self.project_attribute_form_data = project_attribute_form_data
 
     def get_project_queryset(self):
-        """
-        Creates a project queryset.
-
-        Params:
-            data (dict): Information filled out on the search form.
-            request (dict): GET request sent by the server.
-
-        Returns:
-            QuerySet: Project queryset.
-        """
-        data = self.data
+        data = self.form_data
         projects = Project.objects.prefetch_related(
             'pi',
             'requestor',
@@ -73,42 +65,135 @@ class ProjectTable:
         if data.get('project__end_date'):
             projects = projects.filter(end_date=data.get('project__end_date'))
 
+        projects = self.filter_by_project_attribute_parameters(projects)
+
         self.project_queryset = projects
 
-    def build_row(self, project_obj):
+    def filter_by_project_attribute_parameters(self, project_queryset):
+        for entry in self.project_attribute_form_data:
+            project_attribute_type = entry.get('projectattribute__name')
+            project_attribute_value = entry.get('projectattribute__value')
+            project_attribute_has_usage = entry.get('projectattribute__has_usage')
+            if project_attribute_has_usage is not None:
+                project_attribute_has_usage = int(entry.get('projectattribute__has_usage'))
+            project_attribute_usage = entry.get('projectattribute__usage')
+            project_attribute_equality = entry.get('projectattribute__equality')
+            project_attribute_usage_format = entry.get('projectattribute__usage_format')
+
+            if project_attribute_type and project_attribute_value:
+                project_queryset = project_queryset.filter(
+                    projectattribute__proj_attr_type=project_attribute_type,
+                    projectattribute__value__icontains=project_attribute_value
+                )
+
+            if project_attribute_type and project_attribute_has_usage and project_attribute_usage:
+                project_queryset = project_queryset.filter(
+                    projectattribute__proj_attr_type=project_attribute_type
+                )
+                if project_attribute_usage_format == 'whole':
+                    if project_attribute_equality == 'lt':
+                        project_queryset = project_queryset.filter(
+                            projectattribute__projectattributeusage__value__lt=project_attribute_usage
+                        )
+                    elif project_attribute_equality == 'gt':
+                        project_queryset = project_queryset.filter(
+                            projectattribute__projectattributeusage__value__gt=project_attribute_usage
+                        )
+                elif project_attribute_usage_format == 'percent':
+                    project_attribute_ids = project_queryset.values_list(
+                        'projectattribute__projectattributeusage', flat=True
+                    )
+                    project_attribute_ids = [
+                        project_attribute_id 
+                        for project_attribute_id in project_attribute_ids 
+                        if project_attribute_id is not None
+                    ]
+                    project_attribute_usages = ProjectAttributeUsage.objects.filter(
+                        project_attribute__id__in=project_attribute_ids
+                    )
+                    remaining_entries = []
+                    for project_attribute_usage_result in project_attribute_usages:
+                        project_attribute_obj = project_attribute_usage_result.project_attribute
+                        project_attribute_value_with_usage = float(project_attribute_obj.value)
+                        project_attribute_usage_value = project_attribute_usage_result.value
+
+                        fraction = project_attribute_usage_value / project_attribute_value_with_usage * 100
+                        if project_attribute_equality == 'lt' and fraction < project_attribute_usage:
+                            remaining_entries.append(project_attribute_obj.id)
+                        elif project_attribute_equality == 'gt' and fraction > project_attribute_usage:
+                            remaining_entries.append(project_attribute_obj.id)
+
+                    project_queryset = project_queryset.filter(
+                        projectattribute__id__in = remaining_entries
+                    )
+
+        return project_queryset
+
+    def build_row(self, project_obj, additional_data, additional_usage_data):
         row = []
         for column in self.columns:
-            attributes = column.get('field_name').split('__')[1:]
-            current_attribute = project_obj
-            for attribute in attributes:
-                if hasattr(current_attribute, attribute):
-                    current_attribute = getattr(current_attribute, attribute)
-                    continue
+            field_name = column.get('field_name')
+            split = field_name.split('__')
+            model = split[0]
+            attributes = split[1:]
+            if model == 'project':
+                model = project_obj
+            elif model == 'projectattribute':
+                model = None
 
-                if 'project__total_users' == column.get('field_name'):
-                    # Need to do all() or prefetch doesn't work and we end up running more queries
-                    all_project_users = project_obj.projectuser_set.all()
-                    filtered_project_users_count = 0
-                    for project_user in all_project_users:
-                        if project_user.status.name == 'Active':
-                            filtered_project_users_count += 1
-                    current_attribute = filtered_project_users_count
+            if model is not None:
+                current_attribute = model
+                for attribute in attributes:
+                    if hasattr(current_attribute, attribute):
+                        current_attribute = getattr(current_attribute, attribute)
+                        continue
 
-                elif 'project__users' in column.get('field_name'):
-                    all_project_users = project_obj.projectuser_set.all()
-                    filtered_project_users = []
-                    for project_user in all_project_users:
-                        if project_user.status.name == 'Active':
-                            filtered_project_users.append(project_user.user.username)
-                    current_attribute = ', '.join(filtered_project_users)
+                    if 'project__total_users' == column.get('field_name'):
+                        # Need to do all() or prefetch doesn't work and we end up running more queries
+                        all_project_users = project_obj.projectuser_set.all()
+                        filtered_project_users_count = 0
+                        for project_user in all_project_users:
+                            if project_user.status.name == 'Active':
+                                filtered_project_users_count += 1
+                        current_attribute = filtered_project_users_count
 
-                elif 'project__resources' in column.get('field_name'):
-                    all_project_allocations = project_obj.allocation_set.filter(
-                        status__name__in=['Active', 'Renewal Requested'])
-                    resource_list = []
-                    for project_allocation in all_project_allocations:
-                        resource_list.append(f'{project_allocation.get_parent_resource.name} ({project_allocation.pk})')
-                    current_attribute = ', '.join(resource_list)
+                    elif 'project__users' in column.get('field_name'):
+                        all_project_users = project_obj.projectuser_set.all()
+                        filtered_project_users = []
+                        for project_user in all_project_users:
+                            if project_user.status.name == 'Active':
+                                filtered_project_users.append(project_user.user.username)
+                        current_attribute = ', '.join(filtered_project_users)
+
+                    elif 'project__resources' in column.get('field_name'):
+                        all_project_allocations = project_obj.allocation_set.filter(
+                            status__name__in=['Active', 'Renewal Requested'])
+                        resource_list = []
+                        for project_allocation in all_project_allocations:
+                            resource_list.append(f'{project_allocation.get_parent_resource.name} ({project_allocation.pk})')
+                        current_attribute = ', '.join(resource_list)
+            else:
+                project_id = project_obj.id
+                value = ''
+                attribute = attributes[0]
+                if attribute == 'name':
+                    project_attributes = additional_data.get(project_id)
+                    if project_attributes is not None:
+                        for project_attribute in project_attributes:
+                            # Assumes no duplicate project attribute types in list
+                            if project_attribute.proj_attr_type.id == column.get('id'):
+                                value = project_attribute.value
+                                break
+                elif attribute == 'has_usage':
+                    project_attribute_usages = additional_usage_data.get(project_id)
+                    if project_attribute_usages is not None:
+                        for project_attribute_usage in project_attribute_usages:
+                            # Assumes no duplicate project attribute types in list
+                            if project_attribute_usage.project_attribute.proj_attr_type.id == column.get('id'):
+                                value = project_attribute_usage.value
+                                break
+
+                current_attribute = value
 
             if current_attribute is None:
                 current_attribute = ''
@@ -118,31 +203,97 @@ class ProjectTable:
             
             row.append(current_attribute)
         return row
+    
+    def get_project_attribute_data(self):
+        all_project_attributes = {}
+        for entry in self.project_attribute_form_data:
+            project_attribute_type = entry.get('projectattribute__name')
+            if project_attribute_type:
+                project_attributes = ProjectAttribute.objects.prefetch_related(
+                    'project', 'proj_attr_type'
+                ).filter(proj_attr_type=project_attribute_type)
+                for project_attribute in project_attributes:
+                    if all_project_attributes.get(project_attribute.project.id) is None:
+                        all_project_attributes[project_attribute.project.id] = [
+                            project_attribute
+                        ]
+                    else:
+                        all_project_attributes[project_attribute.project.id].append(
+                            project_attribute
+                        )
 
-    def build_rows(self):
+        return all_project_attributes
+    
+    def get_project_attribute_usage(self, additional_data):
+        all_project_attribute_usages = {}
+        project_attributes = [
+            project_attribute 
+            for project_attributes in additional_data.values() 
+            for project_attribute in project_attributes
+        ]
+        project_attribute_usages = ProjectAttributeUsage.objects.prefetch_related(
+            'project_attribute'
+        ).filter(project_attribute__in=project_attributes)
+        for project_attribute_usage in project_attribute_usages:
+            project_attribute = project_attribute_usage.project_attribute
+            if all_project_attribute_usages.get(project_attribute.id) is None:
+                all_project_attribute_usages[project_attribute.project.id] = [
+                    project_attribute_usage
+                ]
+            else:
+                all_project_attribute_usages[project_attribute.project.id].append(
+                    project_attribute_usage
+                )
+
+        return all_project_attribute_usages
+
+    def build_rows(self, additional_data, additional_usage_data):
         rows = {}
         for idx, project_obj in enumerate(self.project_queryset):
-            rows[idx] = self.build_row(project_obj)
+            rows[idx] = self.build_row(project_obj, additional_data, additional_usage_data)
         self.rows = rows
 
     def build_columns(self):
-        data = self.data
         columns = []
-        for key, value in data.items():
+        for key, value in self.form_data.items():
             if 'display' in key and value:
-                display_name = ' '.join(key.split('_')[1:])
+                display_name = ' '.join(key.split('__')[1:])
+                display_name = ' '.join(display_name.split('_'))
                 field_name = key[len('display') + 2:]
                 columns.append({
                     'display_name': display_name.title(),
                     'field_name': field_name
                 })
 
+        for entry in self.project_attribute_form_data:
+            project_attribute_type = entry.get('projectattribute__name')
+            if project_attribute_type:
+                display_name = project_attribute_type.name
+                field_name = 'projectattribute__name'
+                columns.append({
+                    'display_name': display_name,
+                    'field_name': field_name,
+                    'id': project_attribute_type.id
+                })
+
+                has_usage = int(entry.get('projectattribute__has_usage'))
+                if has_usage and int(has_usage):
+                    display_name += ' Usage'
+                    field_name = 'projectattribute__has_usage'
+                    columns.append({
+                        'display_name': display_name,
+                        'field_name': field_name,
+                        'id': project_attribute_type.id
+                    })
+
         self.columns = columns
 
     def build_table(self):
         self.get_project_queryset()
         self.build_columns()
-        self.build_rows()
+        additional_data = self.get_project_attribute_data()
+        additional_usage_data = self.get_project_attribute_usage(additional_data)
+        self.build_rows(additional_data, additional_usage_data)
         return self.rows, self.columns
     
 
@@ -357,7 +508,7 @@ class AllocationTable:
                         'id': allocation_attribute_type.id
                     })
 
-            self.columns = columns
+        self.columns = columns
 
     def build_rows(self, additional_data, additional_usage_data):
         rows_dict = {}

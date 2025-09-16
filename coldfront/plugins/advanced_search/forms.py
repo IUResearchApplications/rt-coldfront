@@ -13,7 +13,7 @@ from crispy_forms.layout import  (Layout,
                                   Fieldset)
 from crispy_forms.bootstrap import  FormActions,  AccordionGroup, Accordion, InlineRadios
 
-from coldfront.core.project.models import ProjectTypeChoice, ProjectStatusChoice
+from coldfront.core.project.models import ProjectAttributeType, ProjectTypeChoice, ProjectStatusChoice
 from coldfront.core.allocation.models import AllocationStatusChoice, AllocationAttributeType
 from coldfront.core.resource.models import Resource, ResourceType
 
@@ -88,6 +88,66 @@ class AllocationAttributeSearchForm(forms.Form):
             ).filter(linked_resources__in=resources).distinct().order_by('name')
         else:
             self.fields['allocationattribute__name'].queryset = AllocationAttributeType.objects.none() 
+
+
+class ProjectAttributeFormSetHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.use_custom_control = False 
+        self.layout = Layout(
+            Div(
+                Div(
+                    Row(
+                        Column('projectattribute__name'),
+                        Column('projectattribute__value'),
+                    ),
+                    Row(
+                        Column('projectattribute__has_usage'),
+                        Column('projectattribute__equality'),
+                        Column('projectattribute__usage'),
+                        Column('projectattribute__usage_format')
+                    ),
+                    css_class='card-body'
+                ),
+                css_class='card mb-3'
+            )
+        )
+
+
+class ProjectAttributeSearchForm(forms.Form):
+    EQUALITY_CHOICES = (
+        ('lt', '<'),
+        ('gt', '>')
+    )
+    FORMAT_CHOICES = (
+        ('whole', '.00'),
+        ('percent', '%')
+    )
+    YES_NO_CHOICES = (
+        (1, 'Yes'),
+        (0, 'No')
+    )
+
+    projectattribute__name = forms.ModelChoiceField(
+        label='Project Attribute Name',
+        queryset=ProjectAttributeType.objects.all() ,
+        required=False,
+    )
+    projectattribute__value = forms.CharField(
+        label='Project Attribute Value',
+        max_length=50,
+        required=False
+    )
+    projectattribute__has_usage = forms.ChoiceField(
+        initial=0, label='Has usage', choices=YES_NO_CHOICES, required=False,
+    )
+    projectattribute__equality = forms.ChoiceField(
+        label='Equality', choices=EQUALITY_CHOICES, required=False
+    )
+    projectattribute__usage = forms.FloatField(label='Usage' , required=False)
+    projectattribute__usage_format = forms.ChoiceField(
+        label='Format', choices=FORMAT_CHOICES, required=False
+    )
 
 
 class ProjectSearchForm(forms.Form):
@@ -169,6 +229,9 @@ class ProjectSearchForm(forms.Form):
     projects_using_ai = forms.BooleanField(label='Only AI', required=False)
     display__project__resources = forms.BooleanField(required=False)
 
+    projectattribute_form = ProjectAttributeSearchForm()
+    projectattribute_helper = ProjectAttributeFormSetHelper()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -226,6 +289,15 @@ class ProjectSearchForm(forms.Form):
                     active=False,
                     css_id='project_search_displays'
                 ),
+            ),
+            Accordion(
+                AccordionGroup('Project Attributes',
+                    Formset('projectattribute_form', 'projectattribute_helper', label='projectattribute_formset'),
+                    HTML(
+                        '<button id="id_formset_add_project_attribute_button" type="button" class="btn btn-primary">Add Project Attribute</button>'
+                    ),
+                    active=False,
+                )
             ),
             FormActions(
                 Submit('submit', 'Project Search'),

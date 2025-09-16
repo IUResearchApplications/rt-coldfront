@@ -8,9 +8,12 @@ from django.http.response import StreamingHttpResponse
 from django.forms import formset_factory
 
 from coldfront.core.allocation.models import AllocationAttributeType
+from coldfront.core.project.models import ProjectAttributeType
 from coldfront.plugins.advanced_search.forms import (AllocationSearchForm,
                                                      AllocationAttributeSearchForm,
                                                      AllocationAttributeFormSetHelper,
+                                                     ProjectAttributeFormSetHelper,
+                                                     ProjectAttributeSearchForm,
                                                      ProjectSearchForm,
                                                      UserSearchForm)
 from coldfront.core.utils.common import Echo
@@ -37,9 +40,16 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         user_search_form = UserSearchForm(prefix='user_search')
 
         allocation_search_formset = formset_factory(AllocationAttributeSearchForm, extra=1)
-        formset = allocation_search_formset(prefix='allocationattribute')
+        allocation_formset = allocation_search_formset(prefix='allocationattribute')
         allocationattribute_data = []
         allocation_attribute_types_with_usage = list(AllocationAttributeType.objects.filter(
+            has_usage=True
+        ).values_list('id', flat=True))
+
+        project_search_formset = formset_factory(ProjectAttributeSearchForm, extra=1)
+        project_formset = project_search_formset(prefix='projectattribute')
+        projectattribute_data = []
+        project_attribute_types_with_usage = list(ProjectAttributeType.objects.filter(
             has_usage=True
         ).values_list('id', flat=True))
         rows, columns = [], []
@@ -48,8 +58,23 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
 
         if self.request.GET.get('submit') == 'Project Search':
             project_search_form = ProjectSearchForm(self.request.GET, prefix='project_search')
+
+            project_search_formset = formset_factory(ProjectAttributeSearchForm, extra=1)
+            project_formset = project_search_formset(self.request.GET, prefix='projectattribute')
+            project_attribute_types_with_usage = list(ProjectAttributeType.objects.filter(
+                has_usage=True
+            ).values_list('id', flat=True))
+            for form in project_formset:
+                if form.is_valid():
+                    data = form.cleaned_data
+                    name = data['projectattribute__name']
+                    if not name or name.id not in project_attribute_types_with_usage: 
+                        data['projectattribute__has_usage'] = '0'
+
+                    projectattribute_data.append(form.cleaned_data)
+
             if project_search_form.is_valid():
-                project_table = ProjectTable(project_search_form.cleaned_data)
+                project_table = ProjectTable(project_search_form.cleaned_data, projectattribute_data)
                 rows, columns = project_table.build_table()
             else:
                 project_search_form = ProjectSearchForm(prefix='project_search')
@@ -62,7 +87,7 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                 selected_resources = allocation_search_form.cleaned_data.get('resources__name')
 
             allocation_search_formset = formset_factory(AllocationAttributeSearchForm, extra=1)
-            formset = allocation_search_formset(
+            allocation_formset = allocation_search_formset(
                 self.request.GET,
                 prefix='allocationattribute',
                 form_kwargs={'resources': selected_resources}
@@ -70,11 +95,11 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
             allocation_attribute_types_with_usage = list(AllocationAttributeType.objects.filter(
                 has_usage=True
             ).values_list('id', flat=True))
-            for form in formset:
+            for form in allocation_formset:
                 if form.is_valid():
                     data = form.cleaned_data
                     name = data['allocationattribute__name']
-                    if not name or not name.id in allocation_attribute_types_with_usage: 
+                    if not name or name.id not in allocation_attribute_types_with_usage: 
                         data['allocationattribute__has_usage'] = '0'
 
                     allocationattribute_data.append(form.cleaned_data)
@@ -115,9 +140,12 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         context['entries'] = num_rows
         context['rows'] = rows
         context['allocation_attribute_type_ids'] = allocation_attribute_types_with_usage
+        context['project_attribute_type_ids'] = project_attribute_types_with_usage
         context['linked_allocation_attribute_types'] = linked_allocation_attribute_types
-        context['allocationattribute_form'] = formset
+        context['allocationattribute_form'] = allocation_formset
         context['allocationattribute_helper'] = AllocationAttributeFormSetHelper()
+        context['projectattribute_form'] = project_formset
+        context['projectattribute_helper'] = ProjectAttributeFormSetHelper()
         context['active_tab'] = active_tab
         context['has_results'] = has_results
 
