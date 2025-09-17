@@ -200,11 +200,18 @@ Project Detail
   </div>
   <div class="card-body">
     <div class="alert alert-info">
-      <i class="fas fa-info-circle" aria-hidden="true"></i> 
+      <i class="fas fa-info-circle" aria-hidden="true"></i>
       This membership list does not guarantee you have access to the resources you need.
-      The Allocations section further below lists the allocations you have access to, if you're a manager all allocations are listed
-      regardless. If you do not see an allocation for the resource you need then you do not have access to it and need to
-      email a project manager about granting you access.
+      The Allocations section further below lists the allocations you have access to.
+      {% if is_allowed_to_update_project %}
+        Since you're a manager all allocations are listed regardless if you are in them so you will
+        need to check the membership list of the allocation for that resource. If you do not see an
+        allocation for that resource then you do not have access to it and need to request an
+        allocation for it.
+      {% else %}
+        If you do not see an allocation for the resource you need then you do not have access to it
+        and need to email a project manager about granting you access.
+      {% endif %}
     </div>
     <div class="table-responsive">
       <table id="projectuser_table" class="table table-hover">
