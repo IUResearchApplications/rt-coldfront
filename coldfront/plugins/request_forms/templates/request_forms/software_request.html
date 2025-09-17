@@ -24,9 +24,6 @@ View a list of software already available on each research computing system (sup
 {% crispy form %}
 
 <script>
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-request-forms").addClass("active");
-
   $(document).ready(function () {
     var radios = $("[type=radio]").parent();
     for (var i = 0; i < radios.length; i++) {

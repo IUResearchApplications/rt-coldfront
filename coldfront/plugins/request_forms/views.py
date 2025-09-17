@@ -47,12 +47,9 @@ class SoftwareRequestView(LoginRequiredMixin, UserPassesTestMixin, FormView):
         return reverse("home")
 
 
-class StatsRequestView(LoginRequiredMixin, UserPassesTestMixin, FormView):
+class StatsRequestView(LoginRequiredMixin, FormView):
     form_class = StatsRequestForm
     template_name = "request_forms/stats_request.html"
-
-    def test_func(self):
-        return True
 
     def form_valid(self, form):
         send_email_template(
