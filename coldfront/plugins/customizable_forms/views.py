@@ -72,7 +72,7 @@ class AllocationResourceSelectionView(LoginRequiredMixin, UserPassesTestMixin, T
         for resource_obj in resource_objs:
             resource_type_name = resource_obj.resource_type.name
             if not resource_categories.get(resource_type_name):
-                resource_categories[resource_type_name] = {"allocated": set(), "resources": []}
+                resource_categories[resource_type_name] = []
 
         return resource_categories
 
@@ -128,7 +128,7 @@ class AllocationResourceSelectionView(LoginRequiredMixin, UserPassesTestMixin, T
                     if not rule_result.get("passed"):
                         break
 
-            resource_categories[resource_type_name]["resources"].append(
+            resource_categories[resource_type_name].append(
                 {
                     "resource": resource_obj,
                     "resource_count": project_resource_count.get(resource_obj.name),
