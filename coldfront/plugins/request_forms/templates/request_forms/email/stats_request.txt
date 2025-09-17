@@ -1,0 +1,5 @@
+Name: {{user.first_name}} {{user.last_name}}
+Email address: {{ user.email }}
+Description: {{ description }}
+Question Addressed: {{ question_addressed }}
+Deadline: {{ deadline }}

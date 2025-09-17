@@ -1,0 +1,34 @@
+{% extends "common/base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}
+HPC Stats Request
+{% endblock %}
+
+{% block content %}
+<style>
+  label:not(.custom-control-label) {
+    font-weight: bold;
+  }
+</style>
+
+<h2>HPC Stats Request</h2>
+<hr>
+
+{% crispy form %}
+
+<script>
+  $("#navbar-main > ul > li.active").removeClass("active");
+  $("#navbar-request-forms").addClass("active");
+
+  $(document).ready(function () {
+    var radios = $("[type=radio]").parent();
+    for (var i = 0; i < radios.length; i++) {
+      radios[i].className = "custom-control custom-radio custom-control-inline";
+    }
+
+    $(".datepicker").flatpickr({ minDate: "today", dateFormat: "M d, Y" });
+  })
+</script>
+{% endblock content %}

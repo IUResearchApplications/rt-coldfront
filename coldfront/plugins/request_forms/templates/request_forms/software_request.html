@@ -1,0 +1,37 @@
+{% extends "common/base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}
+HPC Software Request
+{% endblock %}
+
+{% block content %}
+<style>
+  label:not(.custom-control-label) {
+    font-weight: bold;
+  }
+</style>
+
+<h2>HPC Software Request</h2>
+<hr>
+
+View a list of software already available on each research computing system (supercomputer) in the
+<a target="_blank" href="https://servicenow.iu.edu/kb?id=kb_article_view&sysparm_article=KB0024806"
+  rel="noreferrer noopener">IU Knowledge Base</a>.
+<hr>
+
+{% crispy form %}
+
+<script>
+  $("#navbar-main > ul > li.active").removeClass("active");
+  $("#navbar-request-forms").addClass("active");
+
+  $(document).ready(function () {
+    var radios = $("[type=radio]").parent();
+    for (var i = 0; i < radios.length; i++) {
+      radios[i].className = "custom-control custom-radio custom-control-inline";
+    }
+  })
+</script>
+{% endblock content %}
