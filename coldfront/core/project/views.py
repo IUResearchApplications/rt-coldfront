@@ -1145,16 +1145,7 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
 
                             allocation_activate_user.send(sender=self.__class__,
                                                         allocation_user_pk=allocation_user_obj.pk)
-
-                            allocation_user_request_obj = allocation.create_user_request(
-                                requestor_user=requestor_user,
-                                allocation_user=allocation_user_obj,
-                                allocation_user_status=allocation_user_status_choice
-
-                            )
-
-                            if allocation_user_request_obj is None:
-                                allocations_added_to[allocation].append(project_user_obj)
+                            allocations_added_to[allocation].append(project_user_obj)
 
                             if allocation.get_parent_resource.name not in added_users[username]:
                                 added_users[username].append(allocation.get_parent_resource.name)
