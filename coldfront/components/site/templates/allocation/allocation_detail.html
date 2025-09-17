@@ -425,7 +425,7 @@ Allocation Detail
             {% endif %}
             <th scope="col">Status</th>
             <th scope="col">Last Modified</th>
-            {% if is_allowed_to_update_project %}
+            {% if is_allowed_to_update_project and allocation_user_roles_enabled %}
               <th scope="col">Action</th>
             {% endif %}
           </tr>
@@ -447,7 +447,7 @@ Allocation Detail
                 <td class="text-primary"><strong>{{ user.status.name }}</strong></td>
               {% endif %}
               <td>{{ user.modified|date:"M. d, Y g:i a" }}</td>
-              {% if is_allowed_to_update_project %}
+              {% if is_allowed_to_update_project and allocation_user_roles_enabled %}
                 <td>
                   <a class="btn btn-primary" href="{% url 'allocation-user-detail' allocation.pk user.pk %}" role="button">
                     <i class="fas fa-user-edit" aria-hidden="true"></i> Edit
