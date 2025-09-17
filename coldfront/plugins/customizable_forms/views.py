@@ -1,4 +1,3 @@
-import importlib
 import logging
 import urllib
 
@@ -15,16 +14,16 @@ from coldfront.core.project.models import ProjectPermission
 from coldfront.core.resource.models import Resource
 from coldfront.core.allocation.utils import get_user_resources
 from coldfront.core.utils.common import import_from_settings
-from coldfront.plugins.customizable_forms.utils import get_rules, standardize_resource_name
+from coldfront.plugins.customizable_forms.utils import (
+    get_rule_functions,
+    standardize_resource_name,
+    get_persistence_functions,
+)
 
 
 CUSTOMIZABLE_FORMS_ALLOCATION_VIEWS = import_from_settings(
     "CUSTOMIZABLE_FORMS_ALLOCATION_VIEWS", []
 )
-CUSTOMIZABLE_FORMS_ADDITIONAL_PERSISTANCE_FUNCTIONS = import_from_settings(
-    "CUSTOMIZABLE_FORMS_ADDITIONAL_PERSISTANCE_FUNCTIONS", {}
-)
-
 logger = logging.getLogger(__name__)
 
 
@@ -101,9 +100,7 @@ class AllocationResourceSelectionView(LoginRequiredMixin, UserPassesTestMixin, T
         project_resource_count = self.get_project_resource_count(project_obj)
 
         persistant_values = {}
-        for variable, func in CUSTOMIZABLE_FORMS_ADDITIONAL_PERSISTANCE_FUNCTIONS.items():
-            func_module, func = func.rsplit(".", 1)
-            func = getattr(importlib.import_module(func_module), func)
+        for variable, func in get_persistence_functions().items():
             persistant_values[variable] = func(self.request, project_obj)
         persistant_values["user"] = self.request.user
         persistant_values["project"] = project_obj
@@ -123,7 +120,7 @@ class AllocationResourceSelectionView(LoginRequiredMixin, UserPassesTestMixin, T
             custom_form = CUSTOMIZABLE_FORMS_ALLOCATION_VIEWS.get(resource_obj.name)
             if custom_form:
                 info_url = custom_form.get("info_url")
-                for rule_func in get_rules(resource_obj.name):
+                for rule_func in get_rule_functions(resource_obj.name):
                     rule_result = rule_func(resource_obj, persistant_values)
                     if not rule_result.get("passed"):
                         break
