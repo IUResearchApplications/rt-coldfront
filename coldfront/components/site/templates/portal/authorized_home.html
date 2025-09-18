@@ -17,10 +17,10 @@
     
 
     {% if project_list %}
-      <table class="table">
+      <table id="project_table" class="table table-hover">
         <thead>
           <tr>
-            <th scope="col">Latest Projects</th>
+            <th scope="col" class="nosearch">Latest Projects</th>
             <th scope="col">PI</th>
             <th scope="col">Status</th>
           </tr>
@@ -29,7 +29,7 @@
           {% for project in project_list %}
             <tr>
               <td>
-                <a href="{% url 'project-detail' project.pk %}"><i class="fa fa-folder fa-lg" aria-hidden="true"></i> {{ project.title|truncatechars:50 }}</a>
+                <a href="{% url 'project-detail' project.pk %}"><i class="fa fa-folder fa-lg" aria-hidden="true"></i> {{ project.title|truncatechars:30 }}</a>
               </td>
               <td>{{ project.pi.first_name }} {{ project.pi.last_name }} ({{ project.pi.username }})</td>
               {% if project.status.name == 'Active' %}
@@ -102,10 +102,10 @@
     </p>
 
     {% if allocation_list %}
-      <table class="table">
+      <table id="allocation_table" class="table table-hover">
         <thead>
           <tr>
-            <th scope="col">Project</th>
+            <th scope="col" class="nosearch">Project</th>
             <th scope="col">Latest Resource</th>
             <th scope="col">Status</th>
           </tr>
@@ -113,7 +113,7 @@
         <tbody>
           {% for allocation in allocation_list %}
           <tr>
-            <td>{{allocation.project.title}}</td>
+            <td>{{allocation.project.title|truncatechars:30}}</td>
             <td>{{allocation.get_parent_resource}}
               {% if allocation.get_parent_resource.get_ondemand_status == 'Yes' and ondemand_url %}
               <a href = "{{ondemand_url}}"> {% load static %}  <img src="/static/core/portal/imgs/ondemand.png" alt="ondemand cta" width="25" height="25"></a>
@@ -159,6 +159,7 @@
 </div>
 
 {% if projects_with_a_slurm_account_to_list %}
+  <br>
   <div class="card mb-3">
     <div class="card-header">
       Submitting Slurm Jobs with your Allocation's Slurm Account
@@ -201,5 +202,17 @@
 <script>
   $("#navbar-main > ul > li.active").removeClass("active");
   $("#navbar-home").addClass("active");
+
+  $(document).ready(function() {
+    $('#project_table').DataTable({
+      iDisplayLength: 5,
+      bLengthChange: false,
+    });
+
+    $('#allocation_table').DataTable({
+      iDisplayLength: 5,
+      bLengthChange: false,
+    });
+  })
 </script>
 {% endblock %}
