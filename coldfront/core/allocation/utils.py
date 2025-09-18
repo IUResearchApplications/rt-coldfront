@@ -90,7 +90,8 @@ def send_added_user_email(request, allocation_obj, users, users_emails):
             'project_title': allocation_obj.project.title,
             'url': url,
             'signature': EMAIL_SIGNATURE,
-            'allocation_identifiers': allocation_obj.get_identifiers().items()
+            'allocation_identifiers': allocation_obj.get_identifiers().items(),
+            'allocation_status': allocation_obj.status.name
         }
 
         send_email_template(

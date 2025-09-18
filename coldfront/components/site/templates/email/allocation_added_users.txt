@@ -5,7 +5,11 @@ These users have been added to an allocation for {{ resource }} in project "{{ p
 {% endfor %}
 Allocation Info:
 URL: {{ url }}
-{% for type, value in allocation_identifiers %}{{ type }}: {{ value }}{% endfor %}
+{% for type, value in allocation_identifiers %}{{ type }}: {{ value }}{% endfor %}{% spaceless %}
+{% if allocation_status not in 'Active, Renewal Requested' %}
+Note: This allocation has not been approved yet and is not currently providing access.
+{% endif %}
+{% endspaceless %}
 
 Thank you,
 {{ signature }}
