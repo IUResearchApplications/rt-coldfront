@@ -70,7 +70,7 @@ Project and Allocation Export List
   </div>
   <div class="card-body">
     <div class="table-responsive">
-      <table class="table table-sm">
+      <table id="results_table" class="table table-hover">
         <thead>
           <tr>
             {% for column in columns %}
@@ -144,6 +144,10 @@ Project and Allocation Export List
   }
 
   $(document).ready(function () {
+    $('#results_table').DataTable({
+      bFilter: false
+    });
+
     $("#select_all_project_displays").click(function () {
       $("input[name*='project_search-display__project']").prop('checked', $(this).prop('checked'));
     });
