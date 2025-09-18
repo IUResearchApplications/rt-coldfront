@@ -16,10 +16,12 @@ from coldfront.plugins.advanced_search.forms import (AllocationSearchForm,
                                                      ProjectAttributeSearchForm,
                                                      ProjectSearchForm,
                                                      UserSearchForm)
-from coldfront.core.utils.common import Echo
+from coldfront.core.utils.common import Echo, import_from_settings
 from coldfront.plugins.advanced_search.utils import  ProjectTable, AllocationTable, UserTable
 
 logger = logging.getLogger(__name__)
+
+CENTER_BASE_URL = import_from_settings('CENTER_BASE_URL', '')
 
 
 class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
@@ -152,6 +154,7 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         context['project_form'] = project_search_form
         context['allocation_form'] = allocation_search_form
         context['user_form'] = user_search_form
+        context['CENTER_BASE_URL'] = CENTER_BASE_URL
 
         return context
 

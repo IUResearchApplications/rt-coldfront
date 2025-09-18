@@ -1,5 +1,6 @@
 import datetime
 from django.contrib.auth.models import User
+from django.urls import reverse
 
 from coldfront.core.project.models import Project, ProjectAttribute, ProjectAttributeUsage, ProjectUser
 from coldfront.core.allocation.models import (Allocation,
@@ -8,6 +9,9 @@ from coldfront.core.allocation.models import (Allocation,
                                               AllocationUser)
 from coldfront.core.resource.models import Resource
 from coldfront.core.user.models import UserProfile
+from coldfront.core.utils.common import import_from_settings
+
+CENTER_BASE_URL = import_from_settings('CENTER_BASE_URL', '')
 
 
 class ProjectTable:
@@ -172,6 +176,8 @@ class ProjectTable:
                         for project_allocation in all_project_allocations:
                             resource_list.append(f'{project_allocation.get_parent_resource.name} ({project_allocation.pk})')
                         current_attribute = ', '.join(resource_list)
+                    elif 'project__url' in column.get('field_name'):
+                        current_attribute = f"{CENTER_BASE_URL}{reverse('project-detail', kwargs={'pk': project_obj.pk})}"
             else:
                 project_id = project_obj.id
                 value = ''
@@ -555,6 +561,10 @@ class AllocationTable:
                         current_attribute = filtered_project_users_count
                         break
 
+                    if 'project__url' in column.get('field_name'):
+                        current_attribute = f"{CENTER_BASE_URL}{reverse('project-detail', kwargs={'pk': model.pk})}"
+                        break
+
                     if 'allocation__total_users' == field_name:
                         all_allocation_users = model.allocationuser_set.all()
                         filtered_allocation_users_count = 0
@@ -573,6 +583,8 @@ class AllocationTable:
                         current_attribute = ', '.join(filtered_allocation_users)
                         break
 
+                    if 'allocation__url' in column.get('field_name'):
+                        current_attribute = f"{CENTER_BASE_URL}{reverse('allocation-detail', kwargs={'pk': allocation_obj.pk})}"
             else:
                 allocation_id = allocation_obj.id
                 value = ''

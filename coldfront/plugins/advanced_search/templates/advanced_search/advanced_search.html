@@ -85,7 +85,15 @@ Project and Allocation Export List
             <tr>
               {% for data in row %}
                 <td>
-                  {{ data|truncatechars:30 }}
+                  {% with length=CENTER_BASE_URL|length|add:1 %}
+                      {% if CENTER_BASE_URL in data|truncatechars:length %}
+                        <a href="{{ data }}" target="_blank">
+                          <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                        </a>
+                      {% else %}
+                        {{ data|truncatechars:30 }}
+                      {% endif %}
+                  {% endwith %}
                 </td>
               {% endfor %}
             </tr>

@@ -153,6 +153,8 @@ class ProjectAttributeSearchForm(forms.Form):
 class ProjectSearchForm(forms.Form):
     display__project__id = forms.BooleanField(required=False)
 
+    display__project__url = forms.BooleanField(required=False)
+
     project__title = forms.CharField(
         label='Project Title Contains', max_length=100, required=False
     )
@@ -273,6 +275,7 @@ class ProjectSearchForm(forms.Form):
                         '</label> </div> </div>'
                     ),
                     'display__project__id',
+                    'display__project__url',
                     'display__project__title',
                     'display__project__description',
                     'display__project__pi__username',
@@ -401,6 +404,8 @@ class UserSearchForm(forms.Form):
 class AllocationSearchForm(forms.Form):
     display__project__id = forms.BooleanField(required=False)
 
+    display__project__url = forms.BooleanField(required=False)
+
     project__title = forms.CharField(
         label='Project Title Contains', max_length=100, required=False
     )
@@ -473,6 +478,8 @@ class AllocationSearchForm(forms.Form):
     display__project__total_users = forms.BooleanField(required=False, help_text='Active users')
 
     display__allocation__id = forms.BooleanField(required=False)
+
+    display__allocation__url = forms.BooleanField(required=False)
 
     allocation__user_username = forms.CharField(
         label='Username Contains', max_length=25, required=False, help_text='Active user'
@@ -564,6 +571,7 @@ class AllocationSearchForm(forms.Form):
                                 '</label> </div> </div>'
                             ),
                             'display__project__id',
+                            'display__project__url',
                             'display__project__title',
                             'display__project__description',
                             'display__project__pi__username',
@@ -591,6 +599,7 @@ class AllocationSearchForm(forms.Form):
                         )
                     ),
                     'display__allocation__id',
+                    'display__allocation__url',
                     'display__allocation__status__name',
                     'display__allocation__users',
                     'display__allocation__total_users',
