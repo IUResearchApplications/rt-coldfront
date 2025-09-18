@@ -399,22 +399,22 @@ Allocation Detail
     </div>
   </div>
   <div class="card-body">
+    {% if allocation.get_parent_resource.name == 'Slate-Project' %}
+      <div class="alert alert-info">
+        <i class="fas fa-info-circle" aria-hidden="true"></i> 
+        Below is a list of statuses a Slate-Project user can have:
+        <ul>
+          <li>Pending - This allocation hasn't been approved yet</li>
+          <li>Active - This user has access to the allocation's space </li>
+          <li>Invited - This user needs to create their Slate-Project account at <a href="https://access.iu.edu/Accounts/Create" target="_blank">Create Accounts</a> to get access</li>
+          <li>Disabled - This user's access to this allocation's space has been removed</li>
+          <li>Retired - This user is no longer active in this allocation and likely should be removed</li>
+        </ul>
+        If a user has an Active status and cannot access the storage space then they most likely need to log out (not disconnect) from all interactive login sessions and log back in for their newly added access to become active. 
+      </div>
+    {% endif %}
     <div class="table-responsive">
-      {% if allocation.get_parent_resource.name == 'Slate-Project' %}
-        <div class="alert alert-info">
-          <i class="fas fa-info-circle" aria-hidden="true"></i> 
-          Below is a list of statuses a Slate-Project user can have:
-          <ul>
-            <li>Pending - This allocation hasn't been approved yet</li>
-            <li>Active - This user has access to the allocation's space </li>
-            <li>Invited - This user needs to create their Slate-Project account at <a href="https://access.iu.edu/Accounts/Create" target="_blank">Create Accounts</a> to get access</li>
-            <li>Disabled - This user's access to this allocation's space has been removed</li>
-            <li>Retired - This user is no longer active in this allocation and likely should be removed</li>
-          </ul>
-          If a user has an Active status and cannot access the storage space then they most likely need to log out (not disconnect) from all interactive login sessions and log back in for their newly added access to become active. 
-        </div>
-      {% endif %}
-      <table id="user_table" class="table table-hover">
+      <table id="allocationuser_table" class="table table-hover">
         <thead>
           <tr>
             <th scope="col">Username</th>
