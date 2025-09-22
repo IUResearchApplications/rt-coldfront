@@ -2,8 +2,10 @@ Dear {{center_name}} user,
 
 Your allocation request for {{resource}} has been activated. You now have access to this resource.
 
-Allocation Info:
-URL: {{ url }}
+Additional Info:
+Project PI: {{ project_pi }}
+Project URL: {{ allocation_url }}
+Allocation URL: {{ allocation_url }}
 {% for type, value in allocation_identifiers %}{{ type }}: {{ value }}{% endfor %}
 
 Thank you,

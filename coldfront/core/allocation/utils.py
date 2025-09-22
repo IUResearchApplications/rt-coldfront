@@ -82,13 +82,18 @@ def test_allocation_function(allocation_pk):
 def send_added_user_email(request, allocation_obj, users, users_emails):
     if EMAIL_ENABLED:
         domain_url = get_domain_url(request)
-        url = '{}{}'.format(domain_url, reverse('allocation-detail', kwargs={'pk': allocation_obj.pk}))
+        allocation_url = '{}{}'.format(domain_url, reverse('allocation-detail', kwargs={'pk': allocation_obj.pk}))
+        project_obj = allocation_obj.project
+        project_url = '{}{}'.format(domain_url, reverse('project-detail', kwargs={'pk': project_obj.pk}))
         template_context = {
             'center_name': EMAIL_CENTER_NAME,
             'resource': allocation_obj.get_parent_resource.name,
             'users': users,
-            'project_title': allocation_obj.project.title,
-            'url': url,
+            'project_title': project_obj.title,
+            'allocation_url': allocation_url,
+            'project_url': project_url,
+            'action_user': f'{request.user.first_name} {request.user.last_name}',
+            'project_pi': f'{project_obj.pi.first_name} {project_obj.pi.last_name}',
             'signature': EMAIL_SIGNATURE,
             'allocation_identifiers': allocation_obj.get_identifiers().items(),
             'allocation_status': allocation_obj.status.name
@@ -105,13 +110,19 @@ def send_added_user_email(request, allocation_obj, users, users_emails):
         )
 
 
-def send_removed_user_email(allocation_obj, users, users_emails):
+def send_removed_user_email(request, allocation_obj, users, users_emails):
+    domain_url = get_domain_url(request)
+    project_obj = allocation_obj.project
+    project_url = '{}{}'.format(domain_url, reverse('project-detail', kwargs={'pk': project_obj.pk}))
     if EMAIL_ENABLED:
         template_context = {
             'center_name': EMAIL_CENTER_NAME,
             'resource': allocation_obj.get_parent_resource.name,
             'users': users,
-            'project_title': allocation_obj.project.title,
+            'project_title': project_obj.title,
+            'project_url': project_url,
+            'action_user': f'{request.user.first_name} {request.user.last_name}',
+            'project_pi': f'{project_obj.pi.first_name} {project_obj.pi.last_name}',
             'signature': EMAIL_SIGNATURE,
             'allocation_identifiers': allocation_obj.get_identifiers().items()
         }

@@ -1179,6 +1179,7 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
                     'center_name': EMAIL_CENTER_NAME,
                     'project_title': project_obj.title,
                     'project_users': project_user_objs,
+                    'action_user': f'{request.user.first_name} {request.user.last_name}',
                     'url': project_url,
                     'signature': EMAIL_SIGNATURE
                 }
@@ -1359,6 +1360,7 @@ class ProjectRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                         'project_title': project_obj.title,
                         'removed_users': removed_user_objs,
                         'removed_users_breakdown': removed_users_breakdown,
+                        'action_user': f'{request.user.first_name} {request.user.last_name}',
                         'signature': EMAIL_SIGNATURE
                     }
                     print(removed_users_breakdown)
