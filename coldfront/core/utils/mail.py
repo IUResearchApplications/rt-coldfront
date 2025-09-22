@@ -119,16 +119,23 @@ def send_allocation_admin_email(allocation_obj, subject, template_name, url_path
         ctx,
     )
 
-def send_allocation_customer_email(allocation_obj, subject, template_name, url_path='', domain_url='', addtl_context=None):
+def send_allocation_customer_email(request, allocation_obj, subject, template_name, url_path='', domain_url='', addtl_context=None):
     """Send allocation customer emails
     """
     if not url_path:
         url_path = reverse('allocation-detail', kwargs={'pk': allocation_obj.pk})
 
-    url = build_link(url_path, domain_url=domain_url)
+    allocation_url = build_link(url_path, domain_url=domain_url)
+    project_obj = allocation_obj.project
+    project_url = build_link(
+        reverse('project-detail', kwargs={'pk': project_obj.pk}), domain_url=domain_url
+    )
     ctx = email_template_context()
     ctx['resource'] = allocation_obj.get_parent_resource
-    ctx['url'] = url
+    ctx['allocation_url'] = allocation_url
+    ctx['project_url'] = project_url
+    ctx['project_pi'] = f'{project_obj.pi.first_name} {project_obj.pi.last_name}'
+    ctx['action_user'] = f'{request.user.first_name} {request.user.last_name}',
     ctx['allocation_identifiers'] = allocation_obj.get_identifiers().items()
 
     if addtl_context:
