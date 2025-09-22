@@ -1046,8 +1046,6 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
             no_accounts = {}
             added_users = {}
             managers_rejected = []
-            resources_requiring_user_request = {}
-            requestor_user = User.objects.get(username=request.user)
             for allocation in allocation_formset:
                 cleaned_data = allocation.cleaned_data
                 if cleaned_data['selected']:
