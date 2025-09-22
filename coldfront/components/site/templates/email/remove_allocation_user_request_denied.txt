@@ -1,8 +1,0 @@
-Dear {{center_name}} user,
-
-Your request to remove user {{ user }} from allocation {{ allocation }} in project {{ project }} was denied.
-Allocation URL:
-{{ url }}
-
-Thank you
-{{ signature }}
