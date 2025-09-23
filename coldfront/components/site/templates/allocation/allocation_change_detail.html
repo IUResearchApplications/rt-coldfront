@@ -12,7 +12,7 @@ Allocation Change Detail
 
 <h2>
   Request change to {{ allocation_change.allocation.get_parent_resource }} for 
-  {% if identifier %}{{ identifier }} attached to{% endif %} project: {{ allocation_change.allocation.project.title }}
+  project: {{ allocation_change.allocation.project.title }}
 </h2>
 <hr>
 
@@ -114,7 +114,11 @@ Allocation Change Detail
             </tr>
             <tr>
               <th scope="row" class="text-nowrap">Additional Information</th>
-              <td>{{ allocation_change.allocation.get_information }}</td>
+              <td>
+                {% for identifier in identifiers %}
+                  {{ identifier }} <br>
+                {% endfor %}
+              </td>
             </tr>
           </table>
         </div>

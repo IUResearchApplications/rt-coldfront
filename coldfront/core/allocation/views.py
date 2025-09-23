@@ -90,6 +90,8 @@ ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING = import_from_settings(
     'ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING', 30)
 ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings(
     'ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING', 60)
+ALLOCATION_ATTRIBUTE_IDENTIFIERS = import_from_settings(
+    'ALLOCATION_ATTRIBUTE_IDENTIFIERS', [])
 
 EMAIL_TICKET_SYSTEM_ADDRESS = import_from_settings(
     'EMAIL_TICKET_SYSTEM_ADDRESS', '')
@@ -1887,8 +1889,9 @@ class AllocationChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, FormVi
             self.request.user.groups.all(),
             'delete_allocationattributechangerequest'
         )
-        if allocation_obj.get_parent_resource.name == 'Slate Project':
-            context['identifier'] = allocation_obj.allocationattribute_set.get(allocation_attribute_type__name='Slate Project Directory').value
+        context['identifiers'] = allocation_obj.allocationattribute_set.filter(
+            allocation_attribute_type__name__in=ALLOCATION_ATTRIBUTE_IDENTIFIERS).values_list(
+                'value', flat=True)
 
         return context
 
