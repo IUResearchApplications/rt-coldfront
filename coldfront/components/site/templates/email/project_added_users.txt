@@ -6,9 +6,7 @@ These users have been added to the project "{{ project_title }}" by {{ action_us
 They can view the project here:
 {{ url }}
 
-Being added to the project does not guarantee you have access to the resources you need. If you are unable
-to use a resource visit the URL above and check the allocation list. If you do not see an allocation with the
-resource you need listed then you need to contact a manager in your project about adding you to it.
+Resource access is not automatically granted to project users, they must be added to an allocation as well.
 
 Thank you,
 {{ signature }}
