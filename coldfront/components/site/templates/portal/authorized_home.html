@@ -34,7 +34,7 @@
               </td>
               <td>{{ project.pi.first_name }} {{ project.pi.last_name }} ({{ project.pi.username }})</td>
               {% if project.status.name == 'Active' %}
-                {% if project.can_be_reviewed %}
+                {% if project.needs_review %}
                   <td class="text-warning"><strong>{{ project.status.name }}</strong>
                     {% if user.username in project.list_of_manager_usernames %}
                       <a href="{% url 'project-review' project.pk %}">
@@ -63,7 +63,7 @@
                 <td class="text-danger">
                   <strong>{{ project.status.name }}</strong>
                   {% if user.username in project.list_of_manager_usernames %}
-                    {% if project.status.name == 'Expired' and project.can_be_reviewed %}
+                    {% if project.status.name == 'Expired' and project.needs_review %}
                       <a href="{% url 'project-review' project.pk %}">
                         <span class="badge badge-warning">
                           <i class="fas fa-redo-alt" aria-hidden="true"></i>

@@ -11,26 +11,6 @@ Project Detail
 
 
 {% block content %}
-{% if is_allowed_to_update_project %}
-  {% if project.needs_review %}
-    <div class="alert alert-warning">
-      You need to <a href="{% url 'project-review' project.pk %}">review this project</a>.
-    </div>
-  {% elif project.can_be_reviewed and project.status.name == 'Expired' %}
-    <div class="alert alert-warning">
-      {% if PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING < 0 %}
-        This project has expired. <a href="{% url 'project-review' project.pk %}">Click to renew</a>.
-      {% else %}
-        This project has expired. You cannot make any changes. You have {{ project.expires_in|add:PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING }} days left to
-        <a href="{% url 'project-review' project.pk %}">renew your project</a>.
-      {% endif %}
-    </div>
-  {% elif project.can_be_reviewed %}
-    <div class="alert alert-warning">
-      This project expires in {{ project.expires_in }} day{{ project.expires_in|pluralize }}. <a href="{% url 'project-review' project.pk %}">Renew Project</a>
-    </div>
-  {% endif %}
-{% endif %}
 
 <div id="alert_div">
 </div>
@@ -64,12 +44,21 @@ Project Detail
       {% if 'research_output' not in project.get_env|get_value_from_dict:'forbidden_features' %}
         <a class="btn btn-success" href="{% url 'add-research-output' project.pk %}" role="button"><i class="far fa-newspaper" aria-hidden="true"></i> Add Research Output</a>
       {% endif %}
+      {% if project.needs_review %}
+        <a class="btn btn-success" href="{% url 'project-review' project.pk %}" role="button">
+          <i class="fas fa-redo-alt" aria-hidden="true"></i> Renew
+        </a>
+      {% endif %}
     {% else %}
       {% if not is_allowed_to_update_project %}
         <div class="alert alert-info mb-0" role="alert">
           <i class="fas fa-info-circle" aria-hidden="true"></i>
           Only managers can modify projects
         </div>
+      {% elif project.needs_review %}
+        <a class="btn btn-success" href="{% url 'project-review' project.pk %}" role="button">
+          <i class="fas fa-redo-alt" aria-hidden="true"></i> Renew
+        </a>
       {% else %}
         <div class="alert alert-warning mb-0" role="alert">
           <i class="fas fa-info-circle" aria-hidden="true"></i>
@@ -79,6 +68,20 @@ Project Detail
     {% endif %}
   </div>
   <div class="card-footer">
+    {% if project.needs_review %}
+      <div class="text-{% if project.status.name == 'Expired' %}danger{% else %}warning{% endif %} d-inline">
+        <strong>
+          <i class="far fa-clock" aria-hidden="true"></i>
+          {% if project.force_review %}
+            You need to review this project.
+          {% elif project.status.name == 'Expired' %}
+            {{ project.expires_in|add:PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING }} days left to renew.
+          {% else %}
+            This project expires in {{ project.expires_in }} day{{ project.expires_in|pluralize }}.
+          {% endif %}
+        </strong>
+      </div>
+    {% endif %}
     <a class="float-right btn btn-primary" href="{% url 'project-list' %}">Return to Project List</a>
   </div>
 </div>
@@ -164,7 +167,6 @@ Project Detail
       </p>
     {% endif %}
     <p class="card-text text-justify"><strong>Description: </strong>{{ project.description|linebreaks }}</p>
-    <!-- <p class="card-text text-justify"><strong>Field of Science: </strong>{{ project.field_of_science}}</p> -->
     <p class="card-text text-justify"><strong>Project Type: </strong>{{ project.type.name }}</p>
     <p class="card-text text-justify"><strong>Project ID: </strong>{{ project.pk }}</p>
     {% if project.class_number %}
@@ -172,7 +174,7 @@ Project Detail
     {% endif %}
     <p class="card-text text-justify"><strong>Project Status: </strong>
     {% if project.status.name == 'Active' %}
-      {% if project.can_be_reviewed or project.needs_review%}
+      {% if project.needs_review %}
         <span class="text-warning"><strong>{{ project.status.name }}</strong></span>
       {% else %}
         <span class="text-success"><strong>{{ project.status.name}}</strong></span>
@@ -351,47 +353,22 @@ Project Detail
               </td>
               <td class="text-nowrap">
                 <div class="text-center">
-                  <a class="btn btn-primary" href="{% url 'allocation-detail' allocation.pk %}" role="button">
-                    <i class="far fa-folder-open" aria-hidden="true"></i> Details
+                  <a
+                    class="btn {% if allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 %}btn-warning{% else %}btn-primary{% endif %}"
+                    href="{% url 'allocation-detail' allocation.pk %}"
+                    role="button"
+                  >
+                    <i class="far fa-folder-open" aria-hidden="true"></i> Details <br>
+                    {% if allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 %}
+                      <div style="margin-top: -10px;">
+                        <small><small>Expires in {{allocation.expires_in}} day{{allocation.expires_in|pluralize}}</small></small>
+                      </div>
+                    {% endif %}
                   </a>
                   {% if is_allowed_to_update_project and allocation.status.name in 'Active, New, Renewal Requested, Billing Information Submitted' and not allocation.is_locked %}
                     {% if not allocation.get_parent_resource.name == 'Geode-Project' %}
                       <a class="btn btn-success" href="{% url 'allocation-add-users' allocation.pk %}" role="button">
                         <i class="fas fa-user-plus" aria-hidden="true"></i> Add Users
-                      </a>
-                    {% endif %}
-                  {% endif %}
-                  {% if allocation.project.requires_review and allocation.project.get_env|get_value_from_dict:'renewable' %}
-                    {% if allocation.is_locked and allocation.status.name == 'Active' and allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 %}
-                      <span class="badge badge-warning"><i class="far fa-clock" aria-hidden="true"></i>
-                        Expires in {{allocation.expires_in}} day{{allocation.expires_in|pluralize}} - Not renewable
-                      </span>
-                    {% elif project.status.name == 'Renewal Denied' and allocation.status.name == 'Active' and allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 %}
-                      <span class="badge badge-warning"><i class="far fa-clock" aria-hidden="true"></i>
-                        Expires in {{allocation.expires_in}} day{{allocation.expires_in|pluralize}} - Not renewable
-                      </span>
-                    {% elif is_allowed_to_update_project and ALLOCATION_ENABLE_ALLOCATION_RENEWAL and allocation.status.name == 'Active' and allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 %}
-                      <a href="{% url 'allocation-renew' allocation.pk %}">
-                        <span class="badge badge-warning"><i class="fas fa-redo-alt" aria-hidden="true"></i>
-                          Expires in {{allocation.expires_in}} day{{allocation.expires_in|pluralize}}
-                          {% if allocation.can_be_renewed %} - Click to renew {% endif %}
-                        </span>
-                      </a>
-                    {% elif is_allowed_to_update_project and ALLOCATION_ENABLE_ALLOCATION_RENEWAL and allocation.status.name == 'Expired' and ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING < 0  %}
-                      {% if allocation.can_be_renewed %}
-                        <a href="{% url 'allocation-renew' allocation.pk %}">
-                          <span class="badge badge-warning"><i class="fas fa-redo-alt" aria-hidden="true"></i>
-                            Click to renew
-                          </span>
-                        </a>
-                      {% endif %}
-                    {% elif is_allowed_to_update_project and ALLOCATION_ENABLE_ALLOCATION_RENEWAL and allocation.status.name == 'Expired' and allocation.expires_in >= ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING|change_sign and not allocation.is_locked %}
-                      <a href="{% url 'allocation-renew' allocation.pk %}">
-                        {% if allocation.can_be_renewed %}
-                          <span class="badge badge-warning"><i class="fas fa-redo-alt" aria-hidden="true"></i>
-                            {{ allocation.expires_in|add:ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING }} days left to renew - Click to renew
-                          </span>
-                        {% endif %}
                       </a>
                     {% endif %}
                   {% endif %}

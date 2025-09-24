@@ -1585,7 +1585,7 @@ class ProjectReviewView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     def dispatch(self, request, *args, **kwargs):
         project_obj = get_object_or_404(Project, pk=self.kwargs.get('pk'))
 
-        if not project_obj.needs_review and not project_obj.can_be_reviewed:
+        if not project_obj.needs_review:
             if project_obj.get_env.get('renewable'):
                 messages.error(request, 'You do not need to review this project.')
             else:

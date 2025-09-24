@@ -1327,7 +1327,7 @@ class AllocationRenewView(LoginRequiredMixin, UserPassesTestMixin, TemplateView)
                 request, f'You cannot renew allocations in a {allocation_obj.project.type.name} project.')
             return HttpResponseRedirect(reverse('allocation-detail', kwargs={'pk': allocation_obj.pk})) 
 
-        if allocation_obj.project.needs_review or allocation_obj.project.can_be_reviewed: 
+        if allocation_obj.project.needs_review: 
             messages.error(
                 request, 'You cannot renew your allocation until you review your project first.')
             return HttpResponseRedirect(reverse('allocation-detail', kwargs={'pk': allocation_obj.pk}))
