@@ -274,6 +274,12 @@ class Allocation(TimeStampedModel):
                 return parent
             # Fallback
             return self.resources.first()
+        
+    @property
+    def get_user_list(self):
+        return self.allocationuser_set.filter(
+            status__name__in=["Active", "Retired", "Disabled", "Pending", "Invited"]).values_list(
+                'user__username', flat=True)
 
     def get_attribute(self, name, expand=True, typed=True,
         extra_allocations=[]):

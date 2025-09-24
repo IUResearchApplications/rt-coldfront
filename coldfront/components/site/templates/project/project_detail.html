@@ -291,25 +291,36 @@ Project Detail
         <table id="allocation_table" class="table table-hover">
           <thead>
             <tr>
-              <th scope="col">Resource Name</th>
-              <th scope="col">Resource Type</th>
+              <th scope="col" class="text-nowrap">Resource Name</th>
               <th scope="col">Information</th>
               <th scope="col">Status</th>
               {% if project.requires_review %}
-                <th scope="col">End Date</th>
+                <th scope="col" class="text-nowrap">End Date</th>
               {% endif %}
-              <th scope="col" class="nosort">Actions</th>
+              <th scope="col" class="text-center text-nowrap nosort">
+                Users
+              <a
+                id="popover"
+                href="#"
+                data-toggle="popover"
+                title="Users" data-trigger="hover"
+                data-content="Mouse over a number to see the list of users in the allocation."
+                >
+                  <i class="fas fa-info-circle" aria-hidden="true"></i>
+                  <span class="sr-only">Mouse over a number to see the list of users in the allocation.</span>
+                </a>
+              </th>
+              <th scope="col" class="text-center nosort">Actions</th>
             </tr>
           </thead>
           <tbody>
             {% for allocation in allocations %}
             <tr>
               <td>{{ allocation.get_parent_resource.name }}</td>
-              <td>{{ allocation.get_parent_resource.resource_type.name }}</td>
               {% if allocation.get_information != '' %}
-                <td class="text-nowrap">{{allocation.get_information}}</td>
+                <td>{{allocation.get_information}}</td>
               {% else %}
-                <td class="text-nowrap">{{allocation.description|default_if_none:""}}</td>
+                <td>{{allocation.description|default_if_none:""}}</td>
               {% endif %}
               {% if allocation.status.name == 'Active' %}
                 <td class="text-success"><strong>{{ allocation.status.name }}</strong></td>
@@ -321,51 +332,70 @@ Project Detail
               {% if project.requires_review %}
                 <td>{{allocation.end_date|date:"Y-m-d"}}</td>
               {% endif %}
+              <td>
+                {% with allocation.get_user_list as allocation_users %}
+                  <div class="text-center">
+                    <a
+                      id="popover"
+                      class="badge badge-primary"
+                      href="#"
+                      data-toggle="popover"
+                      title="Users" data-trigger="hover"
+                      data-content="{{allocation_users|join:', '}}"
+                    >
+                      {{ allocation_users|length }}
+                      <span class="sr-only">{{allocation_users|join:", "}}</span>
+                    </a>
+                  </div>
+                {% endwith %}
+              </td>
               <td class="text-nowrap">
-                <a class="btn btn-primary" href="{% url 'allocation-detail' allocation.pk %}" role="button">
-                  <i class="far fa-folder-open" aria-hidden="true"></i> Details
-                </a>
-                {% if is_allowed_to_update_project and allocation.status.name in 'Active, New, Renewal Requested, Billing Information Submitted' and not allocation.is_locked %}
-                  {% if not allocation.get_parent_resource.name == 'Geode-Project' %}
-                    <a class="btn btn-success" href="{% url 'allocation-add-users' allocation.pk %}" role="button">
-                      <i class="fas fa-user-plus" aria-hidden="true"></i> Add Users
-                    </a>
-                  {% endif %}
-                {% endif %}
-                {% if allocation.project.requires_review and allocation.project.get_env|get_value_from_dict:'renewable' %}
-                  {% if allocation.is_locked and allocation.status.name == 'Active' and allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 %}
-                    <span class="badge badge-warning"><i class="far fa-clock" aria-hidden="true"></i>
-                      Expires in {{allocation.expires_in}} day{{allocation.expires_in|pluralize}} - Not renewable
-                    </span>
-                  {% elif project.status.name == 'Renewal Denied' and allocation.status.name == 'Active' and allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 %}
-                    <span class="badge badge-warning"><i class="far fa-clock" aria-hidden="true"></i>
-                      Expires in {{allocation.expires_in}} day{{allocation.expires_in|pluralize}} - Not renewable
-                    </span>
-                  {% elif is_allowed_to_update_project and ALLOCATION_ENABLE_ALLOCATION_RENEWAL and allocation.status.name == 'Active' and allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 %}
-                    <a href="{% url 'allocation-renew' allocation.pk %}">
-                      <span class="badge badge-warning"><i class="fas fa-redo-alt" aria-hidden="true"></i>
-                        Expires in {{allocation.expires_in}} day{{allocation.expires_in|pluralize}}
-                        {% if allocation.can_be_renewed %} - Click to renew {% endif %}
-                      </span>
-                    </a>
-                  {% elif is_allowed_to_update_project and ALLOCATION_ENABLE_ALLOCATION_RENEWAL and allocation.status.name == 'Expired' and ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING < 0  %}
-                    {% if allocation.can_be_renewed %}
-                      <a href="{% url 'allocation-renew' allocation.pk %}">
-                        <span class="badge badge-warning"><i class="fas fa-redo-alt" aria-hidden="true"></i>
-                          Click to renew
-                        </span>
+                <div class="text-center">
+                  <a class="btn btn-primary" href="{% url 'allocation-detail' allocation.pk %}" role="button">
+                    <i class="far fa-folder-open" aria-hidden="true"></i> Details
+                  </a>
+                  {% if is_allowed_to_update_project and allocation.status.name in 'Active, New, Renewal Requested, Billing Information Submitted' and not allocation.is_locked %}
+                    {% if not allocation.get_parent_resource.name == 'Geode-Project' %}
+                      <a class="btn btn-success" href="{% url 'allocation-add-users' allocation.pk %}" role="button">
+                        <i class="fas fa-user-plus" aria-hidden="true"></i> Add Users
                       </a>
                     {% endif %}
-                  {% elif is_allowed_to_update_project and ALLOCATION_ENABLE_ALLOCATION_RENEWAL and allocation.status.name == 'Expired' and allocation.expires_in >= ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING|change_sign and not allocation.is_locked %}
-                    <a href="{% url 'allocation-renew' allocation.pk %}">
-                      {% if allocation.can_be_renewed %}
-                        <span class="badge badge-warning"><i class="fas fa-redo-alt" aria-hidden="true"></i>
-                          {{ allocation.expires_in|add:ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING }} days left to renew - Click to renew
-                        </span>
-                      {% endif %}
-                    </a>
                   {% endif %}
-                {% endif %}
+                  {% if allocation.project.requires_review and allocation.project.get_env|get_value_from_dict:'renewable' %}
+                    {% if allocation.is_locked and allocation.status.name == 'Active' and allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 %}
+                      <span class="badge badge-warning"><i class="far fa-clock" aria-hidden="true"></i>
+                        Expires in {{allocation.expires_in}} day{{allocation.expires_in|pluralize}} - Not renewable
+                      </span>
+                    {% elif project.status.name == 'Renewal Denied' and allocation.status.name == 'Active' and allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 %}
+                      <span class="badge badge-warning"><i class="far fa-clock" aria-hidden="true"></i>
+                        Expires in {{allocation.expires_in}} day{{allocation.expires_in|pluralize}} - Not renewable
+                      </span>
+                    {% elif is_allowed_to_update_project and ALLOCATION_ENABLE_ALLOCATION_RENEWAL and allocation.status.name == 'Active' and allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 %}
+                      <a href="{% url 'allocation-renew' allocation.pk %}">
+                        <span class="badge badge-warning"><i class="fas fa-redo-alt" aria-hidden="true"></i>
+                          Expires in {{allocation.expires_in}} day{{allocation.expires_in|pluralize}}
+                          {% if allocation.can_be_renewed %} - Click to renew {% endif %}
+                        </span>
+                      </a>
+                    {% elif is_allowed_to_update_project and ALLOCATION_ENABLE_ALLOCATION_RENEWAL and allocation.status.name == 'Expired' and ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING < 0  %}
+                      {% if allocation.can_be_renewed %}
+                        <a href="{% url 'allocation-renew' allocation.pk %}">
+                          <span class="badge badge-warning"><i class="fas fa-redo-alt" aria-hidden="true"></i>
+                            Click to renew
+                          </span>
+                        </a>
+                      {% endif %}
+                    {% elif is_allowed_to_update_project and ALLOCATION_ENABLE_ALLOCATION_RENEWAL and allocation.status.name == 'Expired' and allocation.expires_in >= ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING|change_sign and not allocation.is_locked %}
+                      <a href="{% url 'allocation-renew' allocation.pk %}">
+                        {% if allocation.can_be_renewed %}
+                          <span class="badge badge-warning"><i class="fas fa-redo-alt" aria-hidden="true"></i>
+                            {{ allocation.expires_in|add:ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING }} days left to renew - Click to renew
+                          </span>
+                        {% endif %}
+                      </a>
+                    {% endif %}
+                  {% endif %}
+                </div>
               </td>
             </tr>
             {% endfor %}
@@ -667,6 +697,10 @@ Project Detail
   }
 
   $(document).ready(function(){
+    $("a[id*=popover]").click(function(e) {
+      e.preventDefault();
+    })
+
     $("#expand_button").click(function () {
       $('#user_collapse').collapse();
       icon = $("#plus_minus");
@@ -701,6 +735,8 @@ Project Detail
       "bSortClasses": false,
       "order": [[ 1, "desc" ]]
     });
+
+    $('[data-toggle="popover"]').popover(); 
 
     $('#allocation_table').DataTable({
       'aoColumnDefs': [{
