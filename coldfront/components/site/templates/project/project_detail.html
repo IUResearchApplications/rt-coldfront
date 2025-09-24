@@ -194,9 +194,12 @@ Project Detail
 
 
 <!-- Start Project Users -->
-<div class="card mb-3">
+<div class="card mb-3" id="accordion">
   <div class="card-header">
     <h3 class="d-inline" id="users"><i class="fas fa-users" aria-hidden="true"></i> Users</h3> <span class="badge badge-secondary">{{project_users.count}}</span>
+    <a id="expand_button" role="button" class="card-link " data-toggle="collapse" href="#user_collapse">
+      <i id="plus_minus" class="fas {{ expand_accordion|get_icon }}"></i>
+    </a>
     <div class="float-right">
       {% if not project.status.name in 'Archived, Denied, Expired, Renewal Denied' and is_allowed_to_update_project %}
         <a class="btn btn-primary" href="{{mailto}}" role="button"><i class="far fa-envelope" aria-hidden="true"></i> Email Project Users</a>
@@ -205,83 +208,61 @@ Project Detail
       {% endif %}
     </div>
   </div>
-  <div class="card-body">
-    <div class="alert alert-info">
-      <i class="fas fa-info-circle" aria-hidden="true"></i>
-      Resource access is not automatically granted to project users, you must be added to an allocation as well.
-    </div>
-    <div class="table-responsive">
-      <table id="projectuser_table" class="table table-hover">
-        <thead>
-          <tr>
-            <th scope="col" class="text-nowrap">Username</th>
-            <th scope="col" class="text-nowrap">First Name</th>
-            <th scope="col" class="text-nowrap">Last Name</th>
-            <th scope="col" class="text-nowrap">Email</th>
-            <th scope="col" class="text-nowrap">Role
-              <a
-               href="#"
-               data-toggle="popover"
-               title="Role" data-trigger="hover"
-               data-content="Manager role grants user access to add/remove users and allocations in the project. Max permitted Managers: {{ project.max_managers }}"
-              >
-                <i class="fas fa-info-circle" aria-hidden="true"></i>
-                <span class="sr-only">Manager role grants user access to add/remove users and allocations in the project. Max permitted Managers: {{ project.max_managers }}</span>
-              </a>
-            </th>
-            <th scope="col" class="text-nowrap">Status</th>
-            <!-- <th scope="col" class="nosort"><input type="checkbox" class="check" id="selectAll" style="margin-right: 5px;"> Enable Notifications <a href="#" title="Enable Notifications" data-toggle="popover" data-trigger="hover" data-content="When disabled, user will not receive notifications for allocation requests and expirations or cloud usage (if applicable)."><i class="fas fa-info-circle" aria-hidden="true"></i><span class="sr-only">When disabled, user will not receive notifications for allocation requests and expirations or cloud usage (if applicable).</span></a></th> -->
-            <th scope="col" class="nosort">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for user in project_users %}
+  <div id="user_collapse" class="collapse {{expand_accordion}}" data-parent="#accordion">
+    <div class="card-body">
+      <div class="alert alert-info">
+        <i class="fas fa-info-circle" aria-hidden="true"></i>
+        Resource access is not automatically granted to project users, you must be added to an allocation as well.
+      </div>
+      <div class="table-responsive">
+        <table id="projectuser_table" class="table table-hover">
+          <thead>
             <tr>
-              <td>{{ user.user.username }}</td>
-              <td>{{ user.user.first_name }}</td>
-              <td>{{ user.user.last_name }}</td>
-              <td>{{ user.user.email }}</td>
-              <td>{{ user.role.name }}</td>
-              {% if user.status.name == 'Active' %}
-                <td class="text-success"><strong>{{ user.status.name }}</strong></td>
-              {% else %}
-                <td class="text-primary"><strong>{{ user.status.name }}</strong></td>
-              {% endif %}
-              <!-- <td>
-                {% if is_allowed_to_update_project %}
-                  <input type="checkbox"
-                  id="email_notifications_for_user_id_{{user.id}}"
-                  name="email_notifications_checkbox"
-                  value="{{ user.enable_notifications }}"
-                  {% if user.enable_notifications %} checked {% endif %}
-                  {% if user.role.name == "Manager" %} disabled {% endif %}
-                  {% if not request.user.is_superuser and user.role.name == "User" and request.user == user.user %} disabled {% endif %}>
-                {% elif request.user == user.user %}
-                  <input type="checkbox"
-                  id="email_notifications_for_user_id_{{user.id}}"
-                  name="email_notifications_checkbox"
-                  value="{{ user.enable_notifications }}"
-                  {% if user.enable_notifications %} checked {% endif %}>
-                {% else %}
-                  <input type="checkbox"
-                  id="email_notifications_for_user_id_{{user.id}}"
-                  name="email_notifications_checkbox"
-                  value="{{ user.enable_notifications }}"
-                  {% if user.enable_notifications %} checked {% endif %}
-                  disabled>
-                {% endif %}
-              </td> -->
-              <td>
-                {% if is_allowed_to_update_project %}
-                  <a class="btn btn-primary" href="{% url 'project-user-detail' project.pk user.pk %}" role="button">
-                    <i class="fas fa-user-edit" aria-hidden="true"></i> Edit
-                  </a>
-                {% endif %}
-              </td>
+              <th scope="col" class="text-nowrap">Username</th>
+              <th scope="col" class="text-nowrap">First Name</th>
+              <th scope="col" class="text-nowrap">Last Name</th>
+              <th scope="col" class="text-nowrap">Email</th>
+              <th scope="col" class="text-nowrap">Role
+                <a
+                id="popover"
+                href="#"
+                data-toggle="popover"
+                title="Role" data-trigger="hover"
+                data-content="Manager role grants user access to add/remove users and allocations in the project. Max permitted Managers: {{ project.max_managers }}"
+                >
+                  <i class="fas fa-info-circle" aria-hidden="true"></i>
+                  <span class="sr-only">Manager role grants user access to add/remove users and allocations in the project. Max permitted Managers: {{ project.max_managers }}</span>
+                </a>
+              </th>
+              <th scope="col" class="text-nowrap">Status</th>
+              <th scope="col" class="nosort">Actions</th>
             </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {% for user in project_users %}
+              <tr>
+                <td>{{ user.user.username }}</td>
+                <td>{{ user.user.first_name }}</td>
+                <td>{{ user.user.last_name }}</td>
+                <td>{{ user.user.email }}</td>
+                <td>{{ user.role.name }}</td>
+                {% if user.status.name == 'Active' %}
+                  <td class="text-success"><strong>{{ user.status.name }}</strong></td>
+                {% else %}
+                  <td class="text-primary"><strong>{{ user.status.name }}</strong></td>
+                {% endif %}
+                <td>
+                  {% if is_allowed_to_update_project %}
+                    <a class="btn btn-primary" href="{% url 'project-user-detail' project.pk user.pk %}" role="button">
+                      <i class="fas fa-user-edit" aria-hidden="true"></i> Edit
+                    </a>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -686,6 +667,12 @@ Project Detail
   }
 
   $(document).ready(function(){
+    $("#expand_button").click(function () {
+      $('#user_collapse').collapse();
+      icon = $("#plus_minus");
+      icon.toggleClass("fa-plus fa-minus");
+    });
+
     var guage_data = {{ guage_data | safe }};
     $('[data-toggle="tooltip"]').tooltip()
 

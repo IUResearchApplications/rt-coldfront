@@ -242,6 +242,8 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         except AttributeError:
             pass
 
+        context['expand_accordion'] = 'show' if context['is_allowed_to_update_project'] else ""
+
         return context
 
 
