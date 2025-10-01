@@ -99,6 +99,8 @@ PROJECT_END_DATE_CARRYOVER_DAYS = import_from_settings(
     'PROJECT_END_DATE_CARRYOVER_DAYS',  90)
 PROJECT_DAYS_TO_REVIEW_BEFORE_EXPIRING = import_from_settings(
     'PROJECT_DAYS_TO_REVIEW_BEFORE_EXPIRING', 30)
+PROJECT_AUTO_ALLOC_APPROVAL_FUNCS = import_from_settings(
+    'PROJECT_AUTO_ALLOC_APPROVAL_FUNCS', {})
 SLACK_MESSAGING_ENABLED = import_from_settings(
     'SLACK_MESSAGING_ENABLED', False)
 ENABLE_SLATE_PROJECT_SEARCH = import_from_settings(
@@ -2495,6 +2497,22 @@ class ProjectReviewApproveView(LoginRequiredMixin, UserPassesTestMixin, View):
             return False
 
         return True
+    
+    def auto_approve_renewed_allocations(self, allocation_ids, project_obj):
+        allocation_objs = Allocation.objects.filter(pk__in=allocation_ids).prefetch_related()
+        allocation_status = AllocationStatusChoice.objects.get(name="Active")
+        approved_allocation_ids = []
+        for allocation_obj in allocation_objs:
+            resource_name = allocation_obj.get_parent_resource.name
+            func = PROJECT_AUTO_ALLOC_APPROVAL_FUNCS.get(resource_name)
+            if func(project_obj):
+                allocation_obj.status = allocation_status
+                allocation_obj.save()
+                approved_allocation_ids.append(allocation_obj.pk)
+        
+        logger.info(
+            f"Allocation Renewals with IDs {', '.join(approved_allocation_ids)} were auto-approved")
+
 
     def get(self, request, pk):
         project_review_obj = get_object_or_404(ProjectReview, pk=pk)
@@ -2538,6 +2556,8 @@ class ProjectReviewApproveView(LoginRequiredMixin, UserPassesTestMixin, View):
         messages.success(request, 'Project review for {} has been APPROVED'.format(
             project_review_obj.project.title)
         )
+
+        self.auto_approve_renewed_allocations(project_status_obj.allocation_renewals, project_obj)
 
         if EMAIL_ENABLED:
             domain_url = get_domain_url(self.request)

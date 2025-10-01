@@ -40,6 +40,7 @@ PROJECT_PERMISSIONS_PER_TYPE = ENV.dict('PROJECT_PERMISSIONS_PER_TYPE', default=
         'forbidden_features': []
     },
 })
+PROJECT_AUTO_ALLOC_APPROVAL_FUNCS = ENV.dict('PROJECT_AUTO_ALLOC_APPROVAL_FUNCS', default={})
 
 #------------------------------------------------------------------------------
 # Allocation related

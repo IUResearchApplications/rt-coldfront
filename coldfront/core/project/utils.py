@@ -1,3 +1,4 @@
+import importlib
 import logging
 import datetime
 
@@ -8,6 +9,8 @@ from coldfront.core.utils.common import import_from_settings
 from coldfront.plugins.ldap_user_info.utils import get_user_info, get_users_info
 
 PROJECT_PI_ELIGIBLE_ADS_GROUPS = import_from_settings('PROJECT_PI_ELIGIBLE_ADS_GROUPS', [])
+PROJECT_AUTO_ALLOC_APPROVAL_FUNCS = import_from_settings(
+    'PROJECT_AUTO_ALLOC_APPROVAL_FUNCS', {})
 
 logger = logging.getLogger(__name__)
 
@@ -192,3 +195,12 @@ def check_if_pis_eligible(users):
                 break
 
     return eligible_statuses
+
+
+def initialize_auto_approval_funcs():
+    auto_approval_funcs = {}
+    for resource, func in PROJECT_AUTO_ALLOC_APPROVAL_FUNCS.items():
+        func_module, func_name = func.rsplit(".", 1)
+        auto_approval_funcs[resource] = getattr(importlib.import_module(func_module), func_name)
+
+    PROJECT_AUTO_ALLOC_APPROVAL_FUNCS = auto_approval_funcs
