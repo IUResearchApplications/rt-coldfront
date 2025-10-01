@@ -1365,7 +1365,7 @@ class ProjectRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                         'action_user': f'{request.user.first_name} {request.user.last_name}',
                         'signature': EMAIL_SIGNATURE
                     }
-                    print(removed_users_breakdown)
+
                     send_email_template(
                         'Removed From Project',
                         'email/project_removed_users.txt',
