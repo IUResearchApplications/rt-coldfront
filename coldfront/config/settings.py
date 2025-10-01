@@ -36,7 +36,8 @@ plugin_configs = {
     'PLUGIN_ANNOUNCEMENTS': 'plugins/announcements.py',
     'PLUGIN_MOVABLE_ALLOCATIONS': 'plugins/movable_allocations.py',
     'PLUGIN_HELP': 'plugins/help.py',
-    'PLUGIN_REQUEST_FORMS': 'plugins/request_forms.py'
+    'PLUGIN_REQUEST_FORMS': 'plugins/request_forms.py',
+    'PLUGIN_MONITORING': 'plugins/monitoring.py',
 }
 
 # This allows plugins to be enabled via environment variables. Can alternatively
