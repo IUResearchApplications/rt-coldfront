@@ -13,10 +13,7 @@ class MonitoringConfig(AppConfig):
     name = "coldfront.plugins.monitoring"
 
     def ready(self):
-        resource = Resource.create({"service.name": "rtprojects"})
-        trace.set_tracer_provider(TracerProvider(resource=resource))
-        trace.get_tracer_provider().add_span_processor(
-            BatchSpanProcessor(OTLPSpanExporter(endpoint="http://localhost:4317", insecure=True))
-        )
+        trace.set_tracer_provider(TracerProvider(resource=Resource.create()))
+        trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
         MySQLClientInstrumentor().instrument()
         DjangoInstrumentor().instrument()
