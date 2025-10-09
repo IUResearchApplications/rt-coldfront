@@ -111,10 +111,12 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # Can the user update the project?
+        project_obj = self.get_object(Project.objects.select_related("status"))
+        project_user = project_obj.projectuser_set.select_related("role").filter(user=self.request.user)
         if self.request.user.is_superuser:
             context["is_allowed_to_update_project"] = True
-        elif self.object.projectuser_set.filter(user=self.request.user).exists():
-            project_user = self.object.projectuser_set.get(user=self.request.user)
+        elif project_user:
+            project_user = project_user.first()
             if project_user.role.name == "Manager":
                 context["is_allowed_to_update_project"] = True
             else:
@@ -122,30 +124,24 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         else:
             context["is_allowed_to_update_project"] = False
 
-        pk = self.kwargs.get("pk")
-        project_obj = get_object_or_404(Project, pk=pk)
-
+        attributes_query = project_obj.projectattribute_set.select_related("proj_attr_type", "projectattributeusage")
         if self.request.user.is_superuser:
             attributes_with_usage = [
                 attribute
-                for attribute in project_obj.projectattribute_set.all().order_by("proj_attr_type__name")
+                for attribute in attributes_query.all().order_by("proj_attr_type__name")
                 if hasattr(attribute, "projectattributeusage")
             ]
 
-            attributes = [
-                attribute for attribute in project_obj.projectattribute_set.all().order_by("proj_attr_type__name")
-            ]
+            attributes = [attribute for attribute in attributes_query.all().order_by("proj_attr_type__name")]
 
         else:
             attributes_with_usage = [
                 attribute
-                for attribute in project_obj.projectattribute_set.filter(proj_attr_type__is_private=False)
+                for attribute in attributes_query.filter(proj_attr_type__is_private=False)
                 if hasattr(attribute, "projectattributeusage")
             ]
 
-            attributes = [
-                attribute for attribute in project_obj.projectattribute_set.filter(proj_attr_type__is_private=False)
-            ]
+            attributes = [attribute for attribute in attributes_query.filter(proj_attr_type__is_private=False)]
 
         guage_data = []
         invalid_attributes = []
@@ -168,22 +164,25 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
             attributes_with_usage.remove(a)
 
         # Only show 'Active Users'
-        project_users = self.object.projectuser_set.filter(status__name="Active").order_by("user__username")
+        project_users = (
+            project_obj.projectuser_set.select_related("user", "role", "status")
+            .filter(status__name="Active")
+            .order_by("user__username")
+        )
 
         context["mailto"] = "mailto:" + ",".join([user.user.email for user in project_users])
 
+        allocations = Allocation.objects.select_related("status").prefetch_related("resources")
         if self.request.user.is_superuser or self.request.user.has_perm("allocation.can_view_all_allocations"):
-            allocations = (
-                Allocation.objects.prefetch_related("resources").filter(project=self.object).order_by("-end_date")
-            )
+            allocations = allocations.filter(project=project_obj).order_by("-end_date")
         else:
-            if self.object.status.name in [
+            if project_obj.status.name in [
                 "Active",
                 "New",
             ]:
                 allocations = (
-                    Allocation.objects.filter(
-                        Q(project=self.object)
+                    allocations.filter(
+                        Q(project=project_obj)
                         & Q(project__projectuser__user=self.request.user)
                         & Q(
                             project__projectuser__status__name__in=[
@@ -197,17 +196,20 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
                     .order_by("-end_date")
                 )
             else:
-                allocations = Allocation.objects.prefetch_related("resources").filter(project=self.object)
+                allocations = allocations.filter(project=project_obj)
 
         user_status = []
         for allocation in allocations:
-            if allocation.allocationuser_set.filter(user=self.request.user).exists():
-                user_status.append(allocation.allocationuser_set.get(user=self.request.user).status.name)
+            allocation_user = allocation.allocationuser_set.select_related("status").filter(user=self.request.user)
+            if allocation_user:
+                user_status.append(allocation_user.first().status.name)
 
-        context["publications"] = Publication.objects.filter(project=self.object, status="Active").order_by("-year")
-        context["research_outputs"] = ResearchOutput.objects.filter(project=self.object).order_by("-created")
-        context["grants"] = Grant.objects.filter(
-            project=self.object, status__name__in=["Active", "Pending", "Archived"]
+        context["publications"] = (
+            Publication.objects.select_related("source").filter(project=project_obj, status="Active").order_by("-year")
+        )
+        context["research_outputs"] = ResearchOutput.objects.filter(project=project_obj).order_by("-created")
+        context["grants"] = Grant.objects.select_related("status").filter(
+            project=project_obj, status__name__in=["Active", "Pending", "Archived"]
         )
         context["allocations"] = allocations
         context["user_allocation_status"] = user_status
@@ -255,7 +257,7 @@ class ProjectListView(LoginRequiredMixin, ListView):
                 self.request.user.is_superuser or self.request.user.has_perm("project.can_view_all_projects")
             ):
                 projects = (
-                    Project.objects.prefetch_related(
+                    Project.objects.select_related(
                         "pi",
                         "field_of_science",
                         "status",
@@ -270,7 +272,7 @@ class ProjectListView(LoginRequiredMixin, ListView):
                 )
             else:
                 projects = (
-                    Project.objects.prefetch_related(
+                    Project.objects.select_related(
                         "pi",
                         "field_of_science",
                         "status",
@@ -306,7 +308,7 @@ class ProjectListView(LoginRequiredMixin, ListView):
 
         else:
             projects = (
-                Project.objects.prefetch_related(
+                Project.objects.select_related(
                     "pi",
                     "field_of_science",
                     "status",
@@ -681,7 +683,7 @@ class ProjectAddUsersSearchView(LoginRequiredMixin, UserPassesTestMixin, Templat
             return True
 
     def dispatch(self, request, *args, **kwargs):
-        project_obj = get_object_or_404(Project, pk=self.kwargs.get("pk"))
+        project_obj = get_object_or_404(Project.objects.select_related("status"), pk=self.kwargs.get("pk"))
         if project_obj.status.name not in [
             "Active",
             "New",
@@ -718,7 +720,7 @@ class ProjectAddUsersSearchResultsView(LoginRequiredMixin, UserPassesTestMixin, 
             return True
 
     def dispatch(self, request, *args, **kwargs):
-        project_obj = get_object_or_404(Project, pk=self.kwargs.get("pk"))
+        project_obj = get_object_or_404(Project.objects.select_related("status"), pk=self.kwargs.get("pk"))
         if project_obj.status.name not in [
             "Active",
             "New",
@@ -735,15 +737,19 @@ class ProjectAddUsersSearchResultsView(LoginRequiredMixin, UserPassesTestMixin, 
 
         project_obj = get_object_or_404(Project, pk=pk)
 
-        users_to_exclude = [ele.user.username for ele in project_obj.projectuser_set.filter(status__name="Active")]
+        users_to_exclude = [
+            ele.user.username
+            for ele in project_obj.projectuser_set.select_related("user").filter(status__name="Active")
+        ]
 
         cobmined_user_search_obj = CombinedUserSearch(user_search_string, search_by, users_to_exclude)
 
         context = cobmined_user_search_obj.search()
 
         matches = context.get("matches")
+        user_role = ProjectUserRoleChoice.objects.get(name="User")
         for match in matches:
-            match.update({"role": ProjectUserRoleChoice.objects.get(name="User")})
+            match.update({"role": user_role})
 
         if matches:
             formset = formset_factory(ProjectAddUserForm, max_num=len(matches))
@@ -1457,10 +1463,9 @@ class ProjectAttributeDeleteView(LoginRequiredMixin, UserPassesTestMixin, Templa
         messages.error(self.request, "You do not have permission to add project attributes.")
 
     def get_avail_attrs(self, project_obj):
+        avail_attrs = ProjectAttribute.objects.select_related("proj_attr_type").filter(project=project_obj)
         if not self.request.user.is_superuser:
-            avail_attrs = ProjectAttribute.objects.filter(project=project_obj, proj_attr_type__is_private=False)
-        else:
-            avail_attrs = ProjectAttribute.objects.filter(project=project_obj)
+            avail_attrs = avail_attrs.filter(proj_attr_type__is_private=False)
         avail_attrs_dicts = [
             {"pk": attr.pk, "selected": False, "name": str(attr.proj_attr_type), "value": attr.value}
             for attr in avail_attrs

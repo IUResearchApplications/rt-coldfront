@@ -54,16 +54,18 @@ Allocation Detail
             <td><a href="{% url 'project-detail' allocation.project.pk %}">{{ allocation.project }}</a></td>
           </tr>
           <tr>
-            <th scope="row" class="text-nowrap">Resource{{ allocation.resources.all|pluralize }} in allocation:</th>
+            {% with allocation.get_resources_as_list as resources_as_list %}
+            <th scope="row" class="text-nowrap">Resource{{ resources_as_list|pluralize }} in allocation:</th>
             <td>
-              {% if allocation.get_resources_as_list %}
-                {% for resource in allocation.get_resources_as_list %}
+              {% if resources_as_list %}
+                {% for resource in resources_as_list %}
                   <a href="{% url 'resource-detail' resource.pk %}">{{ resource }}</a> <br>
                 {% endfor %}
-            {% else %}
-              None
-            {% endif %}
+              {% else %}
+                None
+              {% endif %}
             </td>
+            {% endwith %}
           </tr>
           {% if request.user.is_superuser %}
             <tr>

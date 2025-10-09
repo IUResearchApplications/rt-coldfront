@@ -128,9 +128,9 @@ We do not have information about your research. Please provide a detailed descri
         Returns:
             ProjectReview: the last project review that was created for this project
         """
-
-        if self.projectreview_set.exists():
-            return self.projectreview_set.order_by("-created")[0]
+        project_review_query = self.projectreview_set.order_by("-created")
+        if project_review_query:
+            return project_review_query.first()
         else:
             return None
 
@@ -140,9 +140,9 @@ We do not have information about your research. Please provide a detailed descri
         Returns:
             Grant: the most recent grant for this project, or None if there are no grants
         """
-
-        if self.grant_set.exists():
-            return self.grant_set.order_by("-modified")[0]
+        grant_query = self.grant_set.order_by("-modified")
+        if grant_query:
+            return grant_query.first()
         else:
             return None
 
@@ -152,9 +152,9 @@ We do not have information about your research. Please provide a detailed descri
         Returns:
             Publication: the most recent publication for this project, or None if there are no publications
         """
-
-        if self.publication_set.exists():
-            return self.publication_set.order_by("-created")[0]
+        publication_query = self.publication_set.order_by("-created")
+        if publication_query:
+            return publication_query.first()
         else:
             return None
 

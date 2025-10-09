@@ -155,7 +155,9 @@ class Allocation(TimeStampedModel):
         """
 
         html_string = escape("")
-        for attribute in self.allocationattribute_set.all():
+        for attribute in self.allocationattribute_set.select_related(
+            "allocation_attribute_type", "allocationattributeusage"
+        ).all():
             if attribute.allocation_attribute_type.name in ALLOCATION_ATTRIBUTE_VIEW_LIST:
                 html_substring = format_html("{}: {} <br>", attribute.allocation_attribute_type.name, attribute.value)
                 html_string += html_substring
@@ -212,15 +214,15 @@ class Allocation(TimeStampedModel):
         Returns:
             Resource: the parent resource for the allocation
         """
-
-        if self.resources.count() == 1:
-            return self.resources.first()
+        resources = self.resources.select_related("resource_type")
+        if len(resources) == 1:
+            return resources.first()
         else:
-            parent = self.resources.order_by(*ALLOCATION_RESOURCE_ORDERING).first()
+            parent = resources.order_by(*ALLOCATION_RESOURCE_ORDERING).first()
             if parent:
                 return parent
             # Fallback
-            return self.resources.first()
+            return resources.first()
 
     def get_attribute(self, name, expand=True, typed=True, extra_allocations=[]):
         """

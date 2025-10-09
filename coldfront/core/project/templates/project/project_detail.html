@@ -196,16 +196,19 @@ Project Detail
           <tbody>
             {% for allocation in allocations %}
             <tr>
-              <td>{{ allocation.get_parent_resource.name }}</td>
-              <td>{{ allocation.get_parent_resource.resource_type.name }}</td>
+              {% with allocation.get_parent_resource as parent_resource %}
+              <td>{{ parent_resource.name }}</td>
+              <td>{{ parent_resource.resource_type.name }}</td>
               {% if user_allocation_status|get_value_by_index:forloop.counter0 == 'PendingEULA' %}
               <td class="test-nowrap"><a href="{% url 'allocation-review-eula' allocation.pk %}">Review and Accept EULA to activate</a> </td>
               {% else %}
-              {% if allocation.get_information != '' %} 
-              <td class="text-nowrap">{{allocation.get_information}}</td>
+              {% with allocation.get_information as allocation_information %}
+              {% if allocation_information != '' %} 
+              <td class="text-nowrap">{{allocation_information}}</td>
               {% else %}
               <td class="text-nowrap">{{allocation.description|default_if_none:""}}</td>
               {% endif %}
+              {% endwith %}
               {% endif %}
               {% if allocation.status.name == 'Active' %}
               {% if user_allocation_status|get_value_by_index:forloop.counter0 == 'PendingEULA' %}
@@ -232,9 +235,10 @@ Project Detail
                   </span>
                   </a>
                 {% endif %}
-                {% if allocation.get_parent_resource.get_ondemand_status == 'Yes' and ondemand_url %}
+                {% if parent_resource.get_ondemand_status == 'Yes' and ondemand_url %}
                 <a href = "{{ ondemand_url }}" target="_blank"> <img src="/static/core/portal/imgs/ondemand.png" alt="ondemand cta" width="25" height="25"></a>
               {% endif %}
+              {% endwith %}
               </td>
             </tr>
             {% endfor %}
@@ -322,9 +326,11 @@ Project Detail
   <div class="card-header">
     <h3 class="d-inline" id="grants"><i class="fas fa-trophy" aria-hidden="true"></i> Grants</h3> <span class="badge badge-secondary">{{grants.count}}</span>
     <div class="float-right">
-      {% if project.latest_grant.modified %}
-        <span class="badge badge-info">Last Updated: {{project.latest_grant.modified|date:"M. d, Y"}}</span>
+      {% with project.latest_grant as latest_grant %}
+      {% if latest_grant.modified %}
+        <span class="badge badge-info">Last Updated: {{latest_grant.modified|date:"M. d, Y"}}</span>
       {% endif %}
+      {% endwith %}
       {% if project.status.name != 'Archived' and is_allowed_to_update_project %}
         <a class="btn btn-success" href="{% url 'grant-create' project.id %}" role="button"><i class="fas fa-plus" aria-hidden="true"></i> Add Grant</a>
         {% if grants %}
@@ -386,9 +392,11 @@ Project Detail
   <div class="card-header">
     <h3 class="d-inline" id="publications"><i class="fas fa-newspaper" aria-hidden="true"></i> Publications</h3> <span class="badge badge-secondary">{{publications.count}}</span>
     <div class="float-right">
-      {% if project.latest_publication.created %}
-        <span class="badge badge-info">Last Updated: {{project.latest_publication.created|date:"M. d, Y"}}</span>
+      {% with project.latest_publication as latest_publication %}
+      {% if latest_publication.created %}
+        <span class="badge badge-info">Last Updated: {{latest_publication.created|date:"M. d, Y"}}</span>
       {% endif %}
+      {% endwith %}
       {% if project.status.name != 'Archived' and is_allowed_to_update_project %}
         <a class="btn btn-success" href="{% url 'publication-search' project.pk %}" role="button"><i class="fas fa-plus" aria-hidden="true"></i> Add Publication</a>
         {% if publications %}
@@ -489,7 +497,8 @@ Project Detail
     </div>
   </div>
   <div class="card-body">
-    {% if project.projectusermessage_set.all %}
+    {% with project.projectusermessage_set.all as all_messages %}
+    {% if all_messages %}
       <div class="table-responsive">
         <table class="table table-hover">
           <thead>
@@ -500,7 +509,7 @@ Project Detail
             </tr>
           </thead>
           <tbody>
-            {% for message in project.projectusermessage_set.all %}
+            {% for message in all_messages %}
               {% if not message.is_private or request.user.is_superuser %}
             <tr>
               <td>{{ message.message }}</td>
@@ -515,6 +524,7 @@ Project Detail
     {% else %}
       <div class="alert alert-info" role="alert"><i class="fas fa-info-circle" aria-hidden="true"></i> There are no messages from system administrators.</div>
     {% endif %}
+    {% endwith %}
   </div>
 </div>
 <!-- End Admin Messages -->

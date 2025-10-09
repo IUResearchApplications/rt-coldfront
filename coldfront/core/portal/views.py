@@ -32,7 +32,8 @@ def home(request):
     if request.user.is_authenticated:
         template_name = "portal/authorized_home.html"
         project_list = (
-            Project.objects.filter(
+            Project.objects.select_related("status")
+            .filter(
                 (
                     Q(pi=request.user)
                     & Q(
@@ -62,7 +63,8 @@ def home(request):
         )
 
         allocation_list = (
-            Allocation.objects.filter(
+            Allocation.objects.select_related("status", "project")
+            .filter(
                 Q(
                     status__name__in=[
                         "Active",
@@ -212,7 +214,7 @@ def allocation_summary(request):
         allocation.get_parent_resource.parent_resource
         if allocation.get_parent_resource.parent_resource
         else allocation.get_parent_resource
-        for allocation in Allocation.objects.filter(status__name="Active")
+        for allocation in Allocation.objects.select_related("resources__parent_resource").filter(status__name="Active")
     ]
 
     allocations_count_by_resource = dict(Counter(allocation_resources))

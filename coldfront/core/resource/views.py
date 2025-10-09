@@ -210,19 +210,21 @@ class ResourceListView(LoginRequiredMixin, ListView):
             order_by = direction + order_by
 
         resource_search_form = ResourceSearchForm(self.request.GET)
-
+        resources = Resource.objects.select_related(
+            "parent_resource", "parent_resource__resource_type", "resource_type"
+        ).all()
         if resource_search_form.is_valid():
             data = resource_search_form.cleaned_data
             if order_by == "name":
                 direction = self.request.GET.get("direction")
                 if direction == "asc":
-                    resources = Resource.objects.all().order_by(Lower("name"))
+                    resources = resources.order_by(Lower("name"))
                 elif direction == "des":
-                    resources = Resource.objects.all().order_by(Lower("name")).reverse()
+                    resources = resources.order_by(Lower("name")).reverse()
                 else:
-                    resources = Resource.objects.all().order_by(order_by)
+                    resources = resources.order_by(order_by)
             else:
-                resources = Resource.objects.all().order_by(order_by)
+                resources = resources.order_by(order_by)
 
             if data.get("show_allocatable_resources"):
                 resources = resources.filter(is_allocatable=True)
@@ -265,13 +267,13 @@ class ResourceListView(LoginRequiredMixin, ListView):
             if order_by == "name":
                 direction = self.request.GET.get("direction")
                 if direction == "asc":
-                    resources = Resource.objects.all().order_by(Lower("name"))
+                    resources = resources.order_by(Lower("name"))
                 elif direction == "des":
-                    resources = Resource.objects.all().order_by(Lower("name").reverse())
+                    resources = resources.order_by(Lower("name").reverse())
                 else:
-                    resources = Resource.objects.all().order_by(order_by)
+                    resources = resources.order_by(order_by)
             else:
-                resources = Resource.objects.all().order_by(order_by)
+                resources = resources.order_by(order_by)
         return resources.distinct()
 
     def get_context_data(self, **kwargs):
