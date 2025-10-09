@@ -731,21 +731,24 @@ class ProjectAddUsersSearchResultsView(LoginRequiredMixin, UserPassesTestMixin, 
             return super().dispatch(request, *args, **kwargs)
 
     def get_initial_data(self, project_obj):
-        allocation_objs = project_obj.allocation_set.filter(
+        allocation_objs = project_obj.allocation_set.select_related("status").filter(
             resources__is_allocatable=True,
             is_locked=False,
             status__name__in=["Active", "New", "Renewal Requested", "Payment Pending", "Payment Requested", "Paid"],
         )
-        return [
-            {
-                "pk": allocation_obj.pk,
-                "resource": allocation_obj.get_parent_resource.name,
-                "details": allocation_obj.get_information,
-                "resource_type": allocation_obj.get_parent_resource.resource_type.name,
-                "status": allocation_obj.status.name,
-            }
-            for allocation_obj in allocation_objs
-        ]
+        initial_data = []
+        for allocation_obj in allocation_objs:
+            resource = allocation_obj.get_parent_resource
+            initial_data.append(
+                {
+                    "pk": allocation_obj.pk,
+                    "resource": resource.name,
+                    "details": allocation_obj.get_information,
+                    "resource_type": resource.resource_type.name,
+                    "status": allocation_obj.status.name,
+                }
+            )
+        return initial_data
 
     def post(self, request, *args, **kwargs):
         user_search_string = request.POST.get("q")
@@ -827,21 +830,24 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
             return super().dispatch(request, *args, **kwargs)
 
     def get_initial_data(self, project_obj):
-        allocation_objs = project_obj.allocation_set.filter(
+        allocation_objs = project_obj.allocation_set.select_related("status").filter(
             resources__is_allocatable=True,
             is_locked=False,
             status__name__in=["Active", "New", "Renewal Requested", "Payment Pending", "Payment Requested", "Paid"],
         )
-        return [
-            {
-                "pk": allocation_obj.pk,
-                "resource": allocation_obj.get_parent_resource.name,
-                "details": allocation_obj.get_information,
-                "resource_type": allocation_obj.get_parent_resource.resource_type.name,
-                "status": allocation_obj.status.name,
-            }
-            for allocation_obj in allocation_objs
-        ]
+        initial_data = []
+        for allocation_obj in allocation_objs:
+            resource = allocation_obj.get_parent_resource
+            initial_data.append(
+                {
+                    "pk": allocation_obj.pk,
+                    "resource": resource.name,
+                    "details": allocation_obj.get_information,
+                    "resource_type": resource.resource_type.name,
+                    "status": allocation_obj.status.name,
+                }
+            )
+        return initial_data
 
     def post(self, request, *args, **kwargs):
         user_search_string = request.POST.get("q")
@@ -921,8 +927,9 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
                     for allocation in allocations_selected_objs:
                         has_eula = allocation.get_eula()
                         user_status_choice = allocation_user_active_status_choice
-                        if allocation.allocationuser_set.filter(user=user_obj).exists():
-                            allocation_user_obj = allocation.allocationuser_set.get(user=user_obj)
+                        allocation_user_query = allocation.allocationuser_set.filter(user=user_obj)
+                        if allocation_user_query:
+                            allocation_user_obj = allocation_user_query.first()
                             if (
                                 ALLOCATION_EULA_ENABLE
                                 and has_eula
