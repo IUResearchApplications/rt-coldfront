@@ -34,6 +34,8 @@ ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings(
     'ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING', 60)
 ALLOCATION_ENABLE_ALLOCATION_RENEWAL = import_from_settings(
     'ALLOCATION_ENABLE_ALLOCATION_RENEWAL', True)
+ALLOCATION_ATTRIBUTE_IDENTIFIERS = import_from_settings(
+    'ALLOCATION_ATTRIBUTE_IDENTIFIERS', [])
 
 EMAIL_ENABLED = import_from_settings('EMAIL_ENABLED', False)
 if EMAIL_ENABLED:
@@ -149,6 +151,19 @@ class Allocation(TimeStampedModel):
 
         super().save(*args, **kwargs)
 
+    def get_identifiers(self):
+        """ 
+        Returns:
+            list: the allocation's attribute types and their values
+        """
+
+        info = {}
+        for attribute in self.allocationattribute_set.all():
+            if attribute.allocation_attribute_type.name in ALLOCATION_ATTRIBUTE_IDENTIFIERS:
+                info[attribute.allocation_attribute_type.name] = attribute.value
+
+        return info
+
     @property
     def get_allocation_attributes(self):
         return self.allocationattribute_set.all()
@@ -174,7 +189,7 @@ class Allocation(TimeStampedModel):
         if self.status.name not in ['Active', 'Expired']:
             return False
 
-        if self.project.needs_review or self.project.can_be_reviewed or self.project.status.name not in ['Active', 'Review Pending']:
+        if self.project.needs_review or self.project.status.name not in ['Active', 'Review Pending']:
             return False
 
         if self.status.name == 'Active' and self.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING  and self.expires_in >= 0:
@@ -259,6 +274,12 @@ class Allocation(TimeStampedModel):
                 return parent
             # Fallback
             return self.resources.first()
+        
+    @property
+    def get_user_list(self):
+        return self.allocationuser_set.filter(
+            status__name__in=["Active", "Retired", "Disabled", "Pending", "Invited"]).values_list(
+                'user__username', flat=True)
 
     def get_attribute(self, name, expand=True, typed=True,
         extra_allocations=[]):
@@ -393,30 +414,6 @@ class Allocation(TimeStampedModel):
 
         perms = self.user_permissions(user, addtl_perm)
         return perm in perms
-
-    def create_user_request(self, requestor_user, allocation_user, allocation_user_status):
-        """ 
-        Params:
-            request_user (User): User who requested the change
-            allocation_user (AllocationUser): User who had the requested change
-            allocation_user_status (AllocationUserStatusChoice): Type of requested change
-
-        Returns:
-            AllocationUserRequest or None: A new AllocationUserRequest object or None if the 'requires_user_request' resource
-            attribute is not 'Yes'
-        """
-        requires_user_request = self.get_parent_resource.get_attribute('requires_user_request')
-        if requires_user_request is not None and requires_user_request == 'Yes':
-            allocation_user_request_obj = AllocationUserRequest.objects.create(
-                requestor_user=requestor_user,
-                allocation_user=allocation_user,
-                allocation_user_status=allocation_user_status,
-                status=AllocationUserRequestStatusChoice.objects.get(name='Pending')
-            )
-
-            return allocation_user_request_obj
-
-        return None
 
     def get_user_roles(self):
         return AllocationUserRoleChoice.objects.filter(resources=self.get_parent_resource)

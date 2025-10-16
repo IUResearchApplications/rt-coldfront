@@ -226,6 +226,7 @@ class AllocationMoveView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
             "allocation_url": allocation_url,
         }
         send_allocation_customer_email(
+            request,
             allocation_obj,
             "Allocation Moved",
             "movable_allocations/email/moved_allocation.txt",

@@ -20,6 +20,7 @@ if EMAIL_ENABLED:
         'EMAIL_OPT_OUT_INSTRUCTION_URL')
     EMAIL_SIGNATURE = import_from_settings('EMAIL_SIGNATURE')
     EMAIL_CENTER_NAME = import_from_settings('CENTER_NAME')
+    EMAIL_RESOURCE_EMAIL_TEMPLATES = import_from_settings('EMAIL_RESOURCE_EMAIL_TEMPLATES', {})
 
 
 def set_allocation_user_status_to_error(allocation_user_pk):
@@ -78,75 +79,59 @@ def test_allocation_function(allocation_pk):
     print('test_allocation_function', allocation_pk)
 
 
-def compute_prorated_amount(total_cost):
-    current_date = datetime.now()
-    expire_date = datetime(current_date.year, 7, 1)
-    if expire_date < current_date:
-        expire_date = expire_date.replace(year=expire_date.year + 1)
-
-    difference = abs(expire_date - current_date)
-    # Take into account leap years.
-    one_year = expire_date - expire_date.replace(year=expire_date.year - 1)
-    cost_per_day = total_cost / one_year.days
-    return round(cost_per_day * difference.days + cost_per_day)
-
-
-def send_allocation_user_request_email(request, usernames, parent_resource_name, email_receiver_list):
-    if EMAIL_ENABLED:
-        domain_url = get_domain_url(request)
-        url = '{}{}'.format(domain_url, reverse('allocation-user-request-list'))
-        template_context = {
-            'center_name': EMAIL_CENTER_NAME,
-            'resource': parent_resource_name,
-            'url': url,
-            'signature': EMAIL_SIGNATURE,
-            'users': usernames
-        }
-
-        send_email_template(
-            'New Allocation User Request(s)',
-            'email/new_allocation_user_requests.txt',
-            template_context,
-            EMAIL_SENDER,
-            email_receiver_list
-        )
-
-
 def send_added_user_email(request, allocation_obj, users, users_emails):
     if EMAIL_ENABLED:
         domain_url = get_domain_url(request)
-        url = '{}{}'.format(domain_url, reverse('allocation-detail', kwargs={'pk': allocation_obj.pk}))
+        allocation_url = '{}{}'.format(domain_url, reverse('allocation-detail', kwargs={'pk': allocation_obj.pk}))
+        project_obj = allocation_obj.project
+        project_url = '{}{}'.format(domain_url, reverse('project-detail', kwargs={'pk': project_obj.pk}))
         template_context = {
             'center_name': EMAIL_CENTER_NAME,
             'resource': allocation_obj.get_parent_resource.name,
             'users': users,
-            'project_title': allocation_obj.project.title,
-            'url': url,
-            'signature': EMAIL_SIGNATURE
+            'project_title': project_obj.title,
+            'allocation_url': allocation_url,
+            'project_url': project_url,
+            'action_user': f'{request.user.first_name} {request.user.last_name}',
+            'project_pi': f'{project_obj.pi.first_name} {project_obj.pi.last_name}',
+            'signature': EMAIL_SIGNATURE,
+            'allocation_identifiers': allocation_obj.get_identifiers().items(),
+            'allocation_status': allocation_obj.status.name
         }
 
         send_email_template(
             'Added to Allocation',
-            'email/allocation_added_users.txt',
+            EMAIL_RESOURCE_EMAIL_TEMPLATES.get(
+                allocation_obj.get_parent_resource.name, {}
+            ).get('added_user', 'email/allocation_added_users.txt'),
             template_context,
             EMAIL_TICKET_SYSTEM_ADDRESS,
             users_emails
         )
 
 
-def send_removed_user_email(allocation_obj, users, users_emails):
+def send_removed_user_email(request, allocation_obj, users, users_emails):
+    domain_url = get_domain_url(request)
+    project_obj = allocation_obj.project
+    project_url = '{}{}'.format(domain_url, reverse('project-detail', kwargs={'pk': project_obj.pk}))
     if EMAIL_ENABLED:
         template_context = {
             'center_name': EMAIL_CENTER_NAME,
             'resource': allocation_obj.get_parent_resource.name,
             'users': users,
-            'project_title': allocation_obj.project.title,
-            'signature': EMAIL_SIGNATURE
+            'project_title': project_obj.title,
+            'project_url': project_url,
+            'action_user': f'{request.user.first_name} {request.user.last_name}',
+            'project_pi': f'{project_obj.pi.first_name} {project_obj.pi.last_name}',
+            'signature': EMAIL_SIGNATURE,
+            'allocation_identifiers': allocation_obj.get_identifiers().items()
         }
 
         send_email_template(
             'Removed From Allocation',
-            'email/allocation_removed_users.txt',
+            EMAIL_RESOURCE_EMAIL_TEMPLATES.get(
+                allocation_obj.get_parent_resource.name, {}
+            ).get('removed_user', 'email/allocation_removed_users.txt'),
             template_context,
             EMAIL_TICKET_SYSTEM_ADDRESS,
             users_emails
@@ -249,11 +234,11 @@ def get_default_allocation_user_role(resource, project_obj, user):
         if is_manager:
             return AllocationUserRoleChoice.objects.filter(
                 resources=resource, is_manager_default=True
-            )
+            ).first()
         else:
             return AllocationUserRoleChoice.objects.filter(
                 resources=resource, is_user_default=True
-            )
+            ).first()
         
     return AllocationUserRoleChoice.objects.none()
 
@@ -261,6 +246,6 @@ def set_default_allocation_user_role(resource, allocation_user):
     role_choice_queryset = get_default_allocation_user_role(
         resource, allocation_user.allocation.project, allocation_user.user
     )
-    if role_choice_queryset.exists():
-        allocation_user.role = role_choice_queryset[0]
+    if role_choice_queryset:
+        allocation_user.role = role_choice_queryset
         allocation_user.save()

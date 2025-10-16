@@ -242,6 +242,8 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         except AttributeError:
             pass
 
+        context['expand_accordion'] = 'show' if context['is_allowed_to_update_project'] else ""
+
         return context
 
 
@@ -1046,8 +1048,6 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
             no_accounts = {}
             added_users = {}
             managers_rejected = []
-            resources_requiring_user_request = {}
-            requestor_user = User.objects.get(username=request.user)
             for allocation in allocation_formset:
                 cleaned_data = allocation.cleaned_data
                 if cleaned_data['selected']:
@@ -1110,7 +1110,6 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
                             if allocations_added_to.get(allocation) is None:
                                 allocations_added_to[allocation] = []
 
-                            resource_name = allocation.get_parent_resource.name
                             # If the user does not have an account on the resource in the allocation then do not add them to it.
                             accounts = selected_users_accounts.get(username)
                             account_exists, reason = allocation.get_parent_resource.check_accounts(accounts).values()
@@ -1123,13 +1122,6 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
                                     if allocation.get_parent_resource.name not in no_accounts[username]:
                                         no_accounts[username].append(allocation.get_parent_resource.name)
                                 continue
-
-                            requires_user_request = allocation.get_parent_resource.get_attribute('requires_user_request')
-                            if requires_user_request is not None and requires_user_request == 'Yes':
-                                resources_requiring_user_request.setdefault(resource_name, set())
-                                resources_requiring_user_request[resource_name].add(username)
-                                allocation_user_status_choice = AllocationUserStatusChoice.objects.get(
-                                    name='Pending - Add')
                                 
                             allocation_user_role_obj = AllocationUserRoleChoice.objects.filter(
                                 resources=allocation.get_parent_resource, name=cleaned_data['role'])
@@ -1153,19 +1145,7 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
 
                             allocation_activate_user.send(sender=self.__class__,
                                                         allocation_user_pk=allocation_user_obj.pk)
-
-                            requires_user_request = allocation.get_parent_resource.get_attribute(
-                                'requires_user_request')
-
-                            allocation_user_request_obj = allocation.create_user_request(
-                                requestor_user=requestor_user,
-                                allocation_user=allocation_user_obj,
-                                allocation_user_status=allocation_user_status_choice
-
-                            )
-
-                            if allocation_user_request_obj is None:
-                                allocations_added_to[allocation].append(project_user_obj)
+                            allocations_added_to[allocation].append(project_user_obj)
 
                             if allocation.get_parent_resource.name not in added_users[username]:
                                 added_users[username].append(allocation.get_parent_resource.name)
@@ -1201,6 +1181,7 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
                     'center_name': EMAIL_CENTER_NAME,
                     'project_title': project_obj.title,
                     'project_users': project_user_objs,
+                    'action_user': f'{request.user.first_name} {request.user.last_name}',
                     'url': project_url,
                     'signature': EMAIL_SIGNATURE
                 }
@@ -1211,13 +1192,11 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
 
                 if allocations_added_to:
                     for allocation, added_project_user_objs in allocations_added_to.items():
-                        if allocation.status.name == 'New':
-                            continue
                         users = [project_user_obj.user for project_user_obj in added_project_user_objs if project_user_obj.enable_notifications]
-                        emails = [user.email for user in users]
-                        if emails and project_obj.pi.email not in emails:
-                            emails.append(project_obj.pi.email)
-
+                        emails = set(user.email for user in users)
+                        if emails:
+                            emails.add(project_obj.pi.email)
+                            emails.add(request.user.email)
                             send_added_user_email(
                                 request, allocation, users, emails)
 
@@ -1326,6 +1305,7 @@ class ProjectRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
             request.POST, initial=users_to_remove, prefix='userform')
 
         removed_user_objs = []
+        removed_users_breakdown = {}
         if formset.is_valid():
             project_user_removed_status_choice = ProjectUserStatusChoice.objects.get(
                 name='Removed')
@@ -1348,18 +1328,15 @@ class ProjectRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                         status__name__in=['Active', 'New', 'Renewal Requested', 'Expired'])
                     for allocation in allocations_to_remove_user_from:
                         for allocation_user_obj in allocation.allocationuser_set.filter(user=user_obj).exclude(status__name='Removed'):
-                            resource = allocation.get_parent_resource
-                            requires_user_requests = resource.get_attribute('requires_user_request')
-
-                            # Users will still be removed from allocations that do not require a
-                            # user review.
-                            if requires_user_requests is not None and requires_user_requests == 'Yes':
-                                resources_requiring_user_request.setdefault(resource.name, set())
-                                resources_requiring_user_request[resource.name].add(
-                                    allocation_user_obj.user.username)
-                                remove_user_from_project = False
-                                continue
-
+                            if not removed_users_breakdown.get(allocation_user_obj.user.username):
+                                removed_users_breakdown[allocation_user_obj.user.username] = []
+                            removed_users_breakdown[allocation_user_obj.user.username].append(
+                                (
+                                    allocation.get_parent_resource.name,
+                                    allocation.get_identifiers().values()
+                                )
+                            )
+                            
                             allocation_user_obj.status = allocation_user_removed_status_choice
                             allocation_user_obj.save()
 
@@ -1372,6 +1349,8 @@ class ProjectRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                         project_user_obj.status = project_user_removed_status_choice
                         project_user_obj.save()
                         removed_user_objs.append(project_user_obj)
+                        if not removed_users_breakdown.get(project_user_obj.user.username):
+                            removed_users_breakdown[project_user_obj.user.username] = [(None, ())]
 
             if removed_user_objs:
                 if EMAIL_ENABLED:
@@ -1382,8 +1361,11 @@ class ProjectRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                         'center_name': EMAIL_CENTER_NAME,
                         'project_title': project_obj.title,
                         'removed_users': removed_user_objs,
+                        'removed_users_breakdown': removed_users_breakdown,
+                        'action_user': f'{request.user.first_name} {request.user.last_name}',
                         'signature': EMAIL_SIGNATURE
                     }
+
                     send_email_template(
                         'Removed From Project',
                         'email/project_removed_users.txt',
@@ -1603,7 +1585,7 @@ class ProjectReviewView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     def dispatch(self, request, *args, **kwargs):
         project_obj = get_object_or_404(Project, pk=self.kwargs.get('pk'))
 
-        if not project_obj.needs_review and not project_obj.can_be_reviewed:
+        if not project_obj.needs_review:
             if project_obj.get_env.get('renewable'):
                 messages.error(request, 'You do not need to review this project.')
             else:

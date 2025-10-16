@@ -86,7 +86,6 @@ class Command(BaseCommand):
             ('project_directory_name_label', 'Text'),
             ('prorated', 'True/False'),
             ('prorated_cost_label', 'Text'),
-            ('requires_user_request', 'Yes/No'),
             ('secondary_contact', 'Text'),
             ('secondary_contact_label', 'Text'),
             ('start_date', 'Date'),

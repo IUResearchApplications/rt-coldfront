@@ -67,7 +67,7 @@ def home(request):
              ) &
              Q(projectuser__user=request.user) &
              Q(projectuser__status__name__in=['Active', ]))
-        ).distinct().order_by('-created')[:5]
+        ).distinct().order_by('-created')
 
         allocation_list = Allocation.objects.filter(
             Q(status__name__in=['Active', 'New', 'Renewal Requested', 'Billing Information Submitted']) &
@@ -77,8 +77,6 @@ def home(request):
             Q(allocationuser__user=request.user) &
             Q(allocationuser__status__name__in=['Active', 'Pending - Remove', 'Invited', 'Pending', 'Disabled', 'Retired'])
         ).distinct().order_by('-created')
-
-        allocation_list = allocation_list[:5]
 
         projects_with_a_slurm_account_to_list = []
         for project in project_list:

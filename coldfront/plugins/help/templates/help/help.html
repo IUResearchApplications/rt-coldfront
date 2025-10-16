@@ -16,4 +16,9 @@ Contact Research Technologies
   {{ form|crispy }}
   <button type="submit" class="btn btn-primary">Send</button>
 </form>
+
+<script>
+  $("#navbar-main > ul > li.active").removeClass("active");
+  $("#navbar-help").addClass("active");
+</script>
 {% endblock %}
