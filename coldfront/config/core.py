@@ -30,7 +30,16 @@ PROJECT_DAYS_TO_REVIEW_BEFORE_EXPIRING = ENV.int('PROJECT_DAYS_TO_REVIEW_BEFORE_
 PROJECT_END_DATE_CARRYOVER_DAYS = ENV.int('PROJECT_END_DATE_CARRYOVER_DAYS', default=90)
 PROJECT_PI_ELIGIBLE_ADS_GROUPS = ENV.str('PROJECT_PI_ELIGIBLE_ADS_GROUPS', default=[])
 PROJECT_ENABLE_PERMISSIONS_PER_TYPE = ENV.bool('PROJECT_ENABLE_PERMISSIONS_PER_TYPE', default=False)
-PROJECT_PERMISSIONS_PER_TYPE = ENV.dict('PROJECT_PERMISSIONS_PER_TYPE', default={})
+PROJECT_PERMISSIONS_PER_TYPE = ENV.dict('PROJECT_PERMISSIONS_PER_TYPE', default={
+    'Default': {
+        'renewable': True,
+        'expiry_dates': [(6, 30), ],
+        'forbidden_resources': [],
+        'allowed_per_pi': -1,
+        'addtl_fields': [],
+        'forbidden_features': []
+    },
+})
 
 #------------------------------------------------------------------------------
 # Allocation related
@@ -41,6 +50,7 @@ ALLOCATION_ENABLE_ALLOCATION_RENEWAL = ENV.bool('ALLOCATION_ENABLE_ALLOCATION_RE
 ALLOCATION_FUNCS_ON_EXPIRE = ['coldfront.core.allocation.utils.test_allocation_function', ]
 ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING = ENV.int('ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING', default=60)
 ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING = ENV.int('ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING', default=30)
+ALLOCATION_ATTRIBUTE_IDENTIFIERS = ENV.list('ALLOCATION_ATTRIBUTE_IDENTIFIERS', default=[])
 #------------------------------------------------------------------------------
 # Resource related
 #------------------------------------------------------------------------------

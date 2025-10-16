@@ -1,4 +1,0 @@
-There are new allocation user requests for a {{ resource }} resource:
-{% for user in users %}{{ user }}
-{% endfor %}
-Please visit {{ url }} at your earliest convenience.

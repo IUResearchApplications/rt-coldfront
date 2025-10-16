@@ -208,21 +208,6 @@ required to log onto the site at least once before they can be added.
         Returns:
             bool: whether or not the project needs review
         """
-
-        if self.status.name in ['Archived', 'Expired', 'Review Pending']:
-            return False
-
-        if self.force_review is True:
-            return True
-
-        return False
-
-    @property
-    def can_be_reviewed(self):
-        """
-        Returns:
-            bool: whether or not the project can be reviewed
-        """
         if not self.get_env.get('renewable'):
             return False
 
@@ -230,7 +215,7 @@ required to log onto the site at least once before they can be added.
             return False
 
         if self.force_review is True:
-            return False
+            return True
 
         if not PROJECT_ENABLE_PROJECT_REVIEW:
             return False

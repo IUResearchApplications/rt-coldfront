@@ -176,6 +176,7 @@ class AllocationRemoveView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
         )
 
         send_allocation_customer_email(
+            request,
             allocation_obj,
             'Allocation Removed',
             'allocation_removal_requests/allocation_removed.txt',
@@ -265,6 +266,7 @@ class AllocationApproveRemovalRequestView(LoginRequiredMixin, UserPassesTestMixi
             request, f'Allocation has been removed from project "{allocation_obj.project.title}"')
 
         send_allocation_customer_email(
+            request,
             allocation_obj,
             'Allocation Removal Approved',
             'allocation_removal_requests/allocation_removed.txt',
@@ -320,6 +322,7 @@ class AllocationDenyRemovalRequestView(LoginRequiredMixin, UserPassesTestMixin, 
             request, f'Allocation has not been removed from project "{allocation_obj.project.title}"')
 
         send_allocation_customer_email(
+            request,
             allocation_obj,
             'Allocation Removal Denied',
             'allocation_removal_requests/allocation_removal_denied.txt',

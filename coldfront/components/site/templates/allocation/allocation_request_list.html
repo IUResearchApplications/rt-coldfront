@@ -47,7 +47,7 @@ Allocation Review New and Pending Requests
             </td>
             {% if PROJECT_ENABLE_PROJECT_REVIEW %}
               {% if allocation.project.status.name == 'Active' %}
-                {% if allocation.project.can_be_reviewed %}
+                {% if allocation.project.needs_review %}
                   <td class="text-warning">
                     <strong>{{ allocation.project.status.name }}</strong>
                     <span class="badge badge-warning">
@@ -123,7 +123,7 @@ Allocation Review New and Pending Requests
             </td>
             {% if PROJECT_ENABLE_PROJECT_REVIEW %}
               {% if allocation.project.status.name == 'Active' %}
-                {% if allocation.project.can_be_reviewed %}
+                {% if allocation.project.needs_review %}
                   <td class="text-warning">
                     <strong>{{ allocation.project.status.name }}</strong>
                     <span class="badge badge-warning">

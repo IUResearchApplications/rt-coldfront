@@ -16,33 +16,26 @@ Choose a Resource for Your Allocation
       </div>
       <div class="card-body">
         <div class="row">
-          {% for resource in resources.resources %}
+          {% for resource in resources %}
             <div class="col-6">
               <div class="card mb-3">
                 <div class="card-header">
                   <h4 class="d-inline">{{ resource.resource.name }}</h4>
-                  {% if resource.info_link %}
-                    <a href="{{ resource.info_link }}" target="_blank" title="More information"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
+                  <span
+                    title="Total Allocations"
+                    class="badge badge-secondary position-absolute"
+                    style="border-top-right-radius: 0px; border-bottom-left-radius: 0px; top: 0; left: 0; user-select: none;">
+                      {{ resource.resource_count|default_if_none:0 }}
+                  </span>
+                  {% if resource.info_url %}
+                    <a href="{{ resource.info_url }}" target="_blank" title="More information"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
                   {% endif %}
                   <div class="float-right">
-                    {% if resource.resource.name in resources.allocated %}
-                      Allocated,
-                    {% endif %}
-                    {% if not resource.can_request %}
-                      {% if resource.resource.name in project_obj.get_env|get_value_from_dict:'forbidden_resources' %}
-                        Not available for class projects
-                      {% elif resource.resource.name == 'Quartz - Hopper' %}
-                        Requires an active Quartz allocation
-                      {% else %}
-                        PI only
-                      {% endif %}
-                    {% elif resource.limit_reached %}
-                      limit reached
-                      <a href="#" data-toggle="popover" data-trigger="hover" title="{{ resource.limit_title }} Reached" data-content="{{ resource.limit_description }}">
+                    {% if not resource.rule_result.passed %}
+                      {{ resource.rule_result.title|safe }}
+                      <a href="#" data-toggle="popover" data-trigger="hover" title="{{ resource.rule_result.title }}" data-content="{{ resource.rule_result.description }}">
                         <i class="fas fa-question-circle" aria-hidden="true"></i>
                       </a>
-                    {% elif not resource.has_account %}
-                      <a href="https://access.iu.edu/Accounts/Create">Account required</a>
                     {% else %}
                       <a
                         class="btn btn-primary"
