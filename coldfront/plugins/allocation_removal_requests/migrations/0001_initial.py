@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('allocation', '0018_alter_allocation_options_and_more'),
+        ('allocation', '0004_auto_20211005_1108_squashed_0018_alter_allocation_options_and_more'),
     ]
 
     operations = [

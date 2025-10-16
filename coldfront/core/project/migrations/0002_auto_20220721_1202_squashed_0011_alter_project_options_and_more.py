@@ -11,19 +11,6 @@ import simple_history.models
 
 class Migration(migrations.Migration):
 
-    replaces = [
-        ("project", "0002_auto_20220721_1202"),
-        ("project", "0003_auto_20220829_0940"),
-        ("project", "0004_projectadminaction"),
-        ("project", "0005_auto_20221111_0837"),
-        ("project", "0006_auto_20230615_1125"),
-        ("project", "0007_alter_projectadminaction_action"),
-        ("project", "0008_attributetype_projectattribute_and_more"),
-        ("project", "0009_alter_project_description_alter_project_title"),
-        ("project", "0010_alter_projectadminaction_action"),
-        ("project", "0011_alter_project_options_and_more"),
-    ]
-
     dependencies = [
         ("project", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),

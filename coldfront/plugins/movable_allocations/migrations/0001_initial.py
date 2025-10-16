@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('allocation', '0018_alter_allocation_options_and_more'),
+        ('allocation', '0004_auto_20211005_1108_squashed_0018_alter_allocation_options_and_more'),
     ]
 
     operations = [
