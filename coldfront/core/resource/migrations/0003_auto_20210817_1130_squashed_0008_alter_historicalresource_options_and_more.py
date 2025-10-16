@@ -5,15 +5,6 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    replaces = [
-        ("resource", "0003_auto_20210817_1130"),
-        ("resource", "0004_resource_review_groups"),
-        ("resource", "0005_auto_20230109_1134"),
-        ("resource", "0006_auto_20230518_1027"),
-        ("resource", "0007_auto_20240116_0907"),
-        ("resource", "0008_alter_historicalresource_options_and_more"),
-    ]
-
     dependencies = [
         ("resource", "0002_auto_20191017_1141"),
         ("auth", "0012_alter_user_first_name_max_length"),

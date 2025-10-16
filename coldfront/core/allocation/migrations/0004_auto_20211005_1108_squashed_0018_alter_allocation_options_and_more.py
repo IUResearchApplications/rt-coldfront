@@ -10,29 +10,13 @@ import simple_history.models
 
 class Migration(migrations.Migration):
 
-    replaces = [
-        ("allocation", "0004_auto_20211005_1108"),
-        ("allocation", "0005_auto_20220721_1202"),
-        ("allocation", "0006_auto_20221020_1120"),
-        ("allocation", "0007_auto_20230109_1134"),
-        ("allocation", "0008_auto_20230317_0811"),
-        ("allocation", "0009_auto_20230518_1027"),
-        ("allocation", "0010_auto_20230615_1125"),
-        ("allocation", "0011_allocationremovalrequest_allocationremovalstatuschoice"),
-        ("allocation", "0012_auto_20240116_0907"),
-        ("allocation", "0013_auto_20240822_1035"),
-        ("allocation", "0014_auto_20240926_1039"),
-        ("allocation", "0015_alter_historicalallocation_options_and_more"),
-        ("allocation", "0016_allocationattributechangerequest_old_value_and_more"),
-        ("allocation", "0017_alter_allocationadminaction_action"),
-        ("allocation", "0018_alter_allocation_options_and_more"),
-    ]
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ("resource", "0006_auto_20230518_1027"),
+        (
+            "resource",
+            "0003_auto_20210817_1130_squashed_0008_alter_historicalresource_options_and_more"
+        ),
         ("allocation", "0003_auto_20191018_1049"),
-        ("resource", "0007_auto_20240116_0907"),
     ]
 
     operations = [
