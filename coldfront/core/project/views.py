@@ -1,86 +1,100 @@
+# SPDX-FileCopyrightText: (C) ColdFront Authors
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 import datetime
-from pipes import Template
-import pprint
-import django
-import logging 
+import logging
+import urllib
 
 from django import forms
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.contrib.auth.decorators import user_passes_test, login_required
 from django.contrib.auth.models import User
-from coldfront.core.utils.common import import_from_settings
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Q
-from django.forms import formset_factory, modelformset_factory
-from django.http import (HttpResponse, HttpResponseForbidden,
-                         HttpResponseRedirect)
+from django.forms import formset_factory
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
-from django.template.loader import render_to_string
 from django.urls import reverse
-from coldfront.core.allocation.utils import generate_guauge_data_from_usage
+from django.utils.html import format_html
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import FormView
 
-from coldfront.core.allocation.models import (Allocation,
-                                              AllocationStatusChoice,
-                                              AllocationUser,
-                                              AllocationUserRoleChoice,
-                                              AllocationUserStatusChoice)
-from coldfront.core.allocation.signals import (allocation_activate_user,
-                                               allocation_remove_user,
-                                               allocation_expire)
+from coldfront.config.core import ALLOCATION_EULA_ENABLE
+from coldfront.core.allocation.models import (
+    Allocation,
+    AllocationStatusChoice,
+    AllocationUser,
+    AllocationUserStatusChoice,
+    AllocationUserRoleChoice
+)
+from coldfront.core.allocation.signals import allocation_activate_user, allocation_remove_user, allocation_expire
+from coldfront.core.allocation.utils import generate_guauge_data_from_usage
 from coldfront.core.grant.models import Grant
-from coldfront.core.project.forms import (ProjectAddUserForm,
-                                          ProjectUpdateForm,
-                                          ProjectAddUsersToAllocationForm,
-                                          ProjectAttributeAddForm,
-                                          ProjectAttributeDeleteForm,
-                                          ProjectRemoveUserForm,
-                                          ProjectReviewEmailForm,
-                                          ProjectReviewForm,
-                                          ProjectSearchForm,
-                                          ProjectUserUpdateForm,
-                                          ProjectAttributeUpdateForm,
-                                          ProjectRequestEmailForm,
-                                          ProjectReviewAllocationForm,
-                                          ProjectAddUsersToAllocationFormSet)
-from coldfront.core.project.models import (Project,
-                                           ProjectAttribute,
-                                           ProjectReview,
-                                           ProjectReviewStatusChoice,
-                                           ProjectStatusChoice,
-                                           ProjectUser,
-                                           ProjectUserRoleChoice,
-                                           ProjectUserStatusChoice,
-                                           ProjectUserMessage,
-                                           ProjectDescriptionRecord)
+from coldfront.core.project.forms import (
+    ProjectAddUserForm,
+    ProjectAddUsersToAllocationForm,
+    ProjectAttributeAddForm,
+    ProjectAttributeDeleteForm,
+    ProjectAttributeUpdateForm,
+    ProjectCreationForm,
+    ProjectRemoveUserForm,
+    ProjectReviewEmailForm,
+    ProjectReviewForm,
+    ProjectSearchForm,
+    ProjectUserUpdateForm,
+    ProjectUpdateForm,
+    ProjectRequestEmailForm,
+    ProjectReviewAllocationForm,
+    ProjectAddUsersToAllocationFormSet
+)
+from coldfront.core.project.models import (
+    Project,
+    ProjectAttribute,
+    ProjectReview,
+    ProjectReviewStatusChoice,
+    ProjectStatusChoice,
+    ProjectUser,
+    ProjectUserMessage,
+    ProjectUserRoleChoice,
+    ProjectUserStatusChoice,
+    ProjectDescriptionRecord
+)
+from coldfront.core.project.signals import (
+    project_activate_user,
+    project_archive,
+    project_new,
+    project_remove_user,
+    project_update,
+)
+from coldfront.core.project.utils import (
+    determine_automated_institution_choice,
+    generate_project_code,
+    get_new_end_date_from_list,
+    create_admin_action,
+    get_project_user_emails,
+    generate_slurm_account_name,
+    create_admin_action_for_creation,
+    create_admin_action_for_deletion,
+    check_if_pi_eligible,
+    check_if_pis_eligible
+)
 from coldfront.core.publication.models import Publication
 from coldfront.core.research_output.models import ResearchOutput
 from coldfront.core.user.forms import UserSearchForm
 from coldfront.core.user.utils import CombinedUserSearch
 from coldfront.core.utils.common import get_domain_url, import_from_settings
 from coldfront.core.utils.mail import send_email, send_email_template
-
-from django import forms
-import urllib
-from django.utils.html import format_html
 from coldfront.core.user.models import UserProfile
-from coldfront.core.project.utils import (get_new_end_date_from_list,
-                                          create_admin_action,
-                                          get_project_user_emails,
-                                          generate_slurm_account_name,
-                                          create_admin_action_for_creation,
-                                          create_admin_action_for_deletion,
-                                          check_if_pi_eligible,
-                                          check_if_pis_eligible)
 from coldfront.core.allocation.utils import send_added_user_email
 from coldfront.core.utils.slack import send_message
 from coldfront.core.project.signals import project_activate, project_user_role_changed
+
 
 EMAIL_ENABLED = import_from_settings('EMAIL_ENABLED', False)
 ALLOCATION_ENABLE_ALLOCATION_RENEWAL = import_from_settings(
@@ -99,6 +113,8 @@ PROJECT_END_DATE_CARRYOVER_DAYS = import_from_settings(
     'PROJECT_END_DATE_CARRYOVER_DAYS',  90)
 PROJECT_DAYS_TO_REVIEW_BEFORE_EXPIRING = import_from_settings(
     'PROJECT_DAYS_TO_REVIEW_BEFORE_EXPIRING', 30)
+PROJECT_CODE = import_from_settings("PROJECT_CODE", False)
+PROJECT_CODE_PADDING = import_from_settings("PROJECT_CODE_PADDING", False)
 SLACK_MESSAGING_ENABLED = import_from_settings(
     'SLACK_MESSAGING_ENABLED', False)
 ENABLE_SLATE_PROJECT_SEARCH = import_from_settings(
@@ -116,27 +132,28 @@ if EMAIL_ENABLED:
     EMAIL_ALERTS_EMAIL_ADDRESS = import_from_settings('EMAIL_ALERTS_EMAIL_ADDRESS')
 
 logger = logging.getLogger(__name__)
+PROJECT_INSTITUTION_EMAIL_MAP = import_from_settings("PROJECT_INSTITUTION_EMAIL_MAP", False)
+
 
 class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Project
-    template_name = 'project/project_detail.html'
-    context_object_name = 'project'
+    template_name = "project/project_detail.html"
+    context_object_name = "project"
 
     def test_func(self):
-        """ UserPassesTestMixin Tests"""
+        """UserPassesTestMixin Tests"""
         if self.request.user.is_superuser:
             return True
 
-        if self.request.user.has_perm('project.can_view_all_projects'):
+        if self.request.user.has_perm("project.can_view_all_projects"):
             return True
 
         project_obj = self.get_object()
 
-        if project_obj.projectuser_set.filter(user=self.request.user, status__name='Active').exists():
+        if project_obj.projectuser_set.filter(user=self.request.user, status__name="Active").exists():
             return True
 
-        messages.error(
-            self.request, 'You do not have permission to view the previous page.')
+        messages.error(self.request, "You do not have permission to view the previous page.")
         return False
 
     def get_context_data(self, **kwargs):
@@ -155,36 +172,47 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
                 is_manager = True
                 context['is_allowed_to_update_project'] = True
             else:
-                context['is_allowed_to_update_project'] = False
+                context["is_allowed_to_update_project"] = False
         else:
-            context['is_allowed_to_update_project'] = False
+            context["is_allowed_to_update_project"] = False
 
-        pk = self.kwargs.get('pk')
+        pk = self.kwargs.get("pk")
         project_obj = get_object_or_404(Project, pk=pk)
 
         if self.request.user.is_superuser or self.request.user.has_perm('project.view_projectattribute'):
             attributes_with_usage = [attribute for attribute in project_obj.projectattribute_set.all(
             ).order_by('proj_attr_type__name') if hasattr(attribute, 'projectattributeusage')]
 
-            attributes = [attribute for attribute in project_obj.projectattribute_set.all(
-            ).order_by('proj_attr_type__name')]
+            attributes = [
+                attribute for attribute in project_obj.projectattribute_set.all().order_by("proj_attr_type__name")
+            ]
 
         else:
-            attributes_with_usage = [attribute for attribute in project_obj.projectattribute_set.filter(
-                proj_attr_type__is_private=False) if hasattr(attribute, 'projectattributeusage')]
+            attributes_with_usage = [
+                attribute
+                for attribute in project_obj.projectattribute_set.filter(proj_attr_type__is_private=False)
+                if hasattr(attribute, "projectattributeusage")
+            ]
 
-            attributes = [attribute for attribute in project_obj.projectattribute_set.filter(
-                proj_attr_type__is_private=False)]
+            attributes = [
+                attribute for attribute in project_obj.projectattribute_set.filter(proj_attr_type__is_private=False)
+            ]
 
         guage_data = []
         invalid_attributes = []
         for attribute in attributes_with_usage:
             try:
-                guage_data.append(generate_guauge_data_from_usage(attribute.proj_attr_type.name,
-                                                                  float(attribute.value), float(attribute.projectattributeusage.value)))
+                guage_data.append(
+                    generate_guauge_data_from_usage(
+                        attribute.proj_attr_type.name,
+                        float(attribute.value),
+                        float(attribute.projectattributeusage.value),
+                    )
+                )
             except ValueError:
-                logger.error("Allocation attribute '%s' is not an int but has a usage",
-                             attribute.allocation_attribute_type.name)
+                logger.error(
+                    "Allocation attribute '%s' is not an int but has a usage", attribute.allocation_attribute_type.name
+                )
                 invalid_attributes.append(attribute)
 
         for a in invalid_attributes:
@@ -194,8 +222,7 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         project_users = self.object.projectuser_set.filter(
             status__name__in=['Active', 'Inactive']).order_by('user__username')
 
-        context['mailto'] = 'mailto:' + \
-            ','.join([user.user.email for user in project_users])
+        context["mailto"] = "mailto:" + ",".join([user.user.email for user in project_users])
 
         if self.request.user.is_superuser or is_manager or self.request.user.has_perm('allocation.can_view_all_allocations'):
             allocations = Allocation.objects.prefetch_related(
@@ -238,7 +265,7 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         context['project_messages'] = project_messages.order_by('-created')
 
         try:
-            context['ondemand_url'] = settings.ONDEMAND_URL
+            context["ondemand_url"] = settings.ONDEMAND_URL
         except AttributeError:
             pass
 
@@ -248,22 +275,24 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
 
 
 class ProjectListView(LoginRequiredMixin, ListView):
-
     model = Project
-    template_name = 'project/project_list.html'
-    prefetch_related = ['pi', 'status', 'field_of_science', ]
-    context_object_name = 'project_list'
+    template_name = "project/project_list.html"
+    prefetch_related = [
+        "pi",
+        "status",
+        "field_of_science",
+    ]
+    context_object_name = "project_list"
     paginate_by = 25
 
     def get_queryset(self):
-
-        order_by = self.request.GET.get('order_by', 'id')
-        direction = self.request.GET.get('direction', 'asc')
+        order_by = self.request.GET.get("order_by", "id")
+        direction = self.request.GET.get("direction", "asc")
         if order_by != "name":
-            if direction == 'asc':
-                direction = ''
-            if direction == 'des':
-                direction = '-'
+            if direction == "asc":
+                direction = ""
+            if direction == "des":
+                direction = "-"
             order_by = direction + order_by
 
         project_search_form = ProjectSearchForm(self.request.GET)
@@ -282,16 +311,15 @@ class ProjectListView(LoginRequiredMixin, ListView):
                 ).order_by(order_by)
 
             # Last Name
-            if data.get('last_name'):
-                projects = projects.filter(
-                    pi__last_name__icontains=data.get('last_name'))
+            if data.get("last_name"):
+                projects = projects.filter(pi__last_name__icontains=data.get("last_name"))
 
             # Username
-            if data.get('username'):
+            if data.get("username"):
                 projects = projects.filter(
-                    Q(pi__username__icontains=data.get('username')) |
-                    Q(projectuser__user__username__icontains=data.get('username')) &
-                    Q(projectuser__status__name='Active')
+                    Q(pi__username__icontains=data.get("username"))
+                    | Q(projectuser__user__username__icontains=data.get("username"))
+                    & Q(projectuser__status__name="Active")
                 )
 
             # Field of Science
@@ -309,50 +337,49 @@ class ProjectListView(LoginRequiredMixin, ListView):
         return projects.distinct()
 
     def get_context_data(self, **kwargs):
-
         context = super().get_context_data(**kwargs)
         projects_count = self.get_queryset().count()
-        context['projects_count'] = projects_count
+        context["projects_count"] = projects_count
 
         context['enabled_pi_search'] = 'coldfront.plugins.pi_search' in settings.INSTALLED_APPS
         context['enabled_slate_project_search'] = ENABLE_SLATE_PROJECT_SEARCH
 
         project_search_form = ProjectSearchForm(self.request.GET)
         if project_search_form.is_valid():
-            context['project_search_form'] = project_search_form
+            context["project_search_form"] = project_search_form
             data = project_search_form.cleaned_data
-            filter_parameters = ''
+            filter_parameters = ""
             for key, value in data.items():
                 if value:
                     if isinstance(value, list):
                         for ele in value:
-                            filter_parameters += '{}={}&'.format(key, ele)
+                            filter_parameters += "{}={}&".format(key, ele)
                     else:
-                        filter_parameters += '{}={}&'.format(key, value)
-            context['project_search_form'] = project_search_form
+                        filter_parameters += "{}={}&".format(key, value)
+            context["project_search_form"] = project_search_form
         else:
             filter_parameters = None
-            context['project_search_form'] = ProjectSearchForm()
+            context["project_search_form"] = ProjectSearchForm()
 
-        order_by = self.request.GET.get('order_by')
+        order_by = self.request.GET.get("order_by")
         if order_by:
-            direction = self.request.GET.get('direction')
-            filter_parameters_with_order_by = filter_parameters + \
-                'order_by=%s&direction=%s&' % (order_by, direction)
+            direction = self.request.GET.get("direction")
+            filter_parameters_with_order_by = filter_parameters + "order_by=%s&direction=%s&" % (order_by, direction)
         else:
             filter_parameters_with_order_by = filter_parameters
 
         if filter_parameters:
-            context['expand_accordion'] = 'show'
+            context["expand_accordion"] = "show"
 
-        context['filter_parameters'] = filter_parameters
-        context['filter_parameters_with_order_by'] = filter_parameters_with_order_by
-        context['PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING'] = PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING
+        context["filter_parameters"] = filter_parameters
+        context["filter_parameters_with_order_by"] = filter_parameters_with_order_by
+        context["PROJECT_INSTITUTION_EMAIL_MAP"] = PROJECT_INSTITUTION_EMAIL_MAP
+        context["PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING"] = PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING
 
-        project_list = context.get('project_list')
+        project_list = context.get("project_list")
         paginator = Paginator(project_list, self.paginate_by)
 
-        page = self.request.GET.get('page')
+        page = self.request.GET.get("page")
 
         try:
             project_list = paginator.page(page)
@@ -365,103 +392,136 @@ class ProjectListView(LoginRequiredMixin, ListView):
 
 
 class ProjectArchivedListView(LoginRequiredMixin, ListView):
-
     model = Project
-    template_name = 'project/project_archived_list.html'
-    prefetch_related = ['pi', 'status', 'field_of_science', ]
-    context_object_name = 'project_list'
+    template_name = "project/project_archived_list.html"
+    prefetch_related = [
+        "pi",
+        "status",
+        "field_of_science",
+    ]
+    context_object_name = "project_list"
     paginate_by = 10
 
     def get_queryset(self):
-
-        order_by = self.request.GET.get('order_by', 'id')
-        direction = self.request.GET.get('direction', '')
+        order_by = self.request.GET.get("order_by", "id")
+        direction = self.request.GET.get("direction", "")
         if order_by != "name":
-            if direction == 'des':
-                direction = '-'
+            if direction == "des":
+                direction = "-"
             order_by = direction + order_by
 
         project_search_form = ProjectSearchForm(self.request.GET)
 
         if project_search_form.is_valid():
             data = project_search_form.cleaned_data
-            if data.get('show_all_projects') and (self.request.user.is_superuser or self.request.user.has_perm('project.can_view_all_projects')):
-                projects = Project.objects.prefetch_related('pi', 'field_of_science', 'status',).filter(
-                    status__name__in=['Archived', ]).order_by(order_by)
+            if data.get("show_all_projects") and (
+                self.request.user.is_superuser or self.request.user.has_perm("project.can_view_all_projects")
+            ):
+                projects = (
+                    Project.objects.prefetch_related(
+                        "pi",
+                        "field_of_science",
+                        "status",
+                    )
+                    .filter(
+                        status__name__in=[
+                            "Archived",
+                        ]
+                    )
+                    .order_by(order_by)
+                )
             else:
-
-                projects = Project.objects.prefetch_related('pi', 'field_of_science', 'status',).filter(
-                    Q(status__name__in=['Archived', ]) &
-                    Q(projectuser__user=self.request.user) &
-                    Q(projectuser__status__name='Active')
-                ).order_by(order_by)
+                projects = (
+                    Project.objects.prefetch_related(
+                        "pi",
+                        "field_of_science",
+                        "status",
+                    )
+                    .filter(
+                        Q(
+                            status__name__in=[
+                                "Archived",
+                            ]
+                        )
+                        & Q(projectuser__user=self.request.user)
+                        & Q(projectuser__status__name="Active")
+                    )
+                    .order_by(order_by)
+                )
 
             # Last Name
-            if data.get('last_name'):
-                projects = projects.filter(
-                    pi__last_name__icontains=data.get('last_name'))
+            if data.get("last_name"):
+                projects = projects.filter(pi__last_name__icontains=data.get("last_name"))
 
             # Username
-            if data.get('username'):
-                projects = projects.filter(
-                    pi__username__icontains=data.get('username'))
+            if data.get("username"):
+                projects = projects.filter(pi__username__icontains=data.get("username"))
 
             # Field of Science
-            # if data.get('field_of_science'):
-            #     projects = projects.filter(
-            #         field_of_science__description__icontains=data.get('field_of_science'))
+            # if data.get("field_of_science"):
+            #     projects = projects.filter(field_of_science__description__icontains=data.get("field_of_science"))
 
         else:
-            projects = Project.objects.prefetch_related('pi', 'field_of_science', 'status',).filter(
-                Q(status__name__in=['Archived', ]) &
-                Q(projectuser__user=self.request.user) &
-                Q(projectuser__status__name='Active')
-            ).order_by(order_by)
+            projects = (
+                Project.objects.prefetch_related(
+                    "pi",
+                    "field_of_science",
+                    "status",
+                )
+                .filter(
+                    Q(
+                        status__name__in=[
+                            "Archived",
+                        ]
+                    )
+                    & Q(projectuser__user=self.request.user)
+                    & Q(projectuser__status__name="Active")
+                )
+                .order_by(order_by)
+            )
 
         return projects
 
     def get_context_data(self, **kwargs):
-
         context = super().get_context_data(**kwargs)
         projects_count = self.get_queryset().count()
-        context['projects_count'] = projects_count
-        context['expand'] = False
+        context["projects_count"] = projects_count
+        context["expand"] = False
 
         project_search_form = ProjectSearchForm(self.request.GET)
         if project_search_form.is_valid():
-            context['project_search_form'] = project_search_form
+            context["project_search_form"] = project_search_form
             data = project_search_form.cleaned_data
-            filter_parameters = ''
+            filter_parameters = ""
             for key, value in data.items():
                 if value:
                     if isinstance(value, list):
                         for ele in value:
-                            filter_parameters += '{}={}&'.format(key, ele)
+                            filter_parameters += "{}={}&".format(key, ele)
                     else:
-                        filter_parameters += '{}={}&'.format(key, value)
-            context['project_search_form'] = project_search_form
+                        filter_parameters += "{}={}&".format(key, value)
+            context["project_search_form"] = project_search_form
         else:
             filter_parameters = None
-            context['project_search_form'] = ProjectSearchForm()
+            context["project_search_form"] = ProjectSearchForm()
 
-        order_by = self.request.GET.get('order_by')
+        order_by = self.request.GET.get("order_by")
         if order_by:
-            direction = self.request.GET.get('direction')
-            filter_parameters_with_order_by = filter_parameters + \
-                'order_by=%s&direction=%s&' % (order_by, direction)
+            direction = self.request.GET.get("direction")
+            filter_parameters_with_order_by = filter_parameters + "order_by=%s&direction=%s&" % (order_by, direction)
         else:
             filter_parameters_with_order_by = filter_parameters
 
         if filter_parameters:
-            context['expand_accordion'] = 'show'
+            context["expand_accordion"] = "show"
 
-        context['filter_parameters'] = filter_parameters
-        context['filter_parameters_with_order_by'] = filter_parameters_with_order_by
+        context["filter_parameters"] = filter_parameters
+        context["filter_parameters_with_order_by"] = filter_parameters_with_order_by
 
-        project_list = context.get('project_list')
+        project_list = context.get("project_list")
         paginator = Paginator(project_list, self.paginate_by)
 
-        page = self.request.GET.get('page')
+        page = self.request.GET.get("page")
 
         try:
             project_list = paginator.page(page)
@@ -2285,19 +2345,21 @@ class ProjectDeniedListView(LoginRequiredMixin, ListView):
 
 
 class ProjectArchiveProjectView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
-    template_name = 'project/project_archive.html'
+    template_name = "project/project_archive.html"
 
     def test_func(self):
-        """ UserPassesTestMixin Tests"""
+        """UserPassesTestMixin Tests"""
         if self.request.user.is_superuser:
             return True
 
-        project_obj = get_object_or_404(Project, pk=self.kwargs.get('pk'))
+        project_obj = get_object_or_404(Project, pk=self.kwargs.get("pk"))
 
         if project_obj.pi == self.request.user:
             return True
 
-        if project_obj.projectuser_set.filter(user=self.request.user, role__name='Manager', status__name='Active').exists():
+        if project_obj.projectuser_set.filter(
+            user=self.request.user, role__name="Manager", status__name="Active"
+        ).exists():
             return True
 
     def dispatch(self, request, *args, **kwargs):
@@ -2313,25 +2375,27 @@ class ProjectArchiveProjectView(LoginRequiredMixin, UserPassesTestMixin, Templat
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        pk = self.kwargs.get('pk')
+        pk = self.kwargs.get("pk")
         project = get_object_or_404(Project, pk=pk)
 
-        context['project'] = project
+        context["project"] = project
 
         return context
 
     def post(self, request, *args, **kwargs):
-        pk = self.kwargs.get('pk')
+        pk = self.kwargs.get("pk")
         project = get_object_or_404(Project, pk=pk)
-        project_status_archive = ProjectStatusChoice.objects.get(
-            name='Archived')
-        allocation_status_expired = AllocationStatusChoice.objects.get(
-            name='Expired')
+        project_status_archive = ProjectStatusChoice.objects.get(name="Archived")
+        allocation_status_expired = AllocationStatusChoice.objects.get(name="Expired")
         end_date = datetime.datetime.now()
         project.status = project_status_archive
         project.end_date = end_date
         project.save()
-        for allocation in project.allocation_set.filter(status__name='Active'):
+
+        # project signals
+        project_archive.send(sender=self.__class__, project_obj=project)
+
+        for allocation in project.allocation_set.filter(status__name="Active"):
             allocation.status = allocation_status_expired
             allocation.end_date = end_date
             allocation.save()
@@ -2409,7 +2473,7 @@ class ProjectDenyRequestView(LoginRequiredMixin, UserPassesTestMixin, View):
     login_url = '/'
 
     def test_func(self):
-        """ UserPassesTestMixin Tests"""
+        """UserPassesTestMixin Tests"""
 
         if not self.request.user.is_superuser:
             if not self.request.user.has_perm('project.can_review_pending_projects'):
@@ -2631,7 +2695,6 @@ class ProjectReviewDenyView(LoginRequiredMixin, UserPassesTestMixin, View):
             template_context = {
                 'project_title': project_review_obj.project.title,
                 'project_url': project_url,
-                'signature': EMAIL_SIGNATURE,
                 'help_email': EMAIL_TICKET_SYSTEM_ADDRESS,
                 'center_name': EMAIL_CENTER_NAME,
                 'not_renewed_allocation_urls': not_renewed_allocation_urls,
@@ -2763,7 +2826,7 @@ class ProjectRequestEmailView(LoginRequiredMixin, UserPassesTestMixin, FormView)
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse('project-review-list')
+        return reverse("project-review-list")
 
 
 class ProjectRequestAccessEmailView(LoginRequiredMixin, View):

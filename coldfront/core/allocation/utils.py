@@ -1,4 +1,7 @@
-from datetime import datetime
+# SPDX-FileCopyrightText: (C) ColdFront Authors
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 from django.db.models import Q
 from django.urls import reverse
 from django.forms.models import model_to_dict
@@ -25,17 +28,16 @@ if EMAIL_ENABLED:
 
 def set_allocation_user_status_to_error(allocation_user_pk):
     allocation_user_obj = AllocationUser.objects.get(pk=allocation_user_pk)
-    error_status = AllocationUserStatusChoice.objects.get(name='Error')
+    error_status = AllocationUserStatusChoice.objects.get(name="Error")
     allocation_user_obj.status = error_status
     allocation_user_obj.save()
 
 
 def generate_guauge_data_from_usage(name, value, usage):
-
     label = "%s: %.2f of %.2f" % (name, usage, value)
 
     try:
-        percent = (usage/value)*100
+        percent = (usage / value) * 100
     except ZeroDivisionError:
         percent = 100
     except ValueError:
@@ -52,31 +54,36 @@ def generate_guauge_data_from_usage(name, value, usage):
         "columns": [
             [label, percent],
         ],
-        "type": 'gauge',
-        "colors": {
-            label: color
-        }
+        "type": "gauge",
+        "colors": {label: color},
     }
 
     return usage_data
 
 
 def get_user_resources(user_obj):
-
     if user_obj.is_superuser:
         resources = Resource.objects.filter(is_allocatable=True)
     else:
         resources = Resource.objects.filter(
-            Q(is_allocatable=True) &
-            Q(is_available=True) &
-            (Q(is_public=True) | Q(allowed_groups__in=user_obj.groups.all()) | Q(allowed_users__in=[user_obj,]))
+            Q(is_allocatable=True)
+            & Q(is_available=True)
+            & (
+                Q(is_public=True)
+                | Q(allowed_groups__in=user_obj.groups.all())
+                | Q(
+                    allowed_users__in=[
+                        user_obj,
+                    ]
+                )
+            )
         ).distinct()
 
     return resources
 
 
 def test_allocation_function(allocation_pk):
-    print('test_allocation_function', allocation_pk)
+    print("test_allocation_function", allocation_pk)
 
 
 def send_added_user_email(request, allocation_obj, users, users_emails):

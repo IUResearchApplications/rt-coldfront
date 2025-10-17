@@ -2,6 +2,7 @@
 {% load crispy_forms_tags %}
 {% load humanize %}
 {% load static %}
+{% load common_tags %}
 
 
 {% block title %}
@@ -69,12 +70,20 @@ Project Detail
       <a href="mailto:{{ project.pi.email }} "><i class="far fa-envelope" aria-hidden="true"></i><span class="sr-only">Email PI</span></a>
     </h3>
     <p class="card-text text-justify"><strong>Description: </strong>{{ project.description }}</p>
+    {% if project.project_code %}
+        <p class="card-text text-justify"><strong>Project Code: </strong>{{ project.project_code }}</p>
+    {% else %}
+        <p class="card-text text-justify"><strong>ID: </strong>{{ project.id }}</p>
+    {% endif %}
     <p class="card-text text-justify"><strong>Field of Science: </strong>{{ project.field_of_science }}</p>
     <p class="card-text text-justify"><strong>Project Status: </strong>{{ project.status }}
         {% if project.last_project_review and  project.last_project_review.status.name == 'Pending'%}
           <span class="badge badge-pill badge-info">project review pending</span>
         {% endif %}
     </p>
+    {% if PROJECT_INSTITUTION_EMAIL_MAP %}
+        <p class="card-text text-justify"><strong>Institution: </strong>{{ project.institution }}</p>
+    {% endif %}
     <p class="card-text text-justify"><strong>Created: </strong>{{ project.created|date:"M. d, Y" }}</p>
   </div>
 </div>
@@ -189,13 +198,21 @@ Project Detail
             <tr>
               <td>{{ allocation.get_parent_resource.name }}</td>
               <td>{{ allocation.get_parent_resource.resource_type.name }}</td>
-              {% if allocation.get_information != '' %}
+              {% if user_allocation_status|get_value_by_index:forloop.counter0 == 'PendingEULA' %}
+              <td class="test-nowrap"><a href="{% url 'allocation-review-eula' allocation.pk %}">Review and Accept EULA to activate</a> </td>
+              {% else %}
+              {% if allocation.get_information != '' %} 
               <td class="text-nowrap">{{allocation.get_information}}</td>
               {% else %}
               <td class="text-nowrap">{{allocation.description|default_if_none:""}}</td>
               {% endif %}
+              {% endif %}
               {% if allocation.status.name == 'Active' %}
+              {% if user_allocation_status|get_value_by_index:forloop.counter0 == 'PendingEULA' %}
+              <td class="text-success">{{ user_allocation_status|get_value_by_index:forloop.counter0 }}</td>
+              {% else %}
                 <td class="text-success">{{ allocation.status.name }}</td>
+              {% endif %}
               {% elif  allocation.status.name == 'Expired' or allocation.status.name == 'Denied' %}
                 <td class="text-danger">{{ allocation.status.name }}</td>
               {% else %}
@@ -501,6 +518,7 @@ Project Detail
   </div>
 </div>
 <!-- End Admin Messages -->
+{{ guage_data|json_script:"guage-data" }}
 
 <script>
   function getCookie(name) {
@@ -522,7 +540,7 @@ Project Detail
   $(document).ready(function(){
     $('[data-toggle="popover"]').popover();
 
-    var guage_data = {{ guage_data | safe }};
+    var guage_data = JSON.parse(document.getElementById('guage-data').textContent);
     drawGauges(guage_data);
 
     $('#publication-table').DataTable({

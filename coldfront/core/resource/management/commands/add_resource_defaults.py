@@ -1,12 +1,14 @@
+# SPDX-FileCopyrightText: (C) ColdFront Authors
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 from django.core.management.base import BaseCommand
 
-from coldfront.core.resource.models import (AttributeType,
-                                            ResourceAttributeType,
-                                            ResourceType)
+from coldfront.core.resource.models import AttributeType, ResourceAttributeType, ResourceType
 
 
 class Command(BaseCommand):
-    help = 'Add default resource related choices'
+    help = "Add default resource related choices"
 
     def handle(self, *args, **options):
 
@@ -132,7 +134,8 @@ class Command(BaseCommand):
             ('allocation_limit_per_pi', 'Int'),
         ):
             ResourceAttributeType.objects.get_or_create(
-                name=resource_attribute_type, attribute_type=AttributeType.objects.get(name=attribute_type))
+                name=resource_attribute_type, attribute_type=AttributeType.objects.get(name=attribute_type)
+            )
 
         for resource_type, description in (
             ('Cloud', 'Cloud Computing'),
@@ -144,5 +147,4 @@ class Command(BaseCommand):
             ('Storage', 'NAS storage'),
             ('Service', 'Services'),
         ):
-            ResourceType.objects.get_or_create(
-                name=resource_type, description=description)
+            ResourceType.objects.get_or_create(name=resource_type, description=description)

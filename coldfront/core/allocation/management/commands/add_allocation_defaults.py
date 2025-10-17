@@ -1,34 +1,50 @@
+# SPDX-FileCopyrightText: (C) ColdFront Authors
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 from django.core.management.base import BaseCommand
 
-from coldfront.core.allocation.models import (AttributeType,
-                                              AllocationAttributeType,
-                                              AllocationStatusChoice,
-                                              AllocationUserStatusChoice,
-                                              AllocationUserRequestStatusChoice,
-                                              AllocationChangeStatusChoice,
-                                              AllocationUserRoleChoice)
+from coldfront.core.allocation.models import (
+    AllocationAttributeType,
+    AllocationChangeStatusChoice,
+    AllocationStatusChoice,
+    AllocationUserStatusChoice,
+    AttributeType,
+    AllocationUserRequestStatusChoice,
+    AllocationUserRoleChoice
+)
 
 
 class Command(BaseCommand):
-    help = 'Add default allocation related choices'
+    help = "Add default allocation related choices"
 
     def handle(self, *args, **options):
-
-        for attribute_type in ('Date', 'Float', 'Int', 'Text', 'Yes/No',
-            'Attribute Expanded Text', 'True/False'):
+        for attribute_type in ("Date", "Float", "Int", "Text", "Yes/No", "No", "Attribute Expanded Text", "True/False"):
             AttributeType.objects.get_or_create(name=attribute_type)
 
-        for choice in ('Active', 'Denied', 'Expired',
-                       'New', 'Paid', 'Payment Pending',
-                       'Payment Requested', 'Payment Declined',
-                       'Renewal Requested', 'Revoked', 'Unpaid',
-                       'Billing Information Submitted',):
+        for choice in (
+            "Active",
+            "Denied",
+            "Expired",
+            "New",
+            "Paid",
+            "Payment Pending",
+            "Payment Requested",
+            "Payment Declined",
+            "Renewal Requested",
+            "Revoked",
+            "Unpaid",
+        ):
             AllocationStatusChoice.objects.get_or_create(name=choice)
 
-        for choice in ('Pending', 'Approved', 'Denied',):
+        for choice in (
+            "Pending",
+            "Approved",
+            "Denied",
+        ):
             AllocationChangeStatusChoice.objects.get_or_create(name=choice)
 
-        for choice in ('Active', 'Error', 'Removed', 'Invited', 'Pending', 'Disabled', 'Retired'):
+        for choice in ("Active", "Error", "Removed", "PendingEULA", "DeclinedEULA", 'Invited', 'Pending', 'Disabled', 'Retired'):
             AllocationUserStatusChoice.objects.get_or_create(name=choice)
 
         for choice in ('Approved', 'Pending', 'Denied', ):
@@ -75,5 +91,9 @@ class Command(BaseCommand):
             ('SMB Enabled', 'Yes/No', False, False),
             ('Slate-Project Directory', 'Text', False, False),
         ):
-            AllocationAttributeType.objects.get_or_create(name=name, attribute_type=AttributeType.objects.get(
-                name=attribute_type), has_usage=has_usage, is_private=is_private)
+            AllocationAttributeType.objects.get_or_create(
+                name=name,
+                attribute_type=AttributeType.objects.get(name=attribute_type),
+                has_usage=has_usage,
+                is_private=is_private,
+            )

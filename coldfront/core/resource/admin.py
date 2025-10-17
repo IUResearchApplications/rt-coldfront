@@ -1,29 +1,61 @@
+# SPDX-FileCopyrightText: (C) ColdFront Authors
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
 
-from coldfront.core.resource.models import (AttributeType, Resource,
-                                              ResourceAttribute,
-                                              ResourceAttributeType,
-                                              ResourceType)
+from coldfront.core.resource.models import (
+    AttributeType,
+    Resource,
+    ResourceAttribute,
+    ResourceAttributeType,
+    ResourceType,
+)
 
 
 @admin.register(AttributeType)
 class AttributeTypeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'created', 'modified', )
-    search_fields = ('name', )
+    list_display = (
+        "name",
+        "created",
+        "modified",
+    )
+    search_fields = ("name",)
 
 
 @admin.register(ResourceType)
 class ResourceTypeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'created', 'modified', )
-    search_fields = ('name', 'description',)
+    list_display = (
+        "name",
+        "description",
+        "created",
+        "modified",
+    )
+    search_fields = (
+        "name",
+        "description",
+    )
 
 
 @admin.register(ResourceAttributeType)
 class ResourceAttributeTypeAdmin(SimpleHistoryAdmin):
-    list_display = ('pk', 'name', 'attribute_type_name', 'is_required', 'is_unique_per_resource', 'is_value_unique', 'created', 'modified', )
-    search_fields = ('name', 'attribute_type__name',)
-    list_filter = ('attribute_type__name', 'name', 'is_required', 'is_unique_per_resource', 'is_value_unique')
+    list_display = (
+        "pk",
+        "name",
+        "attribute_type_name",
+        "is_required",
+        "is_unique_per_resource",
+        "is_value_unique",
+        "created",
+        "modified",
+    )
+    search_fields = (
+        "name",
+        "attribute_type__name",
+        "resource_type__name",
+    )
+    list_filter = ("attribute_type__name", "name", "is_required", "is_unique_per_resource", "is_value_unique")
 
     def attribute_type_name(self, obj):
         return obj.attribute_type.name
@@ -43,7 +75,6 @@ class ResourceAttributeInline(admin.TabularInline):
             return super().get_fields(request)
         else:
             return self.fields_change
-
 
 
 @admin.register(Resource)

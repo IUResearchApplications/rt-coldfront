@@ -1,18 +1,22 @@
+# SPDX-FileCopyrightText: (C) ColdFront Authors
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 import datetime
-import textwrap
 from enum import Enum
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator
 from django.db import models
-from ast import literal_eval
-from coldfront.core.utils.validate import AttributeValidator
 from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
 from coldfront.core.field_of_science.models import FieldOfScience
 from coldfront.core.utils.common import import_from_settings
+from coldfront.core.utils.validate import AttributeValidator
+
+PROJECT_ENABLE_PROJECT_REVIEW = import_from_settings("PROJECT_ENABLE_PROJECT_REVIEW", False)
 
 PROJECT_ENABLE_PROJECT_REVIEW = import_from_settings('PROJECT_ENABLE_PROJECT_REVIEW', False)
 PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings(
@@ -25,21 +29,23 @@ if PROJECT_ENABLE_PERMISSIONS_PER_TYPE:
     PROJECT_PERMISSIONS_PER_TYPE = import_from_settings('PROJECT_PERMISSIONS_PER_TYPE')
 
 class ProjectPermission(Enum):
-    """ A project permission stores the user, manager, pi, and update fields of a project. """
+    """A project permission stores the user, manager, pi, and update fields of a project."""
 
-    USER = 'user'
-    MANAGER = 'manager'
-    PI = 'pi'
-    UPDATE = 'update'
+    USER = "user"
+    MANAGER = "manager"
+    PI = "pi"
+    UPDATE = "update"
+
 
 class ProjectStatusChoice(TimeStampedModel):
-    """ A project status choice indicates the status of the project. Examples include Active, Archived, and New. 
-    
+    """A project status choice indicates the status of the project. Examples include Active, Archived, and New.
+
     Attributes:
         name (str): name of project status choice
     """
+
     class Meta:
-        ordering = ('name',)
+        ordering = ("name",)
 
     class ProjectStatusChoiceManager(models.Manager):
         def get_by_natural_key(self, name):
@@ -72,8 +78,8 @@ class ProjectTypeChoice(TimeStampedModel):
 
 
 class Project(TimeStampedModel):
-    """ A project is a container that includes users, allocations, publications, grants, and other research output. 
-    
+    """A project is a container that includes users, allocations, publications, grants, and other research output.
+
     Attributes:
         title (str): name of the project
         pi (User): represents the User object of the project's PI
@@ -90,9 +96,10 @@ class Project(TimeStampedModel):
         requires_review (bool): indicates whether or not the project requires review
         max_managers (int): maximum managers allowed in the project
     """
+
     class Meta:
-        ordering = ['title']
-        # unique_together = ('title', 'pi')
+        ordering = ["title"]
+        # unique_together = ("title", "pi")
 
         permissions = (
             ("can_view_all_projects", "Can view all projects"),
@@ -129,7 +136,7 @@ required to log onto the site at least once before they can be added.
         validators=[
             MinLengthValidator(
                 10,
-                'The project description must be > 10 characters.',
+                "The project description must be > 10 characters.",
             )
         ],
         db_collation='utf8mb4_0900_ai_ci'
@@ -159,12 +166,16 @@ required to log onto the site at least once before they can be added.
     max_managers = models.IntegerField(default=3)
     history = HistoricalRecords()
     objects = ProjectManager()
+    project_code = models.CharField(max_length=10, blank=True)
+    institution = models.CharField(max_length=80, blank=True, default="None")
 
     def clean(self):
-        """ Validates the project and raises errors if the project is invalid. """
+        """Validates the project and raises errors if the project is invalid."""
 
-        if 'Auto-Import Project'.lower() in self.title.lower():
-            raise ValidationError('You must update the project title. You cannot have "Auto-Import Project" in the title.')
+        if "Auto-Import Project".lower() in self.title.lower():
+            raise ValidationError(
+                'You must update the project title. You cannot have "Auto-Import Project" in the title.'
+            )
 
     @property
     def last_project_review(self):
@@ -174,7 +185,7 @@ required to log onto the site at least once before they can be added.
         """
 
         if self.projectreview_set.exists():
-            return self.projectreview_set.order_by('-created')[0]
+            return self.projectreview_set.order_by("-created")[0]
         else:
             return None
 
@@ -186,7 +197,7 @@ required to log onto the site at least once before they can be added.
         """
 
         if self.grant_set.exists():
-            return self.grant_set.order_by('-modified')[0]
+            return self.grant_set.order_by("-modified")[0]
         else:
             return None
 
@@ -198,7 +209,7 @@ required to log onto the site at least once before they can be added.
         """
 
         if self.publication_set.exists():
-            return self.publication_set.order_by('-created')[0]
+            return self.publication_set.order_by("-created")[0]
         else:
             return None
 
@@ -254,7 +265,7 @@ required to log onto the site at least once before they can be added.
             else:
                 return []
 
-        if self.projectuser_set.filter(user_conditions & models.Q(role__name='Manager')).exists():
+        if self.projectuser_set.filter(user_conditions & models.Q(role__name="Manager")).exists():
             permissions.append(ProjectPermission.MANAGER)
 
         if self.projectuser_set.filter(user_conditions & models.Q(project__pi_id=user.id)).exists():
@@ -349,9 +360,10 @@ required to log onto the site at least once before they can be added.
         return merged
 
 
+
 class ProjectAdminComment(TimeStampedModel):
-    """ A project admin comment is a comment that an admin can make on a project. 
-    
+    """A project admin comment is a comment that an admin can make on a project.
+
     Attributes:
         project (Project): links the project the comment is from to the comment
         author (User): represents the admin who authored the comment
@@ -365,9 +377,10 @@ class ProjectAdminComment(TimeStampedModel):
     def __str__(self):
         return self.comment
 
+
 class ProjectUserMessage(TimeStampedModel):
-    """ A project user message is a message sent to a user in a project. 
-    
+    """A project user message is a message sent to a user in a project.
+
     Attributes:
         project (Project): links the project the message is from to the message
         author (User): represents the user who authored the message
@@ -383,9 +396,10 @@ class ProjectUserMessage(TimeStampedModel):
     def __str__(self):
         return self.message
 
+
 class ProjectReviewStatusChoice(TimeStampedModel):
-    """ A project review status choice is an option a user can choose when setting a project's status. Examples include Completed and Pending.
-    
+    """A project review status choice is an option a user can choose when setting a project's status. Examples include Completed and Pending.
+
     Attributes:
         name (str): name of the status choice
     """
@@ -396,11 +410,14 @@ class ProjectReviewStatusChoice(TimeStampedModel):
         return self.name
 
     class Meta:
-        ordering = ['name', ]
+        ordering = [
+            "name",
+        ]
+
 
 class ProjectReview(TimeStampedModel):
-    """ A project review is what a user submits to their PI when their project status is Pending. 
-    
+    """A project review is what a user submits to their PI when their project status is Pending.
+
     Attributes:
         project (Project): links the project to its review
         status (ProjectReviewStatusChoice): links the project review to its status
@@ -414,15 +431,18 @@ class ProjectReview(TimeStampedModel):
     allocation_renewals = models.TextField(blank=True, null=True)
     history = HistoricalRecords()
 
+
 class ProjectUserRoleChoice(TimeStampedModel):
-    """ A project user role choice is an option a PI, manager, or admin has while selecting a user's role. Examples include Manager and User.
-    
+    """A project user role choice is an option a PI, manager, or admin has while selecting a user's role. Examples include Manager and User.
+
     Attributes:
-        name (str): name of the user role choice  
+        name (str): name of the user role choice
     """
 
     class Meta:
-        ordering = ['name', ]
+        ordering = [
+            "name",
+        ]
 
     class ProjectUserRoleChoiceManager(models.Manager):
         def get_by_natural_key(self, name):
@@ -437,14 +457,18 @@ class ProjectUserRoleChoice(TimeStampedModel):
     def natural_key(self):
         return (self.name,)
 
+
 class ProjectUserStatusChoice(TimeStampedModel):
-    """ A project user status choice indicates the status of a project user. Examples include Active, Pending, and Denied.
-    
+    """A project user status choice indicates the status of a project user. Examples include Active, Pending, and Denied.
+
     Attributes:
         name (str): name of the project user status choice
     """
+
     class Meta:
-        ordering = ['name', ]
+        ordering = [
+            "name",
+        ]
 
     class ProjectUserStatusChoiceManager(models.Manager):
         def get_by_natural_key(self, name):
@@ -459,9 +483,10 @@ class ProjectUserStatusChoice(TimeStampedModel):
     def natural_key(self):
         return (self.name,)
 
+
 class ProjectUser(TimeStampedModel):
-    """ A project user represents a user on the project.
-    
+    """A project user represents a user on the project.
+
     Attributes:
         user (User): represents the User object of the project user
         project (Project): links user to its project
@@ -473,35 +498,39 @@ class ProjectUser(TimeStampedModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     role = models.ForeignKey(ProjectUserRoleChoice, on_delete=models.CASCADE)
-    status = models.ForeignKey(ProjectUserStatusChoice, on_delete=models.CASCADE, verbose_name='Status')
+    status = models.ForeignKey(ProjectUserStatusChoice, on_delete=models.CASCADE, verbose_name="Status")
     enable_notifications = models.BooleanField(default=True)
     history = HistoricalRecords()
 
     def __str__(self):
-        return '%s %s (%s)' % (self.user.first_name, self.user.last_name, self.user.username)
+        return "%s %s (%s)" % (self.user.first_name, self.user.last_name, self.user.username)
 
     class Meta:
-        unique_together = ('user', 'project')
+        unique_together = ("user", "project")
         verbose_name_plural = "Project User Status"
 
+
 class AttributeType(TimeStampedModel):
-    """ An attribute type indicates the data type of the attribute. Examples include Date, Float, Int, Text, and Yes/No. 
-    
+    """An attribute type indicates the data type of the attribute. Examples include Date, Float, Int, Text, and Yes/No.
+
     Attributes:
         name (str): name of attribute data type
     """
-    
+
     name = models.CharField(max_length=64)
 
     def __str__(self):
         return self.name
 
     class Meta:
-        ordering = ['name', ]
+        ordering = [
+            "name",
+        ]
+
 
 class ProjectAttributeType(TimeStampedModel):
-    """ A project attribute type indicates the type of the attribute. Examples include Project ID and Account Number. 
-    
+    """A project attribute type indicates the type of the attribute. Examples include Project ID and Account Number.
+
     Attributes:
         attribute_type (AttributeType): indicates the data type of the attribute
         name (str): name of project attribute type
@@ -522,17 +551,20 @@ class ProjectAttributeType(TimeStampedModel):
     history = HistoricalRecords()
 
     def __str__(self):
-        return '%s (%s)' % (self.name, self.attribute_type.name)
+        return "%s (%s)" % (self.name, self.attribute_type.name)
 
     def __repr__(self) -> str:
         return str(self)
 
     class Meta:
-        ordering = ['name', ]
+        ordering = [
+            "name",
+        ]
+
 
 class ProjectAttribute(TimeStampedModel):
-    """ A project attribute class links a project attribute type and a project. 
-    
+    """A project attribute class links a project attribute type and a project.
+
     Attributes:
         proj_attr_type (ProjectAttributeType): project attribute type to link
         project (Project): project to link
@@ -546,17 +578,18 @@ class ProjectAttribute(TimeStampedModel):
     history = HistoricalRecords()
 
     def save(self, *args, **kwargs):
-        """ Saves the project attribute. """
+        """Saves the project attribute."""
         super().save(*args, **kwargs)
         if self.proj_attr_type.has_usage and not ProjectAttributeUsage.objects.filter(project_attribute=self).exists():
-            ProjectAttributeUsage.objects.create(
-                project_attribute=self)
+            ProjectAttributeUsage.objects.create(project_attribute=self)
 
     def clean(self):
-        """ Validates the project and raises errors if the project is invalid. """
-        if self.proj_attr_type.is_unique and self.project.projectattribute_set.filter(proj_attr_type=self.proj_attr_type).exists():
-            raise ValidationError("'{}' attribute already exists for this project.".format(
-                self.proj_attr_type))
+        """Validates the project and raises errors if the project is invalid."""
+        if (
+            self.proj_attr_type.is_unique
+            and self.project.projectattribute_set.filter(proj_attr_type=self.proj_attr_type).exists()
+        ):
+            raise ValidationError("'{}' attribute already exists for this project.".format(self.proj_attr_type))
 
         expected_value_type = self.proj_attr_type.attribute_type.name.strip()
 
@@ -572,23 +605,24 @@ class ProjectAttribute(TimeStampedModel):
             validator.validate_date()
 
     def __str__(self):
-        return '%s' % (self.proj_attr_type.name)
+        return "%s" % (self.proj_attr_type.name)
+
 
 class ProjectAttributeUsage(TimeStampedModel):
-    """ Project attribute usage indicates the usage of a project attribute. 
-    
+    """Project attribute usage indicates the usage of a project attribute.
+
     Attributes:
         project_attribute (ProjectAttribute): links the usage to its project attribute
         value (float): usage value of the project attribute
     """
 
-    project_attribute = models.OneToOneField(
-        ProjectAttribute, on_delete=models.CASCADE, primary_key=True)
+    project_attribute = models.OneToOneField(ProjectAttribute, on_delete=models.CASCADE, primary_key=True)
     value = models.FloatField(default=0)
     history = HistoricalRecords()
 
     def __str__(self):
         return '{}: {}'.format(self.project_attribute.proj_attr_type.name, self.value)
+
 
 class ProjectAdminAction(TimeStampedModel):
     """ Project admin action tracks what an admin is doing on the site. 
