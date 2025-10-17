@@ -399,7 +399,9 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
                 messages.success(request, "Allocation Revoked!")
             elif allocation_obj.status.name == "Removed":
                 if "coldfront.plugins.allocation_removal_requests" in settings.INSTALLED_APPS:
-                    from coldfront.plugins.allocation_removal_requests.signals import allocation_remove
+                    from coldfront.plugins.allocation_removal_requests.signals import (
+                        allocation_remove,
+                    )
 
                     allocation_remove.send(sender=self.__class__, allocation_pk=allocation_obj.pk)
                 send_allocation_customer_email(
@@ -962,8 +964,6 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
 
         missing_users = list(set(active_users_in_project) - set(users_already_in_allocation))
         missing_users = get_user_model().objects.filter(username__in=missing_users)
-
-        resource_obj = allocation_obj.get_parent_resource
 
         users_to_add = []
         for user in missing_users:
@@ -2540,7 +2540,7 @@ class AllocationChangeView(LoginRequiredMixin, UserPassesTestMixin, FormView):
             return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": allocation_obj.pk}))
 
         if allocation_obj.allocationchangerequest_set.filter(status__name="Pending"):
-            messages.error(request, f"You cannot request a change to an allocation with a pending change request")
+            messages.error(request, "You cannot request a change to an allocation with a pending change request")
             return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": allocation_obj.pk}))
 
         return super().dispatch(request, *args, **kwargs)
@@ -2616,7 +2616,7 @@ class AllocationChangeView(LoginRequiredMixin, UserPassesTestMixin, FormView):
                         allocation_attribute = AllocationAttribute.objects.get(pk=formset_data.get("pk"))
                         attribute_changes_to_make.add((allocation_attribute, new_value))
 
-                if change_requested == True:
+                if change_requested:
                     end_date_extension = form_data.get("end_date_extension")
                     justification = form_data.get("justification")
 
@@ -2650,8 +2650,6 @@ class AllocationChangeView(LoginRequiredMixin, UserPassesTestMixin, FormView):
                         allocation_obj.project.pi.username,
                     )
                     resource_name = allocation_obj.get_parent_resource
-                    domain_url = get_domain_url(self.request)
-                    url = "{}{}".format(domain_url, reverse("allocation-change-list"))
 
                     project_obj = allocation_obj.project
 
@@ -2712,8 +2710,6 @@ class AllocationChangeView(LoginRequiredMixin, UserPassesTestMixin, FormView):
                         allocation_obj.project.pi.username,
                     )
                     resource_name = allocation_obj.get_parent_resource
-                    domain_url = get_domain_url(self.request)
-                    url = "{}{}".format(domain_url, reverse("allocation-change-list"))
 
                     addtl_context = {
                         "project_title": project_obj.title,
