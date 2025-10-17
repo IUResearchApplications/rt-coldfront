@@ -1,5 +1,5 @@
-from coldfront.config.env import ENV
 from coldfront.config.base import INSTALLED_APPS
+from coldfront.config.env import ENV
 
 INSTALLED_APPS += [
     "coldfront.plugins.update_user_profiles",
