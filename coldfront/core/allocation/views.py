@@ -2835,6 +2835,7 @@ class AllocationAttributeEditView(LoginRequiredMixin, UserPassesTestMixin, FormV
                     attribute_changes_to_make.add((allocation_attribute, value))
 
         for allocation_attribute, value in attribute_changes_to_make:
+            create_admin_action(request.user, {"value": value}, allocation_obj, allocation_attribute)
             allocation_attribute.value = value
             allocation_attribute.save()
             allocation_attribute_changed.send(
@@ -2842,6 +2843,13 @@ class AllocationAttributeEditView(LoginRequiredMixin, UserPassesTestMixin, FormV
                 attribute_pk=allocation_attribute.pk,
                 allocation_pk=pk,
             )
+            logger.info(
+                f"Admin {request.user.username} updated a {allocation_obj.get_parent_resource.name} "
+                f"allocation attribute (allocation pk={allocation_obj.pk})"
+            )
+
+        if attribute_changes_to_make:
+            messages.success(request, "Successfully updated allocation attributes.")
 
         return ok_redirect
 
