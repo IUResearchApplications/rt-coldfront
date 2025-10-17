@@ -1,12 +1,12 @@
 # SPDX-FileCopyrightText: (C) ColdFront Authors
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
-import logging
 import datetime
+import logging
 
 from django.forms.models import model_to_dict
 
-from coldfront.core.project.models import ProjectAdminAction, Project
+from coldfront.core.project.models import Project, ProjectAdminAction
 from coldfront.core.utils.common import import_from_settings
 from coldfront.plugins.ldap_user_info.utils import get_user_info, get_users_info
 
@@ -143,7 +143,7 @@ def create_admin_action(user, fields_to_check, project, base_model=None):
                 base_model_value = status_class.objects.get(pk=base_model_value).name
                 value = value.name
         if value != base_model_value:
-            if type(base_model) == Project:
+            if type(base_model) is Project:
                 action = f'Changed "{key}" from "{base_model_value}" to "{value}"'
             else:
                 action = f'For "{base_model}" changed "{key}" from "{base_model_value}" to "{value}"'

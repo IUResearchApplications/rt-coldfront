@@ -7,11 +7,15 @@ import datetime
 # import the logging library
 import logging
 
-from coldfront.core.allocation.models import Allocation, AllocationStatusChoice, AllocationUserStatusChoice
+from coldfront.core.allocation.models import (
+    Allocation,
+    AllocationStatusChoice,
+    AllocationUserStatusChoice,
+)
+from coldfront.core.allocation.signals import allocation_expire
 from coldfront.core.user.models import User
 from coldfront.core.utils.common import import_from_settings
 from coldfront.core.utils.mail import send_email_template
-from coldfront.core.allocation.signals import allocation_expire
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)

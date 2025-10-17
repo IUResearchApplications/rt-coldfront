@@ -12,6 +12,7 @@ from simple_history.admin import SimpleHistoryAdmin
 from coldfront.core.allocation.models import (
     Allocation,
     AllocationAccount,
+    AllocationAdminAction,
     AllocationAdminNote,
     AllocationAttribute,
     AllocationAttributeChangeRequest,
@@ -22,12 +23,10 @@ from coldfront.core.allocation.models import (
     AllocationStatusChoice,
     AllocationUser,
     AllocationUserNote,
+    AllocationUserRoleChoice,
     AllocationUserStatusChoice,
     AttributeType,
-    AllocationAdminAction,
-    AllocationUserRoleChoice,
 )
-
 from coldfront.core.resource.models import Resource
 
 

@@ -1,7 +1,7 @@
-from coldfront.core.utils.mail import send_email
-from coldfront.core.utils.common import import_from_settings
-
 from django.utils.log import AdminEmailHandler
+
+from coldfront.core.utils.common import import_from_settings
+from coldfront.core.utils.mail import send_email
 
 EMAIL_ENABLED = import_from_settings("EMAIL_ENABLED", False)
 if EMAIL_ENABLED:

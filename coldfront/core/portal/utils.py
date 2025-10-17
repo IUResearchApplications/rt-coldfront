@@ -5,6 +5,7 @@
 import datetime
 
 from django.contrib.auth.models import User
+
 from coldfront.core.allocation.models import Allocation
 from coldfront.core.project.models import Project, ProjectUser
 

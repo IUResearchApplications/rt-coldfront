@@ -1,4 +1,5 @@
 import importlib
+
 from django.core.management.base import BaseCommand
 from simple_history.utils import get_history_manager_for_model
 

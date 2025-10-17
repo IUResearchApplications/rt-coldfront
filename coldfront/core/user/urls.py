@@ -2,15 +2,13 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+import django_cas_ng.views
 from django.conf import settings
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path, reverse_lazy
-from coldfront.config.env import ENV
-
-import django_cas_ng.views
 
 import coldfront.core.user.views as user_views
-
+from coldfront.config.env import ENV
 
 EXTRA_APPS = settings.INSTALLED_APPS
 

@@ -1,14 +1,14 @@
 import datetime
 import json
-from argparse import ArgumentParser
 import pathlib
-from urllib.parse import quote
-import requests
-import pymupdf
 import urllib.request
-import feedparser
+from argparse import ArgumentParser
+from urllib.parse import quote
 from xml.etree import ElementTree
 
+import feedparser
+import pymupdf
+import requests
 from django.core.management.base import BaseCommand
 
 from coldfront.core.publication.models import Publication

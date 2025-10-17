@@ -1,8 +1,8 @@
-import requests
 import logging
 
-from coldfront.core.utils.common import import_from_settings
+import requests
 
+from coldfront.core.utils.common import import_from_settings
 
 logger = logging.getLogger(__name__)
 

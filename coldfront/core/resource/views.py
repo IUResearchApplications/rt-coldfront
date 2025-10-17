@@ -17,7 +17,11 @@ from django.views.generic import ListView, TemplateView
 from django.views.generic.edit import CreateView
 
 from coldfront.config.core import ALLOCATION_EULA_ENABLE
-from coldfront.core.resource.forms import ResourceAttributeCreateForm, ResourceAttributeDeleteForm, ResourceSearchForm
+from coldfront.core.resource.forms import (
+    ResourceAttributeCreateForm,
+    ResourceAttributeDeleteForm,
+    ResourceSearchForm,
+)
 from coldfront.core.resource.models import Resource, ResourceAttribute
 from coldfront.core.utils.groups import check_if_groups_in_review_groups
 

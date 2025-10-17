@@ -1,13 +1,12 @@
-import logging
 import json
+import logging
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.auth.signals import user_logged_in
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.conf import settings
 from django_cas_ng.signals import cas_user_authenticated, cas_user_logout
-
 
 from coldfront.core.user.models import UserProfile
 

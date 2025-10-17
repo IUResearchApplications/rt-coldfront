@@ -31,7 +31,12 @@ from coldfront.core.project.models import (
     ProjectUserStatusChoice,
 )
 from coldfront.core.publication.models import Publication, PublicationSource
-from coldfront.core.resource.models import Resource, ResourceAttribute, ResourceAttributeType, ResourceType
+from coldfront.core.resource.models import (
+    Resource,
+    ResourceAttribute,
+    ResourceAttributeType,
+    ResourceType,
+)
 
 base_dir = settings.BASE_DIR
 

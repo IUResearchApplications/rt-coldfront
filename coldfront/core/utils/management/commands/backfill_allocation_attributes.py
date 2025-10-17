@@ -1,7 +1,11 @@
-from coldfront.core.allocation.models import AllocationAttribute, AllocationAttributeType, Allocation
-from coldfront.core.resource.models import Resource
-
 from django.core.management.base import BaseCommand
+
+from coldfront.core.allocation.models import (
+    Allocation,
+    AllocationAttribute,
+    AllocationAttributeType,
+)
+from coldfront.core.resource.models import Resource
 
 
 class Command(BaseCommand):

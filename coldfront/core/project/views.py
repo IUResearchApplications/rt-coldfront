@@ -21,7 +21,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.html import format_html
 from django.views import View
-from django.views.generic import CreateView, DetailView, ListView, UpdateView
+from django.views.generic import CreateView, DetailView, ListView
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import FormView
 
@@ -30,32 +30,37 @@ from coldfront.core.allocation.models import (
     Allocation,
     AllocationStatusChoice,
     AllocationUser,
-    AllocationUserStatusChoice,
     AllocationUserRoleChoice,
+    AllocationUserStatusChoice,
 )
-from coldfront.core.allocation.signals import allocation_activate_user, allocation_remove_user, allocation_expire
-from coldfront.core.allocation.utils import generate_guauge_data_from_usage
+from coldfront.core.allocation.signals import (
+    allocation_activate_user,
+    allocation_expire,
+    allocation_remove_user,
+)
+from coldfront.core.allocation.utils import generate_guauge_data_from_usage, send_added_user_email
 from coldfront.core.grant.models import Grant
 from coldfront.core.project.forms import (
     ProjectAddUserForm,
     ProjectAddUsersToAllocationForm,
+    ProjectAddUsersToAllocationFormSet,
     ProjectAttributeAddForm,
     ProjectAttributeDeleteForm,
     ProjectAttributeUpdateForm,
     ProjectCreationForm,
     ProjectRemoveUserForm,
+    ProjectRequestEmailForm,
+    ProjectReviewAllocationForm,
     ProjectReviewEmailForm,
     ProjectReviewForm,
     ProjectSearchForm,
-    ProjectUserUpdateForm,
     ProjectUpdateForm,
-    ProjectRequestEmailForm,
-    ProjectReviewAllocationForm,
-    ProjectAddUsersToAllocationFormSet,
+    ProjectUserUpdateForm,
 )
 from coldfront.core.project.models import (
     Project,
     ProjectAttribute,
+    ProjectDescriptionRecord,
     ProjectReview,
     ProjectReviewStatusChoice,
     ProjectStatusChoice,
@@ -63,38 +68,36 @@ from coldfront.core.project.models import (
     ProjectUserMessage,
     ProjectUserRoleChoice,
     ProjectUserStatusChoice,
-    ProjectDescriptionRecord,
 )
 from coldfront.core.project.signals import (
+    project_activate,
     project_activate_user,
     project_archive,
     project_new,
     project_remove_user,
     project_update,
+    project_user_role_changed,
 )
 from coldfront.core.project.utils import (
-    determine_automated_institution_choice,
-    generate_project_code,
-    get_new_end_date_from_list,
-    create_admin_action,
-    get_project_user_emails,
-    generate_slurm_account_name,
-    create_admin_action_for_creation,
-    create_admin_action_for_deletion,
     check_if_pi_eligible,
     check_if_pis_eligible,
+    create_admin_action,
+    create_admin_action_for_creation,
+    create_admin_action_for_deletion,
+    determine_automated_institution_choice,
+    generate_project_code,
+    generate_slurm_account_name,
+    get_new_end_date_from_list,
+    get_project_user_emails,
 )
 from coldfront.core.publication.models import Publication
 from coldfront.core.research_output.models import ResearchOutput
 from coldfront.core.user.forms import UserSearchForm
+from coldfront.core.user.models import UserProfile
 from coldfront.core.user.utils import CombinedUserSearch
 from coldfront.core.utils.common import get_domain_url, import_from_settings
 from coldfront.core.utils.mail import send_email, send_email_template
-from coldfront.core.user.models import UserProfile
-from coldfront.core.allocation.utils import send_added_user_email
 from coldfront.core.utils.slack import send_message
-from coldfront.core.project.signals import project_activate, project_user_role_changed
-
 
 EMAIL_ENABLED = import_from_settings("EMAIL_ENABLED", False)
 ALLOCATION_ENABLE_ALLOCATION_RENEWAL = import_from_settings("ALLOCATION_ENABLE_ALLOCATION_RENEWAL", True)

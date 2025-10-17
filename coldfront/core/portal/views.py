@@ -16,11 +16,11 @@ from coldfront.core.allocation.models import Allocation, AllocationUser
 from coldfront.core.grant.models import Grant
 from coldfront.core.portal.utils import (
     generate_allocations_chart_data,
+    generate_project_type_chart_data,
+    generate_project_user_chart_data,
     generate_publication_by_year_chart_data,
     generate_resources_chart_data,
     generate_total_grants_by_agency_chart_data,
-    generate_project_type_chart_data,
-    generate_project_user_chart_data,
     generate_user_counts,
     generate_user_timeline,
 )

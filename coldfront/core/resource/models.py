@@ -2,8 +2,8 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-from datetime import datetime
 import logging
+from datetime import datetime
 
 from django.conf import settings
 from django.contrib.auth.models import Group, User
@@ -11,9 +11,9 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
-from coldfront.core.utils.common import import_from_settings
-import coldfront.core.attribute_expansion as attribute_expansion
 
+import coldfront.core.attribute_expansion as attribute_expansion
+from coldfront.core.utils.common import import_from_settings
 from coldfront.plugins.ldap_user_info.utils import get_user_info, get_users_info
 
 logger = logging.getLogger(__name__)

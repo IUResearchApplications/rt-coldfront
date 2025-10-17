@@ -11,20 +11,20 @@ from simple_history.admin import SimpleHistoryAdmin
 from coldfront.core.project.models import (
     AttributeType,
     Project,
+    ProjectAdminAction,
     ProjectAdminComment,
     ProjectAttribute,
     ProjectAttributeType,
     ProjectAttributeUsage,
+    ProjectDescriptionRecord,
     ProjectReview,
+    ProjectReviewStatusChoice,
     ProjectStatusChoice,
+    ProjectTypeChoice,
     ProjectUser,
     ProjectUserMessage,
     ProjectUserRoleChoice,
     ProjectUserStatusChoice,
-    ProjectTypeChoice,
-    ProjectReviewStatusChoice,
-    ProjectAdminAction,
-    ProjectDescriptionRecord,
 )
 from coldfront.core.utils.common import import_from_settings
 

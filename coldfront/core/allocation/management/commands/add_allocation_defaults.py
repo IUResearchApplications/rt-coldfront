@@ -8,10 +8,10 @@ from coldfront.core.allocation.models import (
     AllocationAttributeType,
     AllocationChangeStatusChoice,
     AllocationStatusChoice,
-    AllocationUserStatusChoice,
-    AttributeType,
     AllocationUserRequestStatusChoice,
     AllocationUserRoleChoice,
+    AllocationUserStatusChoice,
+    AttributeType,
 )
 
 

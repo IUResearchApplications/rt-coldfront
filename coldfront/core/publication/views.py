@@ -4,13 +4,14 @@
 
 import ast
 import io
+import os
 import re
 import uuid
-import os
 
 import requests
 from bibtexparser.bibdatabase import as_text
 from bibtexparser.bparser import BibTexParser
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.forms import formset_factory
@@ -19,9 +20,8 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.generic import TemplateView, View
 from django.views.generic.edit import FormView
-from doi2bib import crossref
 from django.views.static import serve
-from django.conf import settings
+from doi2bib import crossref
 
 from coldfront.core.project.models import Project
 from coldfront.core.publication.forms import (

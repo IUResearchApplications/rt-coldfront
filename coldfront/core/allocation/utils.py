@@ -3,14 +3,14 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 from django.db.models import Q
-from django.urls import reverse
 from django.forms.models import model_to_dict
+from django.urls import reverse
 
 from coldfront.core.allocation.models import (
-    AllocationUser,
-    AllocationUserStatusChoice,
     AllocationAdminAction,
+    AllocationUser,
     AllocationUserRoleChoice,
+    AllocationUserStatusChoice,
 )
 from coldfront.core.resource.models import Resource
 from coldfront.core.utils.common import get_domain_url, import_from_settings

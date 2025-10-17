@@ -9,9 +9,9 @@ from coldfront.core.project.models import (
     ProjectAttributeType,
     ProjectReviewStatusChoice,
     ProjectStatusChoice,
+    ProjectTypeChoice,
     ProjectUserRoleChoice,
     ProjectUserStatusChoice,
-    ProjectTypeChoice,
 )
 
 

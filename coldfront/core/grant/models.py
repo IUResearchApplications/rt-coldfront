@@ -3,7 +3,12 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 from django.core.exceptions import ValidationError
-from django.core.validators import MaxLengthValidator, MaxValueValidator, MinLengthValidator, RegexValidator
+from django.core.validators import (
+    MaxLengthValidator,
+    MaxValueValidator,
+    MinLengthValidator,
+    RegexValidator,
+)
 from django.db import models
 from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords

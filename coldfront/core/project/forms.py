@@ -2,14 +2,18 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-import datetime
 
 from django import forms
+from django.core.validators import MinLengthValidator
 from django.db.models.functions import Lower
 from django.shortcuts import get_object_or_404
-from django.core.validators import MinLengthValidator
 
-from coldfront.core.project.models import Project, ProjectAttribute, ProjectReview, ProjectUserRoleChoice
+from coldfront.core.project.models import (
+    Project,
+    ProjectAttribute,
+    ProjectReview,
+    ProjectUserRoleChoice,
+)
 from coldfront.core.utils.common import import_from_settings
 
 EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL = import_from_settings("EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL")

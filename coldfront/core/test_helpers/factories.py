@@ -31,13 +31,13 @@ from coldfront.core.field_of_science.models import FieldOfScience
 from coldfront.core.grant.models import GrantFundingAgency, GrantStatusChoice
 from coldfront.core.project.models import (
     AttributeType as PAttributeType,
-    ProjectTypeChoice,
 )
 from coldfront.core.project.models import (
     Project,
     ProjectAttribute,
     ProjectAttributeType,
     ProjectStatusChoice,
+    ProjectTypeChoice,
     ProjectUser,
     ProjectUserRoleChoice,
     ProjectUserStatusChoice,
