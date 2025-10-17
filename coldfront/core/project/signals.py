@@ -18,3 +18,7 @@ project_activate_user = django.dispatch.Signal()
 
 project_remove_user = django.dispatch.Signal()
 # providing_args=["project_user_pk"]
+
+project_activate = django.dispatch.Signal()
+
+project_user_role_changed = django.dispatch.Signal()

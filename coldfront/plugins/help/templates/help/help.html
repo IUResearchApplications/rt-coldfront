@@ -1,0 +1,24 @@
+{% extends "common/base.html" %}
+{% load common_tags %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+
+{% block title %}
+Contact Research Technologies
+{% endblock %}
+
+{% block content %}
+<h2>Contact Research Technologies</h2>
+<hr>
+<form method="post">
+  {% csrf_token %}
+  {{ form|crispy }}
+  <button type="submit" class="btn btn-primary">Send</button>
+</form>
+
+<script>
+  $("#navbar-main > ul > li.active").removeClass("active");
+  $("#navbar-help").addClass("active");
+</script>
+{% endblock %}

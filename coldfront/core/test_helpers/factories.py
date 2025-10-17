@@ -21,6 +21,7 @@ from coldfront.core.allocation.models import (
     AllocationStatusChoice,
     AllocationUser,
     AllocationUserNote,
+    AllocationUserRoleChoice,
     AllocationUserStatusChoice,
 )
 from coldfront.core.allocation.models import (
@@ -30,6 +31,7 @@ from coldfront.core.field_of_science.models import FieldOfScience
 from coldfront.core.grant.models import GrantFundingAgency, GrantStatusChoice
 from coldfront.core.project.models import (
     AttributeType as PAttributeType,
+    ProjectTypeChoice,
 )
 from coldfront.core.project.models import (
     Project,
@@ -50,6 +52,8 @@ project_status_choice_names = ["New", "Active", "Archived"]
 project_user_role_choice_names = ["User", "Manager"]
 field_of_science_names = ["Physics", "Chemistry", "Economics", "Biology", "Sociology"]
 attr_types = ["Date", "Int", "Float", "Text", "Boolean"]
+project_type_choice_names = ['Research', 'Class']
+allocation_role_choice_names = ['read/write', 'read_only']
 
 fake = Faker()
 
@@ -138,6 +142,13 @@ class ProjectStatusChoiceFactory(DjangoModelFactory):
     name = FuzzyChoice(project_status_choice_names)
 
 
+class ProjectTypeChoiceFactory(DjangoModelFactory):
+    class Meta:
+        model = ProjectTypeChoice
+        django_get_or_create = ('name',)
+    name = FuzzyChoice(project_type_choice_names)
+
+
 class ProjectFactory(DjangoModelFactory):
     class Meta:
         model = Project
@@ -146,8 +157,10 @@ class ProjectFactory(DjangoModelFactory):
     pi = SubFactory(UserFactory)
     title = factory.Faker("project_title")
     description = factory.Faker("sentence")
+    requestor = SubFactory(UserFactory)
     field_of_science = SubFactory(FieldOfScienceFactory)
     status = SubFactory(ProjectStatusChoiceFactory)
+    type = SubFactory(ProjectTypeChoiceFactory)
     force_review = False
     requires_review = False
 
@@ -340,6 +353,15 @@ class AllocationUserStatusChoiceFactory(DjangoModelFactory):
     name = "Active"
 
 
+class AllocationUserRoleChoiceFactory(DjangoModelFactory):
+    class Meta:
+        model = AllocationUserRoleChoice
+        django_get_or_create = ('name',)
+    name = FuzzyChoice(allocation_role_choice_names)
+    is_user_default = False
+    is_manager_default = False
+
+
 class AllocationUserFactory(DjangoModelFactory):
     class Meta:
         model = AllocationUser
@@ -348,6 +370,7 @@ class AllocationUserFactory(DjangoModelFactory):
     allocation = SubFactory(AllocationFactory)
     user = SubFactory(UserFactory)
     status = SubFactory(AllocationUserStatusChoiceFactory)
+    role = SubFactory(AllocationUserRoleChoiceFactory)
 
 
 class AllocationUserNoteFactory(DjangoModelFactory):

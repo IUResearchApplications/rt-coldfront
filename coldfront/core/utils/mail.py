@@ -22,6 +22,7 @@ EMAIL_OPT_OUT_INSTRUCTION_URL = import_from_settings("EMAIL_OPT_OUT_INSTRUCTION_
 EMAIL_SIGNATURE = import_from_settings("EMAIL_SIGNATURE")
 EMAIL_CENTER_NAME = import_from_settings("CENTER_NAME")
 CENTER_BASE_URL = import_from_settings("CENTER_BASE_URL")
+EMAIL_GROUP_TO_EMAIL_MAPPING = import_from_settings("EMAIL_GROUP_TO_EMAIL_MAPPING", {})
 
 
 def send_email(subject, body, sender, receiver_list, cc=[]):
@@ -31,11 +32,11 @@ def send_email(subject, body, sender, receiver_list, cc=[]):
         return
 
     if len(receiver_list) == 0:
-        logger.error("Failed to send email missing receiver_list")
+        logger.error(f'Failed to send email with subject {subject}, missing receiver_list')
         return
 
     if len(sender) == 0:
-        logger.error("Failed to send email missing sender address")
+        logger.error(f'Failed to send email with subject {subject}, missing sender address')
         return
 
     if len(EMAIL_SUBJECT_PREFIX) > 0:
@@ -82,85 +83,89 @@ def build_link(url_path, domain_url=""):
     return f"{domain_url}{url_path}"
 
 
-def send_admin_email_template(subject, template_name, template_context):
-    """Helper function for sending admin emails using a template"""
+def send_admin_email_template(allocation_obj, subject, template_name, template_context):
+    """Helper function for sending admin emails using a template
+    """
+    email_recipient = get_email_recipient_from_groups(
+        allocation_obj.get_parent_resource.review_groups.all()
+    )
+    send_email_template(subject, template_name, template_context, EMAIL_SENDER, [email_recipient, ])
+
+def send_allocation_admin_email(allocation_obj, subject, template_name, url_path='', domain_url='', addtl_context = None):
+    """Send allocation admin emails
+    """
+    if not url_path:
+        url_path = reverse('allocation-request-list')
+
+    url = build_link(url_path, domain_url=domain_url)
+    pi_name = f'{allocation_obj.project.pi.first_name} {allocation_obj.project.pi.last_name} ({allocation_obj.project.pi.username})'
+    resource_name = allocation_obj.get_parent_resource
+
+    ctx = email_template_context()
+    ctx['pi'] = pi_name
+    ctx['resource'] = resource_name
+    ctx['url'] = url
+
+    if addtl_context:
+        ctx.update(addtl_context)
+
+    send_admin_email_template(
+        allocation_obj,
+        f'{subject}: {pi_name} - {resource_name}',
+        template_name,
+        ctx,
+    )
+
+def send_allocation_customer_email(request, allocation_obj, subject, template_name, url_path='', domain_url='', addtl_context=None):
+    """Send allocation customer emails
+    """
+    if not url_path:
+        url_path = reverse('allocation-detail', kwargs={'pk': allocation_obj.pk})
+
+    allocation_url = build_link(url_path, domain_url=domain_url)
+    project_obj = allocation_obj.project
+    project_url = build_link(
+        reverse('project-detail', kwargs={'pk': project_obj.pk}), domain_url=domain_url
+    )
+    ctx = email_template_context()
+    ctx['resource'] = allocation_obj.get_parent_resource
+    ctx['allocation_url'] = allocation_url
+    ctx['project_url'] = project_url
+    ctx['project_pi'] = f'{project_obj.pi.first_name} {project_obj.pi.last_name}'
+    ctx['action_user'] = f'{request.user.first_name} {request.user.last_name}',
+    ctx['allocation_identifiers'] = allocation_obj.get_identifiers().items()
+
+    if addtl_context:
+        ctx.update(addtl_context)
+
+    allocation_users = allocation_obj.allocationuser_set.exclude(status__name__in=['Removed', 'Error'])
+    email_receiver_list = []
+    for allocation_user in allocation_users:
+        if allocation_user.allocation.project.projectuser_set.get(
+                                user=allocation_user.user).enable_notifications:
+            email_receiver_list.append(allocation_user.user.email)
+
     send_email_template(
         subject,
         template_name,
-        template_context,
+        ctx,
         EMAIL_SENDER,
         [
             EMAIL_TICKET_SYSTEM_ADDRESS,
         ],
     )
 
+def get_email_recipient_from_groups(groups):
+    """
+    Returns a group's email if it exists in EMAIL_GROUP_TO_EMAIL_MAPPING. Only returns the first
+    email it finds, if no email is found then EMAIL_TICKET_SYSTEM_ADDRESS is returned.
 
-def send_allocation_admin_email(allocation_obj, subject, template_name, url_path="", domain_url=""):
-    """Send allocation admin emails"""
-    if not url_path:
-        url_path = reverse("allocation-request-list")
+    :params groups: List/QuerySet of Groups
+    :return: Email address for a group if found, else EMAIL_TICKET_SYSTEM_ADDRESS
+    """
+    for group in groups:
+        email = EMAIL_GROUP_TO_EMAIL_MAPPING.get(group.name)
+        if email is not None:
+            return email
 
-    url = build_link(url_path, domain_url=domain_url)
-    pi_name = f"{allocation_obj.project.pi.first_name} {allocation_obj.project.pi.last_name} ({allocation_obj.project.pi.username})"
-    resource_name = allocation_obj.get_parent_resource
-
-    ctx = email_template_context()
-    ctx["pi"] = pi_name
-    ctx["resource"] = resource_name
-    ctx["url"] = url
-
-    send_admin_email_template(
-        f"{subject}: {pi_name} - {resource_name}",
-        template_name,
-        ctx,
-    )
-
-
-def send_allocation_customer_email(allocation_obj, subject, template_name, url_path="", domain_url=""):
-    """Send allocation customer emails"""
-    if not url_path:
-        url_path = reverse("allocation-detail", kwargs={"pk": allocation_obj.pk})
-
-    url = build_link(url_path, domain_url=domain_url)
-    ctx = email_template_context()
-    ctx["resource"] = allocation_obj.get_parent_resource
-    ctx["url"] = url
-
-    allocation_users = allocation_obj.allocationuser_set.exclude(status__name__in=["Removed", "Error"])
-    email_receiver_list = []
-    for allocation_user in allocation_users:
-        if allocation_user.allocation.project.projectuser_set.get(user=allocation_user.user).enable_notifications:
-            email_receiver_list.append(allocation_user.user.email)
-
-    send_email_template(subject, template_name, ctx, EMAIL_SENDER, email_receiver_list)
-
-
-def send_allocation_eula_customer_email(
-    allocation_user, subject, template_name, url_path="", domain_url="", cc_managers=False, include_eula=False
-):
-    """Send allocation customer emails"""
-
-    allocation_obj = allocation_user.allocation
-    if not url_path:
-        url_path = reverse("allocation-review-eula", kwargs={"pk": allocation_obj.pk})
-
-    url = build_link(url_path, domain_url=domain_url)
-    ctx = email_template_context()
-    ctx["resource"] = allocation_obj.get_parent_resource
-    ctx["url"] = url
-    ctx["allocation_user"] = "{} {} ({})".format(
-        allocation_user.user.first_name, allocation_user.user.last_name, allocation_user.user.username
-    )
-    if include_eula:
-        ctx["eula"] = allocation_obj.get_eula()
-
-    email_receiver_list = [allocation_user.user.email]
-    email_cc_list = []
-    if cc_managers:
-        project_obj = allocation_obj.project
-        managers = project_obj.projectuser_set.filter(role__name="Manager", status__name="Active")
-        for manager in managers:
-            if manager.enable_notifications:
-                email_cc_list.append(manager.user.email)
-
-    send_email_template(subject, template_name, ctx, EMAIL_SENDER, email_receiver_list, cc=email_cc_list)
+    return EMAIL_TICKET_SYSTEM_ADDRESS

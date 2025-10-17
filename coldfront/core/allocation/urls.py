@@ -46,6 +46,8 @@ urlpatterns = [
         "<int:pk>/allocationnote/add", allocation_views.AllocationNoteCreateView.as_view(), name="allocation-note-add"
     ),
     path(
+        "<int:allocation_pk>/allocationnote/<int:pk>/update", allocation_views.AllocationNoteUpdateView.as_view(), name="allocation-note-update"),
+    path(
         "allocation-invoice-list", allocation_views.AllocationInvoiceListView.as_view(), name="allocation-invoice-list"
     ),
     path("<int:pk>/invoice/", allocation_views.AllocationInvoiceDetailView.as_view(), name="allocation-invoice-detail"),
@@ -70,6 +72,11 @@ urlpatterns = [
     path(
         "allocation-account-list/", allocation_views.AllocationAccountListView.as_view(), name="allocation-account-list"
     ),
+    path(
+        "<int:pk>/user-detail/<int:allocation_user_pk>",
+        allocation_views.AllocationUserDetailView.as_view(),
+        name="allocation-user-detail"
+    )
 ]
 
 if ALLOCATION_EULA_ENABLE:

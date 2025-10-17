@@ -19,90 +19,98 @@ from coldfront.core.portal.utils import (
     generate_publication_by_year_chart_data,
     generate_resources_chart_data,
     generate_total_grants_by_agency_chart_data,
+    generate_project_type_chart_data,
+    generate_project_user_chart_data,
+    generate_user_counts,
+    generate_user_timeline
 )
 from coldfront.core.project.models import Project
 from coldfront.core.publication.models import Publication
 from coldfront.core.research_output.models import ResearchOutput
 from coldfront.core.utils.common import import_from_settings
 
-ALLOCATION_EULA_ENABLE = import_from_settings("ALLOCATION_EULA_ENABLE", False)
+PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings(
+    'PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING',
+    30
+)
+ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING = import_from_settings(
+    'ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING',
+    30
+)
+ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings(
+    'ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING',
+    60
+)
 
 
 def home(request):
     context = {}
+    next_url = ""
     if request.user.is_authenticated:
-        template_name = "portal/authorized_home.html"
-        project_list = (
-            Project.objects.filter(
-                (
-                    Q(pi=request.user)
-                    & Q(
-                        status__name__in=[
-                            "New",
-                            "Active",
-                        ]
-                    )
-                )
-                | (
-                    Q(
-                        status__name__in=[
-                            "New",
-                            "Active",
-                        ]
-                    )
-                    & Q(projectuser__user=request.user)
-                    & Q(
-                        projectuser__status__name__in=[
-                            "Active",
-                        ]
-                    )
-                )
-            )
-            .distinct()
-            .order_by("-created")[:5]
-        )
-
-        allocation_list = (
-            Allocation.objects.filter(
+        template_name = 'portal/authorized_home.html'
+        project_list = Project.objects.filter(
+            (
+                Q(pi=request.user) &
                 Q(
                     status__name__in=[
-                        "Active",
-                        "New",
-                        "Renewal Requested",
+                        'New',
+                        'Active',
+                        'Waiting For Admin Approval',
+                        'Contacted By Admin',
+                        'Review Pending',
+                        'Expired'
                     ]
                 )
-                & Q(project__status__name__in=["Active", "New"])
-                & Q(project__projectuser__user=request.user)
-                & Q(
-                    project__projectuser__status__name__in=[
-                        "Active",
+            ) |
+            (Q(
+                status__name__in=[
+                    'New',
+                    'Active',
+                    'Waiting For Admin Approval',
+                    'Contacted By Admin',
+                    'Review Pending'
                     ]
-                )
-                & Q(allocationuser__user=request.user)
-                & Q(allocationuser__status__name__in=["Active", "PendingEULA"])
-            )
-            .distinct()
-            .order_by("-created")[:5]
-        )
+             ) &
+             Q(projectuser__user=request.user) &
+             Q(projectuser__status__name__in=['Active', ]))
+        ).distinct().order_by('-created')
 
-        if ALLOCATION_EULA_ENABLE:
-            user_status = []
-            for allocation in allocation_list:
-                if allocation.allocationuser_set.filter(user=request.user).exists():
-                    user_status.append(allocation.allocationuser_set.get(user=request.user).status.name)
-            context["user_status"] = user_status
+        allocation_list = Allocation.objects.filter(
+            Q(status__name__in=['Active', 'New', 'Renewal Requested', 'Billing Information Submitted']) &
+            Q(project__status__name__in=['Active', 'New', 'Review Pending', 'Expired']) &
+            Q(project__projectuser__user=request.user) &
+            Q(project__projectuser__status__name__in=['Active', ]) &
+            Q(allocationuser__user=request.user) &
+            Q(allocationuser__status__name__in=['Active', 'Pending - Remove', 'Invited', 'Pending', 'Disabled', 'Retired'])
+        ).distinct().order_by('-created')
 
-        context["project_list"] = project_list
-        context["allocation_list"] = allocation_list
+        projects_with_a_slurm_account_to_list = []
+        for project in project_list:
+            resources_with_slurm_accounts = project.get_list_of_resources_with_slurm_accounts(request.user)
+            if resources_with_slurm_accounts:
+                project_dict = {
+                    'title': project.title,
+                    'slurm_account_name': project.slurm_account_name,
+                    'resources_with_slurm_accounts': ', '.join(resources_with_slurm_accounts)
+                }
+                projects_with_a_slurm_account_to_list.append(project_dict)
+        context['projects_with_a_slurm_account_to_list'] = projects_with_a_slurm_account_to_list
 
+        context['user'] = request.user
+        context['project_list'] = project_list
+        context['allocation_list'] = allocation_list
+        context['PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING'] = PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING
+        context['ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING'] = ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING
+        context['ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING'] = ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING
         try:
             context["ondemand_url"] = settings.ONDEMAND_URL
         except AttributeError:
             pass
     else:
-        template_name = "portal/nonauthorized_home.html"
-
-    context["EXTRA_APPS"] = settings.INSTALLED_APPS
+        next_url = request.get_full_path()[1:]
+        template_name = 'portal/nonauthorized_home.html'
+    context['next'] = next_url
+    context['EXTRA_APPS'] = settings.INSTALLED_APPS
 
     if "coldfront.plugins.system_monitor" in settings.INSTALLED_APPS:
         from coldfront.plugins.system_monitor.utils import get_system_monitor_context
@@ -194,6 +202,8 @@ def allocation_by_fos(request):
         list(user_allocations.values_list("allocation__project__field_of_science__description", flat=True))
     )
     total_allocations_users = user_allocations.values("user").distinct().count()
+    user_allocations = AllocationUser.objects.filter(
+        status__name__in=['Active', 'Invited', 'Pending', 'Disabled', 'Retired'], allocation__status__name='Active')
 
     active_pi_count = (
         Project.objects.filter(status__name__in=["Active", "New"])
@@ -231,3 +241,24 @@ def allocation_summary(request):
     context["resources_chart_data"] = resources_chart_data
 
     return render(request, "portal/allocation_summary.html", context)
+
+
+@cache_page(60 * 15)
+def project_summary(request):
+    context = {}
+    context['project_user_chart_data'] = generate_project_user_chart_data()
+    context['project_type_chart_data'] = generate_project_type_chart_data()
+
+    return render(request, 'portal/project_summary.html', context)
+
+
+@cache_page(60 * 15)
+def user_summary(request):
+    context = {}
+    context['user_counts'] = generate_user_counts()
+    user_timeline_chart_data, years_to_months_labels, years_to_months_values = generate_user_timeline()
+    context['user_timeline'] = user_timeline_chart_data
+    context['years_to_months_labels'] = years_to_months_labels
+    context['years_to_months_values'] = years_to_months_values
+
+    return render(request, 'portal/user_summary.html', context)

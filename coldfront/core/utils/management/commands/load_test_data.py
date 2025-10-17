@@ -25,6 +25,7 @@ from coldfront.core.project.models import (
     ProjectAttribute,
     ProjectAttributeType,
     ProjectStatusChoice,
+    ProjectTypeChoice,
     ProjectUser,
     ProjectUserRoleChoice,
     ProjectUserStatusChoice,
@@ -207,6 +208,9 @@ class Command(BaseCommand):
             field_of_science=FieldOfScience.objects.get(description="Chemistry"),
             status=ProjectStatusChoice.objects.get(name="Active"),
             force_review=True,
+            end_date = datetime.date.today() + datetime.timedelta(days=365),
+            max_managers=2,
+            type=ProjectTypeChoice.objects.get(name='Research')
         )
 
         AttributeType.objects.get_or_create(name="Int")
@@ -425,6 +429,9 @@ class Command(BaseCommand):
             description="This purpose of this project is to measure the critical behavior of quantum Hall transitions.",
             field_of_science=FieldOfScience.objects.get(description="Physics"),
             status=ProjectStatusChoice.objects.get(name="Active"),
+            end_date=datetime.date.today() + datetime.timedelta(days=365),
+            max_managers=2,
+            type=ProjectTypeChoice.objects.get(name='Research')
         )
 
         project_user_obj, _ = ProjectUser.objects.get_or_create(

@@ -21,11 +21,23 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         date = timezone.now() + datetime.timedelta(days=1)
         date = date.replace(hour=0, minute=0, second=0, microsecond=0)
-        schedule("coldfront.core.allocation.tasks.update_statuses", schedule_type=Schedule.DAILY, next_run=date)
-
-        schedule("coldfront.core.allocation.tasks.send_expiry_emails", schedule_type=Schedule.DAILY, next_run=date)
 
         if ALLOCATION_EULA_ENABLE and EMAIL_ALLOCATION_EULA_REMINDERS:
             schedule(
                 "coldfront.core.allocation.tasks.send_eula_reminders", schedule_type=Schedule.WEEKLY, next_run=date
             )
+
+        schedule('coldfront.core.allocation.tasks.send_expiry_emails',
+                 schedule_type=Schedule.DAILY,
+                 next_run=date)
+
+        schedule('coldfront.core.project.tasks.update_statuses',
+                 schedule_type=Schedule.DAILY,
+                 next_run=date)
+
+        schedule('coldfront.core.project.tasks.send_expiry_emails',
+                 schedule_type=Schedule.DAILY,
+                 next_run=date)
+
+        schedule('coldfront.plugins.slurm.tasks.run_slurm_dump',
+                 schedule_type=Schedule.HOURLY)

@@ -1,0 +1,9 @@
+Name: {{user.first_name}} {{user.last_name}}
+Email address: {{ user.email }}
+Software Name: {{ software_name }}
+Destination: {{ destination }}
+Software Version: {{ software_version }}
+Vendor URL: {{ vendor_url }}
+Confirmed Users: {{ confirmed_users }}
+Use Case:
+{{ use_case }}

@@ -7,6 +7,7 @@ import datetime
 from django import forms
 from django.db.models.functions import Lower
 from django.shortcuts import get_object_or_404
+from django.core.validators import MinLengthValidator
 
 from coldfront.core.project.models import Project, ProjectAttribute, ProjectReview, ProjectUserRoleChoice
 from coldfront.core.utils.common import import_from_settings
@@ -15,17 +16,16 @@ EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL = import_from_settings("EMAIL_DIRECT
 EMAIL_ADMIN_LIST = import_from_settings("EMAIL_ADMIN_LIST", [])
 EMAIL_DIRECTOR_EMAIL_ADDRESS = import_from_settings("EMAIL_DIRECTOR_EMAIL_ADDRESS", "")
 
-
 class ProjectSearchForm(forms.Form):
     """Search form for the Project list page."""
 
     LAST_NAME = "Last Name"
     USERNAME = "Username"
-    FIELD_OF_SCIENCE = "Field of Science"
+    # FIELD_OF_SCIENCE = "Field of Science"
 
     last_name = forms.CharField(label=LAST_NAME, max_length=100, required=False)
     username = forms.CharField(label=USERNAME, max_length=100, required=False)
-    field_of_science = forms.CharField(label=FIELD_OF_SCIENCE, max_length=100, required=False)
+    # field_of_science = forms.CharField(label=FIELD_OF_SCIENCE, max_length=100, required=False)
     show_all_projects = forms.BooleanField(initial=False, required=False)
 
 
@@ -39,6 +39,16 @@ class ProjectAddUserForm(forms.Form):
     selected = forms.BooleanField(initial=False, required=False)
 
 
+class ProjectAddUsersToAllocationFormSet(forms.BaseFormSet):
+    def get_form_kwargs(self, index):
+        """
+        Override so allocations can have role selection
+        """
+        kwargs = super().get_form_kwargs(index)
+        roles = kwargs['roles'][index]
+        return {'roles': roles}
+
+
 class ProjectAddUsersToAllocationForm(forms.Form):
     pk = forms.IntegerField(disabled=True)
     selected = forms.BooleanField(initial=False, required=False)
@@ -46,6 +56,14 @@ class ProjectAddUsersToAllocationForm(forms.Form):
     details = forms.CharField(max_length=300, disabled=True, required=False)
     resource_type = forms.CharField(max_length=50, disabled=True)
     status = forms.CharField(max_length=50, disabled=True)
+    role = forms.ChoiceField(choices=(('', '----'),), disabled=True, required=False)
+
+    def __init__(self, *args, **kwargs):
+        roles = kwargs.pop('roles')
+        super().__init__(*args, **kwargs)
+        if roles:
+            self.fields['role'].disabled = False
+            self.fields['role'].choices = tuple([(role, role) for role in roles])
 
 
 class ProjectRemoveUserForm(forms.Form):
@@ -63,57 +81,38 @@ class ProjectUserUpdateForm(forms.Form):
 
 
 class ProjectReviewForm(forms.Form):
-    reason = forms.CharField(
-        label="Reason for not updating project information",
-        widget=forms.Textarea(
-            attrs={
-                "placeholder": "If you have no new information to provide, you are required to provide a statement explaining this in this box. Thank you!"
-            }
-        ),
-        required=False,
-    )
+    no_project_updates = forms.BooleanField(label='No new project updates', required=False)
+    project_updates = forms.CharField(
+        label='Project updates', widget=forms.Textarea(), required=False)
     acknowledgement = forms.BooleanField(
         label="By checking this box I acknowledge that I have updated my project to the best of my knowledge",
         initial=False,
         required=True,
     )
 
-    def __init__(self, project_pk, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        project_obj = get_object_or_404(Project, pk=project_pk)
-        now = datetime.datetime.now(datetime.timezone.utc)
-
-        if project_obj.grant_set.exists():
-            latest_grant = project_obj.grant_set.order_by("-modified")[0]
-            grant_updated_in_last_year = (now - latest_grant.created).days < 365
-        else:
-            grant_updated_in_last_year = None
-
-        if project_obj.publication_set.exists():
-            latest_publication = project_obj.publication_set.order_by("-created")[0]
-            publication_updated_in_last_year = (now - latest_publication.created).days < 365
-        else:
-            publication_updated_in_last_year = None
-
-        if grant_updated_in_last_year or publication_updated_in_last_year:
-            self.fields["reason"].widget = forms.HiddenInput()
-        else:
-            self.fields["reason"].required = True
+    def clean(self):
+        cleaned_data = super().clean()
+        project_updates = cleaned_data.get('project_updates')
+        no_project_updates = cleaned_data.get('no_project_updates')
+        if not no_project_updates and project_updates == '':
+            raise forms.ValidationError('Please fill out the project updates field.')
 
 
 class ProjectReviewEmailForm(forms.Form):
     cc = forms.CharField(required=False)
     email_body = forms.CharField(required=True, widget=forms.Textarea)
 
-    def __init__(self, pk, *args, **kwargs):
+    def __init__(self, pk, user, *args, **kwargs):
         super().__init__(*args, **kwargs)
         project_review_obj = get_object_or_404(ProjectReview, pk=int(pk))
-        self.fields["email_body"].initial = "Dear {} {} \n{}".format(
-            project_review_obj.project.pi.first_name,
-            project_review_obj.project.pi.last_name,
-            EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL,
+        self.fields['email_body'].initial = EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL.format(
+            first_name=user.first_name, project_name=project_review_obj.project.title
         )
-        self.fields["cc"].initial = ", ".join([EMAIL_DIRECTOR_EMAIL_ADDRESS] + EMAIL_ADMIN_LIST)
+        cc_list = [project_review_obj.project.pi.email, user.email]
+        if project_review_obj.project.pi == project_review_obj.project.requestor:
+            cc_list.remove(project_review_obj.project.pi.email)
+        self.fields['cc'].initial = ', '.join(cc_list)
+
 
 
 class ProjectAttributeAddForm(forms.ModelForm):
@@ -128,7 +127,7 @@ class ProjectAttributeAddForm(forms.ModelForm):
         super(ProjectAttributeAddForm, self).__init__(*args, **kwargs)
         user = (kwargs.get("initial")).get("user")
         self.fields["proj_attr_type"].queryset = self.fields["proj_attr_type"].queryset.order_by(Lower("name"))
-        if not user.is_superuser:
+        if not user.is_superuser and not user.has_perm("project.delete_projectattribute"):
             self.fields["proj_attr_type"].queryset = self.fields["proj_attr_type"].queryset.filter(is_private=False)
 
 
@@ -180,7 +179,54 @@ class ProjectAttributeUpdateForm(forms.Form):
             proj_attr.clean()
 
 
-class ProjectCreationForm(forms.ModelForm):
-    class Meta:
-        model = Project
-        fields = ["title", "description", "field_of_science"]
+class ProjectRequestEmailForm(forms.Form):
+    cc = forms.CharField(
+        required=False
+    )
+    email_body = forms.CharField(
+        required=True,
+        widget=forms.Textarea
+    )
+
+    def __init__(self, pk, user, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        project_obj = get_object_or_404(Project, pk=int(pk))
+        self.fields['email_body'].initial = EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL.format(
+            first_name=user.first_name, project_name=project_obj.title
+        )
+        cc_list = [project_obj.pi.email, user.email]
+        if project_obj.pi == project_obj.requestor:
+            cc_list.remove(project_obj.pi.email)
+        self.fields['cc'].initial = ', '.join(cc_list)
+
+
+class ProjectReviewAllocationForm(forms.Form):
+    pk = forms.IntegerField(disabled=True)
+    resource = forms.CharField(max_length=100, disabled=True)
+    users = forms.CharField(max_length=2000, disabled=True, required=False)
+    status = forms.CharField(max_length=50, disabled=True)
+    expires_on = forms.DateField(
+        widget=forms.DateInput(attrs={'class': 'datepicker'}),
+        disabled=True
+    )
+    renew = forms.BooleanField(initial=True, required=False)
+
+
+class ProjectUpdateForm(forms.Form):
+    title = forms.CharField(max_length=255,)
+    description = forms.CharField(
+        validators=[
+            MinLengthValidator(
+                10,
+                'The project description must be > 10 characters',
+            )
+        ],
+        widget=forms.Textarea
+    )
+
+    def __init__(self, project_pk, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        project_obj = get_object_or_404(Project, pk=project_pk)
+
+        self.fields['title'].initial = project_obj.title
+        self.fields['description'].initial = project_obj.description

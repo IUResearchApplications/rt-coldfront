@@ -33,4 +33,6 @@ urlpatterns = [
         publication_views.PublicationExportPublicationsView.as_view(),
         name="publication-export-publications",
     ),
+    path('publication_catalogue', publication_views.publication_catalogue, name='publication_catalogue'),
+    path('publication_gallery', publication_views.publication_gallery, name='publication_gallery'),
 ]
