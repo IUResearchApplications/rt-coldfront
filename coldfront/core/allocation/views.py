@@ -43,7 +43,7 @@ from coldfront.core.allocation.forms import (
     AllocationSearchForm,
     AllocationUpdateForm,
     AllocationUserUpdateForm,
-    AllocationAddUserFormset
+    AllocationAddUserFormset,
 )
 from coldfront.core.allocation.models import (
     Allocation,
@@ -70,7 +70,7 @@ from coldfront.core.allocation.signals import (
     allocation_new,
     allocation_remove_user,
     allocation_change_user_role,
-    visit_allocation_detail
+    visit_allocation_detail,
 )
 from coldfront.core.allocation.utils import (
     generate_guauge_data_from_usage,
@@ -80,7 +80,7 @@ from coldfront.core.allocation.utils import (
     create_admin_action_for_creation,
     send_added_user_email,
     send_removed_user_email,
-    check_if_roles_are_enabled
+    check_if_roles_are_enabled,
 )
 from coldfront.core.project.models import Project, ProjectPermission, ProjectUser, ProjectUserStatusChoice
 from coldfront.core.resource.models import Resource
@@ -91,7 +91,7 @@ from coldfront.core.utils.mail import (
     send_allocation_customer_email,
     send_allocation_eula_customer_email,
     send_email_template,
-    get_email_recipient_from_groups
+    get_email_recipient_from_groups,
 )
 from coldfront.core.utils.groups import check_if_groups_in_review_groups
 
@@ -104,17 +104,12 @@ ALLOCATION_DEFAULT_ALLOCATION_LENGTH = import_from_settings("ALLOCATION_DEFAULT_
 ALLOCATION_ENABLE_CHANGE_REQUESTS_BY_DEFAULT = import_from_settings(
     "ALLOCATION_ENABLE_CHANGE_REQUESTS_BY_DEFAULT", True
 )
-ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING = import_from_settings(
-    'ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING', 30)
-ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings(
-    'ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING', 60)
-ALLOCATION_ATTRIBUTE_IDENTIFIERS = import_from_settings(
-    'ALLOCATION_ATTRIBUTE_IDENTIFIERS', [])
+ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING = import_from_settings("ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING", 30)
+ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings("ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING", 60)
+ALLOCATION_ATTRIBUTE_IDENTIFIERS = import_from_settings("ALLOCATION_ATTRIBUTE_IDENTIFIERS", [])
 
-EMAIL_TICKET_SYSTEM_ADDRESS = import_from_settings(
-    'EMAIL_TICKET_SYSTEM_ADDRESS', '')
-EMAIL_RESOURCE_EMAIL_TEMPLATES = import_from_settings(
-    'EMAIL_RESOURCE_EMAIL_TEMPLATES', {})
+EMAIL_TICKET_SYSTEM_ADDRESS = import_from_settings("EMAIL_TICKET_SYSTEM_ADDRESS", "")
+EMAIL_RESOURCE_EMAIL_TEMPLATES = import_from_settings("EMAIL_RESOURCE_EMAIL_TEMPLATES", {})
 
 PROJECT_ENABLE_PROJECT_REVIEW = import_from_settings("PROJECT_ENABLE_PROJECT_REVIEW", False)
 INVOICE_ENABLED = import_from_settings("INVOICE_ENABLED", False)
@@ -131,11 +126,9 @@ EMAIL_ALLOCATION_EULA_CONFIRMATIONS_CC_MANAGERS = import_from_settings(
 )
 EMAIL_ALLOCATION_EULA_INCLUDE_ACCEPTED_EULA = import_from_settings("EMAIL_ALLOCATION_EULA_INCLUDE_ACCEPTED_EULA", False)
 
-SLACK_MESSAGING_ENABLED = import_from_settings(
-    'SLACK_MESSAGING_ENABLED', False)
+SLACK_MESSAGING_ENABLED = import_from_settings("SLACK_MESSAGING_ENABLED", False)
 
-ALLOCATION_REMOVAL_REQUESTS_ALLOWED = import_from_settings(
-    'ALLOCATION_REMOVAL_REQUESTS_ALLOWED', [''])
+ALLOCATION_REMOVAL_REQUESTS_ALLOWED = import_from_settings("ALLOCATION_REMOVAL_REQUESTS_ALLOWED", [""])
 
 logger = logging.getLogger(__name__)
 
@@ -222,37 +215,37 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
         context["allocation_user_roles_enabled"] = check_if_roles_are_enabled(allocation_obj)
 
         noteset = allocation_obj.allocationusernote_set
-        if self.request.user.is_superuser or self.request.user.has_perm('allocation.view_allocationusernote'):
+        if self.request.user.is_superuser or self.request.user.has_perm("allocation.view_allocationusernote"):
             notes = noteset.all()
         else:
             notes = noteset.filter(is_private=False)
 
-        context['user_has_permissions'] = check_if_groups_in_review_groups(
-            allocation_obj.get_parent_resource.review_groups.all(),
-            self.request.user.groups.all(),
-            'change_allocation'
+        context["user_has_permissions"] = check_if_groups_in_review_groups(
+            allocation_obj.get_parent_resource.review_groups.all(), self.request.user.groups.all(), "change_allocation"
         )
 
         if self.request.user.is_superuser:
-            context['user_has_permissions'] = True
+            context["user_has_permissions"] = True
 
-        context['user_exists_in_allocation'] = allocation_obj.allocationuser_set.filter(
-            user=self.request.user, status__name__in=['Active', 'Pending - Remove', 'Invited', 'Pending', 'Disabled', 'Retired']).exists()
+        context["user_exists_in_allocation"] = allocation_obj.allocationuser_set.filter(
+            user=self.request.user,
+            status__name__in=["Active", "Pending - Remove", "Invited", "Pending", "Disabled", "Retired"],
+        ).exists()
 
-        context['can_move_allocation'] = False
-        if 'coldfront.plugins.movable_allocations' in settings.INSTALLED_APPS:
-            context['can_move_allocation'] = check_if_groups_in_review_groups(
+        context["can_move_allocation"] = False
+        if "coldfront.plugins.movable_allocations" in settings.INSTALLED_APPS:
+            context["can_move_allocation"] = check_if_groups_in_review_groups(
                 allocation_obj.get_parent_resource.review_groups.all(),
                 self.request.user.groups.all(),
-                'can_move_allocations'
+                "can_move_allocations",
             )
 
-        context['project'] = allocation_obj.project
-        context['notes'] = notes.order_by("-created")
-        context['ALLOCATION_ENABLE_ALLOCATION_RENEWAL'] = ALLOCATION_ENABLE_ALLOCATION_RENEWAL
-        context['ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING'] = ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING
-        context['ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING'] = ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING
-        context['ALLOCATION_REMOVAL_REQUESTS_ALLOWED'] = ALLOCATION_REMOVAL_REQUESTS_ALLOWED
+        context["project"] = allocation_obj.project
+        context["notes"] = notes.order_by("-created")
+        context["ALLOCATION_ENABLE_ALLOCATION_RENEWAL"] = ALLOCATION_ENABLE_ALLOCATION_RENEWAL
+        context["ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING"] = ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING
+        context["ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING"] = ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING
+        context["ALLOCATION_REMOVAL_REQUESTS_ALLOWED"] = ALLOCATION_REMOVAL_REQUESTS_ALLOWED
         return context
 
     def get(self, request, *args, **kwargs):
@@ -270,14 +263,12 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
 
         form = AllocationUpdateForm(initial=initial_data)
         user_has_permissions = check_if_groups_in_review_groups(
-            allocation_obj.get_parent_resource.review_groups.all(),
-            self.request.user.groups.all(),
-            'change_allocation'
+            allocation_obj.get_parent_resource.review_groups.all(), self.request.user.groups.all(), "change_allocation"
         )
 
         if not self.request.user.is_superuser and not user_has_permissions:
-            form.fields['is_locked'].disabled = True
-            form.fields['is_changeable'].disabled = True
+            form.fields["is_locked"].disabled = True
+            form.fields["is_changeable"].disabled = True
 
         context = self.get_context_data()
         context["form"] = form
@@ -291,12 +282,11 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
             group_exists = check_if_groups_in_review_groups(
                 allocation_obj.get_parent_resource.review_groups.all(),
                 self.request.user.groups.all(),
-                'change_allocation'
+                "change_allocation",
             )
             if not group_exists:
-                messages.error(
-                    request, 'You do not have permission to update this allocation')
-                return HttpResponseRedirect(reverse('allocation-detail', kwargs={'pk': pk}))
+                messages.error(request, "You do not have permission to update this allocation")
+                return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": pk}))
 
         initial_data = {
             "status": allocation_obj.status,
@@ -317,35 +307,37 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
         action = request.POST.get("action")
         if action not in ["update", "approve", "auto-approve", "deny"]:
             return HttpResponseBadRequest("Invalid request")
-        
+
         form_data = form.cleaned_data
         old_status = allocation_obj.status.name
 
-        if action in ['update', 'approve', 'deny']:
+        if action in ["update", "approve", "deny"]:
             create_admin_action(request.user, form_data, allocation_obj)
-            allocation_obj.end_date = form_data.get('end_date')
-            allocation_obj.start_date = form_data.get('start_date')
-            allocation_obj.description = form_data.get('description')
-            allocation_obj.is_locked = form_data.get('is_locked')
-            allocation_obj.is_changeable = form_data.get('is_changeable')
-            allocation_obj.status = form_data.get('status')
+            allocation_obj.end_date = form_data.get("end_date")
+            allocation_obj.start_date = form_data.get("start_date")
+            allocation_obj.description = form_data.get("description")
+            allocation_obj.is_locked = form_data.get("is_locked")
+            allocation_obj.is_changeable = form_data.get("is_changeable")
+            allocation_obj.status = form_data.get("status")
 
-        if 'approve' in action:
-            active_status = AllocationStatusChoice.objects.get(name='Active')
-            create_admin_action(request.user, {'status': active_status}, allocation_obj)
+        if "approve" in action:
+            active_status = AllocationStatusChoice.objects.get(name="Active")
+            create_admin_action(request.user, {"status": active_status}, allocation_obj)
             allocation_obj.status = active_status
-        elif action == 'deny':
-            deny_status = AllocationStatusChoice.objects.get(name='Denied')
-            create_admin_action(request.user, {'status': deny_status}, allocation_obj)
+        elif action == "deny":
+            deny_status = AllocationStatusChoice.objects.get(name="Denied")
+            create_admin_action(request.user, {"status": deny_status}, allocation_obj)
             allocation_obj.status = deny_status
 
-        if old_status != 'Active' == allocation_obj.status.name:
+        if old_status != "Active" == allocation_obj.status.name:
             if allocation_obj.project.status.name != "Active":
-                messages.error(request, 'Project must be approved first before you can update this allocation\'s status!')
-                return HttpResponseRedirect(reverse('allocation-detail', kwargs={'pk': pk}))
+                messages.error(
+                    request, "Project must be approved first before you can update this allocation's status!"
+                )
+                return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": pk}))
             if not allocation_obj.start_date:
                 allocation_obj.start_date = datetime.datetime.now()
-            if 'approve' in action or not allocation_obj.end_date:
+            if "approve" in action or not allocation_obj.end_date:
                 allocation_obj.end_date = allocation_obj.project.end_date
 
             allocation_obj.save()
@@ -355,51 +347,75 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
                 status__name__in=["Removed", "Error", "DeclinedEULA", "PendingEULA"]
             )
             for allocation_user in allocation_users:
-                allocation_activate_user.send(
-                    sender=self.__class__, allocation_user_pk=allocation_user.pk)
-            
-            addtl_context = {'help_url': EMAIL_TICKET_SYSTEM_ADDRESS}
-            email_template = EMAIL_RESOURCE_EMAIL_TEMPLATES.get(
-                allocation_obj.get_parent_resource.name, {}
-            ).get('allocation_activated', 'email/allocation_activated.txt'),
-            send_allocation_customer_email(request, allocation_obj, 'Allocation Activated', email_template, domain_url=get_domain_url(self.request), addtl_context=addtl_context)
-            if action != 'auto-approve':
-                messages.success(request, 'Allocation Activated!')
+                allocation_activate_user.send(sender=self.__class__, allocation_user_pk=allocation_user.pk)
+
+            addtl_context = {"help_url": EMAIL_TICKET_SYSTEM_ADDRESS}
+            email_template = (
+                EMAIL_RESOURCE_EMAIL_TEMPLATES.get(allocation_obj.get_parent_resource.name, {}).get(
+                    "allocation_activated", "email/allocation_activated.txt"
+                ),
+            )
+            send_allocation_customer_email(
+                request,
+                allocation_obj,
+                "Allocation Activated",
+                email_template,
+                domain_url=get_domain_url(self.request),
+                addtl_context=addtl_context,
+            )
+            if action != "auto-approve":
+                messages.success(request, "Allocation Activated!")
             logger.info(
-                f'Admin {request.user.username} approved a {allocation_obj.get_parent_resource.name} '
-                f'allocation (allocation pk={allocation_obj.pk})'
+                f"Admin {request.user.username} approved a {allocation_obj.get_parent_resource.name} "
+                f"allocation (allocation pk={allocation_obj.pk})"
             )
 
-        elif old_status != allocation_obj.status.name in ['Denied', 'New', 'Revoked', 'Removed']:
-            allocation_obj.end_date = datetime.datetime.now() if allocation_obj.status.name != 'New' else None
+        elif old_status != allocation_obj.status.name in ["Denied", "New", "Revoked", "Removed"]:
+            allocation_obj.end_date = datetime.datetime.now() if allocation_obj.status.name != "New" else None
             allocation_obj.save()
 
-            if allocation_obj.status.name in ['Denied', 'Revoked', 'Removed']:
-                allocation_disable.send(
-                    sender=self.__class__, allocation_pk=allocation_obj.pk)
-                allocation_users = allocation_obj.allocationuser_set.exclude(
-                                        status__name__in=['Removed', 'Error'])
+            if allocation_obj.status.name in ["Denied", "Revoked", "Removed"]:
+                allocation_disable.send(sender=self.__class__, allocation_pk=allocation_obj.pk)
+                allocation_users = allocation_obj.allocationuser_set.exclude(status__name__in=["Removed", "Error"])
                 for allocation_user in allocation_users:
-                    allocation_remove_user.send(
-                        sender=self.__class__, allocation_user_pk=allocation_user.pk)
-            if allocation_obj.status.name == 'Denied':
-                send_allocation_customer_email(request, allocation_obj, 'Allocation Denied', 'email/allocation_denied.txt', domain_url=get_domain_url(self.request))
-                messages.success(request, 'Allocation Denied!')
-            elif allocation_obj.status.name == 'Revoked':
-                send_allocation_customer_email(request, allocation_obj, 'Allocation Revoked', 'email/allocation_revoked.txt', domain_url=get_domain_url(self.request))
-                messages.success(request, 'Allocation Revoked!')
-            elif allocation_obj.status.name == 'Removed':
-                if 'coldfront.plugins.allocation_removal_requests' in settings.INSTALLED_APPS:
+                    allocation_remove_user.send(sender=self.__class__, allocation_user_pk=allocation_user.pk)
+            if allocation_obj.status.name == "Denied":
+                send_allocation_customer_email(
+                    request,
+                    allocation_obj,
+                    "Allocation Denied",
+                    "email/allocation_denied.txt",
+                    domain_url=get_domain_url(self.request),
+                )
+                messages.success(request, "Allocation Denied!")
+            elif allocation_obj.status.name == "Revoked":
+                send_allocation_customer_email(
+                    request,
+                    allocation_obj,
+                    "Allocation Revoked",
+                    "email/allocation_revoked.txt",
+                    domain_url=get_domain_url(self.request),
+                )
+                messages.success(request, "Allocation Revoked!")
+            elif allocation_obj.status.name == "Removed":
+                if "coldfront.plugins.allocation_removal_requests" in settings.INSTALLED_APPS:
                     from coldfront.plugins.allocation_removal_requests.signals import allocation_remove
+
                     allocation_remove.send(sender=self.__class__, allocation_pk=allocation_obj.pk)
-                send_allocation_customer_email(request, allocation_obj, 'Allocation Removed', 'allocation_removal_requests/allocation_removed.txt', domain_url=get_domain_url(self.request))
-                messages.success(request, 'Allocation Removed!')
+                send_allocation_customer_email(
+                    request,
+                    allocation_obj,
+                    "Allocation Removed",
+                    "allocation_removal_requests/allocation_removed.txt",
+                    domain_url=get_domain_url(self.request),
+                )
+                messages.success(request, "Allocation Removed!")
             else:
-                messages.success(request, 'Allocation updated!')
+                messages.success(request, "Allocation updated!")
             logger.info(
-                f'Admin {request.user.username} changed the status of a '
-                f'{allocation_obj.get_parent_resource.name} allocation to '
-                f'{allocation_obj.status.name} (allocation pk={allocation_obj.pk})'
+                f"Admin {request.user.username} changed the status of a "
+                f"{allocation_obj.get_parent_resource.name} allocation to "
+                f"{allocation_obj.status.name} (allocation pk={allocation_obj.pk})"
             )
         else:
             messages.success(request, "Allocation updated!")
@@ -539,24 +555,61 @@ class AllocationListView(LoginRequiredMixin, ListView):
         if allocation_search_form.is_valid():
             data = allocation_search_form.cleaned_data
 
-            if data.get('show_all_allocations') and self.request.user.is_superuser:
-                allocations = Allocation.objects.prefetch_related(
-                    'project', 'project__pi', 'status',).all().order_by(order_by)
-            elif data.get('show_all_allocations') and self.request.user.has_perm('allocation.can_view_all_allocations'):
-                allocations = Allocation.objects.prefetch_related(
-                    'project', 'project__pi', 'status',).filter(
-                    resources__review_groups__in=list(self.request.user.groups.all())
-                ).order_by(order_by)
+            if data.get("show_all_allocations") and self.request.user.is_superuser:
+                allocations = (
+                    Allocation.objects.prefetch_related(
+                        "project",
+                        "project__pi",
+                        "status",
+                    )
+                    .all()
+                    .order_by(order_by)
+                )
+            elif data.get("show_all_allocations") and self.request.user.has_perm("allocation.can_view_all_allocations"):
+                allocations = (
+                    Allocation.objects.prefetch_related(
+                        "project",
+                        "project__pi",
+                        "status",
+                    )
+                    .filter(resources__review_groups__in=list(self.request.user.groups.all()))
+                    .order_by(order_by)
+                )
             else:
-                allocations = Allocation.objects.prefetch_related('project', 'project__pi', 'status',).filter(
-                    Q(project__status__name__in=['New', 'Active', ]) &
-                    Q(project__projectuser__status__name='Active') &
-                    Q(project__projectuser__user=self.request.user) &
-
-                    (Q(project__projectuser__role__name='Manager') |
-                    Q(allocationuser__user=self.request.user) &
-                    Q(allocationuser__status__name__in= ['Active', 'Pending - Remove', 'Invited', 'Pending', 'Disabled', 'Retired', "PendingEULA"]))
-                ).distinct().order_by(order_by)
+                allocations = (
+                    Allocation.objects.prefetch_related(
+                        "project",
+                        "project__pi",
+                        "status",
+                    )
+                    .filter(
+                        Q(
+                            project__status__name__in=[
+                                "New",
+                                "Active",
+                            ]
+                        )
+                        & Q(project__projectuser__status__name="Active")
+                        & Q(project__projectuser__user=self.request.user)
+                        & (
+                            Q(project__projectuser__role__name="Manager")
+                            | Q(allocationuser__user=self.request.user)
+                            & Q(
+                                allocationuser__status__name__in=[
+                                    "Active",
+                                    "Pending - Remove",
+                                    "Invited",
+                                    "Pending",
+                                    "Disabled",
+                                    "Retired",
+                                    "PendingEULA",
+                                ]
+                            )
+                        )
+                    )
+                    .distinct()
+                    .order_by(order_by)
+                )
 
             # Project Title
             if data.get("project"):
@@ -565,9 +618,18 @@ class AllocationListView(LoginRequiredMixin, ListView):
             # username
             if data.get("username"):
                 allocations = allocations.filter(
-                    Q(project__pi__username__icontains=data.get('username')) |
-                    Q(allocationuser__user__username__icontains=data.get('username')) &
-                    Q(allocationuser__status__name__in= ["PendingEULA", 'Active', 'Invited', 'Pending', 'Disabled', 'Retired'])
+                    Q(project__pi__username__icontains=data.get("username"))
+                    | Q(allocationuser__user__username__icontains=data.get("username"))
+                    & Q(
+                        allocationuser__status__name__in=[
+                            "PendingEULA",
+                            "Active",
+                            "Invited",
+                            "Pending",
+                            "Disabled",
+                            "Retired",
+                        ]
+                    )
                 )
 
             # Resource Type
@@ -611,7 +673,16 @@ class AllocationListView(LoginRequiredMixin, ListView):
                 )
                 .filter(
                     Q(allocationuser__user=self.request.user)
-                    & Q(allocationuser__status__name__in=["PendingEULA", "Active", 'Invited', 'Pending', 'Disabled', 'Retired'])
+                    & Q(
+                        allocationuser__status__name__in=[
+                            "PendingEULA",
+                            "Active",
+                            "Invited",
+                            "Pending",
+                            "Disabled",
+                            "Retired",
+                        ]
+                    )
                 )
                 .order_by(order_by)
             )
@@ -690,11 +761,18 @@ class AllocationCreateView(LoginRequiredMixin, UserPassesTestMixin, FormView):
             )
             return HttpResponseRedirect(reverse("project-detail", kwargs={"pk": project_obj.pk}))
 
-        if project_obj.status.name in ['Archived', 'Denied', 'Review Pending', 'Expired', 'Renewal Denied', ]:
+        if project_obj.status.name in [
+            "Archived",
+            "Denied",
+            "Review Pending",
+            "Expired",
+            "Renewal Denied",
+        ]:
             messages.error(
-                request, 'You cannot request a new allocation for a project with status "{}".'.format(project_obj.status.name)
+                request,
+                'You cannot request a new allocation for a project with status "{}".'.format(project_obj.status.name),
             )
-            return HttpResponseRedirect(reverse('project-detail', kwargs={'pk': project_obj.pk}))
+            return HttpResponseRedirect(reverse("project-detail", kwargs={"pk": project_obj.pk}))
 
         return super().dispatch(request, *args, **kwargs)
 
@@ -842,7 +920,7 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
     def test_func(self):
         """UserPassesTestMixin Tests"""
         allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get("pk"))
-        if allocation_obj.has_perm(self.request.user, AllocationPermission.MANAGER, 'add_allocationuser'):
+        if allocation_obj.has_perm(self.request.user, AllocationPermission.MANAGER, "add_allocationuser"):
             return True
 
         messages.error(self.request, "You do not have permission to add users to the allocation.")
@@ -853,11 +931,18 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
 
         message = None
         if allocation_obj.is_locked and not self.request.user.is_superuser:
-            message = 'You cannot modify this allocation because it is locked! Contact support for details.'
-        elif allocation_obj.status.name not in ['Active', 'New', 'Renewal Requested', 'Payment Pending', 'Payment Requested', 'Paid']:
-            message = f'You cannot add users to an allocation with status {allocation_obj.status.name}.'
-        elif allocation_obj.get_parent_resource.name == 'Geode-Project':
-            message = 'You cannot add users to a Geode-Project allocation.'
+            message = "You cannot modify this allocation because it is locked! Contact support for details."
+        elif allocation_obj.status.name not in [
+            "Active",
+            "New",
+            "Renewal Requested",
+            "Payment Pending",
+            "Payment Requested",
+            "Paid",
+        ]:
+            message = f"You cannot add users to an allocation with status {allocation_obj.status.name}."
+        elif allocation_obj.get_parent_resource.name == "Geode-Project":
+            message = "You cannot add users to a Geode-Project allocation."
         if message:
             messages.error(request, message)
             return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": allocation_obj.pk}))
@@ -875,21 +960,22 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
             )
         )
 
-        missing_users = list(set(active_users_in_project) -
-                             set(users_already_in_allocation))
+        missing_users = list(set(active_users_in_project) - set(users_already_in_allocation))
         missing_users = get_user_model().objects.filter(username__in=missing_users)
 
         resource_obj = allocation_obj.get_parent_resource
 
         users_to_add = []
         for user in missing_users:
-            users_to_add.append({
-                'username': user.username,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'email': user.email,
-                'role': None
-            })
+            users_to_add.append(
+                {
+                    "username": user.username,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "email": user.email,
+                    "role": None,
+                }
+            )
 
         return users_to_add
 
@@ -897,23 +983,28 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
         users = {}
         for form in formset:
             user_form_data = form.cleaned_data
-            if user_form_data['selected']:
-                users[user_form_data.get('username')] = user_form_data.get('role')
+            if user_form_data["selected"]:
+                users[user_form_data.get("username")] = user_form_data.get("role")
 
         return users
 
     def get_total_users_in_allocation_if_added(self, allocation_obj, selected_users):
-        total_users = len(list(allocation_obj.allocationuser_set.exclude(
-            status__name__in=['Removed']).values_list('user__username', flat=True)))
+        total_users = len(
+            list(
+                allocation_obj.allocationuser_set.exclude(status__name__in=["Removed"]).values_list(
+                    "user__username", flat=True
+                )
+            )
+        )
         total_users += len(selected_users)
 
         return total_users
-    
+
     def get_disable_select_list(self, allocation_obj, usernames):
         disable_select_list = [False] * len(usernames)
         results = allocation_obj.get_parent_resource.check_users_accounts(usernames)
         for i, result in enumerate(results.values()):
-            if not result.get('exists'):
+            if not result.get("exists"):
                 disable_select_list[i] = True
         return disable_select_list
 
@@ -927,27 +1018,28 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
         results = {}
         if users_to_add:
             formset = formset_factory(
-                AllocationAddUserForm,
-                max_num=len(users_to_add),
-                formset=AllocationAddUserFormset    
+                AllocationAddUserForm, max_num=len(users_to_add), formset=AllocationAddUserFormset
             )
-            results = allocation_obj.get_parent_resource.check_users_accounts([user.get('username') for user in users_to_add])
+            results = allocation_obj.get_parent_resource.check_users_accounts(
+                [user.get("username") for user in users_to_add]
+            )
             formset = formset(
                 initial=users_to_add,
-                prefix='userform',
+                prefix="userform",
                 form_kwargs={
-                    'resource': allocation_obj.get_parent_resource,
-                    'disable_selected': [not result.get('exists') for result in results.values()]
-                })
-            context['formset'] = formset
+                    "resource": allocation_obj.get_parent_resource,
+                    "disable_selected": [not result.get("exists") for result in results.values()],
+                },
+            )
+            context["formset"] = formset
 
-        context['allocation_user_roles_enabled'] = check_if_roles_are_enabled(allocation_obj)
+        context["allocation_user_roles_enabled"] = check_if_roles_are_enabled(allocation_obj)
         context["allocation"] = allocation_obj
 
         account_results = {}
         for username, result in results.items():
-            account_results[username] = result.get('reason')
-        context['account_results'] = account_results
+            account_results[username] = result.get("reason")
+        context["account_results"] = account_results
 
         user_resources = get_user_resources(self.request.user)
         resources_with_eula = {}
@@ -972,93 +1064,96 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
         users_to_add = self.get_users_to_add(allocation_obj)
         allocation_user_limit = allocation_obj.get_parent_resource.get_attribute("user_limit")
 
-        formset = formset_factory(
-            AllocationAddUserForm, max_num=len(users_to_add))
-        formset = formset(request.POST, initial=users_to_add,
-            prefix='userform', form_kwargs={'resource': allocation_obj.get_parent_resource})
+        formset = formset_factory(AllocationAddUserForm, max_num=len(users_to_add))
+        formset = formset(
+            request.POST,
+            initial=users_to_add,
+            prefix="userform",
+            form_kwargs={"resource": allocation_obj.get_parent_resource},
+        )
 
         if formset.is_valid():
             selected_users = self.get_dict_of_users_to_add(formset)
 
             user_account_results = allocation_obj.get_parent_resource.check_users_accounts(
-                [selected_user for selected_user in selected_users.keys()])
+                [selected_user for selected_user in selected_users.keys()]
+            )
 
             missing_accounts = []
             missing_resource_accounts = []
             for username, result in user_account_results.items():
-                if not result.get('exists'):
-                    if result.get('reason') == 'no_account':
+                if not result.get("exists"):
+                    if result.get("reason") == "no_account":
                         missing_accounts.append(username)
-                    elif result.get('reason') == 'no_resource_account':
+                    elif result.get("reason") == "no_resource_account":
                         missing_resource_accounts.append(username)
                     selected_users.pop(username)
 
             if missing_accounts:
-                message = 'The following user does not have an IU account and was not added:'
+                message = "The following user does not have an IU account and was not added:"
                 if len(missing_accounts) > 1:
-                    message = 'The following users do not have IU accounts and were not added:'
-                messages.warning(
-                    request,
-                    f'{message} {", ".join(missing_accounts)}'
+                    message = "The following users do not have IU accounts and were not added:"
+                messages.warning(request, f"{message} {', '.join(missing_accounts)}")
+                logger.info(
+                    f"User(s) {', '.join(missing_accounts)} do not have IU accounts and "
+                    f"were not added to a {allocation_obj.get_parent_resource.name} "
+                    f"allocation (allocation pk={allocation_obj.pk})"
                 )
-                logger.info(f'User(s) {", ".join(missing_accounts)} do not have IU accounts and '
-                            f'were not added to a {allocation_obj.get_parent_resource.name} '
-                            f'allocation (allocation pk={allocation_obj.pk})')
 
             if missing_resource_accounts:
-                message = 'The following user does not have an account on this resource and was not added:'
+                message = "The following user does not have an account on this resource and was not added:"
                 if len(missing_resource_accounts) > 1:
-                    message = 'The following users do not have an account on this resource and were not added:'
-                accounts_url = 'https://access.iu.edu/Accounts/Create'
-                messages.warning(request, format_html(
-                        f'{message} {", ".join(missing_resource_accounts)}. Please direct them '
+                    message = "The following users do not have an account on this resource and were not added:"
+                accounts_url = "https://access.iu.edu/Accounts/Create"
+                messages.warning(
+                    request,
+                    format_html(
+                        f"{message} {', '.join(missing_resource_accounts)}. Please direct them "
                         f'to <a href="{accounts_url}">{accounts_url}</a> to create one.'
-                    )
+                    ),
                 )
 
                 logger.info(
-                    f'User(s) {", ".join(missing_resource_accounts)} were missing accounts for a '
-                    f'{allocation_obj.get_parent_resource.name} allocation (allocation pk={allocation_obj.pk})'
+                    f"User(s) {', '.join(missing_resource_accounts)} were missing accounts for a "
+                    f"{allocation_obj.get_parent_resource.name} allocation (allocation pk={allocation_obj.pk})"
                 )
 
             if allocation_user_limit:
                 total_users = self.get_total_users_in_allocation_if_added(
-                    allocation_obj, [selected_user for selected_user in selected_users.keys()])
+                    allocation_obj, [selected_user for selected_user in selected_users.keys()]
+                )
                 if total_users > int(allocation_user_limit):
                     messages.warning(
                         request,
-                        f'Only {allocation_user_limit} users are allowed on this resource. Users '
-                        f'were not added. (Total users counted: {total_users})')
-                    return HttpResponseRedirect(reverse('allocation-detail', kwargs={'pk': pk}))
+                        f"Only {allocation_user_limit} users are allowed on this resource. Users "
+                        f"were not added. (Total users counted: {total_users})",
+                    )
+                    return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": pk}))
 
-            allocation_user_status_choice = AllocationUserStatusChoice.objects.get(name='Active')
+            allocation_user_status_choice = AllocationUserStatusChoice.objects.get(name="Active")
             selected_user_objs = []
             for username, role in selected_users.items():
-
                 user_obj = get_user_model().objects.get(username=username)
                 selected_user_objs.append(user_obj)
 
                 if allocation_obj.allocationuser_set.filter(user=user_obj).exists():
-                    allocation_user_obj = allocation_obj.allocationuser_set.get(
-                        user=user_obj)
+                    allocation_user_obj = allocation_obj.allocationuser_set.get(user=user_obj)
                     allocation_user_obj.status = allocation_user_status_choice
                     allocation_user_obj.role = role
                     allocation_user_obj.save()
                 else:
                     allocation_user_obj = AllocationUser.objects.create(
-                        allocation=allocation_obj,
-                        user=user_obj,
-                        status=allocation_user_status_choice,
-                        role=role  
+                        allocation=allocation_obj, user=user_obj, status=allocation_user_status_choice, role=role
                     )
 
-                allocation_activate_user.send(sender=self.__class__,
-                                                allocation_user_pk=allocation_user_obj.pk)
+                allocation_activate_user.send(sender=self.__class__, allocation_user_pk=allocation_user_obj.pk)
 
             if selected_users:
-                allocation_added_users_emails = list(allocation_obj.project.projectuser_set.filter(
-                    user__in=selected_user_objs, enable_notifications=True
-                ).values_list('user__email', flat=True))
+                allocation_added_users_emails = list(
+                    allocation_obj.project.projectuser_set.filter(
+                        user__in=selected_user_objs, enable_notifications=True
+                    ).values_list("user__email", flat=True)
+                )
                 if allocation_obj.project.pi.email not in allocation_added_users_emails:
                     allocation_added_users_emails.append(allocation_obj.project.pi.email)
 
@@ -1067,23 +1162,23 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                 is_plural = len(selected_users.keys()) > 1
                 messages.success(
                     request,
-                    f'User{"s" if is_plural else ""} added to the allocation: {", ".join(selected_users.keys())}'
+                    f"User{'s' if is_plural else ''} added to the allocation: {', '.join(selected_users.keys())}",
                 )
 
                 logger.info(
-                    f'User {request.user.username} added {", ".join(selected_users.keys())} '
-                    f'to a {allocation_obj.get_parent_resource.name} allocation '
-                    f'(allocation pk={allocation_obj.pk})'
+                    f"User {request.user.username} added {', '.join(selected_users.keys())} "
+                    f"to a {allocation_obj.get_parent_resource.name} allocation "
+                    f"(allocation pk={allocation_obj.pk})"
                 )
         else:
             for error in formset.errors:
-                if error.get('__all__'):
-                    messages.error(request, error.get('__all__')[0])
+                if error.get("__all__"):
+                    messages.error(request, error.get("__all__")[0])
                     logger.warning(
-                        f'An error occured when adding users to an allocation (allocation pk={allocation_obj.pk}). '
-                        f'Error: {error.get("__all__")[0]}'
+                        f"An error occured when adding users to an allocation (allocation pk={allocation_obj.pk}). "
+                        f"Error: {error.get('__all__')[0]}"
                     )
-                    return HttpResponseRedirect(reverse('allocation-add-users', kwargs={'pk': pk}))
+                    return HttpResponseRedirect(reverse("allocation-add-users", kwargs={"pk": pk}))
 
         return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": pk}))
 
@@ -1105,11 +1200,15 @@ class AllocationRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, Templat
 
         message = None
         if allocation_obj.is_locked and not self.request.user.is_superuser:
-            message = 'You cannot modify this allocation because it is locked! Contact support for details.'
-        elif allocation_obj.status.name not in ['Active', 'New', 'Renewal Requested', ]:
-            message = f'You cannot remove users from a allocation with status {allocation_obj.status.name}.'
-        elif allocation_obj.get_parent_resource.name == 'Geode-Project':
-            message = 'You cannot remove users from a Geode-Project allocation.'
+            message = "You cannot modify this allocation because it is locked! Contact support for details."
+        elif allocation_obj.status.name not in [
+            "Active",
+            "New",
+            "Renewal Requested",
+        ]:
+            message = f"You cannot remove users from a allocation with status {allocation_obj.status.name}."
+        elif allocation_obj.get_parent_resource.name == "Geode-Project":
+            message = "You cannot remove users from a Geode-Project allocation."
         if message:
             messages.error(request, message)
             return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": allocation_obj.pk}))
@@ -1191,22 +1290,21 @@ class AllocationRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, Templat
 
             if removed_user_objs:
                 removed_users = [removed_user_obj.username for removed_user_obj in removed_user_objs]
-                allocation_removed_users_emails = list(allocation_obj.project.projectuser_set.filter(
-                    user__in=removed_user_objs,
-                    enable_notifications=True
-                ).values_list('user__email', flat=True))
+                allocation_removed_users_emails = list(
+                    allocation_obj.project.projectuser_set.filter(
+                        user__in=removed_user_objs, enable_notifications=True
+                    ).values_list("user__email", flat=True)
+                )
                 if allocation_obj.project.pi.email not in allocation_removed_users_emails:
                     allocation_removed_users_emails.append(allocation_obj.project.pi.email)
 
                 send_removed_user_email(request, allocation_obj, removed_user_objs, allocation_removed_users_emails)
                 user_plural = "user" if remove_users_count == 1 else "users"
-                messages.success(
-                    request, f"Removed {user_plural} {', '.join(removed_users)} from allocation."
-                )
+                messages.success(request, f"Removed {user_plural} {', '.join(removed_users)} from allocation.")
 
                 logger.info(
-                    f'User {request.user.username} removed {", ".join(removed_users)} from a '
-                    f'{allocation_obj.get_parent_resource.name} allocation (allocation pk={allocation_obj.pk})'
+                    f"User {request.user.username} removed {', '.join(removed_users)} from a "
+                    f"{allocation_obj.get_parent_resource.name} allocation (allocation pk={allocation_obj.pk})"
                 )
         else:
             for error in formset.errors:
@@ -1221,8 +1319,8 @@ class AllocationAttributeCreateView(LoginRequiredMixin, UserPassesTestMixin, Cre
     template_name = "allocation/allocation_allocationattribute_create.html"
 
     def test_func(self):
-        """ UserPassesTestMixin Tests"""
-        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get('pk'))
+        """UserPassesTestMixin Tests"""
+        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get("pk"))
         user = self.request.user
         if user.is_superuser:
             return True
@@ -1230,12 +1328,12 @@ class AllocationAttributeCreateView(LoginRequiredMixin, UserPassesTestMixin, Cre
         group_exists = check_if_groups_in_review_groups(
             allocation_obj.get_parent_resource.review_groups.all(),
             self.request.user.groups.all(),
-            'add_allocationattribute'
+            "add_allocationattribute",
         )
         if group_exists:
             return True
 
-        messages.error(self.request, 'You do not have permission to add allocation attributes.')
+        messages.error(self.request, "You do not have permission to add allocation attributes.")
         return False
 
     def get_context_data(self, **kwargs):
@@ -1255,14 +1353,13 @@ class AllocationAttributeCreateView(LoginRequiredMixin, UserPassesTestMixin, Cre
     def get_form(self, form_class=None):
         """Return an instance of the form to be used in this view."""
         form = super().get_form(form_class)
-        form.fields['allocation'].widget = forms.HiddenInput()
+        form.fields["allocation"].widget = forms.HiddenInput()
 
-        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get('pk'))
+        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get("pk"))
         current_allocation_attribute_objs = allocation_obj.allocationattribute_set.all()
         current_allocation_attribute_type_objs = []
         for allocation_attribute_obj in current_allocation_attribute_objs:
-            current_allocation_attribute_type_objs.append(
-                allocation_attribute_obj.allocation_attribute_type)
+            current_allocation_attribute_type_objs.append(allocation_attribute_obj.allocation_attribute_type)
         allocation_attribute_type_objs = AllocationAttributeType.objects.all()
         allocation_attribute_type_pks = []
         for allocation_attribute_type_obj in allocation_attribute_type_objs:
@@ -1271,27 +1368,28 @@ class AllocationAttributeCreateView(LoginRequiredMixin, UserPassesTestMixin, Cre
 
             if allocation_obj.get_parent_resource in allocation_attribute_type_obj.get_linked_resources():
                 allocation_attribute_type_pks.append(allocation_attribute_type_obj.pk)
-        form.fields['allocation_attribute_type'].queryset = AllocationAttributeType.objects.filter(
-            pk__in=allocation_attribute_type_pks)
+        form.fields["allocation_attribute_type"].queryset = AllocationAttributeType.objects.filter(
+            pk__in=allocation_attribute_type_pks
+        )
 
         return form
 
     def get_success_url(self):
-        allocation_obj = Allocation.objects.get(pk=self.kwargs.get('pk'))
+        allocation_obj = Allocation.objects.get(pk=self.kwargs.get("pk"))
         logger.info(
-            f'Admin {self.request.user.username} created a {allocation_obj.get_parent_resource.name} '
-            f'allocation attribute (allocation pk={allocation_obj.pk})'
+            f"Admin {self.request.user.username} created a {allocation_obj.get_parent_resource.name} "
+            f"allocation attribute (allocation pk={allocation_obj.pk})"
         )
         create_admin_action_for_creation(self.request.user, self.object, allocation_obj)
-        return reverse('allocation-detail', kwargs={'pk': allocation_obj.pk})
+        return reverse("allocation-detail", kwargs={"pk": allocation_obj.pk})
 
 
 class AllocationAttributeDeleteView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     template_name = "allocation/allocation_allocationattribute_delete.html"
 
     def test_func(self):
-        """ UserPassesTestMixin Tests"""
-        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get('pk'))
+        """UserPassesTestMixin Tests"""
+        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get("pk"))
         user = self.request.user
         if user.is_superuser:
             return True
@@ -1299,12 +1397,12 @@ class AllocationAttributeDeleteView(LoginRequiredMixin, UserPassesTestMixin, Tem
         group_exists = check_if_groups_in_review_groups(
             allocation_obj.get_parent_resource.review_groups.all(),
             self.request.user.groups.all(),
-            'delete_allocationattribute'
+            "delete_allocationattribute",
         )
         if group_exists:
             return True
 
-        messages.error(self.request, 'You do not have permission to delete attributes from this allocation.')
+        messages.error(self.request, "You do not have permission to delete attributes from this allocation.")
         return False
 
     def get_allocation_attributes_to_delete(self, allocation_obj):
@@ -1354,11 +1452,12 @@ class AllocationAttributeDeleteView(LoginRequiredMixin, UserPassesTestMixin, Tem
                     allocation_attribute = AllocationAttribute.objects.get(pk=form_data["pk"])
 
                     logger.info(
-                        f'Admin {request.user.username} deleted a {allocation_obj.get_parent_resource.name} '
-                        f'allocation attribute (allocation pk={allocation_obj.pk})'
+                        f"Admin {request.user.username} deleted a {allocation_obj.get_parent_resource.name} "
+                        f"allocation attribute (allocation pk={allocation_obj.pk})"
                     )
                     create_admin_action_for_deletion(
-                        request.user, allocation_attribute, allocation_attribute.allocation)
+                        request.user, allocation_attribute, allocation_attribute.allocation
+                    )
 
                     allocation_attribute.delete()
 
@@ -1376,8 +1475,8 @@ class AllocationNoteCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateVi
     template_name = "allocation/allocation_note_create.html"
 
     def test_func(self):
-        """ UserPassesTestMixin Tests"""
-        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get('pk'))
+        """UserPassesTestMixin Tests"""
+        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get("pk"))
         user = self.request.user
         if user.is_superuser:
             return True
@@ -1385,12 +1484,12 @@ class AllocationNoteCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateVi
         group_exists = check_if_groups_in_review_groups(
             allocation_obj.get_parent_resource.review_groups.all(),
             self.request.user.groups.all(),
-            'add_allocationusernote'
+            "add_allocationusernote",
         )
         if group_exists:
             return True
 
-        messages.error(self.request, 'You do not have permission to add a note to this allocation.')
+        messages.error(self.request, "You do not have permission to add a note to this allocation.")
         return False
 
     def get_context_data(self, **kwargs):
@@ -1419,8 +1518,9 @@ class AllocationNoteCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateVi
 
     def get_success_url(self):
         logger.info(
-            f'Admin {self.request.user.username} created an allocation note (allocation pk={self.object.allocation.pk})')
-        return reverse('allocation-detail', kwargs={'pk': self.object.allocation.pk})
+            f"Admin {self.request.user.username} created an allocation note (allocation pk={self.object.allocation.pk})"
+        )
+        return reverse("allocation-detail", kwargs={"pk": self.object.allocation.pk})
 
 
 class AllocationRequestListView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
@@ -1436,36 +1536,51 @@ class AllocationRequestListView(LoginRequiredMixin, UserPassesTestMixin, Templat
         if self.request.user.has_perm("allocation.can_review_allocation_requests"):
             return True
 
-        messages.error(self.request, 'You do not have permission to review allocation requests.')
+        messages.error(self.request, "You do not have permission to review allocation requests.")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         if self.request.user.is_superuser:
             allocation_list = Allocation.objects.filter(
                 status__name__in=[
-                    'New', 'Paid', 'Billing Information Submitted', 'Contacted By Admin', 'Waiting For Admin Approval'
+                    "New",
+                    "Paid",
+                    "Billing Information Submitted",
+                    "Contacted By Admin",
+                    "Waiting For Admin Approval",
                 ]
-            ).exclude(project__status__name__in=['Archived', 'Renewal Denied'])
-            allocation_renewal_list = Allocation.objects.filter(
-                status__name='Renewal Requested'
-            ).exclude(project__status__name__in=['Archived', 'Renewal Denied'])
+            ).exclude(project__status__name__in=["Archived", "Renewal Denied"])
+            allocation_renewal_list = Allocation.objects.filter(status__name="Renewal Requested").exclude(
+                project__status__name__in=["Archived", "Renewal Denied"]
+            )
         else:
-            allocation_list = Allocation.objects.filter(
-                status__name__in=[
-                    'New', 'Paid', 'Billing Information Submitted', 'Contacted By Admin', 'Waiting For Admin Approval'
-                ],
-                resources__review_groups__in=list(self.request.user.groups.all())
-            ).exclude(project__status__name__in=['Archived', 'Renewal Denied']).distinct()
-            allocation_renewal_list = Allocation.objects.filter(
-                status__name='Renewal Requested',
-                resources__review_groups__in=list(self.request.user.groups.all())
-            ).exclude(project__status__name__in=['Archived', 'Renewal Denied']).distinct()
+            allocation_list = (
+                Allocation.objects.filter(
+                    status__name__in=[
+                        "New",
+                        "Paid",
+                        "Billing Information Submitted",
+                        "Contacted By Admin",
+                        "Waiting For Admin Approval",
+                    ],
+                    resources__review_groups__in=list(self.request.user.groups.all()),
+                )
+                .exclude(project__status__name__in=["Archived", "Renewal Denied"])
+                .distinct()
+            )
+            allocation_renewal_list = (
+                Allocation.objects.filter(
+                    status__name="Renewal Requested", resources__review_groups__in=list(self.request.user.groups.all())
+                )
+                .exclude(project__status__name__in=["Archived", "Renewal Denied"])
+                .distinct()
+            )
 
-        context['allocation_status_active'] = AllocationStatusChoice.objects.get(name='Active')
-        context['allocation_list'] = allocation_list
-        context['allocation_renewal_list'] = allocation_renewal_list
-        context['PROJECT_ENABLE_PROJECT_REVIEW'] = PROJECT_ENABLE_PROJECT_REVIEW
-        context['ALLOCATION_DEFAULT_ALLOCATION_LENGTH'] = ALLOCATION_DEFAULT_ALLOCATION_LENGTH
+        context["allocation_status_active"] = AllocationStatusChoice.objects.get(name="Active")
+        context["allocation_list"] = allocation_list
+        context["allocation_renewal_list"] = allocation_renewal_list
+        context["PROJECT_ENABLE_PROJECT_REVIEW"] = PROJECT_ENABLE_PROJECT_REVIEW
+        context["ALLOCATION_DEFAULT_ALLOCATION_LENGTH"] = ALLOCATION_DEFAULT_ALLOCATION_LENGTH
         return context
 
 
@@ -1485,8 +1600,8 @@ class AllocationRenewView(LoginRequiredMixin, UserPassesTestMixin, TemplateView)
         allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get("pk"))
 
         if not allocation_obj.project.requires_review:
-            messages.error(request, 'Your allocation does not need to be renewed.')
-            return HttpResponseRedirect(reverse('allocation-detail', kwargs={'pk': allocation_obj.pk}))
+            messages.error(request, "Your allocation does not need to be renewed.")
+            return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": allocation_obj.pk}))
 
         if not ALLOCATION_ENABLE_ALLOCATION_RENEWAL:
             messages.error(
@@ -1495,39 +1610,48 @@ class AllocationRenewView(LoginRequiredMixin, UserPassesTestMixin, TemplateView)
             )
             return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": allocation_obj.pk}))
 
-        if allocation_obj.status.name not in ['Active', 'Expired', 'Revoked', ]:
-            messages.error(request, f'You cannot renew a allocation with status {allocation_obj.status.name}.')
-            return HttpResponseRedirect(reverse('allocation-detail', kwargs={'pk': allocation_obj.pk}))
+        if allocation_obj.status.name not in [
+            "Active",
+            "Expired",
+            "Revoked",
+        ]:
+            messages.error(request, f"You cannot renew a allocation with status {allocation_obj.status.name}.")
+            return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": allocation_obj.pk}))
 
-        if allocation_obj.project.status.name in ['Denied', 'Expired', 'Archived', 'Renewal Denied', ]:
+        if allocation_obj.project.status.name in [
+            "Denied",
+            "Expired",
+            "Archived",
+            "Renewal Denied",
+        ]:
             messages.error(
-                request, 'You cannot renew an allocation with project status "{}".'.format(
-                    allocation_obj.project.status.name)
+                request,
+                'You cannot renew an allocation with project status "{}".'.format(allocation_obj.project.status.name),
             )
-            return HttpResponseRedirect(reverse('allocation-detail', kwargs={'pk': allocation_obj.pk}))
+            return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": allocation_obj.pk}))
 
-        if not allocation_obj.project.get_env.get('renewable'): 
-            messages.error(
-                request, f'You cannot renew allocations in a {allocation_obj.project.type.name} project.')
-            return HttpResponseRedirect(reverse('allocation-detail', kwargs={'pk': allocation_obj.pk})) 
+        if not allocation_obj.project.get_env.get("renewable"):
+            messages.error(request, f"You cannot renew allocations in a {allocation_obj.project.type.name} project.")
+            return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": allocation_obj.pk}))
 
-        if allocation_obj.project.needs_review: 
-            messages.error(
-                request, 'You cannot renew your allocation until you review your project first.')
-            return HttpResponseRedirect(reverse('allocation-detail', kwargs={'pk': allocation_obj.pk}))
+        if allocation_obj.project.needs_review:
+            messages.error(request, "You cannot renew your allocation until you review your project first.")
+            return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": allocation_obj.pk}))
 
         if allocation_obj.expires_in > ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING:
-            messages.error(
-                request, 'It is too soon to renew your allocation.')
-            return HttpResponseRedirect(reverse('allocation-detail', kwargs={'pk': allocation_obj.pk}))
+            messages.error(request, "It is too soon to renew your allocation.")
+            return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": allocation_obj.pk}))
 
-        if ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING > 0 and allocation_obj.expires_in < -ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING:
-            messages.error(request, 'It is too late to renew your allocation.')
-            return HttpResponseRedirect(reverse('allocation-detail', kwargs={'pk': allocation_obj.pk}))
-        
+        if (
+            ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING > 0
+            and allocation_obj.expires_in < -ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING
+        ):
+            messages.error(request, "It is too late to renew your allocation.")
+            return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": allocation_obj.pk}))
+
         if allocation_obj.is_locked:
-            messages.error(request, 'You cannot renew this allocation.')
-            return HttpResponseRedirect(reverse('allocation-detail', kwargs={'pk': allocation_obj.pk}))
+            messages.error(request, "You cannot renew this allocation.")
+            return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": allocation_obj.pk}))
 
         return super().dispatch(request, *args, **kwargs)
 
@@ -1635,16 +1759,22 @@ class AllocationRenewView(LoginRequiredMixin, UserPassesTestMixin, TemplateView)
 
             project_obj = allocation_obj.project
             addtl_context = {
-                'project_title': project_obj.title,
-                'project_id': project_obj.pk,
+                "project_title": project_obj.title,
+                "project_id": project_obj.pk,
             }
-            send_allocation_admin_email(allocation_obj, 'Allocation Renewal Requested', 'email/allocation_renewed.txt', domain_url=get_domain_url(self.request), addtl_context=addtl_context)
+            send_allocation_admin_email(
+                allocation_obj,
+                "Allocation Renewal Requested",
+                "email/allocation_renewed.txt",
+                domain_url=get_domain_url(self.request),
+                addtl_context=addtl_context,
+            )
 
             logger.info(
-                f'User {request.user.username} sent a {allocation_obj.get_parent_resource.name} '
-                f'allocation renewal request (allocation pk={allocation_obj.pk})'
+                f"User {request.user.username} sent a {allocation_obj.get_parent_resource.name} "
+                f"allocation renewal request (allocation pk={allocation_obj.pk})"
             )
-            messages.success(request, 'Allocation renewal submitted')
+            messages.success(request, "Allocation renewal submitted")
         else:
             if not formset.is_valid():
                 for error in formset.errors:
@@ -1674,8 +1804,7 @@ class AllocationInvoiceListView(LoginRequiredMixin, UserPassesTestMixin, ListVie
             resource_objs = Resource.objects.filter(requires_payment=True)
         else:
             resource_objs = Resource.objects.filter(
-                review_groups__in=list(self.request.user.groups.all()),
-                requires_payment=True
+                review_groups__in=list(self.request.user.groups.all()), requires_payment=True
             )
         resources = []
         for resource in resource_objs:
@@ -1685,11 +1814,17 @@ class AllocationInvoiceListView(LoginRequiredMixin, UserPassesTestMixin, ListVie
 
     def get_queryset(self):
         if self.request.user.is_superuser:
-            allocations = Allocation.objects.filter(status__name__in=['Active', ])
+            allocations = Allocation.objects.filter(
+                status__name__in=[
+                    "Active",
+                ]
+            )
         else:
             allocations = Allocation.objects.filter(
-                status__name__in=['Active', ],
-                resources__review_groups__in=list(self.request.user.groups.all())
+                status__name__in=[
+                    "Active",
+                ],
+                resources__review_groups__in=list(self.request.user.groups.all()),
             )
         allocations_require_payment = []
         for allocation in allocations:
@@ -1819,11 +1954,9 @@ class AllocationAddInvoiceNoteView(LoginRequiredMixin, UserPassesTestMixin, Crea
         if self.request.user.is_superuser:
             return True
 
-        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get('pk'))
+        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get("pk"))
         group_exists = check_if_groups_in_review_groups(
-            allocation_obj.get_parent_resource.review_groups.all(),
-            self.request.user.groups.all(),
-            'can_manage_invoice'
+            allocation_obj.get_parent_resource.review_groups.all(), self.request.user.groups.all(), "can_manage_invoice"
         )
         if group_exists:
             return True
@@ -1864,11 +1997,9 @@ class AllocationUpdateInvoiceNoteView(LoginRequiredMixin, UserPassesTestMixin, U
         if self.request.user.is_superuser:
             return True
 
-        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get('pk'))
+        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get("pk"))
         group_exists = check_if_groups_in_review_groups(
-            allocation_obj.get_parent_resource.review_groups.all(),
-            self.request.user.groups.all(),
-            'can_manage_invoice'
+            allocation_obj.get_parent_resource.review_groups.all(), self.request.user.groups.all(), "can_manage_invoice"
         )
         if group_exists:
             return True
@@ -1888,11 +2019,9 @@ class AllocationDeleteInvoiceNoteView(LoginRequiredMixin, UserPassesTestMixin, T
         if self.request.user.is_superuser:
             return True
 
-        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get('pk'))
+        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get("pk"))
         group_exists = check_if_groups_in_review_groups(
-            allocation_obj.get_parent_resource.review_groups.all(),
-            self.request.user.groups.all(),
-            'can_manage_invoice'
+            allocation_obj.get_parent_resource.review_groups.all(), self.request.user.groups.all(), "can_manage_invoice"
         )
         if group_exists:
             return True
@@ -2016,7 +2145,9 @@ class AllocationChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, FormVi
         if self.request.user.has_perm("allocation.can_view_all_allocations"):
             return True
 
-        if allocation_change_obj.allocation.has_perm(self.request.user, AllocationPermission.MANAGER, 'view_allocationchangerequest'):
+        if allocation_change_obj.allocation.has_perm(
+            self.request.user, AllocationPermission.MANAGER, "view_allocationchangerequest"
+        ):
             return True
 
         return False
@@ -2050,35 +2181,35 @@ class AllocationChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, FormVi
             user_can_change = check_if_groups_in_review_groups(
                 allocation_obj.get_parent_resource.review_groups.all(),
                 self.request.user.groups.all(),
-                'change_allocationattributechangerequest'
+                "change_allocationattributechangerequest",
             )
-            formset = formset_factory(self.formset_class, max_num=len(
-                allocation_attributes_to_change))
+            formset = formset_factory(self.formset_class, max_num=len(allocation_attributes_to_change))
             formset = formset(
                 initial=allocation_attributes_to_change,
-                prefix='attributeform',
-                form_kwargs={'new_value_disabled': not user_can_change})
-            context['formset'] = formset
+                prefix="attributeform",
+                form_kwargs={"new_value_disabled": not user_can_change},
+            )
+            context["formset"] = formset
 
-        context['user_has_permissions'] = check_if_groups_in_review_groups(
+        context["user_has_permissions"] = check_if_groups_in_review_groups(
             allocation_obj.get_parent_resource.review_groups.all(),
             self.request.user.groups.all(),
-            'view_allocationchangerequest'
+            "view_allocationchangerequest",
         )
 
         if self.request.user.is_superuser:
-            context['user_has_permissions'] = True
+            context["user_has_permissions"] = True
 
-        context['allocation_change'] = allocation_change_obj
-        context['attribute_changes'] = allocation_attributes_to_change
-        context['user_can_delete'] = check_if_groups_in_review_groups(
+        context["allocation_change"] = allocation_change_obj
+        context["attribute_changes"] = allocation_attributes_to_change
+        context["user_can_delete"] = check_if_groups_in_review_groups(
             allocation_obj.get_parent_resource.review_groups.all(),
             self.request.user.groups.all(),
-            'delete_allocationattributechangerequest'
+            "delete_allocationattributechangerequest",
         )
-        context['identifiers'] = allocation_obj.allocationattribute_set.filter(
-            allocation_attribute_type__name__in=ALLOCATION_ATTRIBUTE_IDENTIFIERS).values_list(
-                'value', flat=True)
+        context["identifiers"] = allocation_obj.allocationattribute_set.filter(
+            allocation_attribute_type__name__in=ALLOCATION_ATTRIBUTE_IDENTIFIERS
+        ).values_list("value", flat=True)
 
         return context
 
@@ -2094,7 +2225,10 @@ class AllocationChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, FormVi
         allocation_change_form.fields["justification"].disabled = True
         if allocation_change_obj.status.name != "Pending":
             allocation_change_form.fields["end_date_extension"].disabled = True
-        if not not self.request.user.has_perm("allocation.can_view_all_allocations") and not self.request.user.is_superuser:
+        if (
+            not not self.request.user.has_perm("allocation.can_view_all_allocations")
+            and not self.request.user.is_superuser
+        ):
             allocation_change_form.fields["end_date_extension"].disabled = True
 
         note_form = AllocationChangeNoteForm(initial={"notes": allocation_change_obj.notes})
@@ -2106,24 +2240,31 @@ class AllocationChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, FormVi
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
-        pk = self.kwargs.get('pk')
+        pk = self.kwargs.get("pk")
         allocation_change_obj = get_object_or_404(AllocationChangeRequest, pk=pk)
         allocation_obj = allocation_change_obj.allocation
         if not request.user.is_superuser:
             group_exists = check_if_groups_in_review_groups(
                 allocation_obj.get_parent_resource.review_groups.all(),
                 self.request.user.groups.all(),
-                'change_allocationchangerequest'
+                "change_allocationchangerequest",
             )
             if not group_exists:
                 messages.error(
-                    request, 'You do not have permission to manage this allocation change request with this resource.')
-                return HttpResponseRedirect(reverse('allocation-change-detail', kwargs={'pk': allocation_change_obj.pk}))
+                    request, "You do not have permission to manage this allocation change request with this resource."
+                )
+                return HttpResponseRedirect(
+                    reverse("allocation-change-detail", kwargs={"pk": allocation_change_obj.pk})
+                )
 
-        allocation_change_form = AllocationChangeForm(request.POST,
-            initial={'justification': allocation_change_obj.justification,
-                     'end_date_extension': allocation_change_obj.end_date_extension})
-        allocation_change_form.fields['justification'].required = False
+        allocation_change_form = AllocationChangeForm(
+            request.POST,
+            initial={
+                "justification": allocation_change_obj.justification,
+                "end_date_extension": allocation_change_obj.end_date_extension,
+            },
+        )
+        allocation_change_form.fields["justification"].required = False
 
         allocation_attributes_to_change = self.get_allocation_attributes_to_change(allocation_change_obj)
 
@@ -2131,15 +2272,15 @@ class AllocationChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, FormVi
             user_can_change = check_if_groups_in_review_groups(
                 allocation_obj.get_parent_resource.review_groups.all(),
                 self.request.user.groups.all(),
-                'change_allocationattributechangerequest'
+                "change_allocationattributechangerequest",
             )
-            formset = formset_factory(self.formset_class, max_num=len(
-                allocation_attributes_to_change))
+            formset = formset_factory(self.formset_class, max_num=len(allocation_attributes_to_change))
             formset = formset(
                 request.POST,
                 initial=allocation_attributes_to_change,
-                prefix='attributeform',
-                form_kwargs={'new_value_disabled': not user_can_change})
+                prefix="attributeform",
+                form_kwargs={"new_value_disabled": not user_can_change},
+            )
 
         note_form = AllocationChangeNoteForm(request.POST, initial={"notes": allocation_change_obj.notes})
 
@@ -2162,7 +2303,7 @@ class AllocationChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, FormVi
             return HttpResponseBadRequest("Invalid request")
 
         if action == "deny":
-            create_admin_action(request.user, {'notes': notes}, allocation_obj, allocation_change_obj)
+            create_admin_action(request.user, {"notes": notes}, allocation_obj, allocation_change_obj)
             allocation_change_obj.notes = notes
 
             allocation_change_status_denied_obj = AllocationChangeStatusChoice.objects.get(name="Denied")
@@ -2189,11 +2330,10 @@ class AllocationChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, FormVi
             )
 
             logger.info(
-                f'Admin {request.user.username} denied a {allocation_obj.get_parent_resource.name} '
-                f'allocation change request (allocation pk={allocation_obj.pk})'
+                f"Admin {request.user.username} denied a {allocation_obj.get_parent_resource.name} "
+                f"allocation change request (allocation pk={allocation_obj.pk})"
             )
             return HttpResponseRedirect(reverse("allocation-change-detail", kwargs={"pk": pk}))
-
 
         if not allocation_change_form.is_valid() or (allocation_attributes_to_change and not formset.is_valid()):
             for error in allocation_change_form.errors:
@@ -2212,8 +2352,8 @@ class AllocationChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, FormVi
             allocation_change_obj.save()
             messages.success(request, "Allocation change request updated!")
             logger.info(
-                f'Admin {request.user.username} updated a {allocation_obj.get_parent_resource.name} '
-                f'allocation change request (allocation pk={allocation_obj.pk})'
+                f"Admin {request.user.username} updated a {allocation_obj.get_parent_resource.name} "
+                f"allocation change request (allocation pk={allocation_obj.pk})"
             )
             return HttpResponseRedirect(reverse("allocation-change-detail", kwargs={"pk": pk}))
 
@@ -2225,7 +2365,7 @@ class AllocationChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, FormVi
             return HttpResponseRedirect(reverse("allocation-change-detail", kwargs={"pk": pk}))
 
         if end_date_extension != allocation_change_obj.end_date_extension:
-            create_admin_action(request.user, {'end_date': end_date_extension}, allocation_obj)
+            create_admin_action(request.user, {"end_date": end_date_extension}, allocation_obj)
             allocation_change_obj.end_date_extension = end_date_extension
 
         if allocation_attributes_to_change:
@@ -2235,31 +2375,29 @@ class AllocationChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, FormVi
                 attribute_change = AllocationAttributeChangeRequest.objects.get(pk=formset_data.get("change_pk"))
 
                 if new_value != attribute_change.new_value:
-                    create_admin_action(request.user, {'new_value': new_value}, allocation_obj, attribute_change)
+                    create_admin_action(request.user, {"new_value": new_value}, allocation_obj, attribute_change)
                     attribute_change.new_value = new_value
                     attribute_change.save()
 
         if action == "update":
             allocation_change_obj.save()
-            messages.success(request, 'Allocation change request updated!')
+            messages.success(request, "Allocation change request updated!")
             logger.info(
-                f'Admin {request.user.username} updated a {allocation_obj.get_parent_resource.name} '
-                f'allocation change request (allocation pk={allocation_obj.pk})'
+                f"Admin {request.user.username} updated a {allocation_obj.get_parent_resource.name} "
+                f"allocation change request (allocation pk={allocation_obj.pk})"
             )
 
-
-        elif action == 'approve':
+        elif action == "approve":
             allocation_obj = allocation_change_obj.allocation
-            allocation_change_status_active_obj = AllocationChangeStatusChoice.objects.get(
-                name='Approved')
+            allocation_change_status_active_obj = AllocationChangeStatusChoice.objects.get(name="Approved")
             allocation_change_obj.status = allocation_change_status_active_obj
 
             if allocation_change_obj.end_date_extension > 0:
                 create_admin_action(
                     request.user,
-                    {'end_date_extension': form_data.get('end_date_extension')},
+                    {"end_date_extension": form_data.get("end_date_extension")},
                     allocation_obj,
-                    allocation_change_obj
+                    allocation_change_obj,
                 )
                 new_end_date = allocation_change_obj.allocation.end_date + relativedelta(
                     days=allocation_change_obj.end_date_extension
@@ -2272,7 +2410,9 @@ class AllocationChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, FormVi
             if allocation_attributes_to_change:
                 attribute_change_list = allocation_change_obj.allocationattributechangerequest_set.all()
                 for attribute_change in attribute_change_list:
-                    create_admin_action(request.user, {'new_value': attribute_change.new_value}, allocation_obj, attribute_change)
+                    create_admin_action(
+                        request.user, {"new_value": attribute_change.new_value}, allocation_obj, attribute_change
+                    )
                     attribute_change.allocation_attribute.value = attribute_change.new_value
                     attribute_change.allocation_attribute.save()
                     allocation_attribute_changed.send(
@@ -2303,10 +2443,10 @@ class AllocationChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, FormVi
                 "email/allocation_change_approved.txt",
                 domain_url=get_domain_url(self.request),
             )
-            
+
             logger.info(
-                f'Admin {request.user.username} approved a {allocation_obj.get_parent_resource.name} '
-                f'allocation change request (allocation pk={allocation_obj.pk})'
+                f"Admin {request.user.username} approved a {allocation_obj.get_parent_resource.name} "
+                f"allocation change request (allocation pk={allocation_obj.pk})"
             )
 
         return HttpResponseRedirect(reverse("allocation-change-detail", kwargs={"pk": pk}))
@@ -2321,7 +2461,7 @@ class AllocationChangeListView(LoginRequiredMixin, UserPassesTestMixin, Template
         if self.request.user.is_superuser:
             return True
 
-        if self.request.user.has_perm('allocation.view_allocationchangerequest'):
+        if self.request.user.has_perm("allocation.view_allocationchangerequest"):
             return True
 
         messages.error(self.request, "You do not have permission to review allocation requests.")
@@ -2332,14 +2472,19 @@ class AllocationChangeListView(LoginRequiredMixin, UserPassesTestMixin, Template
         context = super().get_context_data(**kwargs)
         if self.request.user.is_superuser:
             allocation_change_list = AllocationChangeRequest.objects.filter(
-                status__name__in=['Pending', ])
+                status__name__in=[
+                    "Pending",
+                ]
+            )
         else:
             allocation_change_list = AllocationChangeRequest.objects.filter(
-                status__name__in=['Pending', ],
-                allocation__resources__review_groups__in=list(self.request.user.groups.all())
+                status__name__in=[
+                    "Pending",
+                ],
+                allocation__resources__review_groups__in=list(self.request.user.groups.all()),
             )
-        context['allocation_change_list'] = allocation_change_list
-        context['PROJECT_ENABLE_PROJECT_REVIEW'] = PROJECT_ENABLE_PROJECT_REVIEW
+        context["allocation_change_list"] = allocation_change_list
+        context["PROJECT_ENABLE_PROJECT_REVIEW"] = PROJECT_ENABLE_PROJECT_REVIEW
         return context
 
 
@@ -2365,10 +2510,18 @@ class AllocationChangeView(LoginRequiredMixin, UserPassesTestMixin, FormView):
             )
             return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": allocation_obj.pk}))
 
-        if allocation_obj.project.status.name in ['Denied', 'Expired', 'Revoked', ]:
+        if allocation_obj.project.status.name in [
+            "Denied",
+            "Expired",
+            "Revoked",
+        ]:
             messages.error(
-                request, 'You cannot request a change to an allocation in a project with status "{}".'.format(allocation_obj.project.status.name))
-            return HttpResponseRedirect(reverse('allocation-detail', kwargs={'pk': allocation_obj.pk}))
+                request,
+                'You cannot request a change to an allocation in a project with status "{}".'.format(
+                    allocation_obj.project.status.name
+                ),
+            )
+            return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": allocation_obj.pk}))
 
         if allocation_obj.is_locked:
             messages.error(request, "You cannot request a change to a locked allocation.")
@@ -2386,9 +2539,9 @@ class AllocationChangeView(LoginRequiredMixin, UserPassesTestMixin, FormView):
             )
             return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": allocation_obj.pk}))
 
-        if allocation_obj.allocationchangerequest_set.filter(status__name='Pending'):
-            messages.error(request, f'You cannot request a change to an allocation with a pending change request')
-            return HttpResponseRedirect(reverse('allocation-detail', kwargs={'pk': allocation_obj.pk}))
+        if allocation_obj.allocationchangerequest_set.filter(status__name="Pending"):
+            messages.error(request, f"You cannot request a change to an allocation with a pending change request")
+            return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": allocation_obj.pk}))
 
         return super().dispatch(request, *args, **kwargs)
 
@@ -2402,8 +2555,8 @@ class AllocationChangeView(LoginRequiredMixin, UserPassesTestMixin, FormView):
                 "pk": attribute.pk,
                 "name": attribute.allocation_attribute_type.name,
                 "value": attribute.value,
-                "old_value": attribute.value
-             }
+                "old_value": attribute.value,
+            }
             for attribute in attributes_to_change
         ]
 
@@ -2420,15 +2573,15 @@ class AllocationChangeView(LoginRequiredMixin, UserPassesTestMixin, FormView):
         allocation_attributes_to_change = self.get_allocation_attributes_to_change(allocation_obj)
 
         if allocation_attributes_to_change:
-            formset = formset_factory(self.formset_class, max_num=len(
-                allocation_attributes_to_change))
-            formset = formset(
-                initial=allocation_attributes_to_change, prefix='attributeform')
-            context['formset'] = formset
-        context['allocation'] = allocation_obj
-        context['attributes'] = allocation_attributes_to_change
-        if allocation_obj.get_parent_resource.name == 'Slate Project':
-            context['identifier'] = allocation_obj.allocationattribute_set.get(allocation_attribute_type__name='Slate Project Directory').value
+            formset = formset_factory(self.formset_class, max_num=len(allocation_attributes_to_change))
+            formset = formset(initial=allocation_attributes_to_change, prefix="attributeform")
+            context["formset"] = formset
+        context["allocation"] = allocation_obj
+        context["attributes"] = allocation_attributes_to_change
+        if allocation_obj.get_parent_resource.name == "Slate Project":
+            context["identifier"] = allocation_obj.allocationattribute_set.get(
+                allocation_attribute_type__name="Slate Project Directory"
+            ).value
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
@@ -2449,136 +2602,141 @@ class AllocationChangeView(LoginRequiredMixin, UserPassesTestMixin, FormView):
             if form.is_valid() and formset.is_valid():
                 form_data = form.cleaned_data
 
-                if form_data.get('end_date_extension') != 0:
+                if form_data.get("end_date_extension") != 0:
                     change_requested = True
 
                 for entry in formset:
                     formset_data = entry.cleaned_data
 
-                    new_value = formset_data.get('new_value')
+                    new_value = formset_data.get("new_value")
 
                     if new_value != "":
                         change_requested = True
 
-                        allocation_attribute = AllocationAttribute.objects.get(pk=formset_data.get('pk'))
+                        allocation_attribute = AllocationAttribute.objects.get(pk=formset_data.get("pk"))
                         attribute_changes_to_make.add((allocation_attribute, new_value))
 
                 if change_requested == True:
+                    end_date_extension = form_data.get("end_date_extension")
+                    justification = form_data.get("justification")
 
-                    end_date_extension = form_data.get('end_date_extension')
-                    justification = form_data.get('justification')
-
-                    change_request_status_obj = AllocationChangeStatusChoice.objects.get(
-                        name='Pending')
+                    change_request_status_obj = AllocationChangeStatusChoice.objects.get(name="Pending")
 
                     allocation_change_request_obj = AllocationChangeRequest.objects.create(
                         allocation=allocation_obj,
                         end_date_extension=end_date_extension,
                         justification=justification,
-                        status=change_request_status_obj
-                        )
+                        status=change_request_status_obj,
+                    )
 
                     for attribute in attribute_changes_to_make:
                         attribute_change_request_obj = AllocationAttributeChangeRequest.objects.create(
                             allocation_change_request=allocation_change_request_obj,
                             allocation_attribute=attribute[0],
                             old_value=attribute[0].value,
-                            new_value=attribute[1]
-                            )
-                    messages.success(
-                        request, 'Allocation change request successfully submitted.')
+                            new_value=attribute[1],
+                        )
+                    messages.success(request, "Allocation change request successfully submitted.")
 
                     logger.info(
-                        f'User {request.user.username} requested a {allocation_obj.get_parent_resource.name} '
-                        f'allocation change (allocation pk={allocation_obj.pk})'
+                        f"User {request.user.username} requested a {allocation_obj.get_parent_resource.name} "
+                        f"allocation change (allocation pk={allocation_obj.pk})"
                     )
 
                     # TODO - review this
-                    pi_name = '{} {} ({})'.format(allocation_obj.project.pi.first_name,
-                                                allocation_obj.project.pi.last_name, allocation_obj.project.pi.username)
+                    pi_name = "{} {} ({})".format(
+                        allocation_obj.project.pi.first_name,
+                        allocation_obj.project.pi.last_name,
+                        allocation_obj.project.pi.username,
+                    )
                     resource_name = allocation_obj.get_parent_resource
                     domain_url = get_domain_url(self.request)
-                    url = '{}{}'.format(domain_url, reverse('allocation-change-list'))
+                    url = "{}{}".format(domain_url, reverse("allocation-change-list"))
 
                     project_obj = allocation_obj.project
 
                     addtl_context = {
-                        'project_title': project_obj.title,
-                        'project_id': project_obj.pk,
+                        "project_title": project_obj.title,
+                        "project_id": project_obj.pk,
                     }
                     allocation_change.send(
                         sender=self.__class__,
-                        allocation_change_pk=allocation_change_request_obj.pk,)
-                    send_allocation_admin_email(allocation_obj,
-                                                f'New Allocation Change Request: {pi_name} - {resource_name}',
-                                                'email/new_allocation_change_request.txt',
-                                                url_path=reverse('allocation-change-list'),
-                                                domain_url=get_domain_url(self.request),
-                                                addtl_context=addtl_context)
-                    return HttpResponseRedirect(reverse('allocation-detail', kwargs={'pk': pk}))
+                        allocation_change_pk=allocation_change_request_obj.pk,
+                    )
+                    send_allocation_admin_email(
+                        allocation_obj,
+                        f"New Allocation Change Request: {pi_name} - {resource_name}",
+                        "email/new_allocation_change_request.txt",
+                        url_path=reverse("allocation-change-list"),
+                        domain_url=get_domain_url(self.request),
+                        addtl_context=addtl_context,
+                    )
+                    return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": pk}))
 
                 else:
-                    messages.error(request, 'You must request a change.')
-                    return HttpResponseRedirect(reverse('allocation-change', kwargs={'pk': pk}))
+                    messages.error(request, "You must request a change.")
+                    return HttpResponseRedirect(reverse("allocation-change", kwargs={"pk": pk}))
 
             else:
                 attribute_errors = []
                 for error in form.errors:
                     messages.error(request, error)
                 for error in formset.errors:
-                    if error.get('__all__') is not None:
-                        attribute_errors.append(error.get('__all__')[0])
+                    if error.get("__all__") is not None:
+                        attribute_errors.append(error.get("__all__")[0])
 
                 if attribute_errors:
-                    messages.error(request,  ', '.join(attribute_errors))
-                return HttpResponseRedirect(reverse('allocation-change', kwargs={'pk': pk}))
+                    messages.error(request, ", ".join(attribute_errors))
+                return HttpResponseRedirect(reverse("allocation-change", kwargs={"pk": pk}))
         else:
             if form.is_valid():
                 form_data = form.cleaned_data
 
-                if form_data.get('end_date_extension') != 0:
+                if form_data.get("end_date_extension") != 0:
+                    end_date_extension = form_data.get("end_date_extension")
+                    justification = form_data.get("justification")
 
-                    end_date_extension = form_data.get('end_date_extension')
-                    justification = form_data.get('justification')
-
-                    change_request_status_obj = AllocationChangeStatusChoice.objects.get(
-                        name='Pending')
+                    change_request_status_obj = AllocationChangeStatusChoice.objects.get(name="Pending")
 
                     allocation_change_request_obj = AllocationChangeRequest.objects.create(
                         allocation=allocation_obj,
                         end_date_extension=end_date_extension,
                         justification=justification,
-                        status=change_request_status_obj
-                        )
-                    messages.success(
-                        request, 'Allocation change request successfully submitted.')
+                        status=change_request_status_obj,
+                    )
+                    messages.success(request, "Allocation change request successfully submitted.")
 
-                    pi_name = '{} {} ({})'.format(allocation_obj.project.pi.first_name,
-                                                allocation_obj.project.pi.last_name, allocation_obj.project.pi.username)
+                    pi_name = "{} {} ({})".format(
+                        allocation_obj.project.pi.first_name,
+                        allocation_obj.project.pi.last_name,
+                        allocation_obj.project.pi.username,
+                    )
                     resource_name = allocation_obj.get_parent_resource
                     domain_url = get_domain_url(self.request)
-                    url = '{}{}'.format(domain_url, reverse('allocation-change-list'))
+                    url = "{}{}".format(domain_url, reverse("allocation-change-list"))
 
                     addtl_context = {
-                        'project_title': project_obj.title,
-                        'project_id': project_obj.pk,
+                        "project_title": project_obj.title,
+                        "project_id": project_obj.pk,
                     }
-                    send_allocation_admin_email(allocation_obj,
-                                                f'New Allocation Change Request: {pi_name} - {resource_name}',
-                                                'email/new_allocation_change_request.txt',
-                                                url_path=reverse('allocation-change-list'),
-                                                domain_url=get_domain_url(self.request),
-                                                addtl_context=addtl_context)
+                    send_allocation_admin_email(
+                        allocation_obj,
+                        f"New Allocation Change Request: {pi_name} - {resource_name}",
+                        "email/new_allocation_change_request.txt",
+                        url_path=reverse("allocation-change-list"),
+                        domain_url=get_domain_url(self.request),
+                        addtl_context=addtl_context,
+                    )
 
-                    return HttpResponseRedirect(reverse('allocation-detail', kwargs={'pk': pk}))
+                    return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": pk}))
                 else:
-                    messages.error(request, 'You must request a change.')
-                    return HttpResponseRedirect(reverse('allocation-change', kwargs={'pk': pk}))
+                    messages.error(request, "You must request a change.")
+                    return HttpResponseRedirect(reverse("allocation-change", kwargs={"pk": pk}))
 
             else:
                 for error in form.errors:
                     messages.error(request, error)
-                return HttpResponseRedirect(reverse('allocation-change', kwargs={'pk': pk}))
+                return HttpResponseRedirect(reverse("allocation-change", kwargs={"pk": pk}))
 
 
 class AllocationAttributeEditView(LoginRequiredMixin, UserPassesTestMixin, FormView):
@@ -2690,20 +2848,17 @@ class AllocationChangeDeleteAttributeView(LoginRequiredMixin, UserPassesTestMixi
         if self.request.user.is_superuser:
             return True
 
-        allocation_attribute_change_obj = get_object_or_404(
-            AllocationAttributeChangeRequest,
-            pk=self.kwargs.get('pk')
-        )
+        allocation_attribute_change_obj = get_object_or_404(AllocationAttributeChangeRequest, pk=self.kwargs.get("pk"))
         allocation_obj = allocation_attribute_change_obj.allocation_change_request.allocation
         group_exists = check_if_groups_in_review_groups(
             allocation_obj.get_parent_resource.review_groups.all(),
             self.request.user.groups.all(),
-            'delete_allocationattributechangerequest'
+            "delete_allocationattributechangerequest",
         )
         if group_exists:
             return True
 
-        messages.error(self.request, 'You do not have permission to delete an allocation attribute change request.')
+        messages.error(self.request, "You do not have permission to delete an allocation attribute change request.")
         return False
 
     def get(self, request, pk):
@@ -2714,88 +2869,86 @@ class AllocationChangeDeleteAttributeView(LoginRequiredMixin, UserPassesTestMixi
             request.user,
             allocation_attribute_change_obj,
             allocation_attribute_change_obj.allocation_change_request.allocation,
-            allocation_attribute_change_obj.allocation_change_request
+            allocation_attribute_change_obj.allocation_change_request,
         )
 
         allocation_attribute_change_obj.delete()
 
         allocation_pk = allocation_attribute_change_obj.allocation_change_request.allocation.pk
-        allocation_resource_name = allocation_attribute_change_obj.allocation_change_request.allocation.get_parent_resource.name
-        logger.info(
-            f'Admin {request.user.username} deleted a {allocation_resource_name} allocation '
-            f'attribute change request (allocation pk={allocation_pk})'
+        allocation_resource_name = (
+            allocation_attribute_change_obj.allocation_change_request.allocation.get_parent_resource.name
         )
-        messages.success(
-            request, 'Allocation attribute change request successfully deleted.')
-        return HttpResponseRedirect(reverse('allocation-change-detail', kwargs={'pk': allocation_change_pk}))
+        logger.info(
+            f"Admin {request.user.username} deleted a {allocation_resource_name} allocation "
+            f"attribute change request (allocation pk={allocation_pk})"
+        )
+        messages.success(request, "Allocation attribute change request successfully deleted.")
+        return HttpResponseRedirect(reverse("allocation-change-detail", kwargs={"pk": allocation_change_pk}))
 
 
 class AllocationUserDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
-    template_name = 'allocation/allocation_user_detail.html'
+    template_name = "allocation/allocation_user_detail.html"
 
     def test_func(self):
-        """ UserPassesTestMixin Tests"""
+        """UserPassesTestMixin Tests"""
         if self.request.user.is_superuser:
             return True
 
-        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get('pk'))
+        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get("pk"))
 
         if allocation_obj.project.pi == self.request.user:
             return True
 
-        if allocation_obj.project.projectuser_set.filter(user=self.request.user, role__name='Manager', status__name='Active').exists():
+        if allocation_obj.project.projectuser_set.filter(
+            user=self.request.user, role__name="Manager", status__name="Active"
+        ).exists():
             return True
 
     def get(self, request, *args, **kwargs):
-        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get('pk'))
-        allocation_user_pk = self.kwargs.get('allocation_user_pk')
+        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get("pk"))
+        allocation_user_pk = self.kwargs.get("allocation_user_pk")
 
         if allocation_obj.allocationuser_set.filter(pk=allocation_user_pk).exists():
-            allocation_user_obj = allocation_obj.allocationuser_set.get(
-                pk=allocation_user_pk)
+            allocation_user_obj = allocation_obj.allocationuser_set.get(pk=allocation_user_pk)
 
             allocation_user_update_form = AllocationUserUpdateForm(
                 resource=allocation_obj.get_parent_resource,
                 initial={
-                    'role': allocation_user_obj.role,
+                    "role": allocation_user_obj.role,
                 },
             )
 
             context = {}
-            context['can_update'] = not allocation_obj.project.pi == allocation_user_obj.user
-            context['allocation_obj'] = allocation_obj
-            context['allocation_user_update_form'] = allocation_user_update_form
-            context['allocation_user_obj'] = allocation_user_obj
-            context['allocation_user_roles_enabled'] = check_if_roles_are_enabled(allocation_obj)
+            context["can_update"] = not allocation_obj.project.pi == allocation_user_obj.user
+            context["allocation_obj"] = allocation_obj
+            context["allocation_user_update_form"] = allocation_user_update_form
+            context["allocation_user_obj"] = allocation_user_obj
+            context["allocation_user_roles_enabled"] = check_if_roles_are_enabled(allocation_obj)
 
             return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
-        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get('pk'))
+        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get("pk"))
         project_obj = allocation_obj.project
-        allocation_user_pk = self.kwargs.get('allocation_user_pk')
+        allocation_user_pk = self.kwargs.get("allocation_user_pk")
 
-        if allocation_obj.status.name not in ['Active', 'Billing Information Submitted', 'New', 'Renewal Requested']:
-            messages.error(
-                request, f'You cannot update a user in a(n) {allocation_obj.status.name} allocation.'
-            )
+        if allocation_obj.status.name not in ["Active", "Billing Information Submitted", "New", "Renewal Requested"]:
+            messages.error(request, f"You cannot update a user in a(n) {allocation_obj.status.name} allocation.")
             return HttpResponseRedirect(
                 reverse(
-                    'allocation-user-detail',
-                    kwargs={'pk': allocation_obj.pk, 'allocation_user_pk': allocation_user_pk})
+                    "allocation-user-detail", kwargs={"pk": allocation_obj.pk, "allocation_user_pk": allocation_user_pk}
+                )
             )
 
         if allocation_obj.allocationuser_set.filter(id=allocation_user_pk).exists():
-            allocation_user_obj = allocation_obj.allocationuser_set.get(
-                pk=allocation_user_pk
-            )
+            allocation_user_obj = allocation_obj.allocationuser_set.get(pk=allocation_user_pk)
 
             if allocation_user_obj.user == allocation_user_obj.allocation.project.pi:
-                messages.error(request, 'PI role cannot be changed.')
+                messages.error(request, "PI role cannot be changed.")
                 return HttpResponseRedirect(
                     reverse(
-                        'allocation-user-detail',
-                        kwargs={'pk': allocation_obj.pk, 'allocation_user_pk': allocation_user_pk}
+                        "allocation-user-detail",
+                        kwargs={"pk": allocation_obj.pk, "allocation_user_pk": allocation_user_pk},
                     )
                 )
 
@@ -2803,22 +2956,20 @@ class AllocationUserDetailView(LoginRequiredMixin, UserPassesTestMixin, Template
                 request.POST,
                 resource=allocation_obj.get_parent_resource,
                 initial={
-                    'role': allocation_user_obj.role,
+                    "role": allocation_user_obj.role,
                 },
             )
 
             if allocation_user_update_form.is_valid():
                 form_data = allocation_user_update_form.cleaned_data
-                if allocation_user_obj.role == form_data.get('role'):
+                if allocation_user_obj.role == form_data.get("role"):
                     return HttpResponseRedirect(
                         reverse(
-                            'allocation-user-detail',
-                            kwargs={
-                                'pk': allocation_obj.pk, 'allocation_user_pk': allocation_user_pk
-                            }
+                            "allocation-user-detail",
+                            kwargs={"pk": allocation_obj.pk, "allocation_user_pk": allocation_user_pk},
                         )
                     )
-                allocation_user_obj.role = form_data.get('role')
+                allocation_user_obj.role = form_data.get("role")
                 allocation_user_obj.save()
                 allocation_change_user_role.send(
                     sender=self.__class__,
@@ -2826,62 +2977,56 @@ class AllocationUserDetailView(LoginRequiredMixin, UserPassesTestMixin, Template
                 )
 
                 logger.info(
-                    f'User {request.user.username} updated {allocation_user_obj.user.username}\'s '
-                    f'role (allocation pk={project_obj.pk})'
+                    f"User {request.user.username} updated {allocation_user_obj.user.username}'s "
+                    f"role (allocation pk={project_obj.pk})"
                 )
 
-                messages.success(request, 'User details updated.')
+                messages.success(request, "User details updated.")
                 return HttpResponseRedirect(
                     reverse(
-                        'allocation-user-detail',
-                        kwargs={'pk': allocation_obj.pk, 'allocation_user_pk': allocation_user_pk}
+                        "allocation-user-detail",
+                        kwargs={"pk": allocation_obj.pk, "allocation_user_pk": allocation_user_pk},
                     )
                 )
             else:
-                messages.error(request, allocation_user_update_form.errors.get('__all__'))
+                messages.error(request, allocation_user_update_form.errors.get("__all__"))
                 return HttpResponseRedirect(
                     reverse(
-                        'allocation-user-detail',
-                        kwargs={'pk': allocation_obj.pk, 'allocation_user_pk': allocation_user_pk}
+                        "allocation-user-detail",
+                        kwargs={"pk": allocation_obj.pk, "allocation_user_pk": allocation_user_pk},
                     )
                 )
 
 
 class AllocationAttributeUpdateView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     formset_class = AllocationAttributeEditForm
-    template_name = 'allocation/allocation_allocationattribute_update.html'
+    template_name = "allocation/allocation_allocationattribute_update.html"
 
     def test_func(self):
-        """ UserPassesTestMixin """
-        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get('pk'))
+        """UserPassesTestMixin"""
+        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get("pk"))
         user = self.request.user
         if user.is_superuser:
             return True
 
         group_exists = check_if_groups_in_review_groups(
-            allocation_obj.get_parent_resource.review_groups.all(),
-            user.groups.all(),
-            'change_allocationattribute'
+            allocation_obj.get_parent_resource.review_groups.all(), user.groups.all(), "change_allocationattribute"
         )
         if group_exists:
             return True
 
-        messages.error(
-            self.request, 'You do not have permission to update attributes in this allocation.'
-        )
+        messages.error(self.request, "You do not have permission to update attributes in this allocation.")
 
     def get_allocation_attributes_to_change(self, allocation_obj):
         allocation_attributes = allocation_obj.allocationattribute_set.all()
 
         attributes_to_change = [
-
             {
-             'attribute_pk': allocation_attribute.pk,
-             'name': allocation_attribute.allocation_attribute_type.name,
-             'value': allocation_attribute.value,
-             'new_value': None,
-             }
-
+                "attribute_pk": allocation_attribute.pk,
+                "name": allocation_attribute.allocation_attribute_type.name,
+                "value": allocation_attribute.value,
+                "new_value": None,
+            }
             for allocation_attribute in allocation_attributes
         ]
 
@@ -2889,88 +3034,76 @@ class AllocationAttributeUpdateView(LoginRequiredMixin, UserPassesTestMixin, Tem
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        pk = self.kwargs.get('pk')
+        pk = self.kwargs.get("pk")
         allocation_obj = get_object_or_404(Allocation, pk=pk)
-        allocation_attributes_to_change = self.get_allocation_attributes_to_change(
-            allocation_obj
-        )
+        allocation_attributes_to_change = self.get_allocation_attributes_to_change(allocation_obj)
 
         if allocation_attributes_to_change:
-            formset = formset_factory(
-                self.formset_class,
-                max_num=len(allocation_attributes_to_change)
-            )
-            formset = formset(
-                initial=allocation_attributes_to_change, prefix='attributeform'
-            )
-            context['formset'] = formset
+            formset = formset_factory(self.formset_class, max_num=len(allocation_attributes_to_change))
+            formset = formset(initial=allocation_attributes_to_change, prefix="attributeform")
+            context["formset"] = formset
 
-        context['allocation'] = allocation_obj
+        context["allocation"] = allocation_obj
 
         return context
 
     def post(self, request, *args, **kwargs):
-        pk = self.kwargs.get('pk')
+        pk = self.kwargs.get("pk")
         allocation_obj = get_object_or_404(Allocation, pk=pk)
 
-        allocation_attributes_to_change = self.get_allocation_attributes_to_change(
-            allocation_obj)
+        allocation_attributes_to_change = self.get_allocation_attributes_to_change(allocation_obj)
 
-        formset = formset_factory(
-            self.formset_class, max_num=len(allocation_attributes_to_change))
-        formset = formset(
-            request.POST, initial=allocation_attributes_to_change, prefix='attributeform')
+        formset = formset_factory(self.formset_class, max_num=len(allocation_attributes_to_change))
+        formset = formset(request.POST, initial=allocation_attributes_to_change, prefix="attributeform")
 
         no_changes = True
         if formset.is_valid():
             for entry in formset:
                 formset_data = entry.cleaned_data
-                new_value = formset_data.get('new_value')
+                new_value = formset_data.get("new_value")
                 if not new_value:
                     continue
                 no_changes = False
 
-                allocation_attribute = AllocationAttribute.objects.get(
-                    pk=formset_data.get('attribute_pk'))
+                allocation_attribute = AllocationAttribute.objects.get(pk=formset_data.get("attribute_pk"))
 
                 if new_value and new_value != allocation_attribute.value:
                     logger.info(
-                        f'Admin {request.user.username} updated a {allocation_obj.get_parent_resource.name} '
-                        f'allocation attribute (allocation pk={allocation_obj.pk})'
+                        f"Admin {request.user.username} updated a {allocation_obj.get_parent_resource.name} "
+                        f"allocation attribute (allocation pk={allocation_obj.pk})"
                     )
-                    create_admin_action(
-                        request.user, {'value': new_value}, allocation_obj, allocation_attribute)
+                    create_admin_action(request.user, {"value": new_value}, allocation_obj, allocation_attribute)
 
                     allocation_attribute.value = new_value
                     allocation_attribute.save()
         else:
             errors = []
             for error in formset.errors:
-                if error.get('__all__') is not None:
-                        errors.append(error.get('__all__')[0])
+                if error.get("__all__") is not None:
+                    errors.append(error.get("__all__")[0])
 
-            messages.error(request,  ', '.join(errors))
-            return HttpResponseRedirect(reverse('allocation-attribute-update', kwargs={'pk': pk}))
+            messages.error(request, ", ".join(errors))
+            return HttpResponseRedirect(reverse("allocation-attribute-update", kwargs={"pk": pk}))
 
         if no_changes:
-            messages.error(self.request, 'No allocation attributes where updated')
-            return HttpResponseRedirect(reverse('allocation-attribute-update', kwargs={'pk': pk}))
+            messages.error(self.request, "No allocation attributes where updated")
+            return HttpResponseRedirect(reverse("allocation-attribute-update", kwargs={"pk": pk}))
 
-        messages.success(request, 'Successfully updated allocation attributes')
+        messages.success(request, "Successfully updated allocation attributes")
 
-        return HttpResponseRedirect(reverse('allocation-detail', kwargs={'pk': pk}))
+        return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": pk}))
 
 
 class AllocationNoteUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = AllocationUserNote
-    template_name = 'allocation/allocation_note_update.html'
-    fields = ['is_private', 'note']
-    success_message = 'Allocation note updated.'
+    template_name = "allocation/allocation_note_update.html"
+    fields = ["is_private", "note"]
+    success_message = "Allocation note updated."
 
     def test_func(self):
-        """ UserPassesTestMixin Tests """
-        allocation_note_obj = get_object_or_404(AllocationUserNote, pk=self.kwargs.get('pk'))
-        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get('allocation_pk'))
+        """UserPassesTestMixin Tests"""
+        allocation_note_obj = get_object_or_404(AllocationUserNote, pk=self.kwargs.get("pk"))
+        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get("allocation_pk"))
         user = self.request.user
         if user.is_superuser:
             return True
@@ -2978,30 +3111,27 @@ class AllocationNoteUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPass
         group_exists = check_if_groups_in_review_groups(
             allocation_obj.get_parent_resource.review_groups.all(),
             self.request.user.groups.all(),
-            'change_allocationusernote'
+            "change_allocationusernote",
         )
         if not group_exists:
-            messages.error(
-                self.request, 'You do not have permission to update notes in this allocation.'
-            )
+            messages.error(self.request, "You do not have permission to update notes in this allocation.")
             return False
 
         if user != allocation_note_obj.author:
-            messages.error(
-                self.request, 'Only the original author can edit this note.'
-            )
+            messages.error(self.request, "Only the original author can edit this note.")
             return False
 
         return True
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        allocation_pk = self.kwargs.get('allocation_pk')
+        allocation_pk = self.kwargs.get("allocation_pk")
         allocation_obj = get_object_or_404(Allocation, pk=allocation_pk)
-        context['allocation'] = allocation_obj
+        context["allocation"] = allocation_obj
         return context
 
     def get_success_url(self):
         logger.info(
-            f'Admin {self.request.user.username} updated an allocation note (allocation pk={self.object.allocation.pk})')
-        return reverse('allocation-detail', kwargs={'pk': self.object.allocation.pk})
+            f"Admin {self.request.user.username} updated an allocation note (allocation pk={self.object.allocation.pk})"
+        )
+        return reverse("allocation-detail", kwargs={"pk": self.object.allocation.pk})

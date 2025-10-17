@@ -36,7 +36,7 @@ EMAIL_ADMIN_LIST = import_from_settings("EMAIL_ADMIN_LIST")
 EMAIL_ALLOCATION_EULA_IGNORE_OPT_OUT = import_from_settings("EMAIL_ALLOCATION_EULA_IGNORE_OPT_OUT")
 
 
-EMAIL_TICKET_SYSTEM_ADDRESS = import_from_settings('EMAIL_TICKET_SYSTEM_ADDRESS')
+EMAIL_TICKET_SYSTEM_ADDRESS = import_from_settings("EMAIL_TICKET_SYSTEM_ADDRESS")
 
 
 def update_statuses():
@@ -49,7 +49,7 @@ def update_statuses():
             "Unpaid",
         ],
         end_date__lt=datetime.datetime.now().date(),
-        project__requires_review=True
+        project__requires_review=True,
     )
     for sub_obj in allocations_to_expire:
         sub_obj.status = expired_status_choice
@@ -103,13 +103,17 @@ def send_expiry_emails():
             for allocationuser in user.allocationuser_set.all():
                 allocation = allocationuser.allocation
 
-                if (((allocation.status.name in ['Active', 'Payment Pending', 'Payment Requested', 'Unpaid']) and (allocation.end_date == expring_in_days) and not allocation.project.end_date == expring_in_days)):
+                if (
+                    (allocation.status.name in ["Active", "Payment Pending", "Payment Requested", "Unpaid"])
+                    and (allocation.end_date == expring_in_days)
+                    and not allocation.project.end_date == expring_in_days
+                ):
                     if not allocation.project.requires_review:
                         continue
 
-                    project_url = f'{CENTER_BASE_URL.strip("/")}/{"project"}/{allocation.project.pk}/'
+                    project_url = f"{CENTER_BASE_URL.strip('/')}/{'project'}/{allocation.project.pk}/"
 
-                    allocation_renew_url = f'{CENTER_BASE_URL.strip("/")}/{"allocation"}/{allocation.pk}/'
+                    allocation_renew_url = f"{CENTER_BASE_URL.strip('/')}/{'allocation'}/{allocation.pk}/"
 
                     resource_name = allocation.get_parent_resource.name
 
@@ -137,11 +141,12 @@ def send_expiry_emails():
                     if cloud_usage_notification and cloud_usage_notification.value == "No":
                         continue
 
-                    for projectuser in allocation.project.projectuser_set.filter(user=user, status__name='Active'): 
-                        if ((projectuser.enable_notifications) and 
-                            (allocationuser.user == user and allocationuser.status.name in ['Active', 'Invited', 'Disabled'])):
-
-                            if (user.email not in email_receiver_list):
+                    for projectuser in allocation.project.projectuser_set.filter(user=user, status__name="Active"):
+                        if (projectuser.enable_notifications) and (
+                            allocationuser.user == user
+                            and allocationuser.status.name in ["Active", "Invited", "Disabled"]
+                        ):
+                            if user.email not in email_receiver_list:
                                 email_receiver_list.append(user.email)
 
                             if days_remaining not in expirationdict:
@@ -158,21 +163,22 @@ def send_expiry_emails():
                                 projectdict[allocation.project.title] = (
                                     project_url,
                                     allocation.project.pi.username,
-                                    allocation.project.get_env.get('renewable'),
-                                    allocation.project.type.name
-                                    )
-                            
+                                    allocation.project.get_env.get("renewable"),
+                                    allocation.project.type.name,
+                                )
+
         if email_receiver_list:
-            send_email_template(f'Your access to {CENTER_NAME} allocations is expiring soon',
-                        'email/allocation_expiring.txt',
-                        template_context,
-                        EMAIL_TICKET_SYSTEM_ADDRESS,
-                        email_receiver_list
-                        ) 
+            send_email_template(
+                f"Your access to {CENTER_NAME} allocations is expiring soon",
+                "email/allocation_expiring.txt",
+                template_context,
+                EMAIL_TICKET_SYSTEM_ADDRESS,
+                email_receiver_list,
+            )
 
-            logger.debug(f'Allocation(s) expiring email sent to user {user}.')
+            logger.debug(f"Allocation(s) expiring email sent to user {user}.")
 
-    #Allocations expired
+    # Allocations expired
     admin_projectdict = {}
     admin_allocationdict = {}
     for user in User.objects.all():
@@ -185,17 +191,20 @@ def send_expiry_emails():
         for allocationuser in user.allocationuser_set.all():
             allocation = allocationuser.allocation
 
-            if allocation.status.name != 'Active':
+            if allocation.status.name != "Active":
                 continue
 
             if not allocation.project.requires_review:
                 continue
 
-            if (allocation.end_date == expring_in_days and not allocation.project.end_date == expring_in_days and not allocation.is_locked):
-                
-                project_url = f'{CENTER_BASE_URL.strip("/")}/{"project"}/{allocation.project.pk}/'
+            if (
+                allocation.end_date == expring_in_days
+                and not allocation.project.end_date == expring_in_days
+                and not allocation.is_locked
+            ):
+                project_url = f"{CENTER_BASE_URL.strip('/')}/{'project'}/{allocation.project.pk}/"
 
-                allocation_renew_url = f'{CENTER_BASE_URL.strip("/")}/{"allocation"}/{allocation.pk}/'
+                allocation_renew_url = f"{CENTER_BASE_URL.strip('/')}/{'allocation'}/{allocation.pk}/"
 
                 allocation_url = f"{CENTER_BASE_URL.strip('/')}/{'allocation'}/{allocation.pk}/"
 
@@ -215,13 +224,12 @@ def send_expiry_emails():
                     allocation_attribute_type__name="EXPIRE NOTIFICATION"
                 ).first()
 
-                for projectuser in allocation.project.projectuser_set.filter(user=user, status__name='Active'): 
-                    if ((projectuser.enable_notifications) and 
-                        (allocationuser.user == user and allocationuser.status.name in ['Active', 'Invited', 'Disabled'])):
-
-                        if not expire_notification or expire_notification and expire_notification.value == 'No':
-
-                            if (user.email not in email_receiver_list):
+                for projectuser in allocation.project.projectuser_set.filter(user=user, status__name="Active"):
+                    if (projectuser.enable_notifications) and (
+                        allocationuser.user == user and allocationuser.status.name in ["Active", "Invited", "Disabled"]
+                    ):
+                        if not expire_notification or expire_notification and expire_notification.value == "No":
+                            if user.email not in email_receiver_list:
                                 email_receiver_list.append(user.email)
 
                             if project_url not in allocationdict:
@@ -235,9 +243,9 @@ def send_expiry_emails():
                                 projectdict[allocation.project.title] = (
                                     project_url,
                                     allocation.project.pi.username,
-                                    allocation.project.get_env.get('renewable'),
-                                    allocation.project.type.name
-                                    )
+                                    allocation.project.get_env.get("renewable"),
+                                    allocation.project.type.name,
+                                )
 
                         if EMAIL_ADMINS_ON_ALLOCATION_EXPIRE:
                             if project_url not in admin_allocationdict:
@@ -262,14 +270,15 @@ def send_expiry_emails():
                 email_receiver_list,
             )
 
-            send_email_template(f'Access to your {CENTER_NAME} allocations has expired',
-                        'email/allocation_expired.txt',
-                        template_context,
-                        EMAIL_TICKET_SYSTEM_ADDRESS,
-                        email_receiver_list
-                        ) 
+            send_email_template(
+                f"Access to your {CENTER_NAME} allocations has expired",
+                "email/allocation_expired.txt",
+                template_context,
+                EMAIL_TICKET_SYSTEM_ADDRESS,
+                email_receiver_list,
+            )
 
-            logger.debug(f'Allocation(s) expired email sent to user {user}.')
+            logger.debug(f"Allocation(s) expired email sent to user {user}.")
 
     if EMAIL_ADMINS_ON_ALLOCATION_EXPIRE:
         if admin_projectdict:

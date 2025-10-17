@@ -55,26 +55,22 @@ class ResourceDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     context_object_name = "resource"
 
     def test_func(self):
-        """ UserPassesTestMixin Tests"""
+        """UserPassesTestMixin Tests"""
 
         if self.request.user.is_superuser:
             return True
-        
-        resource_obj = get_object_or_404(Resource, pk=self.kwargs.get('pk'))
+
+        resource_obj = get_object_or_404(Resource, pk=self.kwargs.get("pk"))
         if resource_obj.is_allocatable:
             return True
 
         group_exists = check_if_groups_in_review_groups(
-            resource_obj.review_groups.all(),
-            self.request.user.groups.all(),
-            'view_resource'
+            resource_obj.review_groups.all(), self.request.user.groups.all(), "view_resource"
         )
         if group_exists:
             return True
 
-        messages.error(
-            self.request, 'You do not have permission to view this resource\'s attributes.'
-        )
+        messages.error(self.request, "You do not have permission to view this resource's attributes.")
 
     def get_child_resources(self, resource_obj):
         child_resources = [resource for resource in resource_obj.resource_set.all().order_by(Lower("name"))]
@@ -124,9 +120,7 @@ class ResourceAttributeCreateView(LoginRequiredMixin, UserPassesTestMixin, Creat
         if self.request.user.is_superuser:
             return True
 
-        messages.error(
-            self.request, 'You do not have permission to add this resource\'s attributes.'
-        )
+        messages.error(self.request, "You do not have permission to add this resource's attributes.")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -150,10 +144,10 @@ class ResourceAttributeCreateView(LoginRequiredMixin, UserPassesTestMixin, Creat
 
     def get_success_url(self):
         logger.info(
-            f'Admin {self.request.user.username} created a {self.object.resource.name} resource '
-            f'attribute (resource pk={self.kwargs.get("pk")})'
+            f"Admin {self.request.user.username} created a {self.object.resource.name} resource "
+            f"attribute (resource pk={self.kwargs.get('pk')})"
         )
-        return reverse('resource-detail', kwargs={'pk': self.kwargs.get('pk')})
+        return reverse("resource-detail", kwargs={"pk": self.kwargs.get("pk")})
 
 
 class ResourceAttributeDeleteView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
@@ -164,9 +158,7 @@ class ResourceAttributeDeleteView(LoginRequiredMixin, UserPassesTestMixin, Templ
         if self.request.user.is_superuser:
             return True
 
-        messages.error(
-            self.request, 'You do not have permission to delete this resource\'s attributes.'
-        )
+        messages.error(self.request, "You do not have permission to delete this resource's attributes.")
 
     def get_resource_attributes_to_delete(self, resource_obj):
         resource_attributes_to_delete = ResourceAttribute.objects.filter(resource=resource_obj)
@@ -215,12 +207,11 @@ class ResourceAttributeDeleteView(LoginRequiredMixin, UserPassesTestMixin, Templ
                     resource_attribute = ResourceAttribute.objects.get(pk=form_data["pk"])
                     resource_attribute.delete()
 
-            messages.success(request, 'Deleted {} attributes from resource.'.format(
-                attributes_deleted_count))
-            
+            messages.success(request, "Deleted {} attributes from resource.".format(attributes_deleted_count))
+
             logger.info(
-                f'Admin {self.request.user.username} deleted {attributes_deleted_count} '
-                f'attribute(s) from the {resource_obj.name} resource (resource pk={resource_obj.pk})'
+                f"Admin {self.request.user.username} deleted {attributes_deleted_count} "
+                f"attribute(s) from the {resource_obj.name} resource (resource pk={resource_obj.pk})"
             )
         else:
             for error in formset.errors:

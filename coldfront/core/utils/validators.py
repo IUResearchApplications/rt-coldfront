@@ -4,10 +4,10 @@ from django.utils.deconstruct import deconstructible
 
 @deconstructible
 class IsAlpha:
-    message = 'The entry must not contain numbers or special characters'
-    code = 'invalid'
+    message = "The entry must not contain numbers or special characters"
+    code = "invalid"
 
-    def __init__(self, message = None) -> None:
+    def __init__(self, message=None) -> None:
         if message is not None:
             self.message = message
 
@@ -16,7 +16,4 @@ class IsAlpha:
             raise ValidationError(self.message, self.code)
 
     def __eq__(self, other):
-        return (
-            isinstance(other, IsAlpha)
-            and (self.message == other.message)
-        )
+        return isinstance(other, IsAlpha) and (self.message == other.message)

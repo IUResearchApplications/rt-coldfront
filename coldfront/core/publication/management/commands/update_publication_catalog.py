@@ -49,9 +49,7 @@ class Command(BaseCommand):
         dir = kwargs.get("dir")
 
         publications = set(
-            Publication.objects.filter()
-            .exclude(source__name="manual")
-            .values_list("id", "unique_id", "title")
+            Publication.objects.filter().exclude(source__name="manual").values_list("id", "unique_id", "title")
         )
 
         dir = pathlib.Path(dir)
@@ -183,9 +181,7 @@ class Command(BaseCommand):
         if png_file.exists():
             return True
 
-        parser = feedparser.parse(
-            f"http://export.arxiv.org/api/query?search_query=ti:{quote(title)}"
-        )
+        parser = feedparser.parse(f"http://export.arxiv.org/api/query?search_query=ti:{quote(title)}")
         for entry in parser.get("entries"):
             if entry.get("arxiv_doi") == unique_id:
                 for link in entry.get("links"):

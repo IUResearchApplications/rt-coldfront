@@ -13,9 +13,7 @@ from coldfront.core.utils.common import import_from_settings
 
 logger = logging.getLogger(__name__)
 
-SLATE_PROJECT_MAX_ALLOCATED_STORAGE = import_from_settings(
-    'SLATE_PROJECT_MAX_ALLOCATED_STORAGE', 60
-)
+SLATE_PROJECT_MAX_ALLOCATED_STORAGE = import_from_settings("SLATE_PROJECT_MAX_ALLOCATED_STORAGE", 60)
 
 
 class UserSearch(abc.ABC):
@@ -83,9 +81,9 @@ class LocalUserSearch(UserSearch):
 
 class CombinedUserSearch:
     def __init__(self, user_search_string, search_by, usernames_names_to_exclude=[]):
-        self.USER_SEARCH_CLASSES = import_from_settings('ADDITIONAL_USER_SEARCH_CLASSES', [])
-        if 'coldfront.core.user.utils.LocalUserSearch' not in self.USER_SEARCH_CLASSES:
-            self.USER_SEARCH_CLASSES.insert(0, 'coldfront.core.user.utils.LocalUserSearch')
+        self.USER_SEARCH_CLASSES = import_from_settings("ADDITIONAL_USER_SEARCH_CLASSES", [])
+        if "coldfront.core.user.utils.LocalUserSearch" not in self.USER_SEARCH_CLASSES:
+            self.USER_SEARCH_CLASSES.insert(0, "coldfront.core.user.utils.LocalUserSearch")
         self.user_search_string = user_search_string
         self.search_by = search_by
         self.usernames_names_to_exclude = usernames_names_to_exclude

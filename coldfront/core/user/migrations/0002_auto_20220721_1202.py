@@ -4,25 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('user', '0001_initial'),
+        ("user", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='userprofile',
-            name='department',
-            field=models.CharField(default='', max_length=100),
+            model_name="userprofile",
+            name="department",
+            field=models.CharField(default="", max_length=100),
         ),
         migrations.AddField(
-            model_name='userprofile',
-            name='max_projects',
+            model_name="userprofile",
+            name="max_projects",
             field=models.IntegerField(default=-1),
         ),
         migrations.AddField(
-            model_name='userprofile',
-            name='title',
-            field=models.CharField(default='', max_length=30),
+            model_name="userprofile",
+            name="title",
+            field=models.CharField(default="", max_length=30),
         ),
     ]

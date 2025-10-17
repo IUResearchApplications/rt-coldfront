@@ -4,18 +4,17 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('user', '0004_auto_20240926_1039'),
+        ("user", "0004_auto_20240926_1039"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='userprofile',
-            name='max_class_projects_override',
+            model_name="userprofile",
+            name="max_class_projects_override",
         ),
         migrations.RemoveField(
-            model_name='userprofile',
-            name='max_research_projects_override',
+            model_name="userprofile",
+            name="max_research_projects_override",
         ),
     ]

@@ -5,11 +5,15 @@ from coldfront.plugins.allocation_removal_requests.models import AllocationRemov
 
 
 class Command(BaseCommand):
-    help = 'Add default allocation removal related choices'
+    help = "Add default allocation removal related choices"
 
     def handle(self, *args, **options):
-        for choice in ('Approved', 'Pending', 'Denied', ):
+        for choice in (
+            "Approved",
+            "Pending",
+            "Denied",
+        ):
             AllocationRemovalStatusChoice.objects.get_or_create(name=choice)
 
-        for choice in ('Removal Requested', 'Removed'):
+        for choice in ("Removal Requested", "Removed"):
             AllocationStatusChoice.objects.get_or_create(name=choice)

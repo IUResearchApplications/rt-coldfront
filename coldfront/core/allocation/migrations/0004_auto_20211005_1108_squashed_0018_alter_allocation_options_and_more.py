@@ -9,13 +9,9 @@ import simple_history.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        (
-            "resource",
-            "0003_auto_20210817_1130_squashed_0008_alter_historicalresource_options_and_more"
-        ),
+        ("resource", "0003_auto_20210817_1130_squashed_0008_alter_historicalresource_options_and_more"),
         ("allocation", "0003_auto_20191018_1049"),
     ]
 
@@ -1029,9 +1025,7 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.IntegerField(
-                        auto_created=True, blank=True, db_index=True, verbose_name="ID"
-                    ),
+                    models.IntegerField(auto_created=True, blank=True, db_index=True, verbose_name="ID"),
                 ),
                 (
                     "created",
@@ -1113,9 +1107,7 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.IntegerField(
-                        auto_created=True, blank=True, db_index=True, verbose_name="ID"
-                    ),
+                    models.IntegerField(auto_created=True, blank=True, db_index=True, verbose_name="ID"),
                 ),
                 (
                     "created",
@@ -1259,9 +1251,7 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.IntegerField(
-                        auto_created=True, blank=True, db_index=True, verbose_name="ID"
-                    ),
+                    models.IntegerField(auto_created=True, blank=True, db_index=True, verbose_name="ID"),
                 ),
                 (
                     "created",

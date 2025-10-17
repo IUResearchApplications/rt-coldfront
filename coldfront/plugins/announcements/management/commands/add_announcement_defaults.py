@@ -4,12 +4,11 @@ from coldfront.plugins.announcements.models import AnnouncementStatusChoice, Ann
 
 
 class Command(BaseCommand):
-    help = 'Add default announcement related choices'
+    help = "Add default announcement related choices"
 
     def handle(self, *args, **options):
-
-        for status_choice in ['Active', 'Removed']:
+        for status_choice in ["Active", "Removed"]:
             AnnouncementStatusChoice.objects.get_or_create(name=status_choice)
 
-        for category_choice in ['Compute', 'Storage', 'Service']:
+        for category_choice in ["Compute", "Storage", "Service"]:
             AnnouncementCategoryChoice.objects.get_or_create(name=category_choice)

@@ -26,8 +26,8 @@ from coldfront.core.utils.mail import send_email_template
 
 logger = logging.getLogger(__name__)
 
-DISPLAY_USER_SLATE_PROJECTS = import_from_settings('DISPLAY_USER_SLATE_PROJECTS', False)
-EMAIL_ENABLED = import_from_settings('EMAIL_ENABLED', False)
+DISPLAY_USER_SLATE_PROJECTS = import_from_settings("DISPLAY_USER_SLATE_PROJECTS", False)
+EMAIL_ENABLED = import_from_settings("EMAIL_ENABLED", False)
 if EMAIL_ENABLED:
     EMAIL_SENDER = import_from_settings("EMAIL_SENDER")
     EMAIL_TICKET_SYSTEM_ADDRESS = import_from_settings("EMAIL_TICKET_SYSTEM_ADDRESS")
@@ -63,12 +63,11 @@ class UserProfile(TemplateView):
         else:
             viewed_user = self.request.user
 
-        group_list = ', '.join(
-            [group.name for group in viewed_user.groups.all()])
-        context['group_list'] = group_list
-        context['viewed_user'] = viewed_user
-        context['viewed_username'] = {'viewed_username': viewed_user.username}
-        context['DISPLAY_USER_SLATE_PROJECTS'] = DISPLAY_USER_SLATE_PROJECTS
+        group_list = ", ".join([group.name for group in viewed_user.groups.all()])
+        context["group_list"] = group_list
+        context["viewed_user"] = viewed_user
+        context["viewed_username"] = {"viewed_username": viewed_user.username}
+        context["DISPLAY_USER_SLATE_PROJECTS"] = DISPLAY_USER_SLATE_PROJECTS
         return context
 
 
@@ -109,9 +108,9 @@ class UserProjectsManagersView(ListView):
             "Pending - Remove",
         )
         ongoing_project_statuses = (
-            'New',
-            'Active',
-            'Review Pending',
+            "New",
+            "Active",
+            "Review Pending",
         )
 
         qs = (
@@ -284,8 +283,10 @@ class UserListAllocations(LoginRequiredMixin, UserPassesTestMixin, TemplateView)
         user_dict = {}
 
         for project in Project.objects.filter(pi=self.request.user):
-            for allocation in project.allocation_set.filter(status__name='Active'):
-                for allocation_user in allocation.allocationuser_set.filter(status__name__in=['Active', 'Invited', 'Pending', 'Disabled', 'Retired']).order_by('user__username'):
+            for allocation in project.allocation_set.filter(status__name="Active"):
+                for allocation_user in allocation.allocationuser_set.filter(
+                    status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"]
+                ).order_by("user__username"):
                     if allocation_user.user not in user_dict:
                         user_dict[allocation_user.user] = []
 

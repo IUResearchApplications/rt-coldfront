@@ -9,12 +9,8 @@ from coldfront.plugins.customizable_forms.views import (
     GenericView,
 )
 
-CUSTOMIZABLE_FORMS_ALLOCATION_VIEWS = import_from_settings(
-    "CUSTOMIZABLE_FORMS_ALLOCATION_VIEWS", []
-)
-CUSTOMIZABLE_FORMS_GENERIC_ALLOCATION_VIEW = import_from_settings(
-    "CUSTOMIZABLE_FORMS_GENERIC_ALLOCATION_VIEW", ""
-)
+CUSTOMIZABLE_FORMS_ALLOCATION_VIEWS = import_from_settings("CUSTOMIZABLE_FORMS_ALLOCATION_VIEWS", [])
+CUSTOMIZABLE_FORMS_GENERIC_ALLOCATION_VIEW = import_from_settings("CUSTOMIZABLE_FORMS_GENERIC_ALLOCATION_VIEW", "")
 
 
 urlpatterns = [

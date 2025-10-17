@@ -45,14 +45,13 @@ class ProjectInContextMixin:
 
 class ChangesOnlyOnActiveProjectMixin:
     def dispatch(self, request, *args, **kwargs):
-        project_obj = get_object_or_404(
-            Project, pk=self.kwargs.get('project_pk'))
-        if project_obj.status.name in ['Archived', 'Denied', ]:
-            messages.error(
-                request,
-                'You cannot modify a project with status "{}".'.format(project_obj.status.name)
-            )
-            return HttpResponseRedirect(reverse('project-detail', kwargs={'pk': project_obj.pk}))
+        project_obj = get_object_or_404(Project, pk=self.kwargs.get("project_pk"))
+        if project_obj.status.name in [
+            "Archived",
+            "Denied",
+        ]:
+            messages.error(request, 'You cannot modify a project with status "{}".'.format(project_obj.status.name))
+            return HttpResponseRedirect(reverse("project-detail", kwargs={"pk": project_obj.pk}))
         else:
             return super().dispatch(request, *args, **kwargs)
 

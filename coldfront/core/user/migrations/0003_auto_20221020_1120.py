@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('user', '0002_auto_20220721_1202'),
+        ("user", "0002_auto_20220721_1202"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='userprofile',
-            name='max_class_projects_override',
+            model_name="userprofile",
+            name="max_class_projects_override",
             field=models.IntegerField(default=-1),
         ),
         migrations.AddField(
-            model_name='userprofile',
-            name='max_research_projects_override',
+            model_name="userprofile",
+            name="max_research_projects_override",
             field=models.IntegerField(default=-1),
         ),
     ]

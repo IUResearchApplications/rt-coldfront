@@ -10,7 +10,7 @@ from coldfront.core.project.models import ProjectAdminAction, Project
 from coldfront.core.utils.common import import_from_settings
 from coldfront.plugins.ldap_user_info.utils import get_user_info, get_users_info
 
-PROJECT_PI_ELIGIBLE_ADS_GROUPS = import_from_settings('PROJECT_PI_ELIGIBLE_ADS_GROUPS', [])
+PROJECT_PI_ELIGIBLE_ADS_GROUPS = import_from_settings("PROJECT_PI_ELIGIBLE_ADS_GROUPS", [])
 
 logger = logging.getLogger(__name__)
 
@@ -138,8 +138,8 @@ def create_admin_action(user, fields_to_check, project, base_model=None):
     for key, value in fields_to_check.items():
         base_model_value = base_model_dict.get(key)
         if type(value) is not type(base_model_value):
-            if key == 'status':
-                status_class = base_model._meta.get_field('status').remote_field.model
+            if key == "status":
+                status_class = base_model._meta.get_field("status").remote_field.model
                 base_model_value = status_class.objects.get(pk=base_model_value).name
                 value = value.name
         if value != base_model_value:
@@ -147,11 +147,7 @@ def create_admin_action(user, fields_to_check, project, base_model=None):
                 action = f'Changed "{key}" from "{base_model_value}" to "{value}"'
             else:
                 action = f'For "{base_model}" changed "{key}" from "{base_model_value}" to "{value}"'
-            ProjectAdminAction.objects.create(
-                user=user,
-                project=project,
-                action=action
-            )
+            ProjectAdminAction.objects.create(user=user, project=project, action=action)
 
 
 def get_project_user_emails(project_obj, only_project_managers=False):
@@ -163,21 +159,19 @@ def get_project_user_emails(project_obj, only_project_managers=False):
     :param only_project_managers: Indicates if only the project manager emails should be returned
     """
     project_users = project_obj.projectuser_set.filter(
-        enable_notifications=True,
-        status__name__in=['Active', 'Pending - Remove']
+        enable_notifications=True, status__name__in=["Active", "Pending - Remove"]
     )
     if only_project_managers:
-        project_users = project_users.filter(role__name='Manager')
-    project_users = project_users.values_list('user__email', flat=True)
-
+        project_users = project_users.filter(role__name="Manager")
+    project_users = project_users.values_list("user__email", flat=True)
 
     return list(project_users)
 
 
 def generate_slurm_account_name(project_obj):
     num = str(project_obj.pk)
-    string = '00000'
-    string = string[:-len(num)] + num
+    string = "00000"
+    string = string[: -len(num)] + num
     letter = project_obj.type.name.lower()[0]
 
     return letter + string
@@ -186,16 +180,10 @@ def generate_slurm_account_name(project_obj):
 def create_admin_action_for_deletion(user, deleted_obj, project, base_model=None):
     if base_model:
         ProjectAdminAction.objects.create(
-            user=user,
-            project=project,
-            action=f'Deleted "{deleted_obj}" from "{base_model}"'
+            user=user, project=project, action=f'Deleted "{deleted_obj}" from "{base_model}"'
         )
     else:
-        ProjectAdminAction.objects.create(
-            user=user,
-            project=project,
-            action=f'Deleted "{deleted_obj}"'
-        )
+        ProjectAdminAction.objects.create(user=user, project=project, action=f'Deleted "{deleted_obj}"')
 
 
 def create_admin_action_for_creation(user, created_obj, project, base_model=None):
@@ -203,21 +191,17 @@ def create_admin_action_for_creation(user, created_obj, project, base_model=None
         ProjectAdminAction.objects.create(
             user=user,
             project=project,
-            action=f'Created "{created_obj}" in "{base_model}" with value "{created_obj.value}"'
+            action=f'Created "{created_obj}" in "{base_model}" with value "{created_obj.value}"',
         )
     else:
         ProjectAdminAction.objects.create(
-            user=user,
-            project=project,
-            action=f'Created "{created_obj}" with value "{created_obj.value}"'
+            user=user, project=project, action=f'Created "{created_obj}" with value "{created_obj.value}"'
         )
 
 
 def create_admin_action_for_project_creation(user, project):
     ProjectAdminAction.objects.create(
-        user=user,
-        project=project,
-        action=f'Created a project with status "{project.status.name}"'
+        user=user, project=project, action=f'Created a project with status "{project.status.name}"'
     )
 
 
@@ -226,7 +210,7 @@ def check_if_pi_eligible(user, memberships=None):
         return True
 
     if not memberships:
-        memberships = get_user_info(user.username, ['memberOf']).get('memberOf')
+        memberships = get_user_info(user.username, ["memberOf"]).get("memberOf")
 
     if not memberships:
         return False
@@ -244,9 +228,9 @@ def check_if_pis_eligible(users):
 
     usernames = [user.username for user in set(users)]
     eligible_statuses = {}
-    memberships = get_users_info(usernames, ['memberOf'])
+    memberships = get_users_info(usernames, ["memberOf"])
     for user, user_memberships in memberships.items():
-        for user_membersip in user_memberships.get('memberOf'):
+        for user_membersip in user_memberships.get("memberOf"):
             eligible = user_membersip in PROJECT_PI_ELIGIBLE_ADS_GROUPS
             eligible_statuses[user] = eligible
             if eligible:

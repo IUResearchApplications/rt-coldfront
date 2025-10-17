@@ -19,6 +19,6 @@ class UserProfile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     is_pi = models.BooleanField(default=False)
-    department = models.CharField(max_length=100, default='')
-    division = models.CharField(max_length=100, default='')
-    title = models.CharField(max_length=30, default='')
+    department = models.CharField(max_length=100, default="")
+    division = models.CharField(max_length=100, default="")
+    title = models.CharField(max_length=30, default="")

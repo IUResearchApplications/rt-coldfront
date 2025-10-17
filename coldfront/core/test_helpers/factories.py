@@ -52,8 +52,8 @@ project_status_choice_names = ["New", "Active", "Archived"]
 project_user_role_choice_names = ["User", "Manager"]
 field_of_science_names = ["Physics", "Chemistry", "Economics", "Biology", "Sociology"]
 attr_types = ["Date", "Int", "Float", "Text", "Boolean"]
-project_type_choice_names = ['Research', 'Class']
-allocation_role_choice_names = ['read/write', 'read_only']
+project_type_choice_names = ["Research", "Class"]
+allocation_role_choice_names = ["read/write", "read_only"]
 
 fake = Faker()
 
@@ -145,7 +145,8 @@ class ProjectStatusChoiceFactory(DjangoModelFactory):
 class ProjectTypeChoiceFactory(DjangoModelFactory):
     class Meta:
         model = ProjectTypeChoice
-        django_get_or_create = ('name',)
+        django_get_or_create = ("name",)
+
     name = FuzzyChoice(project_type_choice_names)
 
 
@@ -356,7 +357,8 @@ class AllocationUserStatusChoiceFactory(DjangoModelFactory):
 class AllocationUserRoleChoiceFactory(DjangoModelFactory):
     class Meta:
         model = AllocationUserRoleChoice
-        django_get_or_create = ('name',)
+        django_get_or_create = ("name",)
+
     name = FuzzyChoice(allocation_role_choice_names)
     is_user_default = False
     is_manager_default = False

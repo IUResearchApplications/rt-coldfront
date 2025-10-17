@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = 'Changes the allowed number of managers in all projects'
+    help = "Changes the allowed number of managers in all projects"
 
     def add_arguments(self, parser):
         parser.add_argument("max_managers", type=int)
@@ -17,7 +17,7 @@ class Command(BaseCommand):
         max_managers = kwargs.get("max_managers")
         if max_managers < 1:
             raise CommandError("Max managers must be > 0")
-        
+
         project_objs = Project.objects.all()
         for project_obj in project_objs:
             project_obj.max_managers = max_managers

@@ -7,9 +7,9 @@ def update_all_user_profiles():
     Updates all user profiles.
     """
     ldap_search = LDAPSearch()
-    user_profiles = UserProfile.objects.all().prefetch_related('user')
+    user_profiles = UserProfile.objects.all().prefetch_related("user")
     for user_profile in user_profiles:
-        search_attributes = {'title': '', 'department': '', 'division': '', 'mail': ''}
+        search_attributes = {"title": "", "department": "", "division": "", "mail": ""}
         attributes = get_user_info(user_profile.user.username, list(search_attributes.keys()), ldap_search)
 
         for name, value in attributes.items():
@@ -18,7 +18,7 @@ def update_all_user_profiles():
 
         save_changes = False
         for name, value in search_attributes.items():
-            if name == 'mail':
+            if name == "mail":
                 if user_profile.user.email != value:
                     user_profile.user.email = value
                     user_profile.user.save()

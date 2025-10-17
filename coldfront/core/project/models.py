@@ -18,15 +18,13 @@ from coldfront.core.utils.validate import AttributeValidator
 
 PROJECT_ENABLE_PROJECT_REVIEW = import_from_settings("PROJECT_ENABLE_PROJECT_REVIEW", False)
 
-PROJECT_ENABLE_PROJECT_REVIEW = import_from_settings('PROJECT_ENABLE_PROJECT_REVIEW', False)
-PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings(
-    'PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING', 60)
-PROJECT_DAYS_TO_REVIEW_BEFORE_EXPIRING = import_from_settings(
-    'PROJECT_DAYS_TO_REVIEW_BEFORE_EXPIRING', 30)
-PROJECT_ENABLE_PERMISSIONS_PER_TYPE = import_from_settings(
-    'PROJECT_ENABLE_PERMISSIONS_PER_TYPE', False)
+PROJECT_ENABLE_PROJECT_REVIEW = import_from_settings("PROJECT_ENABLE_PROJECT_REVIEW", False)
+PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings("PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING", 60)
+PROJECT_DAYS_TO_REVIEW_BEFORE_EXPIRING = import_from_settings("PROJECT_DAYS_TO_REVIEW_BEFORE_EXPIRING", 30)
+PROJECT_ENABLE_PERMISSIONS_PER_TYPE = import_from_settings("PROJECT_ENABLE_PERMISSIONS_PER_TYPE", False)
 if PROJECT_ENABLE_PERMISSIONS_PER_TYPE:
-    PROJECT_PERMISSIONS_PER_TYPE = import_from_settings('PROJECT_PERMISSIONS_PER_TYPE')
+    PROJECT_PERMISSIONS_PER_TYPE = import_from_settings("PROJECT_PERMISSIONS_PER_TYPE")
+
 
 class ProjectPermission(Enum):
     """A project permission stores the user, manager, pi, and update fields of a project."""
@@ -62,19 +60,20 @@ class ProjectStatusChoice(TimeStampedModel):
 
 
 class ProjectTypeChoice(TimeStampedModel):
-    """ A project type choice indicates the type of project. Examples include Research and Class.
+    """A project type choice indicates the type of project. Examples include Research and Class.
     This can effect the projects end date.
-    
+
     Attributes:
         name (str): name of project type
     """
+
     name = models.CharField(max_length=64)
 
     def __str__(self):
         return self.name
 
     class Meta:
-        ordering = ('name',)
+        ordering = ("name",)
 
 
 class Project(TimeStampedModel):
@@ -110,7 +109,7 @@ class Project(TimeStampedModel):
         def get_by_natural_key(self, title, pi_username):
             return self.get(title=title, pi__username=pi_username)
 
-    DEFAULT_DESCRIPTION = ''
+    DEFAULT_DESCRIPTION = ""
     DESCRIPTION_HELP_TEXT = """
 Please provide a brief description or abstract about your project including any applications or
 workflows you intend to use, and how you primarily intend to use the system, including if PHI will
@@ -118,8 +117,11 @@ be stored. Please include your area of research and your department. If this is 
 put the approximate class size.
 """
 
-    title = models.CharField(max_length=255, db_collation='utf8mb4_0900_ai_ci')
-    pi = models.ForeignKey(User, on_delete=models.CASCADE,)
+    title = models.CharField(max_length=255, db_collation="utf8mb4_0900_ai_ci")
+    pi = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+    )
     pi_username = models.CharField(
         verbose_name="PI Username",
         max_length=20,
@@ -127,9 +129,9 @@ put the approximate class size.
         help_text="""
 Required if you will not be the PI of this project. Only faculty and staff can be the PI. They are
 required to log onto the site at least once before they can be added.
-"""
+""",
     )
-    requestor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='requestor_user')
+    requestor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="requestor_user")
     description = models.TextField(
         default=DEFAULT_DESCRIPTION,
         help_text=DESCRIPTION_HELP_TEXT,
@@ -139,25 +141,20 @@ required to log onto the site at least once before they can be added.
                 "The project description must be > 10 characters.",
             )
         ],
-        db_collation='utf8mb4_0900_ai_ci'
+        db_collation="utf8mb4_0900_ai_ci",
     )
 
-    slurm_account_name = models.CharField(
-        max_length=15,
-        blank=True,
-        null=True,
-        unique=True
-    )
+    slurm_account_name = models.CharField(max_length=15, blank=True, null=True, unique=True)
     field_of_science = models.ForeignKey(FieldOfScience, on_delete=models.CASCADE, default=FieldOfScience.DEFAULT_PK)
     type = models.ForeignKey(
         ProjectTypeChoice,
         on_delete=models.CASCADE,
-        help_text="This cannot be changed once your project is submitted. Class projects expire at the end of every semester. Research projects expire once a year."
+        help_text="This cannot be changed once your project is submitted. Class projects expire at the end of every semester. Research projects expire once a year.",
     )
     class_number = models.CharField(max_length=25, blank=True, null=True)
     private = models.BooleanField(
         default=False,
-        help_text="A private project will not show up in the PI search results if someone searchs for you/your PI."
+        help_text="A private project will not show up in the PI search results if someone searchs for you/your PI.",
     )
     status = models.ForeignKey(ProjectStatusChoice, on_delete=models.CASCADE)
     force_review = models.BooleanField(default=False)
@@ -219,10 +216,15 @@ required to log onto the site at least once before they can be added.
         Returns:
             bool: whether or not the project needs review
         """
-        if not self.get_env.get('renewable'):
+        if not self.get_env.get("renewable"):
             return False
 
-        if self.status.name in ['Archived', 'Denied', 'Review Pending', 'Renewal Denied', ]:
+        if self.status.name in [
+            "Archived",
+            "Denied",
+            "Review Pending",
+            "Renewal Denied",
+        ]:
             return False
 
         if self.force_review is True:
@@ -234,17 +236,17 @@ required to log onto the site at least once before they can be added.
         if self.requires_review is False:
             return False
 
-        if self.status.name == 'Active' and self.expires_in <= PROJECT_DAYS_TO_REVIEW_BEFORE_EXPIRING:
-            return True
-        
-        if self.status.name == 'Expired' and PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING < 0:
+        if self.status.name == "Active" and self.expires_in <= PROJECT_DAYS_TO_REVIEW_BEFORE_EXPIRING:
             return True
 
-        if self.status.name == 'Expired' and self.expires_in >= -PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING:
+        if self.status.name == "Expired" and PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING < 0:
+            return True
+
+        if self.status.name == "Expired" and self.expires_in >= -PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING:
             return True
 
         return False
-    
+
     def user_permissions(self, user, permission=None):
         """
         Params:
@@ -258,7 +260,7 @@ required to log onto the site at least once before they can be added.
             return list(ProjectPermission)
 
         permissions = [ProjectPermission.USER]
-        user_conditions = (models.Q(status__name__in=('Active', 'New')) & models.Q(user=user))
+        user_conditions = models.Q(status__name__in=("Active", "New")) & models.Q(user=user)
         if not self.projectuser_set.filter(user_conditions).exists():
             if permission and user.has_perm(permission):
                 permissions.append(ProjectPermission.MANAGER)
@@ -303,11 +305,9 @@ required to log onto the site at least once before they can be added.
         Returns:
             bool: the list of managers in the project
         """
-        project_managers = self.projectuser_set.filter(
-            role=ProjectUserRoleChoice.objects.get(name='Manager')
-        )
+        project_managers = self.projectuser_set.filter(role=ProjectUserRoleChoice.objects.get(name="Manager"))
         return [manager.user.username for manager in project_managers]
-    
+
     def get_list_of_resources_with_slurm_accounts(self, user):
         """
         Returns:
@@ -315,15 +315,18 @@ required to log onto the site at least once before they can be added.
         """
         resources = set()
         allocations = self.allocation_set.filter(
-            status__name__in=['Active', 'Renewal Requested', ],
+            status__name__in=[
+                "Active",
+                "Renewal Requested",
+            ],
             allocationuser__user=user,
-            allocationuser__status__name='Active'
+            allocationuser__status__name="Active",
         )
         for allocation in allocations:
             resource = allocation.get_parent_resource
             slurm_cluster = None
             if resource.parent_resource is not None:
-                slurm_cluster = resource.parent_resource.get_attribute('slurm_cluster')
+                slurm_cluster = resource.parent_resource.get_attribute("slurm_cluster")
             if slurm_cluster:
                 resources.add(allocation.get_parent_resource.name)
 
@@ -335,9 +338,9 @@ required to log onto the site at least once before they can be added.
             bool: the current number of managers
         """
         return self.projectuser_set.filter(
-            role=ProjectUserRoleChoice.objects.get(name='Manager'),
-            status=ProjectUserStatusChoice.objects.get(name='Active'),
-            ).count()
+            role=ProjectUserRoleChoice.objects.get(name="Manager"),
+            status=ProjectUserStatusChoice.objects.get(name="Active"),
+        ).count()
 
     def check_exceeds_max_managers(self, num_added_managers=0):
         """
@@ -351,14 +354,13 @@ required to log onto the site at least once before they can be added.
 
     def natural_key(self):
         return (self.title,) + self.pi.natural_key()
-    
+
     @property
     def get_env(self):
         if not PROJECT_ENABLE_PERMISSIONS_PER_TYPE or PROJECT_PERMISSIONS_PER_TYPE.get(self.type.name) is None:
-            return PROJECT_PERMISSIONS_PER_TYPE.get('Default')
-        merged = PROJECT_PERMISSIONS_PER_TYPE.get('Default') | PROJECT_PERMISSIONS_PER_TYPE.get(self.type.name)
+            return PROJECT_PERMISSIONS_PER_TYPE.get("Default")
+        merged = PROJECT_PERMISSIONS_PER_TYPE.get("Default") | PROJECT_PERMISSIONS_PER_TYPE.get(self.type.name)
         return merged
-
 
 
 class ProjectAdminComment(TimeStampedModel):
@@ -422,11 +424,11 @@ class ProjectReview(TimeStampedModel):
         project (Project): links the project to its review
         status (ProjectReviewStatusChoice): links the project review to its status
         project_updates (str): text input from the user about what updates their project has
-        allocation_renewals (str): text that contains the IDs of the allocations that should be renewed 
+        allocation_renewals (str): text that contains the IDs of the allocations that should be renewed
     """
 
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    status = models.ForeignKey(ProjectReviewStatusChoice, on_delete=models.CASCADE, verbose_name='Status')
+    status = models.ForeignKey(ProjectReviewStatusChoice, on_delete=models.CASCADE, verbose_name="Status")
     project_updates = models.TextField(blank=True, null=True)
     allocation_renewals = models.TextField(blank=True, null=True)
     history = HistoricalRecords()
@@ -621,30 +623,32 @@ class ProjectAttributeUsage(TimeStampedModel):
     history = HistoricalRecords()
 
     def __str__(self):
-        return '{}: {}'.format(self.project_attribute.proj_attr_type.name, self.value)
+        return "{}: {}".format(self.project_attribute.proj_attr_type.name, self.value)
 
 
 class ProjectAdminAction(TimeStampedModel):
-    """ Project admin action tracks what an admin is doing on the site. 
-    
+    """Project admin action tracks what an admin is doing on the site.
+
     Attributes:
         user (User): who the admin was
         project (Project): the project the action was done on
         action (str): what the admin did on the site
     """
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     action = models.CharField(max_length=256)
 
 
 class ProjectDescriptionRecord(TimeStampedModel):
-    """ Project description record keeps a record of previous project descriptions after they are updated. 
-    
+    """Project description record keeps a record of previous project descriptions after they are updated.
+
     Attributes:
         project (project): projetc that had its description updated
         user (user): who updated the description
         description (str): the previous description
     """
+
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     description = models.TextField()

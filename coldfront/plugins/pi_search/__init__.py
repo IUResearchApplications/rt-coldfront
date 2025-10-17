@@ -1,1 +1,1 @@
-default_app_config = 'coldfront.plugins.pi_search.apps.PISearchConfig'
+default_app_config = "coldfront.plugins.pi_search.apps.PISearchConfig"

@@ -10,7 +10,6 @@ import simple_history.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("project", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
@@ -159,9 +158,7 @@ class Migration(migrations.Migration):
                 default="",
                 help_text="\nPlease provide a brief description or abstract about your project including any applications or\nworkflows you intend to use, and how you primarily intend to use the system, including if PHI will\nbe stored. Please include your area of research and your department. If this is for a class please\nput the approximate class size.\n",
                 validators=[
-                    django.core.validators.MinLengthValidator(
-                        10, "The project description must be > 10 characters."
-                    )
+                    django.core.validators.MinLengthValidator(10, "The project description must be > 10 characters.")
                 ],
             ),
         ),
@@ -190,9 +187,7 @@ class Migration(migrations.Migration):
                 default="",
                 help_text="\nPlease provide a brief description or abstract about your project including any applications or\nworkflows you intend to use, and how you primarily intend to use the system, including if PHI will\nbe stored. Please include your area of research and your department. If this is for a class please\nput the approximate class size.\n",
                 validators=[
-                    django.core.validators.MinLengthValidator(
-                        10, "The project description must be > 10 characters."
-                    )
+                    django.core.validators.MinLengthValidator(10, "The project description must be > 10 characters.")
                 ],
             ),
         ),
@@ -517,9 +512,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="projectattribute",
             name="project",
-            field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, to="project.project"
-            ),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="project.project"),
         ),
         migrations.CreateModel(
             name="HistoricalProjectAttributeUsage",
@@ -585,9 +578,7 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.IntegerField(
-                        auto_created=True, blank=True, db_index=True, verbose_name="ID"
-                    ),
+                    models.IntegerField(auto_created=True, blank=True, db_index=True, verbose_name="ID"),
                 ),
                 (
                     "created",
@@ -655,9 +646,7 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.IntegerField(
-                        auto_created=True, blank=True, db_index=True, verbose_name="ID"
-                    ),
+                    models.IntegerField(auto_created=True, blank=True, db_index=True, verbose_name="ID"),
                 ),
                 (
                     "created",
@@ -734,9 +723,7 @@ class Migration(migrations.Migration):
                 default="",
                 help_text="\nPlease provide a brief description or abstract about your project including any applications or\nworkflows you intend to use, and how you primarily intend to use the system, including if PHI will\nbe stored. Please include your area of research and your department. If this is for a class please\nput the approximate class size.\n",
                 validators=[
-                    django.core.validators.MinLengthValidator(
-                        10, "The project description must be > 10 characters."
-                    )
+                    django.core.validators.MinLengthValidator(10, "The project description must be > 10 characters.")
                 ],
             ),
         ),

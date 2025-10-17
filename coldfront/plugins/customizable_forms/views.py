@@ -21,9 +21,7 @@ from coldfront.plugins.customizable_forms.utils import (
 )
 
 
-CUSTOMIZABLE_FORMS_ALLOCATION_VIEWS = import_from_settings(
-    "CUSTOMIZABLE_FORMS_ALLOCATION_VIEWS", []
-)
+CUSTOMIZABLE_FORMS_ALLOCATION_VIEWS = import_from_settings("CUSTOMIZABLE_FORMS_ALLOCATION_VIEWS", [])
 logger = logging.getLogger(__name__)
 
 
@@ -58,9 +56,7 @@ class AllocationResourceSelectionView(LoginRequiredMixin, UserPassesTestMixin, T
         ]:
             messages.error(
                 request,
-                'You cannot request a new allocation for a project with status "{}".'.format(
-                    project_obj.status.name
-                ),
+                'You cannot request a new allocation for a project with status "{}".'.format(project_obj.status.name),
             )
             return HttpResponseRedirect(reverse("project-detail", kwargs={"pk": project_obj.pk}))
 

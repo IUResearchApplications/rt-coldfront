@@ -1,1 +1,1 @@
-default_app_config = 'coldfront.plugins.allocation_removal_requests.apps.AllocationRemovalRequestsConfig'
+default_app_config = "coldfront.plugins.allocation_removal_requests.apps.AllocationRemovalRequestsConfig"

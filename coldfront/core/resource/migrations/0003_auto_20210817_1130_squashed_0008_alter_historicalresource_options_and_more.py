@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("resource", "0002_auto_20191017_1141"),
         ("auth", "0012_alter_user_first_name_max_length"),
@@ -24,9 +23,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="resource",
             name="review_groups",
-            field=models.ManyToManyField(
-                blank=True, related_name="review_groups_resource_set", to="auth.group"
-            ),
+            field=models.ManyToManyField(blank=True, related_name="review_groups_resource_set", to="auth.group"),
         ),
         migrations.AddField(
             model_name="historicalresourceattributetype",

@@ -22,95 +22,113 @@ from coldfront.core.portal.utils import (
     generate_project_type_chart_data,
     generate_project_user_chart_data,
     generate_user_counts,
-    generate_user_timeline
+    generate_user_timeline,
 )
 from coldfront.core.project.models import Project
 from coldfront.core.publication.models import Publication
 from coldfront.core.research_output.models import ResearchOutput
 from coldfront.core.utils.common import import_from_settings
 
-PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings(
-    'PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING',
-    30
-)
-ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING = import_from_settings(
-    'ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING',
-    30
-)
-ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings(
-    'ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING',
-    60
-)
+PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings("PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING", 30)
+ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING = import_from_settings("ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING", 30)
+ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings("ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING", 60)
 
 
 def home(request):
     context = {}
     next_url = ""
     if request.user.is_authenticated:
-        template_name = 'portal/authorized_home.html'
-        project_list = Project.objects.filter(
-            (
-                Q(pi=request.user) &
-                Q(
-                    status__name__in=[
-                        'New',
-                        'Active',
-                        'Waiting For Admin Approval',
-                        'Contacted By Admin',
-                        'Review Pending',
-                        'Expired'
+        template_name = "portal/authorized_home.html"
+        project_list = (
+            Project.objects.filter(
+                (
+                    Q(pi=request.user)
+                    & Q(
+                        status__name__in=[
+                            "New",
+                            "Active",
+                            "Waiting For Admin Approval",
+                            "Contacted By Admin",
+                            "Review Pending",
+                            "Expired",
+                        ]
+                    )
+                )
+                | (
+                    Q(
+                        status__name__in=[
+                            "New",
+                            "Active",
+                            "Waiting For Admin Approval",
+                            "Contacted By Admin",
+                            "Review Pending",
+                        ]
+                    )
+                    & Q(projectuser__user=request.user)
+                    & Q(
+                        projectuser__status__name__in=[
+                            "Active",
+                        ]
+                    )
+                )
+            )
+            .distinct()
+            .order_by("-created")
+        )
+
+        allocation_list = (
+            Allocation.objects.filter(
+                Q(status__name__in=["Active", "New", "Renewal Requested", "Billing Information Submitted"])
+                & Q(project__status__name__in=["Active", "New", "Review Pending", "Expired"])
+                & Q(project__projectuser__user=request.user)
+                & Q(
+                    project__projectuser__status__name__in=[
+                        "Active",
                     ]
                 )
-            ) |
-            (Q(
-                status__name__in=[
-                    'New',
-                    'Active',
-                    'Waiting For Admin Approval',
-                    'Contacted By Admin',
-                    'Review Pending'
+                & Q(allocationuser__user=request.user)
+                & Q(
+                    allocationuser__status__name__in=[
+                        "Active",
+                        "Pending - Remove",
+                        "Invited",
+                        "Pending",
+                        "Disabled",
+                        "Retired",
                     ]
-             ) &
-             Q(projectuser__user=request.user) &
-             Q(projectuser__status__name__in=['Active', ]))
-        ).distinct().order_by('-created')
-
-        allocation_list = Allocation.objects.filter(
-            Q(status__name__in=['Active', 'New', 'Renewal Requested', 'Billing Information Submitted']) &
-            Q(project__status__name__in=['Active', 'New', 'Review Pending', 'Expired']) &
-            Q(project__projectuser__user=request.user) &
-            Q(project__projectuser__status__name__in=['Active', ]) &
-            Q(allocationuser__user=request.user) &
-            Q(allocationuser__status__name__in=['Active', 'Pending - Remove', 'Invited', 'Pending', 'Disabled', 'Retired'])
-        ).distinct().order_by('-created')
+                )
+            )
+            .distinct()
+            .order_by("-created")
+        )
 
         projects_with_a_slurm_account_to_list = []
         for project in project_list:
             resources_with_slurm_accounts = project.get_list_of_resources_with_slurm_accounts(request.user)
             if resources_with_slurm_accounts:
                 project_dict = {
-                    'title': project.title,
-                    'slurm_account_name': project.slurm_account_name,
-                    'resources_with_slurm_accounts': ', '.join(resources_with_slurm_accounts)
+                    "title": project.title,
+                    "slurm_account_name": project.slurm_account_name,
+                    "resources_with_slurm_accounts": ", ".join(resources_with_slurm_accounts),
                 }
                 projects_with_a_slurm_account_to_list.append(project_dict)
-        context['projects_with_a_slurm_account_to_list'] = projects_with_a_slurm_account_to_list
+        context["projects_with_a_slurm_account_to_list"] = projects_with_a_slurm_account_to_list
 
-        context['user'] = request.user
-        context['project_list'] = project_list
-        context['allocation_list'] = allocation_list
-        context['PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING'] = PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING
-        context['ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING'] = ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING
-        context['ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING'] = ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING
+        context["user"] = request.user
+        context["project_list"] = project_list
+        context["allocation_list"] = allocation_list
+        context["PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING"] = PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING
+        context["ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING"] = ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING
+        context["ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING"] = ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING
         try:
             context["ondemand_url"] = settings.ONDEMAND_URL
         except AttributeError:
             pass
     else:
         next_url = request.get_full_path()[1:]
-        template_name = 'portal/nonauthorized_home.html'
-    context['next'] = next_url
-    context['EXTRA_APPS'] = settings.INSTALLED_APPS
+        template_name = "portal/nonauthorized_home.html"
+    context["next"] = next_url
+    context["EXTRA_APPS"] = settings.INSTALLED_APPS
 
     if "coldfront.plugins.system_monitor" in settings.INSTALLED_APPS:
         from coldfront.plugins.system_monitor.utils import get_system_monitor_context
@@ -203,7 +221,8 @@ def allocation_by_fos(request):
     )
     total_allocations_users = user_allocations.values("user").distinct().count()
     user_allocations = AllocationUser.objects.filter(
-        status__name__in=['Active', 'Invited', 'Pending', 'Disabled', 'Retired'], allocation__status__name='Active')
+        status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"], allocation__status__name="Active"
+    )
 
     active_pi_count = (
         Project.objects.filter(status__name__in=["Active", "New"])
@@ -246,19 +265,19 @@ def allocation_summary(request):
 @cache_page(60 * 15)
 def project_summary(request):
     context = {}
-    context['project_user_chart_data'] = generate_project_user_chart_data()
-    context['project_type_chart_data'] = generate_project_type_chart_data()
+    context["project_user_chart_data"] = generate_project_user_chart_data()
+    context["project_type_chart_data"] = generate_project_type_chart_data()
 
-    return render(request, 'portal/project_summary.html', context)
+    return render(request, "portal/project_summary.html", context)
 
 
 @cache_page(60 * 15)
 def user_summary(request):
     context = {}
-    context['user_counts'] = generate_user_counts()
+    context["user_counts"] = generate_user_counts()
     user_timeline_chart_data, years_to_months_labels, years_to_months_values = generate_user_timeline()
-    context['user_timeline'] = user_timeline_chart_data
-    context['years_to_months_labels'] = years_to_months_labels
-    context['years_to_months_values'] = years_to_months_values
+    context["user_timeline"] = user_timeline_chart_data
+    context["years_to_months_labels"] = years_to_months_labels
+    context["years_to_months_values"] = years_to_months_values
 
-    return render(request, 'portal/user_summary.html', context)
+    return render(request, "portal/user_summary.html", context)

@@ -25,7 +25,7 @@ from coldfront.core.allocation.models import (
     AllocationUserStatusChoice,
     AttributeType,
     AllocationAdminAction,
-    AllocationUserRoleChoice
+    AllocationUserRoleChoice,
 )
 
 from coldfront.core.resource.models import Resource
@@ -46,7 +46,7 @@ class AllocationUserInline(admin.TabularInline):
     raw_id_fields = ("user",)
 
     def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related('user', 'status')
+        return super().get_queryset(request).prefetch_related("user", "status")
 
 
 class AllocationAttributeInline(admin.TabularInline):
@@ -74,27 +74,26 @@ class AllocationUserNoteInline(admin.TabularInline):
 
 class AllocationAdminActionInline(admin.TabularInline):
     model = AllocationAdminAction
-    fields = ['user', 'action', 'created', ]
-    readonly_fields = ['user', 'action', 'created']
+    fields = [
+        "user",
+        "action",
+        "created",
+    ]
+    readonly_fields = ["user", "action", "created"]
     can_delete = False
     extra = 0
 
 
 class ResourceFilter(admin.SimpleListFilter):
-    title = 'Resource'
-    parameter_name = 'resource'
+    title = "Resource"
+    parameter_name = "resource"
 
     def lookups(self, request, model_admin):
         resource_objs = Resource.objects.all()
         if not request.user.is_superuser:
             resource_objs = resource_objs.filter(review_groups__in=list(request.user.groups.all()))
-        
-        return [
-            (
-                resource_obj.name,
-                resource_obj
-            ) for resource_obj in resource_objs
-        ]
+
+        return [(resource_obj.name, resource_obj) for resource_obj in resource_objs]
 
     def queryset(self, request, queryset):
         if self.value() is not None and queryset.exists():
@@ -118,7 +117,9 @@ class ReviewGroupFilteredResourceQueryset(admin.ModelAdmin):
                 try:
                     queryset = queryset.filter(allocation__resources__review_groups__in=list(request.user.groups.all()))
                 except FieldError:
-                    queryset = queryset.filter(allocation_attribute__allocation__resources__review_groups__in=list(request.user.groups.all()))
+                    queryset = queryset.filter(
+                        allocation_attribute__allocation__resources__review_groups__in=list(request.user.groups.all())
+                    )
         return queryset
 
 
@@ -151,7 +152,13 @@ class AllocationAdmin(SimpleHistoryAdmin, ReviewGroupFilteredResourceQueryset):
         "created",
         "modified",
     )
-    inlines = [AllocationUserInline, AllocationAttributeInline, AllocationAdminNoteInline, AllocationUserNoteInline, AllocationAdminActionInline]
+    inlines = [
+        AllocationUserInline,
+        AllocationAttributeInline,
+        AllocationAdminNoteInline,
+        AllocationUserNoteInline,
+        AllocationAdminActionInline,
+    ]
     list_filter = ("resources__resource_type__name", "status", ResourceFilter, "is_locked")
     search_fields = [
         "project__pi__username",
@@ -197,8 +204,8 @@ class AllocationAdmin(SimpleHistoryAdmin, ReviewGroupFilteredResourceQueryset):
             inline_instances = super().get_inline_instances(request)
             allocation_user_inline = inline_instances[0]
             if obj and obj.allocationuser_set.all().count() > 200:
-                setattr(allocation_user_inline, 'readonly_fields', ['user', 'status'])
-                setattr(allocation_user_inline, 'can_delete', False)
+                setattr(allocation_user_inline, "readonly_fields", ["user", "status"])
+                setattr(allocation_user_inline, "can_delete", False)
                 inline_instances[0] = allocation_user_inline
             return inline_instances
 
@@ -219,9 +226,17 @@ class AttributeTypeAdmin(admin.ModelAdmin):
 
 @admin.register(AllocationAttributeType)
 class AllocationAttributeTypeAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'name', 'linked_resource_attribute_type', 'list_linked_resources', 'attribute_type', 'has_usage', 'is_private')
-    list_filter = ('linked_resources', )
-    filter_horizontal = ('linked_resources', )
+    list_display = (
+        "pk",
+        "name",
+        "linked_resource_attribute_type",
+        "list_linked_resources",
+        "attribute_type",
+        "has_usage",
+        "is_private",
+    )
+    list_filter = ("linked_resources",)
+    filter_horizontal = ("linked_resources",)
 
     def list_linked_resources(self, obj):
         return list(obj.linked_resources.all())
@@ -349,8 +364,8 @@ class AllocationUserStatusChoiceAdmin(admin.ModelAdmin):
 
 @admin.register(AllocationUserRoleChoice)
 class AllocationUserRoleChoiceAdmin(admin.ModelAdmin):
-    list_display = ('name', 'list_resources')
-    filter_horizontal = ('resources', )
+    list_display = ("name", "list_resources")
+    filter_horizontal = ("resources",)
 
     def list_resources(self, obj):
         return list(obj.resources.all())
@@ -537,8 +552,8 @@ class AllocationChangeRequestAdmin(ReviewGroupFilteredResourceQueryset):
         "justification",
         "notes",
     )
-    raw_id_fields = ("allocation", )
-    list_filter = (ResourceFilter, )
+    raw_id_fields = ("allocation",)
+    list_filter = (ResourceFilter,)
 
 
 @admin.register(AllocationAttributeChangeRequest)
@@ -550,20 +565,42 @@ class AllocationAttributeChangeRequestAdmin(admin.ModelAdmin):
         "old_value",
         "new_value",
     )
-    raw_id_fields = ('allocation_change_request', 'allocation_attribute', )
+    raw_id_fields = (
+        "allocation_change_request",
+        "allocation_attribute",
+    )
 
 
 @admin.register(AllocationAdminAction)
 class AllocationAdminActionAdmin(ReviewGroupFilteredResourceQueryset):
-    list_display = ('pk', 'user', 'allocation_pk', 'allocation', 'action', 'created', )
-    fields_change = ('user', 'allocation', 'action', 'modified', 'created', )
-    readonly_fields_change = ('modified', 'created', )
-    raw_id_fields = ('user', 'allocation', )
-    list_filter = ('allocation__resources', )
+    list_display = (
+        "pk",
+        "user",
+        "allocation_pk",
+        "allocation",
+        "action",
+        "created",
+    )
+    fields_change = (
+        "user",
+        "allocation",
+        "action",
+        "modified",
+        "created",
+    )
+    readonly_fields_change = (
+        "modified",
+        "created",
+    )
+    raw_id_fields = (
+        "user",
+        "allocation",
+    )
+    list_filter = ("allocation__resources",)
 
     def allocation_pk(self, obj):
         return obj.allocation.pk
-    
+
     def get_fields(self, request, obj):
         if obj is None:
             return super().get_fields(request)

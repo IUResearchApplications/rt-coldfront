@@ -16,7 +16,7 @@ def settings_value(name):
         "CENTER_NAME",
         "CENTER_HELP_URL",
         "EMAIL_PROJECT_REVIEW_CONTACT",
-        "EMAIL_TICKET_SYSTEM_ADDRESS"
+        "EMAIL_TICKET_SYSTEM_ADDRESS",
     ]
     # FIXME: This is using mark_safe for now but settings should not contain HTML in the future
     return mark_safe(getattr(settings, name, "") if name in allowed_names else "")  # noqa: S308
@@ -54,16 +54,24 @@ def convert_status_to_icon(project):
 
 @register.filter()
 def color_text(status):
-    if status in ["Active", ]:
+    if status in [
+        "Active",
+    ]:
         return "text-success"
 
-    if status in ["Expired", "Denied", "Renewal Denied", "Removed", "Revoked", ]:
+    if status in [
+        "Expired",
+        "Denied",
+        "Renewal Denied",
+        "Removed",
+        "Revoked",
+    ]:
         return "text-danger"
 
     return "text-primary"
 
 
-@register.filter('get_value_from_dict')
+@register.filter("get_value_from_dict")
 def get_value_from_dict(dict_data, key):
     """
     usage example {{ your_dict|get_value_from_dict:your_key }}
@@ -95,6 +103,7 @@ def change_sign(int):
 @register.filter
 def divide(int, divisor):
     return int // divisor
+
 
 @register.filter
 def template_exists(value):

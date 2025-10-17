@@ -11,7 +11,7 @@ from coldfront.core.allocation.models import (
     AllocationAttribute,
     AllocationAttributeType,
     AllocationStatusChoice,
-    AllocationUserRoleChoice
+    AllocationUserRoleChoice,
 )
 from coldfront.core.allocation.utils import get_user_resources
 from coldfront.core.project.models import Project
@@ -104,26 +104,25 @@ class AllocationAddUserForm(forms.Form):
     first_name = forms.CharField(max_length=150, required=False, disabled=True)
     last_name = forms.CharField(max_length=150, required=False, disabled=True)
     email = forms.EmailField(max_length=100, required=False, disabled=True)
-    role = forms.ModelChoiceField(
-        queryset=AllocationUserRoleChoice.objects.none(), required=False, disabled=True)
+    role = forms.ModelChoiceField(queryset=AllocationUserRoleChoice.objects.none(), required=False, disabled=True)
     selected = forms.BooleanField(initial=False, required=False)
 
     def __init__(self, *args, **kwargs):
-        resource = kwargs.pop('resource', None)
-        disable_selected = kwargs.pop('disable_selected', None)
+        resource = kwargs.pop("resource", None)
+        disable_selected = kwargs.pop("disable_selected", None)
         super().__init__(*args, **kwargs)
         if resource and resource.requires_user_roles:
-            self.fields['role'].disabled = False
-            self.fields['role'].queryset = AllocationUserRoleChoice.objects.filter(resources=resource)
+            self.fields["role"].disabled = False
+            self.fields["role"].queryset = AllocationUserRoleChoice.objects.filter(resources=resource)
 
         if disable_selected:
-            self.fields['selected'].disabled = True
+            self.fields["selected"].disabled = True
 
     def clean(self):
         cleaned_data = super().clean()
-        if cleaned_data.get('selected'):
-            if not self.fields['role'].disabled and not cleaned_data.get('role'):
-                raise forms.ValidationError('This resource requires user roles')
+        if cleaned_data.get("selected"):
+            if not self.fields["role"].disabled and not cleaned_data.get("role"):
+                raise forms.ValidationError("This resource requires user roles")
 
         return cleaned_data
 
@@ -134,8 +133,8 @@ class AllocationAddUserFormset(forms.BaseFormSet):
         Override so specific users can be prevented from being added.
         """
         kwargs = super().get_form_kwargs(index)
-        disable_selected = kwargs['disable_selected'][index]
-        return {'disable_selected': disable_selected, 'resource': kwargs.get('resource')}
+        disable_selected = kwargs["disable_selected"][index]
+        return {"disable_selected": disable_selected, "resource": kwargs.get("resource")}
 
 
 class AllocationRemoveUserForm(forms.Form):
@@ -247,13 +246,13 @@ class AllocationAttributeUpdateForm(forms.Form):
     old_value = forms.CharField(max_length=150, required=False, disabled=True)
 
     def __init__(self, *args, **kwargs):
-        new_value_disabled = kwargs.pop('new_value_disabled')
+        new_value_disabled = kwargs.pop("new_value_disabled")
         super().__init__(*args, **kwargs)
         self.fields["change_pk"].widget = forms.HiddenInput()
         self.fields["attribute_pk"].widget = forms.HiddenInput()
 
         if new_value_disabled:
-            self.fields['new_value'].disabled = True
+            self.fields["new_value"].disabled = True
 
     def clean(self):
         cleaned_data = super().clean()
@@ -327,24 +326,23 @@ class AllocationAttributeCreateForm(forms.ModelForm):
 
 
 class AllocationUserUpdateForm(forms.Form):
-    role = forms.ModelChoiceField(
-        queryset=AllocationUserRoleChoice.objects.none(), required=False, disabled=True)
+    role = forms.ModelChoiceField(queryset=AllocationUserRoleChoice.objects.none(), required=False, disabled=True)
     enable_notifications = forms.BooleanField(initial=False, required=False)
 
     def __init__(self, *args, **kwargs):
-        disable_enable_notifications = kwargs.pop('disable_enable_notifications', False)
-        resource = kwargs.pop('resource', None)
+        disable_enable_notifications = kwargs.pop("disable_enable_notifications", False)
+        resource = kwargs.pop("resource", None)
         super().__init__(*args, **kwargs)
         if resource and resource.requires_user_roles:
-            self.fields['role'].disabled = False
-            self.fields['role'].queryset = AllocationUserRoleChoice.objects.filter(resources=resource)
+            self.fields["role"].disabled = False
+            self.fields["role"].queryset = AllocationUserRoleChoice.objects.filter(resources=resource)
 
         if disable_enable_notifications:
-            self.fields['enable_notifications'].disabled = True
+            self.fields["enable_notifications"].disabled = True
 
     def clean(self):
         cleaned_data = super().clean()
-        if not self.fields['role'].disabled and not cleaned_data.get('role'):
-            raise forms.ValidationError('This resource requires user roles')
+        if not self.fields["role"].disabled and not cleaned_data.get("role"):
+            raise forms.ValidationError("This resource requires user roles")
 
         return cleaned_data

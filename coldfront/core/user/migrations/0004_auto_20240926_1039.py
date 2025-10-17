@@ -4,19 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('user', '0003_auto_20221020_1120'),
+        ("user", "0003_auto_20221020_1120"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='userprofile',
-            name='max_projects',
+            model_name="userprofile",
+            name="max_projects",
         ),
         migrations.AddField(
-            model_name='userprofile',
-            name='division',
-            field=models.CharField(default='', max_length=100),
+            model_name="userprofile",
+            name="division",
+            field=models.CharField(default="", max_length=100),
         ),
     ]
