@@ -4,14 +4,15 @@
 
 import datetime
 import logging
-import csv
 from datetime import date
 
 from dateutil.relativedelta import relativedelta
 from django import forms
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.messages.views import SuccessMessageMixin
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Q
 from django.db.models.query import QuerySet
@@ -28,6 +29,7 @@ from coldfront.config.core import ALLOCATION_EULA_ENABLE
 from coldfront.core.allocation.forms import (
     AllocationAccountForm,
     AllocationAddUserForm,
+    AllocationAddUserFormset,
     AllocationAttributeChangeForm,
     AllocationAttributeCreateForm,
     AllocationAttributeDeleteForm,
@@ -43,7 +45,6 @@ from coldfront.core.allocation.forms import (
     AllocationSearchForm,
     AllocationUpdateForm,
     AllocationUserUpdateForm,
-    AllocationAddUserFormset,
 )
 from coldfront.core.allocation.models import (
     Allocation,
@@ -63,41 +64,38 @@ from coldfront.core.allocation.signals import (
     allocation_activate,
     allocation_activate_user,
     allocation_attribute_changed,
-    allocation_change,
     allocation_change_approved,
     allocation_change_created,
+    allocation_change_user_role,
     allocation_disable,
     allocation_new,
     allocation_remove_user,
-    allocation_change_user_role,
     visit_allocation_detail,
 )
 from coldfront.core.allocation.utils import (
+    check_if_roles_are_enabled,
+    create_admin_action,
+    create_admin_action_for_creation,
+    create_admin_action_for_deletion,
     generate_guauge_data_from_usage,
     get_user_resources,
-    create_admin_action,
-    create_admin_action_for_deletion,
-    create_admin_action_for_creation,
     send_added_user_email,
     send_removed_user_email,
-    check_if_roles_are_enabled,
 )
-from coldfront.core.project.models import Project, ProjectPermission, ProjectUser, ProjectUserStatusChoice
+from coldfront.core.project.models import (
+    Project,
+    ProjectPermission,
+    ProjectUser,
+    ProjectUserStatusChoice,
+)
 from coldfront.core.resource.models import Resource
 from coldfront.core.utils.common import get_domain_url, import_from_settings
+from coldfront.core.utils.groups import check_if_groups_in_review_groups
 from coldfront.core.utils.mail import (
-    build_link,
     send_allocation_admin_email,
     send_allocation_customer_email,
     send_allocation_eula_customer_email,
-    send_email_template,
-    get_email_recipient_from_groups,
 )
-from coldfront.core.utils.groups import check_if_groups_in_review_groups
-
-from django.conf import settings
-from django.contrib.messages.views import SuccessMessageMixin
-from django.http.response import StreamingHttpResponse
 
 ALLOCATION_ENABLE_ALLOCATION_RENEWAL = import_from_settings("ALLOCATION_ENABLE_ALLOCATION_RENEWAL", True)
 ALLOCATION_DEFAULT_ALLOCATION_LENGTH = import_from_settings("ALLOCATION_DEFAULT_ALLOCATION_LENGTH", 365)
@@ -2657,8 +2655,9 @@ class AllocationChangeView(LoginRequiredMixin, UserPassesTestMixin, FormView):
                         "project_title": project_obj.title,
                         "project_id": project_obj.pk,
                     }
-                    allocation_change.send(
+                    allocation_change_created.send(
                         sender=self.__class__,
+                        allocation_pk=allocation_obj.pk,
                         allocation_change_pk=allocation_change_request_obj.pk,
                     )
                     send_allocation_admin_email(
