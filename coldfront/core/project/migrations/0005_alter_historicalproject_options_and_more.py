@@ -11,7 +11,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ("project", "0004_auto_20230406_1133"),
+        ("project", "0002_auto_20220721_1202_squashed_0011_alter_project_options_and_more"),
     ]
 
     operations = [
@@ -108,9 +108,5 @@ class Migration(migrations.Migration):
             model_name="historicalprojectuser",
             name="history_date",
             field=models.DateTimeField(db_index=True),
-        ),
-        migrations.AlterUniqueTogether(
-            name="project",
-            unique_together={("title", "pi")},
         ),
     ]

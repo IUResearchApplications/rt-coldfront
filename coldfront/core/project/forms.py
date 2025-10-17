@@ -179,6 +179,12 @@ class ProjectAttributeUpdateForm(forms.Form):
             proj_attr.clean()
 
 
+class ProjectCreationForm(forms.ModelForm):
+    class Meta:
+        model = Project
+        fields = ["title", "description", "field_of_science"]
+
+
 class ProjectRequestEmailForm(forms.Form):
     cc = forms.CharField(
         required=False
@@ -230,3 +236,4 @@ class ProjectUpdateForm(forms.Form):
 
         self.fields['title'].initial = project_obj.title
         self.fields['description'].initial = project_obj.description
+
