@@ -2745,8 +2745,15 @@ class AllocationAttributeEditView(LoginRequiredMixin, UserPassesTestMixin, FormV
 
     def test_func(self):
         """UserPassesTestMixin Tests"""
+        allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get("pk"))
         user = self.request.user
-        if user.is_superuser or user.is_staff:
+        if user.is_superuser:
+            return True
+
+        group_exists = check_if_groups_in_review_groups(
+            allocation_obj.get_parent_resource.review_groups.all(), user.groups.all(), "change_allocationattribute"
+        )
+        if group_exists:
             return True
 
         messages.error(self.request, "You do not have permission to edit this allocation's attributes.")
