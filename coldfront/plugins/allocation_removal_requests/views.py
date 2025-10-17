@@ -1,21 +1,31 @@
-import logging
 import datetime
+import logging
 
-from django.urls import reverse
 from django.contrib import messages
-from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views import View
-from django.shortcuts import get_object_or_404
 from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404
+from django.urls import reverse
+from django.views import View
+from django.views.generic import TemplateView
 
-from coldfront.core.utils.groups import check_if_groups_in_review_groups
-from coldfront.core.utils.mail import send_allocation_customer_email, send_allocation_admin_email
-from coldfront.core.allocation.utils import create_admin_action
-from coldfront.core.allocation.models import Allocation, AllocationStatusChoice, AllocationPermission
+from coldfront.core.allocation.models import (
+    Allocation,
+    AllocationPermission,
+    AllocationStatusChoice,
+)
 from coldfront.core.allocation.signals import allocation_remove_user
-from coldfront.plugins.allocation_removal_requests.signals import allocation_remove, allocation_removal_request
-from coldfront.plugins.allocation_removal_requests.models import AllocationRemovalRequest, AllocationRemovalStatusChoice
+from coldfront.core.allocation.utils import create_admin_action
+from coldfront.core.utils.groups import check_if_groups_in_review_groups
+from coldfront.core.utils.mail import send_allocation_admin_email, send_allocation_customer_email
+from coldfront.plugins.allocation_removal_requests.models import (
+    AllocationRemovalRequest,
+    AllocationRemovalStatusChoice,
+)
+from coldfront.plugins.allocation_removal_requests.signals import (
+    allocation_removal_request,
+    allocation_remove,
+)
 
 logger = logging.getLogger(__name__)
 

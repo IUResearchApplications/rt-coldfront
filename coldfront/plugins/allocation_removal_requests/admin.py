@@ -1,7 +1,10 @@
 from django.contrib import admin
 
-from coldfront.plugins.allocation_removal_requests.models import AllocationRemovalRequest, AllocationRemovalStatusChoice
-from coldfront.core.allocation.admin import ReviewGroupFilteredResourceQueryset, ResourceFilter
+from coldfront.core.allocation.admin import ResourceFilter, ReviewGroupFilteredResourceQueryset
+from coldfront.plugins.allocation_removal_requests.models import (
+    AllocationRemovalRequest,
+    AllocationRemovalStatusChoice,
+)
 
 
 # Register your models here.

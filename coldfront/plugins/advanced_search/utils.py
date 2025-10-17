@@ -1,9 +1,20 @@
 import datetime
+
 from django.contrib.auth.models import User
 from django.urls import reverse
 
-from coldfront.core.project.models import Project, ProjectAttribute, ProjectAttributeUsage, ProjectUser
-from coldfront.core.allocation.models import Allocation, AllocationAttribute, AllocationAttributeUsage, AllocationUser
+from coldfront.core.allocation.models import (
+    Allocation,
+    AllocationAttribute,
+    AllocationAttributeUsage,
+    AllocationUser,
+)
+from coldfront.core.project.models import (
+    Project,
+    ProjectAttribute,
+    ProjectAttributeUsage,
+    ProjectUser,
+)
 from coldfront.core.resource.models import Resource
 from coldfront.core.user.models import UserProfile
 from coldfront.core.utils.common import import_from_settings

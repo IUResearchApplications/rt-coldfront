@@ -2,7 +2,6 @@ from django.urls import path
 
 import coldfront.plugins.allocation_removal_requests.views as views
 
-
 app_name = "allocation_removal_requests"
 urlpatterns = [
     path(

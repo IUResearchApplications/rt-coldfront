@@ -1,13 +1,12 @@
-from django.urls import reverse
 from django.contrib import messages
-from django.views.generic import FormView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.urls import reverse
+from django.views.generic import FormView
 
 from coldfront.core.utils.common import import_from_settings
 from coldfront.core.utils.mail import send_email_template
-from coldfront.plugins.request_forms.forms import SoftwareRequestForm, StatsRequestForm
 from coldfront.plugins.ldap_user_info.utils import get_user_info
-
+from coldfront.plugins.request_forms.forms import SoftwareRequestForm, StatsRequestForm
 
 REQUEST_FORMS_EMAILS = import_from_settings("REQUEST_FORMS_EMAILS", {})
 EMAIL_SENDER = import_from_settings("EMAIL_SENDER", "")

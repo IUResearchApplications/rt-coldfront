@@ -1,14 +1,17 @@
 import logging
 
-from django.shortcuts import render
-from django.forms import formset_factory
-from django.views.generic.base import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.shortcuts import get_object_or_404
+from django.forms import formset_factory
+from django.shortcuts import get_object_or_404, render
+from django.views.generic.base import TemplateView
 
-from coldfront.plugins.academic_analytics.forms import PublicationForm
-from coldfront.plugins.academic_analytics.utils import get_publications, remove_existing_publications, add_publication
 from coldfront.core.project.models import Project
+from coldfront.plugins.academic_analytics.forms import PublicationForm
+from coldfront.plugins.academic_analytics.utils import (
+    add_publication,
+    get_publications,
+    remove_existing_publications,
+)
 
 logger = logging.getLogger(__name__)
 

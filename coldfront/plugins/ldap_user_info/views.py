@@ -1,5 +1,5 @@
-from django.shortcuts import render
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import render
 from django.views.generic import View
 
 from coldfront.plugins.ldap_user_info.utils import get_user_info

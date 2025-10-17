@@ -1,32 +1,32 @@
 import logging
 
 from django.contrib import messages
-from django.contrib.auth.models import User
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.models import User
 from django.http import HttpResponseNotFound, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.generic import TemplateView
 
-from coldfront.core.allocation.utils import create_admin_action
-from coldfront.core.project.utils import generate_slurm_account_name
-from coldfront.core.utils.common import get_domain_url
-from coldfront.core.utils.mail import send_allocation_customer_email, send_allocation_admin_email
-from coldfront.core.utils.groups import check_if_groups_in_review_groups
 from coldfront.core.allocation.models import Allocation, AllocationAttribute, AllocationUserNote
+from coldfront.core.allocation.utils import create_admin_action
 from coldfront.core.project.models import (
     Project,
     ProjectUser,
+    ProjectUserMessage,
     ProjectUserRoleChoice,
     ProjectUserStatusChoice,
-    ProjectUserMessage,
 )
+from coldfront.core.project.utils import generate_slurm_account_name
+from coldfront.core.utils.common import get_domain_url
+from coldfront.core.utils.groups import check_if_groups_in_review_groups
+from coldfront.core.utils.mail import send_allocation_admin_email, send_allocation_customer_email
 from coldfront.plugins.movable_allocations.forms import AllocationMoveForm
+from coldfront.plugins.movable_allocations.signals import allocation_moved
 from coldfront.plugins.movable_allocations.utils import (
     check_over_allocation_limit,
     check_resource_is_allowed,
 )
-from coldfront.plugins.movable_allocations.signals import allocation_moved
 
 logger = logging.getLogger(__name__)
 

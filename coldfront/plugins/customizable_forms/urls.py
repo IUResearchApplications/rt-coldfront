@@ -1,5 +1,6 @@
-from django.urls import path
 import importlib
+
+from django.urls import path
 
 from coldfront.core.utils.common import import_from_settings
 from coldfront.plugins.customizable_forms.utils import standardize_resource_name

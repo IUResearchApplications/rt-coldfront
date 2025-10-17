@@ -1,6 +1,9 @@
 from django.core.management.base import BaseCommand
 
-from coldfront.plugins.announcements.models import AnnouncementStatusChoice, AnnouncementCategoryChoice
+from coldfront.plugins.announcements.models import (
+    AnnouncementCategoryChoice,
+    AnnouncementStatusChoice,
+)
 
 
 class Command(BaseCommand):

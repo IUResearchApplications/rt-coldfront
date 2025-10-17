@@ -1,6 +1,9 @@
 from django import forms
 
-from coldfront.plugins.announcements.models import AnnouncementCategoryChoice, AnnouncementMailingListChoice
+from coldfront.plugins.announcements.models import (
+    AnnouncementCategoryChoice,
+    AnnouncementMailingListChoice,
+)
 
 
 class AnnouncementCreateForm(forms.Form):

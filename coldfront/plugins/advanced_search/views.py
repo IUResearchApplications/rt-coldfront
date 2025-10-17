@@ -1,25 +1,25 @@
 import csv
-import logging
 import json
+import logging
 
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic import TemplateView, View
-from django.http.response import StreamingHttpResponse
 from django.forms import formset_factory
+from django.http.response import StreamingHttpResponse
+from django.views.generic import TemplateView, View
 
 from coldfront.core.allocation.models import AllocationAttributeType
 from coldfront.core.project.models import ProjectAttributeType
+from coldfront.core.utils.common import Echo, import_from_settings
 from coldfront.plugins.advanced_search.forms import (
-    AllocationSearchForm,
-    AllocationAttributeSearchForm,
     AllocationAttributeFormSetHelper,
+    AllocationAttributeSearchForm,
+    AllocationSearchForm,
     ProjectAttributeFormSetHelper,
     ProjectAttributeSearchForm,
     ProjectSearchForm,
     UserSearchForm,
 )
-from coldfront.core.utils.common import Echo, import_from_settings
-from coldfront.plugins.advanced_search.utils import ProjectTable, AllocationTable, UserTable
+from coldfront.plugins.advanced_search.utils import AllocationTable, ProjectTable, UserTable
 
 logger = logging.getLogger(__name__)
 

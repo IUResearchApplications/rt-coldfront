@@ -1,20 +1,21 @@
 import logging
+
 from django.contrib import messages
-from django.http import HttpResponseRedirect, HttpResponseNotFound
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.http import HttpResponseNotFound, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
-from django.views.generic import ListView, UpdateView, FormView, View, TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.views.generic import FormView, ListView, TemplateView, UpdateView, View
 
-from coldfront.core.utils.mail import send_email_template
 from coldfront.core.utils.common import import_from_settings
+from coldfront.core.utils.mail import send_email_template
+from coldfront.plugins.announcements.forms import AnnouncementCreateForm, AnnouncementFilterForm
 from coldfront.plugins.announcements.models import (
     Announcement,
     AnnouncementCategoryChoice,
     AnnouncementMailingListChoice,
     AnnouncementStatusChoice,
 )
-from coldfront.plugins.announcements.forms import AnnouncementCreateForm, AnnouncementFilterForm
 
 logger = logging.getLogger(__name__)
 

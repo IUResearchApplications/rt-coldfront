@@ -1,5 +1,5 @@
 from coldfront.core.user.models import UserProfile
-from coldfront.plugins.ldap_user_info.utils import get_user_info, LDAPSearch
+from coldfront.plugins.ldap_user_info.utils import LDAPSearch, get_user_info
 
 
 def update_all_user_profiles():

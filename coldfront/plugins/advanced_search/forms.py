@@ -1,12 +1,25 @@
+from crispy_forms.bootstrap import Accordion, AccordionGroup, FormActions, InlineRadios
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import (
+    HTML,
+    Column,
+    Div,
+    Fieldset,
+    Layout,
+    LayoutObject,
+    Reset,
+    Row,
+    Submit,
+)
 from django import forms
 from django.template.loader import render_to_string
 
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Submit, HTML, Row, Column, Reset, LayoutObject, Div, Fieldset
-from crispy_forms.bootstrap import FormActions, AccordionGroup, Accordion, InlineRadios
-
-from coldfront.core.project.models import ProjectAttributeType, ProjectTypeChoice, ProjectStatusChoice
-from coldfront.core.allocation.models import AllocationStatusChoice, AllocationAttributeType
+from coldfront.core.allocation.models import AllocationAttributeType, AllocationStatusChoice
+from coldfront.core.project.models import (
+    ProjectAttributeType,
+    ProjectStatusChoice,
+    ProjectTypeChoice,
+)
 from coldfront.core.resource.models import Resource, ResourceType
 
 

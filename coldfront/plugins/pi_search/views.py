@@ -1,17 +1,16 @@
 import logging
-from django.shortcuts import render
+
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponseForbidden, HttpResponseRedirect
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.generic import ListView, View
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import get_object_or_404
-from django.http import HttpResponseForbidden, HttpResponseRedirect
-from django.contrib.auth.decorators import login_required
 
 from coldfront.core.project.models import Project
 from coldfront.core.utils.common import get_domain_url, import_from_settings
 from coldfront.core.utils.mail import send_email_template
 from coldfront.plugins.pi_search.forms import PISearchForm
-
 
 EMAIL_ENABLED = import_from_settings("EMAIL_ENABLED", False)
 if EMAIL_ENABLED:

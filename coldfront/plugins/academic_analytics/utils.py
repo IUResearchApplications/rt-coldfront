@@ -1,9 +1,10 @@
-import requests
-import oracledb
 import logging
 
-from coldfront.core.utils.common import import_from_settings
+import oracledb
+import requests
+
 from coldfront.core.publication.models import Publication, PublicationSource
+from coldfront.core.utils.common import import_from_settings
 
 ACADEMIC_ANALYTICS_API_KEY = import_from_settings("ACADEMIC_ANALYTICS_API_KEY")
 ACADEMIC_ANALYTICS_API_BASE_ADDRESS = import_from_settings("ACADEMIC_ANALYTICS_API_BASE_ADDRESS")

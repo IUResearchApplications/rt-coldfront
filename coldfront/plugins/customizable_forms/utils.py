@@ -1,5 +1,5 @@
-import re
 import importlib
+import re
 
 from coldfront.core.utils.common import import_from_settings
 

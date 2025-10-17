@@ -1,8 +1,9 @@
-import logging
 import json
+import logging
 
 import ldap.filter
 from ldap3 import Connection, Server
+
 from coldfront.core.utils.common import import_from_settings
 
 logger = logging.getLogger(__name__)
