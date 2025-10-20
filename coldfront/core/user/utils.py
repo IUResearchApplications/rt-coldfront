@@ -13,8 +13,6 @@ from coldfront.core.utils.common import import_from_settings
 
 logger = logging.getLogger(__name__)
 
-SLATE_PROJECT_MAX_ALLOCATED_STORAGE = import_from_settings("SLATE_PROJECT_MAX_ALLOCATED_STORAGE", 60)
-
 
 class UserSearch(abc.ABC):
     def __init__(self, user_search_string, search_by):
