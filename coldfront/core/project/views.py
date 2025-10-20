@@ -210,7 +210,7 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
             attributes_with_usage.remove(a)
 
         # Only show 'Active Users'
-        project_users = self.object.projectuser_set.filter(status__name__in=["Active", "Inactive"]).order_by(
+        project_users = self.object.projectuser_set.filter(status__name__in=["Active", ]).order_by(
             "user__username"
         )
 
@@ -948,7 +948,7 @@ class ProjectAddUsersSearchResultsView(LoginRequiredMixin, UserPassesTestMixin, 
         project_obj = get_object_or_404(Project, pk=pk)
 
         users_to_exclude = [
-            ele.user.username for ele in project_obj.projectuser_set.filter(status__name__in=["Active", "Inactive"])
+            ele.user.username for ele in project_obj.projectuser_set.filter(status__name__in=["Active", ])
         ]
 
         cobmined_user_search_obj = CombinedUserSearch(user_search_string, search_by, users_to_exclude)
@@ -1105,7 +1105,7 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
         project_obj = get_object_or_404(Project, pk=pk)
 
         users_to_exclude = [
-            ele.user.username for ele in project_obj.projectuser_set.filter(status__name__in=["Active", "Inactive"])
+            ele.user.username for ele in project_obj.projectuser_set.filter(status__name__in=["Active", ])
         ]
 
         cobmined_user_search_obj = CombinedUserSearch(user_search_string, search_by, users_to_exclude)
@@ -1417,7 +1417,7 @@ class ProjectRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                 "email": ele.user.email,
                 "role": ele.role,
             }
-            for ele in project_obj.projectuser_set.filter(status__name__in=["Active", "Inactive"]).order_by(
+            for ele in project_obj.projectuser_set.filter(status__name__in=["Active", ]).order_by(
                 "user__username"
             )
             if ele.user != self.request.user and ele.user != project_obj.pi
@@ -1798,7 +1798,7 @@ class ProjectReviewView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                         [
                             "{} {}".format(ele.user.first_name, ele.user.last_name)
                             for ele in allocation.allocationuser_set.filter(
-                                status__name__in=["Active", "Inactive", "Invited", "Pending", "Disabled", "Retired"]
+                                status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"]
                             ).order_by("user__last_name")
                         ]
                     ),
@@ -1820,7 +1820,7 @@ class ProjectReviewView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         context["project_users"] = ", ".join(
             [
                 "{} {}".format(ele.user.first_name, ele.user.last_name)
-                for ele in project_obj.projectuser_set.filter(status__name__in=["Active", "Inactive"]).order_by(
+                for ele in project_obj.projectuser_set.filter(status__name__in=["Active", ]).order_by(
                     "user__last_name"
                 )
             ]

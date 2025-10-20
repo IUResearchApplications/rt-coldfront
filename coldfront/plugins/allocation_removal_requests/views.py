@@ -181,7 +181,7 @@ class AllocationRemoveView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
 
         allocation_remove.send(sender=self.__class__, allocation_pk=allocation_obj.pk)
         allocation_users = allocation_obj.allocationuser_set.filter(
-            status__name__in=["Active", "Inactive", "Invited", "Pending", "Disabled", "Retired"]
+            status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"]
         )
         for allocation_user in allocation_users:
             allocation_remove_user.send(sender=self.__class__, allocation_user_pk=allocation_user.pk)
@@ -269,7 +269,7 @@ class AllocationApproveRemovalRequestView(LoginRequiredMixin, UserPassesTestMixi
 
         allocation_remove.send(sender=self.__class__, allocation_pk=allocation_obj.pk)
         allocation_users = allocation_obj.allocationuser_set.filter(
-            status__name__in=["Active", "Inactive", "Invited", "Pending", "Disabled", "Retired"]
+            status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"]
         )
         for allocation_user in allocation_users:
             allocation_remove_user.send(sender=self.__class__, allocation_user_pk=allocation_user.pk)
