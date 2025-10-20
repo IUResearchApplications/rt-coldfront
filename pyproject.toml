@@ -76,6 +76,12 @@ mysql = [
 pg = [
     "psycopg2>=2.9.10",
 ]
+cas = [
+    "django-cas-ng",
+]
+aa = [
+    "oracledb"
+]
 
 [dependency-groups]
 dev = [
@@ -85,6 +91,9 @@ dev = [
     "pytest-django>=4.11.1",
     "reuse>=5.0.2",
     "ruff>=0.11.4",
+    "django-extensions",
+    "Werkzeug",
+    "pyOpenSSL"
 ]
 docs = [
     "mkdocs>=1.6.1",
