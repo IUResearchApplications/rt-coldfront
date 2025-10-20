@@ -29,6 +29,7 @@ from coldfront.core.publication.models import Publication
 from coldfront.core.research_output.models import ResearchOutput
 from coldfront.core.utils.common import import_from_settings
 
+ALLOCATION_EULA_ENABLE = import_from_settings("ALLOCATION_EULA_ENABLE", False)
 PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings("PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING", 30)
 ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING = import_from_settings("ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING", 30)
 ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings("ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING", 60)
@@ -90,17 +91,24 @@ def home(request):
                 & Q(
                     allocationuser__status__name__in=[
                         "Active",
-                        "Pending - Remove",
                         "Invited",
                         "Pending",
                         "Disabled",
                         "Retired",
+                        "PendingEULA"
                     ]
                 )
             )
             .distinct()
             .order_by("-created")
         )
+
+        if ALLOCATION_EULA_ENABLE:
+            user_status = []
+            for allocation in allocation_list:
+                if allocation.allocationuser_set.filter(user=request.user).exists():
+                    user_status.append(allocation.allocationuser_set.get(user=request.user).status.name)
+            context["user_status"] = user_status
 
         projects_with_a_slurm_account_to_list = []
         for project in project_list:

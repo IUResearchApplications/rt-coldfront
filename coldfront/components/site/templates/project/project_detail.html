@@ -319,13 +319,21 @@ Project Detail
             {% for allocation in allocations %}
             <tr>
               <td>{{ allocation.get_parent_resource.name }}</td>
+              {% if user_allocation_status|get_value_by_index:forloop.counter0 == 'PendingEULA' %}
+                <td class="test-nowrap"><a href="{% url 'allocation-review-eula' allocation.pk %}">Review and Accept EULA to activate</a> </td>
+              {% else %}
               {% if allocation.get_information != '' %}
                 <td>{{allocation.get_information}}</td>
               {% else %}
                 <td>{{allocation.description|default_if_none:""}}</td>
               {% endif %}
+              {% endif %}
               {% if allocation.status.name == 'Active' %}
+              {% if user_allocation_status|get_value_by_index:forloop.counter0 == 'PendingEULA' %}
+              <td class="text-success">{{ user_allocation_status|get_value_by_index:forloop.counter0 }}</td>
+              {% else %}
                 <td class="text-success"><strong>{{ allocation.status.name }}</strong></td>
+              {% endif %}
               {% elif  allocation.status.name == 'Expired' or allocation.status.name == 'Denied' %}
                 <td class="text-danger"><strong>{{ allocation.status.name }}</strong></td>
               {% else %}

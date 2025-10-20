@@ -240,11 +240,16 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
                         ]
                     )
                     & Q(allocationuser__user=self.request.user)
-                    & Q(allocationuser__status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"])
+                    & Q(allocationuser__status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired", "PendingEULA"])
                 )
                 .distinct()
                 .order_by("-end_date")
             )
+
+        user_status = []                
+        for allocation in allocations:
+            if allocation.allocationuser_set.filter(user=self.request.user).exists():
+                user_status.append(allocation.allocationuser_set.get(user=self.request.user).status.name)
 
         allocation_submitted = self.request.GET.get("allocation_submitted")
         after_project_creation_get = self.request.GET.get("after_project_creation")
@@ -256,6 +261,7 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
             project=self.object, status__name__in=["Active", "Pending", "Archived"]
         )
         context["allocations"] = allocations
+        context['user_allocation_status'] = user_status
         context["attributes"] = attributes
         context["guage_data"] = guage_data
         context["attributes_with_usage"] = attributes_with_usage
@@ -1148,7 +1154,9 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
         allocations_added_to = {}
         if formset.is_valid() and allocation_formset.is_valid():
             project_user_active_status_choice = ProjectUserStatusChoice.objects.get(name="Active")
-            allocation_user_status_choice = AllocationUserStatusChoice.objects.get(name="Active")
+            allocation_user_active_status_choice = AllocationUserStatusChoice.objects.get(name="Active")
+            if ALLOCATION_EULA_ENABLE:
+                allocation_user_pending_status_choice = AllocationUserStatusChoice.objects.get(name="PendingEULA")
 
             no_accounts = {}
             added_users = {}
@@ -1238,22 +1246,32 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
                             else:
                                 allocation_user_role_obj = None
 
+                            has_eula = allocation.get_eula()
+                            user_status_choice = allocation_user_active_status_choice
                             if allocation.allocationuser_set.filter(user=user_obj).exists():
                                 allocation_user_obj = allocation.allocationuser_set.get(user=user_obj)
-                                allocation_user_obj.status = allocation_user_status_choice
+                                if (
+                                    ALLOCATION_EULA_ENABLE
+                                    and has_eula
+                                    and (allocation_user_obj.status != allocation_user_active_status_choice)
+                                ):
+                                    user_status_choice = allocation_user_pending_status_choice
+                                allocation_user_obj.status = user_status_choice
                                 allocation_user_obj.role = allocation_user_role_obj
                                 allocation_user_obj.save()
                             else:
+                                if ALLOCATION_EULA_ENABLE and has_eula:
+                                    user_status_choice = allocation_user_pending_status_choice
                                 allocation_user_obj = AllocationUser.objects.create(
                                     allocation=allocation,
                                     user=user_obj,
                                     role=allocation_user_role_obj,
-                                    status=allocation_user_status_choice,
+                                    status=user_status_choice,
                                 )
-
-                            allocation_activate_user.send(
-                                sender=self.__class__, allocation_user_pk=allocation_user_obj.pk
-                            )
+                            if user_status_choice == allocation_user_active_status_choice:
+                                allocation_activate_user.send(
+                                    sender=self.__class__, allocation_user_pk=allocation_user_obj.pk
+                                )
                             allocations_added_to[allocation].append(project_user_obj)
 
                             if allocation.get_parent_resource.name not in added_users[username]:
