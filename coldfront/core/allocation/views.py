@@ -229,7 +229,7 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
 
         context["user_exists_in_allocation"] = allocation_obj.allocationuser_set.filter(
             user=self.request.user,
-            status__name__in=["Active", "Pending - Remove", "Invited", "Pending", "Disabled", "Retired"],
+            status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"],
         ).exists()
 
         context["can_move_allocation"] = False
@@ -599,7 +599,6 @@ class AllocationListView(LoginRequiredMixin, ListView):
                             & Q(
                                 allocationuser__status__name__in=[
                                     "Active",
-                                    "Pending - Remove",
                                     "Invited",
                                     "Pending",
                                     "Disabled",

@@ -104,8 +104,6 @@ class UserProjectsManagersView(ListView):
 
         ongoing_projectuser_statuses = (
             "Active",
-            "Pending - Add",
-            "Pending - Remove",
         )
         ongoing_project_statuses = (
             "New",

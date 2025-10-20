@@ -210,7 +210,7 @@ def get_allocation_user_emails(allocation_obj, only_project_managers=False):
     :param only_project_managers: Indicates if only the project manager emails should be returned
     """
     allocation_users = allocation_obj.allocationuser_set.filter(
-        status__name__in=["Active", "Pending - Remove"]
+        status__name__in=["Active", ]
     ).values_list("user", flat=True)
     allocation_users = allocation_obj.project.projectuser_set.filter(
         enable_notifications=True, user__in=list(allocation_users)

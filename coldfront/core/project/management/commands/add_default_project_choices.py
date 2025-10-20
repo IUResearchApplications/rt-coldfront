@@ -53,8 +53,6 @@ class Command(BaseCommand):
 
         for choice in [
             "Active",
-            "Pending - Add",
-            "Pending - Remove",
             "Denied",
             "Removed",
         ]:
