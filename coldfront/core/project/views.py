@@ -86,7 +86,6 @@ from coldfront.core.project.utils import (
     create_admin_action_for_deletion,
     determine_automated_institution_choice,
     generate_project_code,
-    generate_slurm_account_name,
     get_new_end_date_from_list,
     get_project_user_emails,
 )
@@ -597,7 +596,7 @@ class ProjectArchivedListView(LoginRequiredMixin, ListView):
 class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Project
     template_name_suffix = "_create_form"
-    fields = ["title", "description", "pi_username", "type", "class_number"]
+    form_class = ProjectCreationForm
 
     def test_func(self):
         """UserPassesTestMixin Tests"""
@@ -608,21 +607,9 @@ class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
             return True
 
     def get_form(self, form_class=None):
-        form = super().get_form(form_class)
-        form.fields["pi_username"].required = not check_if_pi_eligible(self.request.user)
-        form.fields["description"].widget.attrs.update(
-            {
-                "placeholder": (
-                    "EXAMPLE: Our research involves the collection, storage, and analysis of rat "
-                    "colony behaviorial footage to study rat social patterns in natural settings. "
-                    "We intend to store the footage in a shared Slate-Project directory, perform "
-                    "cleaning of the footage with the Python library Pillow, and then perform "
-                    "video classification analysis on the footage using Python libraries such as "
-                    "TorchVision using Quartz and Big Red 200."
-                )
-            }
-        )
-        return form
+        if form_class is None:
+            form_class = self.get_form_class()
+        return form_class(self.request.user, **self.get_form_kwargs())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -646,43 +633,12 @@ class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
 
     def form_valid(self, form):
         project_obj = form.save(commit=False)
-        if not form.instance.pi_username:
-            if not check_if_pi_eligible(self.request.user):
-                messages.error(self.request, "Only faculty and staff can be the PI")
-                return super().form_invalid(form)
-            if self.check_max_project_type_count_reached(form.instance, self.request.user):
-                messages.error(self.request, "You have reached the max projects you can have of this type.")
-                return super().form_invalid(form)
-            form.instance.pi = self.request.user
-        else:
-            user = User.objects.filter(username=form.instance.pi_username).first()
-            if user is None:
-                if "coldfront.plugins.ldap_user_info" in settings.INSTALLED_APPS:
-                    from coldfront.plugins.ldap_user_info.utils import get_user_info
-
-                    result = get_user_info(form.instance.pi_username, ["sAMAccountName"])
-                    if not result.get("sAMAccountName")[0]:
-                        messages.error(self.request, "This PI's username does not exist.")
-                        return super().form_invalid(form)
-
-                messages.error(
-                    self.request,
-                    f"This PI's username could not be found on RT Projects. If they haven't yet, "
-                    f"they will need to log onto the RT Projects site for their account to be "
-                    f"automatically created. Once they do that they can be added as a PI to this "
-                    f"project.",
-                )
-                return super().form_invalid(form)
-            if not check_if_pi_eligible(user):
-                messages.error(self.request, "Only faculty and staff can be the PI")
-                return super().form_invalid(form)
-            if self.check_max_project_type_count_reached(form.instance, user):
-                messages.error(self.request, "This PI has reached the max projects they can have of this type.")
-                return super().form_invalid(form)
-            form.instance.pi = user
-
-        form.instance.requestor = self.request.user
+        form.instance.pi = form.cleaned_data.get("pi")
         form.instance.status = ProjectStatusChoice.objects.get(name="Waiting For Admin Approval")
+
+        if self.check_max_project_type_count_reached(form.instance, form.instance.pi):
+            messages.error(self.request, "You have reached the max projects you can have of this type.")
+            return super().form_invalid(form)
 
         expiry_dates = project_obj.get_env.get("expiry_dates")
         if expiry_dates:
@@ -694,7 +650,6 @@ class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
             full_expire_dates = [datetime.date.today() + datetime.timedelta(days=365)]
 
         end_date = get_new_end_date_from_list(full_expire_dates, datetime.date.today(), PROJECT_END_DATE_CARRYOVER_DAYS)
-
         if end_date is None:
             logger.error(f"End date for new project request was set to None on date {datetime.date.today()}")
             messages.error(
@@ -710,11 +665,9 @@ class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
                 return super().form_invalid(form)
 
         project_obj.save()
-        project_obj.slurm_account_name = generate_slurm_account_name(project_obj)
-        project_obj.save()
         self.object = project_obj
 
-        project_user_obj = ProjectUser.objects.create(
+        ProjectUser.objects.create(
             user=self.request.user,
             project=project_obj,
             role=ProjectUserRoleChoice.objects.get(name="Manager"),
@@ -727,6 +680,18 @@ class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
                 role=ProjectUserRoleChoice.objects.get(name="Manager"),
                 status=ProjectUserStatusChoice.objects.get(name="Active"),
             )
+
+        if PROJECT_CODE:
+            """
+            Set the ProjectCode object, if PROJECT_CODE is defined. 
+            If PROJECT_CODE_PADDING is defined, the set amount of padding will be added to PROJECT_CODE.
+            """
+            project_type_initial = form.instance.type.name[0]
+            project_obj.project_code = generate_project_code(project_type_initial, project_obj.pk, PROJECT_CODE_PADDING or 0)
+            project_obj.save(update_fields=["project_code"])
+
+        if PROJECT_INSTITUTION_EMAIL_MAP:
+            determine_automated_institution_choice(project_obj, PROJECT_INSTITUTION_EMAIL_MAP)
 
         if SLACK_MESSAGING_ENABLED:
             domain_url = get_domain_url(self.request)
@@ -777,6 +742,9 @@ class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
                 )
 
                 logger.info(f"Email sent to pi {form.instance.pi.username} (project pk={project_obj.pk})")
+
+        # project signals
+        project_new.send(sender=self.__class__, project_obj=project_obj)
 
         logger.info(f"User {form.instance.requestor.username} created a new project (project pk={project_obj.pk})")
         return super().form_valid(form)
@@ -868,6 +836,8 @@ class ProjectUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestM
         return super().form_valid(form)
 
     def get_success_url(self):
+        # project signals
+        project_update.send(sender=self.__class__, project_obj=self.object)
         return reverse("project-detail", kwargs={"pk": self.kwargs.get("pk")})
 
 
@@ -1233,6 +1203,9 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
                             enable_notifications=enable_notifications,
                         )
 
+                    # project signals
+                    project_activate_user.send(sender=self.__class__, project_user_pk=project_user_obj.pk)
+
                     project_user_objs.append(project_user_obj)
 
                     username = user_form_data.get("username")
@@ -1502,6 +1475,8 @@ class ProjectRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                         project_user_obj = project_obj.projectuser_set.get(user=user_obj)
                         project_user_obj.status = project_user_removed_status_choice
                         project_user_obj.save()
+                        # project signals
+                        project_remove_user.send(sender=self.__class__, project_user_pk=project_user_obj.pk)
                         removed_user_objs.append(project_user_obj)
                         if not removed_users_breakdown.get(project_user_obj.user.username):
                             removed_users_breakdown[project_user_obj.user.username] = [(None, ())]
@@ -1881,7 +1856,7 @@ class ProjectReviewView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
             if form_data.get("no_project_updates"):
                 project_updates = "No new project updates."
 
-            project_review_obj = ProjectReview.objects.create(
+            ProjectReview.objects.create(
                 project=project_obj,
                 project_updates=project_updates,
                 allocation_renewals=",".join(allocation_renewals),

@@ -4,6 +4,8 @@
 
 
 from django import forms
+from django.conf import settings
+from django.contrib.auth.models import User
 from django.core.validators import MinLengthValidator
 from django.db.models.functions import Lower
 from django.shortcuts import get_object_or_404
@@ -14,6 +16,7 @@ from coldfront.core.project.models import (
     ProjectReview,
     ProjectUserRoleChoice,
 )
+from coldfront.core.project.utils import check_if_pi_eligible
 from coldfront.core.utils.common import import_from_settings
 
 EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL = import_from_settings("EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL")
@@ -185,7 +188,56 @@ class ProjectAttributeUpdateForm(forms.Form):
 class ProjectCreationForm(forms.ModelForm):
     class Meta:
         model = Project
-        fields = ["title", "description", "field_of_science"]
+        fields = ["title", "description", "pi_username", "type", "class_number", "requestor", "pi"]
+
+    def __init__(self, user, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["pi_username"].required = not check_if_pi_eligible(user)
+        self.fields["description"].widget.attrs.update(
+            {
+                "placeholder": (
+                    "EXAMPLE: Our research involves the collection, storage, and analysis of rat "
+                    "colony behaviorial footage to study rat social patterns in natural settings. "
+                    "We intend to store the footage in a shared Slate-Project directory, perform "
+                    "cleaning of the footage with the Python library Pillow, and then perform "
+                    "video classification analysis on the footage using Python libraries such as "
+                    "TorchVision using Quartz and Big Red 200."
+                )
+            }
+        )
+        self.fields["requestor"].initial = user
+        self.fields["requestor"].widget = forms.HiddenInput()
+        self.fields["pi"].initial = user
+        self.fields["pi"].widget = forms.HiddenInput()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        requestor = cleaned_data.get("requestor")
+        pi = cleaned_data.get("pi_username")
+        if pi:
+            pi_obj = User.objects.filter(username=pi).first()
+        else:
+            pi_obj = requestor
+        if pi_obj is None:
+            if "coldfront.plugins.ldap_user_info" in settings.INSTALLED_APPS:
+                from coldfront.plugins.ldap_user_info.utils import get_user_info
+
+                result = get_user_info(pi_obj, ["sAMAccountName"])
+                if not result.get("sAMAccountName")[0]:
+                    raise forms.ValidationError("This PI's username does not exist.")
+
+            raise forms.ValidationError(
+                "This PI's username could not be found on RT Projects. If they haven't yet, "
+                "they will need to log onto the RT Projects site for their account to be "
+                "automatically created. Once they do that they can be added as a PI to this "
+                "project."
+            )
+
+        if not check_if_pi_eligible(pi_obj):
+            raise forms.ValidationError("Only faculty and staff can be the PI")
+
+        cleaned_data["pi"] = pi_obj
+        return cleaned_data
 
 
 class ProjectRequestEmailForm(forms.Form):

@@ -354,7 +354,7 @@ class ProjectAdmin(SimpleHistoryAdmin):
         "pi",
         "requestor",
         "description",
-        "slurm_account_name",
+        "project_code",
         "private",
         "type",
         "class_number",

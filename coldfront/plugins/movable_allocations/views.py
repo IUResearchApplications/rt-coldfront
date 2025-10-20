@@ -17,7 +17,6 @@ from coldfront.core.project.models import (
     ProjectUserRoleChoice,
     ProjectUserStatusChoice,
 )
-from coldfront.core.project.utils import generate_slurm_account_name
 from coldfront.core.utils.common import get_domain_url
 from coldfront.core.utils.groups import check_if_groups_in_review_groups
 from coldfront.core.utils.mail import send_allocation_admin_email, send_allocation_customer_email
@@ -136,7 +135,7 @@ class AllocationMoveView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
             allocation=allocation_obj, allocation_attribute_type__name="slurm_account_name"
         ).first()
         if slurm_account_obj:
-            slurm_account_obj.value = generate_slurm_account_name(allocation_obj.project)
+            slurm_account_obj.value = allocation_obj.project.project_code
             slurm_account_obj.save()
 
         project_user_active_status = ProjectUserStatusChoice.objects.get(name="Active")

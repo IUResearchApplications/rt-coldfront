@@ -59,7 +59,7 @@ def generate_project_code(project_code: str, project_pk: int, padding: int = 0) 
     :return: A formatted project code string.
     """
 
-    return f"{project_code.upper()}{str(project_pk).zfill(padding)}"
+    return f"{project_code.lower()}{str(project_pk).zfill(padding)}"
 
 
 def determine_automated_institution_choice(project, institution_map: dict):
@@ -166,15 +166,6 @@ def get_project_user_emails(project_obj, only_project_managers=False):
     project_users = project_users.values_list("user__email", flat=True)
 
     return list(project_users)
-
-
-def generate_slurm_account_name(project_obj):
-    num = str(project_obj.pk)
-    string = "00000"
-    string = string[: -len(num)] + num
-    letter = project_obj.type.name.lower()[0]
-
-    return letter + string
 
 
 def create_admin_action_for_deletion(user, deleted_obj, project, base_model=None):

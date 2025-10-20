@@ -149,7 +149,7 @@ class ProjectSearchForm(forms.Form):
         label="Username Contains", max_length=25, required=False, help_text="Active user"
     )
 
-    display__project__slurm_account_name = forms.BooleanField(required=False)
+    display__project__project_code = forms.BooleanField(required=False)
 
     project__status__name = forms.ModelMultipleChoiceField(
         label="Project Status", queryset=ProjectStatusChoice.objects.all().order_by("name"), required=False
@@ -239,7 +239,7 @@ class ProjectSearchForm(forms.Form):
                     "display__project__description",
                     "display__project__pi__username",
                     "display__project__requestor__username",
-                    "display__project__slurm_account_name",
+                    "display__project__project_code",
                     "display__project__status__name",
                     "display__project__type__name",
                     "display__project__class_number",

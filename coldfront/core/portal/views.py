@@ -108,7 +108,7 @@ def home(request):
             if resources_with_slurm_accounts:
                 project_dict = {
                     "title": project.title,
-                    "slurm_account_name": project.slurm_account_name,
+                    "project_code": project.project_code,
                     "resources_with_slurm_accounts": ", ".join(resources_with_slurm_accounts),
                 }
                 projects_with_a_slurm_account_to_list.append(project_dict)

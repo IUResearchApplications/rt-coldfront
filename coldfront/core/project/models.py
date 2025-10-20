@@ -17,8 +17,6 @@ from coldfront.core.utils.common import import_from_settings
 from coldfront.core.utils.validate import AttributeValidator
 
 PROJECT_ENABLE_PROJECT_REVIEW = import_from_settings("PROJECT_ENABLE_PROJECT_REVIEW", False)
-
-PROJECT_ENABLE_PROJECT_REVIEW = import_from_settings("PROJECT_ENABLE_PROJECT_REVIEW", False)
 PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings("PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING", 60)
 PROJECT_DAYS_TO_REVIEW_BEFORE_EXPIRING = import_from_settings("PROJECT_DAYS_TO_REVIEW_BEFORE_EXPIRING", 30)
 PROJECT_ENABLE_PERMISSIONS_PER_TYPE = import_from_settings("PROJECT_ENABLE_PERMISSIONS_PER_TYPE", False)
@@ -357,10 +355,11 @@ required to log onto the site at least once before they can be added.
 
     @property
     def get_env(self):
+        default_env = PROJECT_PERMISSIONS_PER_TYPE.get("Default")
         if not PROJECT_ENABLE_PERMISSIONS_PER_TYPE or PROJECT_PERMISSIONS_PER_TYPE.get(self.type.name) is None:
-            return PROJECT_PERMISSIONS_PER_TYPE.get("Default")
-        merged = PROJECT_PERMISSIONS_PER_TYPE.get("Default") | PROJECT_PERMISSIONS_PER_TYPE.get(self.type.name)
-        return merged
+            return default_env
+
+        return default_env | PROJECT_PERMISSIONS_PER_TYPE.get(self.type.name)
 
 
 class ProjectAdminComment(TimeStampedModel):
