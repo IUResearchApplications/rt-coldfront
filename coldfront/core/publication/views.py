@@ -20,7 +20,6 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.generic import TemplateView, View
 from django.views.generic.edit import FormView
-from django.views.static import serve
 from doi2bib import crossref
 
 from coldfront.core.project.models import Project
