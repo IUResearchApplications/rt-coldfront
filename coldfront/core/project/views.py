@@ -970,7 +970,7 @@ class ProjectAddUsersSearchResultsView(LoginRequiredMixin, UserPassesTestMixin, 
             for match in matches:
                 username = match.get("username")
                 user_info = users_info.get(username)
-                user_accounts.append([username, user_info.get("memberOf")])
+                user_accounts.append([username, user_info.get("memberOf", [])])
                 role = "Group" if user_info.get("title") == "group" else "User"
                 match.update({"role": ProjectUserRoleChoice.objects.get(name=role)})
         else:
