@@ -9,8 +9,8 @@ Create Project
 
 
 {% block content %}
-  RT Projects is designed for labs, groups, and classes. If your group already has an existing project then you should
-  contact your PI about adding you to your groups project instead. Limiting projects to groups helps prevent user
+  RT Projects is designed for labs, groups, and classes. If your group has an existing project then please
+  contact your PI about adding you to that one instead. Limiting projects to groups helps prevent user
   access fragmentation and simplifies your PI's project management.
   <hr>
  <form method="post">
@@ -29,7 +29,7 @@ Create Project
     <div class="card">
       <div class="card-header">
         <a id="expand_pi_button" href="#collapse_pi" role="button" class="card-link" data-toggle="collapse">
-          Current Active Projects
+          Active Projects
           <i id="plus_minus_1" class="fas fa-plus float-right"></i>
         </a>
       </div>
@@ -51,9 +51,9 @@ Create Project
   {{ form.type|as_crispy_field }}
   <p id="div_id_class_info" class="alert alert-info" role="alert">
     <i class="fas fa-info-circle" aria-hidden="true"></i>
-    If you are a student you should contact your PI about creating a project for the class themselves
-    and adding all of the students who need access to it. Doing so will reduce the number of projects 
-    to manage for a single class.
+    If you are a student please contact your PI about creating a project for the class
+    and adding the students needing access to it. This reduces the number of projects 
+    your PI needs to manage for a single class.
   </p>
   {{ form.class_number|as_crispy_field }}
 
