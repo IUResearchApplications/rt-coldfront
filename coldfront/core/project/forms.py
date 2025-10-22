@@ -4,7 +4,6 @@
 
 
 from django import forms
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.validators import MinLengthValidator
 from django.db.models.functions import Lower
@@ -22,6 +21,8 @@ from coldfront.core.utils.common import import_from_settings
 EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL = import_from_settings("EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL")
 EMAIL_ADMIN_LIST = import_from_settings("EMAIL_ADMIN_LIST", [])
 EMAIL_DIRECTOR_EMAIL_ADDRESS = import_from_settings("EMAIL_DIRECTOR_EMAIL_ADDRESS", "")
+
+ADDITIONAL_USER_SEARCH_CLASSES = import_from_settings("ADDITIONAL_USER_SEARCH_CLASSES", [])
 
 
 class ProjectSearchForm(forms.Form):
@@ -219,11 +220,11 @@ class ProjectCreationForm(forms.ModelForm):
         else:
             pi_obj = requestor
         if pi_obj is None:
-            if "coldfront.plugins.ldap_user_info" in settings.INSTALLED_APPS:
-                from coldfront.plugins.ldap_user_info.utils import get_user_info
+            if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
+                from coldfront.plugins.ldap_user_search.utils import get_user_info
 
-                result = get_user_info(pi_obj, ["sAMAccountName"])
-                if not result.get("sAMAccountName")[0]:
+                user_info = get_user_info(pi_obj.username)
+                if not user_info:
                     raise forms.ValidationError("This PI's username does not exist.")
 
             raise forms.ValidationError(

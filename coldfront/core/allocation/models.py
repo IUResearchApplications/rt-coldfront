@@ -7,7 +7,6 @@ import logging
 from ast import literal_eval
 from enum import Enum
 
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -40,6 +39,8 @@ if EMAIL_ENABLED:
     EMAIL_OPT_OUT_INSTRUCTION_URL = import_from_settings("EMAIL_OPT_OUT_INSTRUCTION_URL")
     EMAIL_SIGNATURE = import_from_settings("EMAIL_SIGNATURE")
     EMAIL_CENTER_NAME = import_from_settings("CENTER_NAME")
+
+ADDITIONAL_USER_SEARCH_CLASSES = import_from_settings("ADDITIONAL_USER_SEARCH_CLASSES", [])
 
 
 class AllocationPermission(Enum):
@@ -594,8 +595,8 @@ class AllocationAttribute(TimeStampedModel):
                 )
 
         linked_attribute_type_obj = self.allocation_attribute_type.linked_resource_attribute_type
-        if "coldfront.plugins.ldap_user_info" in settings.INSTALLED_APPS:
-            from coldfront.plugins.ldap_user_info.utils import check_if_user_exists
+        if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
+            from coldfront.plugins.ldap_user_search.utils import get_user_info
 
             linked_attribute_obj = ResourceAttribute.objects.filter(
                 resource=self.allocation.get_parent_resource,
@@ -603,7 +604,7 @@ class AllocationAttribute(TimeStampedModel):
                 check_if_username_exists=True,
             )
             if linked_attribute_obj.exists():
-                if not check_if_user_exists(self.value):
+                if not get_user_info(self.value):
                     raise ValidationError(f"{self.allocation_attribute_type.name} does not have a valid username")
 
     def __str__(self):

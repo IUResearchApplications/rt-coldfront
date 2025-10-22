@@ -17,6 +17,10 @@ from django.views.generic import TemplateView
 
 import coldfront.core.portal.views as portal_views
 from coldfront.config.env import ENV, PROJECT_ROOT
+from coldfront.core.utils.common import import_from_settings
+
+ADDITIONAL_USER_SEARCH_CLASSES = import_from_settings("ADDITIONAL_USER_SEARCH_CLASSES", [])
+
 
 admin.site.site_header = "RT Projects Administration"
 admin.site.site_title = "RT Projects Administration"
@@ -74,11 +78,8 @@ if "coldfront.plugins.academic_analytics" in settings.INSTALLED_APPS:
 if "coldfront.plugins.advanced_search" in settings.INSTALLED_APPS:
     urlpatterns.append(path("advanced_search/", include("coldfront.plugins.advanced_search.urls")))
 
-if "coldfront.plugins.ldap_user_info" in settings.INSTALLED_APPS:
-    urlpatterns.append(path("ldap_user_info/", include("coldfront.plugins.ldap_user_info.urls")))
-
-if "coldfront.plugins.iquota" in settings.INSTALLED_APPS:
-    urlpatterns.append(path("iquota/", include("coldfront.plugins.iquota.urls")))
+if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
+    urlpatterns.append(path("ldap_user_search/", include("coldfront.plugins.ldap_user_search.urls")))
 
 if "coldfront.plugins.iquota" in settings.INSTALLED_APPS:
     urlpatterns.append(path("iquota/", include("coldfront.plugins.iquota.urls")))

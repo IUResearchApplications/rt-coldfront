@@ -8,7 +8,7 @@ from django.forms.models import model_to_dict
 
 from coldfront.core.project.models import Project, ProjectAdminAction
 from coldfront.core.utils.common import import_from_settings
-from coldfront.plugins.ldap_user_info.utils import get_user_info, get_users_info
+from coldfront.plugins.ldap_user_search.utils import get_user_info, get_users_info
 
 PROJECT_PI_ELIGIBLE_ADS_GROUPS = import_from_settings("PROJECT_PI_ELIGIBLE_ADS_GROUPS", [])
 
@@ -201,7 +201,7 @@ def check_if_pi_eligible(user, memberships=None):
         return True
 
     if not memberships:
-        memberships = get_user_info(user.username, ["memberOf"]).get("memberOf")
+        memberships = get_user_info(user.username).get("memberOf")
 
     if not memberships:
         return False
@@ -219,11 +219,11 @@ def check_if_pis_eligible(users):
 
     usernames = [user.username for user in set(users)]
     eligible_statuses = {}
-    memberships = get_users_info(usernames, ["memberOf"])
-    for user, user_memberships in memberships.items():
-        for user_membersip in user_memberships.get("memberOf"):
+    users_info = get_users_info(usernames)
+    for username, user_info in users_info.items():
+        for user_membersip in user_info.get("memberOf", []):
             eligible = user_membersip in PROJECT_PI_ELIGIBLE_ADS_GROUPS
-            eligible_statuses[user] = eligible
+            eligible_statuses[username] = eligible
             if eligible:
                 break
 

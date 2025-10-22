@@ -5,7 +5,6 @@
 import logging
 from datetime import datetime
 
-from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -14,12 +13,14 @@ from simple_history.models import HistoricalRecords
 
 import coldfront.core.attribute_expansion as attribute_expansion
 from coldfront.core.utils.common import import_from_settings
-from coldfront.plugins.ldap_user_info.utils import get_user_info, get_users_info
+from coldfront.plugins.ldap_user_search.utils import get_user_info, get_users_info
 
 logger = logging.getLogger(__name__)
 
 RESOURCE_ENABLE_ACCOUNT_CHECKING = import_from_settings("RESOURCE_ENABLE_ACCOUNT_CHECKING", True)
 RESOURCE_ACCOUNTS = import_from_settings("RESOURCE_ACCOUNTS", {})
+
+ADDITIONAL_USER_SEARCH_CLASSES = import_from_settings("ADDITIONAL_USER_SEARCH_CLASSES", [])
 
 
 class AttributeType(TimeStampedModel):
@@ -243,14 +244,14 @@ class Resource(TimeStampedModel):
 
     def check_users_accounts(self, usernames):
         results = {}
-        if "coldfront.plugins.ldap_user_info" not in settings.INSTALLED_APPS:
+        if not any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
             for username in usernames:
                 results[username] = {"exists": True, "reason": "not_enabled"}
             return results
 
-        users_accounts = get_users_info(usernames, ["memberOf"])
-        for username in usernames:
-            result = self.check_user_account(username, users_accounts)
+        users_info = get_users_info(usernames)
+        for username, user_info in users_info.items():
+            result = self.check_user_account(username, user_info.get("memberOf", []))
             results[username] = result
 
         return results
@@ -293,7 +294,7 @@ class Resource(TimeStampedModel):
         if not RESOURCE_ENABLE_ACCOUNT_CHECKING:
             return {"exists": True, "reason": "not_enabled"}
 
-        if "coldfront.plugins.ldap_user_info" not in settings.INSTALLED_APPS:
+        if not any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
             return {"exists": True, "reason": "not_enabled"}
 
         resource = self.get_attribute("check_user_account")
@@ -301,11 +302,11 @@ class Resource(TimeStampedModel):
             return {"exists": True, "reason": "not_required"}
 
         if users_accounts is None:
-            accounts = get_user_info(username, ["memberOf"]).get("memberOf")
+            accounts = get_user_info(username).get("memberOf")
         else:
-            accounts = users_accounts.get(username).get("memberOf")
+            accounts = users_accounts
 
-        if accounts[0] == "":
+        if not accounts:
             return {"exists": False, "reason": "no_account"}
 
         resource_acc = RESOURCE_ACCOUNTS.get(resource)

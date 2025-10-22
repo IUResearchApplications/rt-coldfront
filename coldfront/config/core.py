@@ -69,31 +69,14 @@ ALLOCATION_FUNCS_ON_EXPIRE = [
 ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING = ENV.int("ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING", default=60)
 ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING = ENV.int("ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING", default=30)
 ALLOCATION_ATTRIBUTE_IDENTIFIERS = ENV.list("ALLOCATION_ATTRIBUTE_IDENTIFIERS", default=[])
+# This is in days
+ALLOCATION_DEFAULT_ALLOCATION_LENGTH = ENV.int("ALLOCATION_DEFAULT_ALLOCATION_LENGTH", default=365)
+
 # ------------------------------------------------------------------------------
 # Resource related
 # ------------------------------------------------------------------------------
 RESOURCE_ENABLE_ACCOUNT_CHECKING = ENV.bool("RESOURCE_ENABLE_ACCOUNT_CHECKING", default=True)
 RESOURCE_ACCOUNTS = ENV.dict("RESOURCE_ACCOUNTS", default={})
-
-# This is in days
-ALLOCATION_DEFAULT_ALLOCATION_LENGTH = ENV.int("ALLOCATION_DEFAULT_ALLOCATION_LENGTH", default=365)
-
-# ------------------------------------------------------------------------------
-# Allow user to select account name for allocation
-# ------------------------------------------------------------------------------
-ALLOCATION_ACCOUNT_ENABLED = ENV.bool("ALLOCATION_ACCOUNT_ENABLED", default=False)
-ALLOCATION_ACCOUNT_MAPPING = ENV.dict("ALLOCATION_ACCOUNT_MAPPING", default={})
-
-SETTINGS_EXPORT += [
-    "ALLOCATION_ACCOUNT_ENABLED",
-    "CENTER_HELP_URL",
-    "RESEARCH_OUTPUT_ENABLE",
-    "GRANT_ENABLE",
-    "PUBLICATION_ENABLE",
-]
-
-# This is in days
-ALLOCATION_DEFAULT_ALLOCATION_LENGTH = ENV.int("ALLOCATION_DEFAULT_ALLOCATION_LENGTH", default=365)
 
 # ------------------------------------------------------------------------------
 # Allow user to select account name for allocation

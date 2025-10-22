@@ -7,7 +7,15 @@ import logging
 import ssl
 
 import ldap.filter
-from ldap3 import AUTO_BIND_TLS_BEFORE_BIND, SASL, Connection, Server, Tls, get_config_parameter, set_config_parameter
+from ldap3 import (
+    AUTO_BIND_TLS_BEFORE_BIND,
+    SASL,
+    Connection,
+    Server,
+    Tls,
+    get_config_parameter,
+    set_config_parameter,
+)
 
 from coldfront.core.user.utils import UserSearch
 from coldfront.core.utils.common import import_from_settings
@@ -118,3 +126,21 @@ class LDAPUserSearch(UserSearch):
             users.append(user_dict)
         logger.info("LDAP user search for %s found %s results", user_search_string, len(users))
         return users
+
+
+def get_user_info(username, ldap_search=None):
+    if ldap_search is None:
+        ldap_search = LDAPUserSearch(None, None)
+    user_info = ldap_search.search_a_user(username, "username_only")
+    if not user_info:
+        return {}
+    return ldap_search.search_a_user(username, "username_only")[0]
+
+
+def get_users_info(usernames):
+    ldap_search = LDAPUserSearch(None, None)
+    results = {}
+    for username in usernames:
+        results[username] = get_user_info(username, ldap_search)
+
+    return results

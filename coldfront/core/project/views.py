@@ -123,6 +123,8 @@ if EMAIL_ENABLED:
 logger = logging.getLogger(__name__)
 PROJECT_INSTITUTION_EMAIL_MAP = import_from_settings("PROJECT_INSTITUTION_EMAIL_MAP", False)
 
+ADDITIONAL_USER_SEARCH_CLASSES = import_from_settings("ADDITIONAL_USER_SEARCH_CLASSES", [])
+
 
 class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Project
@@ -961,20 +963,16 @@ class ProjectAddUsersSearchResultsView(LoginRequiredMixin, UserPassesTestMixin, 
         matches = context.get("matches")
 
         user_accounts = []
-        if "coldfront.plugins.ldap_user_info" in settings.INSTALLED_APPS:
-            from coldfront.plugins.ldap_user_info.utils import get_users_info
+        if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
+            from coldfront.plugins.ldap_user_search.utils import get_users_info
 
-            users = [match.get("username") for match in matches]
-            results = get_users_info(users, ["title", "memberOf"])
+            users_info = get_users_info([match.get("username") for match in matches])
             for match in matches:
                 username = match.get("username")
-                user_accounts.append([username, results.get(username).get("memberOf")])
-
-                title = results.get(username).get("title")
-                if title and title[0] == "group":
-                    match.update({"role": ProjectUserRoleChoice.objects.get(name="Group")})
-                else:
-                    match.update({"role": ProjectUserRoleChoice.objects.get(name="User")})
+                user_info = users_info.get(username)
+                user_accounts.append([username, user_info.get("memberOf")])
+                role = "Group" if user_info.get("title") == "group" else "User"
+                match.update({"role": ProjectUserRoleChoice.objects.get(name=role)})
         else:
             for match in matches:
                 match.update({"role": ProjectUserRoleChoice.objects.get(name="User")})
@@ -1085,12 +1083,12 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
                 selected_users_usernames.append(user_form_data.get("username"))
                 selected_users_accounts[user_form_data.get("username")] = []
 
-        if "coldfront.plugins.ldap_user_info" in settings.INSTALLED_APPS:
-            from coldfront.plugins.ldap_user_info.utils import get_users_info
+        if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
+            from coldfront.plugins.ldap_user_search.utils import get_users_info
 
-            results = get_users_info(selected_users_usernames, ["memberOf"])
-            for username, result in results.items():
-                selected_users_accounts[username] = result.get("memberOf")
+            users_info = get_users_info(selected_users_usernames)
+            for username, user_info in users_info.items():
+                selected_users_accounts[username] = user_info.get("memberOf")
 
         return selected_users_accounts
 
@@ -1114,13 +1112,13 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
 
         # Initial data for ProjectAddUserForm
         matches = context.get("matches")
-        if "coldfront.plugins.ldap_user_info" in settings.INSTALLED_APPS:
-            from coldfront.plugins.ldap_user_info.utils import get_users_info
+        if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
+            from coldfront.plugins.ldap_user_search.utils import get_users_info
 
             users = [match.get("username") for match in matches]
-            results = get_users_info(users, ["title"])
+            results = get_users_info(users)
             for match in matches:
-                if results.get(match.get("username")).get("title")[0] == "group":
+                if results.get(match.get("username")).get("title") == "group":
                     match.update({"role": ProjectUserRoleChoice.objects.get(name="Group")})
                 else:
                     match.update({"role": ProjectUserRoleChoice.objects.get(name="User")})
