@@ -193,7 +193,7 @@ class ProjectCreationForm(forms.ModelForm):
         required=False,
         help_text=(
             "Required if you will not be the PI of this project. Only faculty and staff can be the PI. "
-            "They are required to log onto the site at least once before they can be added."
+            "They must log onto the site at least once before they can be added."
         ),
     )
     class_number = forms.CharField(max_length=25, required=False)
