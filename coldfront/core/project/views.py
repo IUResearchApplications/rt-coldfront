@@ -690,7 +690,7 @@ class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
             ProjectAttribute.objects.create(
                 project=project_obj,
                 proj_attr_type=ProjectAttributeType.objects.get(name=field.replace("_", " ").title()),
-                value = form.cleaned_data.get(field)
+                value=form.cleaned_data.get(field),
             )
 
         ProjectUser.objects.create(

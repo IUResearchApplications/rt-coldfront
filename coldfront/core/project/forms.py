@@ -194,7 +194,7 @@ class ProjectCreationForm(forms.ModelForm):
         help_text=(
             "Required if you will not be the PI of this project. Only faculty and staff can be the PI. "
             "They are required to log onto the site at least once before they can be added."
-        )
+        ),
     )
     class_number = forms.CharField(max_length=25, required=False)
 
@@ -225,28 +225,36 @@ class ProjectCreationForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         requestor = cleaned_data.get("requestor")
-        pi = cleaned_data.get("pi_username")
-        if pi:
-            pi_obj = User.objects.filter(username=pi).first()
+        pi_username = cleaned_data.get("pi_username")
+        if pi_username:
+            pi_obj = User.objects.filter(username=pi_username).first()
         else:
             pi_obj = requestor
         if pi_obj is None:
             if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
                 from coldfront.plugins.ldap_user_search.utils import get_user_info
 
-                user_info = get_user_info(pi_obj.username)
+                user_info = get_user_info(pi_username)
                 if not user_info:
-                    raise forms.ValidationError("This PI's username does not exist.")
+                    raise forms.ValidationError({"pi_username": "This PI's username does not exist."})
 
             raise forms.ValidationError(
-                "This PI's username could not be found on RT Projects. If they haven't yet, "
-                "they will need to log onto the RT Projects site for their account to be "
-                "automatically created. Once they do that they can be added as a PI to this "
-                "project."
+                {
+                    "pi_username": (
+                        "This PI's username could not be found on RT Projects. "
+                        "They need to log onto this site for their account to be "
+                        "automatically created. Afterwards, they can be added as a PI to this "
+                        "project."
+                    )
+                }
             )
 
         if not check_if_pi_eligible(pi_obj):
-            raise forms.ValidationError("Only faculty and staff can be the PI")
+            if pi_username:
+                message = {"pi_username": "Only faculty and staff can be the PI"}
+            else:
+                message = "Only faculty and staff can be the PI"
+            raise forms.ValidationError(message)
 
         cleaned_data["pi"] = pi_obj
         return cleaned_data
