@@ -14,12 +14,11 @@ logger = logging.getLogger(__name__)
 
 ADDITIONAL_USER_SEARCH_CLASSES = import_from_settings("ADDITIONAL_USER_SEARCH_CLASSES", [])
 
+
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
-        user_profile = UserProfile.objects.create(
-            user=instance, title="", department="", division=""
-        )
+        user_profile = UserProfile.objects.create(user=instance, title="", department="", division="")
         if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
             from coldfront.plugins.ldap_user_search.utils import get_user_info
 
@@ -52,6 +51,7 @@ def update_user_profile(sender, user, **kwargs):
 
     if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
         from coldfront.plugins.ldap_user_search.utils import get_user_info
+
         attributes = get_user_info(user.username)
         if not attributes:
             return

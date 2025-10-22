@@ -519,7 +519,7 @@ class AllocationAttributeType(TimeStampedModel):
 
     def __str__(self):
         return "%s" % (self.name)
-    
+
     def get_linked_resources(self):
         return self.linked_resources.all()
 

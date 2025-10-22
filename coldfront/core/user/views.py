@@ -102,9 +102,7 @@ class UserProjectsManagersView(ListView):
     def get_queryset(self, *args, **kwargs):
         viewed_user = self.viewed_user
 
-        ongoing_projectuser_statuses = (
-            "Active",
-        )
+        ongoing_projectuser_statuses = ("Active",)
         ongoing_project_statuses = (
             "New",
             "Active",

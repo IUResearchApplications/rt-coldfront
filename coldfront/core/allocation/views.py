@@ -1161,7 +1161,10 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                 else:
                     if ALLOCATION_EULA_ENABLE and not user_obj.userprofile.is_pi and allocation_obj.get_eula():
                         allocation_user_obj = AllocationUser.objects.create(
-                            allocation=allocation_obj, user=user_obj, status=allocation_user_pending_status_choice, role=role
+                            allocation=allocation_obj,
+                            user=user_obj,
+                            status=allocation_user_pending_status_choice,
+                            role=role,
                         )
                         send_email_template(
                             f"Agree to EULA for {allocation_obj.get_parent_resource.__str__()}",
@@ -1178,7 +1181,10 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                         )
                     else:
                         allocation_user_obj = AllocationUser.objects.create(
-                            allocation=allocation_obj, user=user_obj, status=allocation_user_active_status_choice, role=role
+                            allocation=allocation_obj,
+                            user=user_obj,
+                            status=allocation_user_active_status_choice,
+                            role=role,
                         )
 
                 allocation_activate_user.send(sender=self.__class__, allocation_user_pk=allocation_user_obj.pk)

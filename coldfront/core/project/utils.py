@@ -159,7 +159,10 @@ def get_project_user_emails(project_obj, only_project_managers=False):
     :param only_project_managers: Indicates if only the project manager emails should be returned
     """
     project_users = project_obj.projectuser_set.filter(
-        enable_notifications=True, status__name__in=["Active", ]
+        enable_notifications=True,
+        status__name__in=[
+            "Active",
+        ],
     )
     if only_project_managers:
         project_users = project_users.filter(role__name="Manager")

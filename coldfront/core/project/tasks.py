@@ -151,6 +151,7 @@ def send_expiry_emails():
 def check_current_pi_eligibilities():
     if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
         from coldfront.plugins.ldap_user_search.utils import get_users_info
+
         project_pis = set(Project.objects.filter(status__name="Active").values_list("pi__username", flat=True))
         users_info = get_users_info(project_pis)
         logger.info("Checking PI eligibilities...")

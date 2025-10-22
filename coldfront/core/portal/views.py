@@ -95,7 +95,7 @@ def home(request):
                         "Pending",
                         "Disabled",
                         "Retired",
-                        "PendingEULA"
+                        "PendingEULA",
                     ]
                 )
             )

@@ -212,9 +212,11 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
             attributes_with_usage.remove(a)
 
         # Only show 'Active Users'
-        project_users = self.object.projectuser_set.filter(status__name__in=["Active", ]).order_by(
-            "user__username"
-        )
+        project_users = self.object.projectuser_set.filter(
+            status__name__in=[
+                "Active",
+            ]
+        ).order_by("user__username")
 
         context["mailto"] = "mailto:" + ",".join([user.user.email for user in project_users])
 
@@ -242,13 +244,22 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
                         ]
                     )
                     & Q(allocationuser__user=self.request.user)
-                    & Q(allocationuser__status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired", "PendingEULA"])
+                    & Q(
+                        allocationuser__status__name__in=[
+                            "Active",
+                            "Invited",
+                            "Pending",
+                            "Disabled",
+                            "Retired",
+                            "PendingEULA",
+                        ]
+                    )
                 )
                 .distinct()
                 .order_by("-end_date")
             )
 
-        user_status = []                
+        user_status = []
         for allocation in allocations:
             if allocation.allocationuser_set.filter(user=self.request.user).exists():
                 user_status.append(allocation.allocationuser_set.get(user=self.request.user).status.name)
@@ -263,7 +274,7 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
             project=self.object, status__name__in=["Active", "Pending", "Archived"]
         )
         context["allocations"] = allocations
-        context['user_allocation_status'] = user_status
+        context["user_allocation_status"] = user_status
         context["attributes"] = attributes
         context["guage_data"] = guage_data
         context["attributes_with_usage"] = attributes_with_usage
@@ -694,7 +705,9 @@ class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
             If PROJECT_CODE_PADDING is defined, the set amount of padding will be added to PROJECT_CODE.
             """
             project_type_initial = form.instance.type.name[0]
-            project_obj.project_code = generate_project_code(project_type_initial, project_obj.pk, PROJECT_CODE_PADDING or 0)
+            project_obj.project_code = generate_project_code(
+                project_type_initial, project_obj.pk, PROJECT_CODE_PADDING or 0
+            )
             project_obj.save(update_fields=["project_code"])
 
         if PROJECT_INSTITUTION_EMAIL_MAP:
@@ -950,7 +963,12 @@ class ProjectAddUsersSearchResultsView(LoginRequiredMixin, UserPassesTestMixin, 
         project_obj = get_object_or_404(Project, pk=pk)
 
         users_to_exclude = [
-            ele.user.username for ele in project_obj.projectuser_set.filter(status__name__in=["Active", ])
+            ele.user.username
+            for ele in project_obj.projectuser_set.filter(
+                status__name__in=[
+                    "Active",
+                ]
+            )
         ]
 
         cobmined_user_search_obj = CombinedUserSearch(user_search_string, search_by, users_to_exclude)
@@ -1103,7 +1121,12 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
         project_obj = get_object_or_404(Project, pk=pk)
 
         users_to_exclude = [
-            ele.user.username for ele in project_obj.projectuser_set.filter(status__name__in=["Active", ])
+            ele.user.username
+            for ele in project_obj.projectuser_set.filter(
+                status__name__in=[
+                    "Active",
+                ]
+            )
         ]
 
         cobmined_user_search_obj = CombinedUserSearch(user_search_string, search_by, users_to_exclude)
@@ -1415,9 +1438,11 @@ class ProjectRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                 "email": ele.user.email,
                 "role": ele.role,
             }
-            for ele in project_obj.projectuser_set.filter(status__name__in=["Active", ]).order_by(
-                "user__username"
-            )
+            for ele in project_obj.projectuser_set.filter(
+                status__name__in=[
+                    "Active",
+                ]
+            ).order_by("user__username")
             if ele.user != self.request.user and ele.user != project_obj.pi
         ]
 
@@ -1818,9 +1843,11 @@ class ProjectReviewView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         context["project_users"] = ", ".join(
             [
                 "{} {}".format(ele.user.first_name, ele.user.last_name)
-                for ele in project_obj.projectuser_set.filter(status__name__in=["Active", ]).order_by(
-                    "user__last_name"
-                )
+                for ele in project_obj.projectuser_set.filter(
+                    status__name__in=[
+                        "Active",
+                    ]
+                ).order_by("user__last_name")
             ]
         )
         context["ineligible_pi"] = not check_if_pi_eligible(project_obj.pi)
