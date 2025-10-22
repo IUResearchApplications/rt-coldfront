@@ -59,8 +59,6 @@ class ProjectTable:
             projects = projects.filter(status__in=data.get("project__status__name"))
         if data.get("project__type__name"):
             projects = projects.filter(type__in=data.get("project__type__name"))
-        if data.get("project__class_number"):
-            projects = projects.filter(class_number__icontains=data.get("project__class_number"))
         if data.get("project__user_username"):
             projects = projects.filter(
                 projectuser__user__username__icontains=data.get("project__user_username"),
@@ -386,8 +384,6 @@ class AllocationTable:
             projects = projects.filter(status__in=data.get("project__status__name"))
         if data.get("project__type__name"):
             projects = projects.filter(type__in=data.get("project__type__name"))
-        if data.get("project__class_number"):
-            projects = projects.filter(class_number__icontains=data.get("project__class_number"))
         if data.get("project__user_username"):
             projects = projects.filter(
                 projectuser__user__username__icontains=data.get("project__user_username"),

@@ -60,6 +60,7 @@ from coldfront.core.project.forms import (
 from coldfront.core.project.models import (
     Project,
     ProjectAttribute,
+    ProjectAttributeType,
     ProjectDescriptionRecord,
     ProjectReview,
     ProjectReviewStatusChoice,
@@ -678,12 +679,19 @@ class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         project_obj.end_date = end_date
 
         for field in project_obj.get_env.get("addtl_fields", []):
-            if not getattr(form.instance, field):
+            if not form.cleaned_data.get(field):
                 messages.error(self.request, f"You must provide a {field} for a {project_obj.type} project.")
                 return super().form_invalid(form)
 
         project_obj.save()
         self.object = project_obj
+
+        for field in project_obj.get_env.get("addtl_fields", []):
+            ProjectAttribute.objects.create(
+                project=project_obj,
+                proj_attr_type=ProjectAttributeType.objects.get(name=field.replace("_", " ").title()),
+                value = form.cleaned_data.get(field)
+            )
 
         ProjectUser.objects.create(
             user=self.request.user,

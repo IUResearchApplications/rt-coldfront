@@ -161,9 +161,6 @@ class ProjectSearchForm(forms.Form):
     )
     display__project__type__name = forms.BooleanField(required=False)
 
-    project__class_number = forms.CharField(label="Class Number", max_length=25, required=False)
-    display__project__class_number = forms.BooleanField(required=False)
-
     display__project__users = forms.BooleanField(required=False, help_text="Active users")
 
     display__project__total_users = forms.BooleanField(required=False, help_text="Active users")
@@ -208,7 +205,6 @@ class ProjectSearchForm(forms.Form):
                     "project__user_username",
                     "project__status__name",
                     "project__type__name",
-                    "project__class_number",
                     "projects_using_ai",
                     Fieldset(
                         "Created Date Range",
@@ -242,7 +238,6 @@ class ProjectSearchForm(forms.Form):
                     "display__project__project_code",
                     "display__project__status__name",
                     "display__project__type__name",
-                    "display__project__class_number",
                     "display__project__users",
                     "display__project__total_users",
                     "display__project__created",
@@ -370,9 +365,6 @@ class AllocationSearchForm(forms.Form):
     )
     display__project__type__name = forms.BooleanField(required=False)
 
-    project__class_number = forms.CharField(label="Class Number", max_length=25, required=False)
-    display__project__class_number = forms.BooleanField(required=False)
-
     project__created_after_date = forms.DateField(
         widget=forms.TextInput(attrs={"class": "datepicker"}), label="After", required=False, help_text="Includes date"
     )
@@ -460,7 +452,6 @@ class AllocationSearchForm(forms.Form):
                             "project__user_username",
                             "project__status__name",
                             "project__type__name",
-                            "project__class_number",
                             Fieldset(
                                 "Created Date Range",
                                 Div(
@@ -492,7 +483,6 @@ class AllocationSearchForm(forms.Form):
                             "display__project__requestor__username",
                             "display__project__status__name",
                             "display__project__type__name",
-                            "display__project__class_number",
                             "display__project__created",
                             "display__project__end_date",
                             active=False,

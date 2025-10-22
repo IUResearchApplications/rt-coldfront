@@ -357,7 +357,6 @@ class ProjectAdmin(SimpleHistoryAdmin):
         "project_code",
         "private",
         "type",
-        "class_number",
         "status",
         "requires_review",
         "force_review",

@@ -80,13 +80,11 @@ class Project(TimeStampedModel):
     Attributes:
         title (str): name of the project
         pi (User): represents the User object of the project's PI
-        pi_username (str): username of the PI if the requestor cannot be one
         requestor (User): represents the User object of the project's requestor
         description (str): description of the project
         slurm_account_name (str): slurm account assigned to the project
         field_of_science (FieldOfScience): represents the field of science for this project
         type (ProjectTypeChoice): respresents the ProjectTypeChoice of this project
-        class_number (str): the class the project is for. Required for class projects
         private (bool): indicates if the project should be found in the PI search function
         status (ProjectStatusChoice): represents the ProjectStatusChoice of this project
         force_review (bool): indicates whether or not to force a review for the project
@@ -120,15 +118,6 @@ put the approximate class size.
         User,
         on_delete=models.CASCADE,
     )
-    pi_username = models.CharField(
-        verbose_name="PI Username",
-        max_length=20,
-        blank=True,
-        help_text="""
-Required if you will not be the PI of this project. Only faculty and staff can be the PI. They are
-required to log onto the site at least once before they can be added.
-""",
-    )
     requestor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="requestor_user")
     description = models.TextField(
         default=DEFAULT_DESCRIPTION,
@@ -149,7 +138,6 @@ required to log onto the site at least once before they can be added.
         on_delete=models.CASCADE,
         help_text="This cannot be changed once your project is submitted. Class projects expire at the end of every semester. Research projects expire once a year.",
     )
-    class_number = models.CharField(max_length=25, blank=True, null=True)
     private = models.BooleanField(
         default=False,
         help_text="A private project will not show up in the PI search results if someone searchs for you/your PI.",
