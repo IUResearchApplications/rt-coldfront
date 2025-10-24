@@ -54,8 +54,10 @@ User Profile{% if not user == viewed_user %}: {{ viewed_user.username }}{% endif
   {% include "storage/slate_project/slate_project_info_div.html" %}
 {% endif %}
 
+{{ viewed_username|json_script:"viewed_username" }}
+
 <script>
-  var viewed_username = {{ viewed_username | safe }}
+  var viewed_username = JSON.parse(document.getElementById('viewed_username').textContent);
 
   $("#navbar-main > ul > li.active").removeClass("active");
   $("#navbar-user").addClass("active");

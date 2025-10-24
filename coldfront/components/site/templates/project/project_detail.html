@@ -655,9 +655,12 @@ Project Detail
 </div>
 <!-- End Admin Messages -->
 
+{{ display_modal|json_script:"display_modal" }}
+{{ display_project_created_modal|json_script:"display_project_created_modal" }}
+
 <script>
-  var display_modal = {{ display_modal | safe }};
-  var display_project_created_modal = {{ display_project_created_modal | safe }}
+  var display_modal = JSON.parse(document.getElementById('display_modal').textContent);
+  var display_project_created_modal = JSON.parse(document.getElementById('display_project_created_modal').textContent);
 
   $("#navbar-main > ul > li.active").removeClass("active");
   $("#navbar-project-menu").addClass("active");

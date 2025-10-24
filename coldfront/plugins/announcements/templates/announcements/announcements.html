@@ -55,8 +55,10 @@ Announcements
 
 <div id="announcement_list"></div>
 
+{{ categories|json_script:"categories" }}
+
 <script>
-  var categories = {{ categories|safe }};
+  var categories = JSON.parse(document.getElementById('categories').textContent);
 
   $("#navbar-main > ul > li.active").removeClass("active");
   $("#navbar-announcements").addClass("active");

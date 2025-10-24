@@ -61,8 +61,11 @@ Create Project
   <a class="btn btn-secondary" href="{% url 'project-list' %}" role="button">Cancel</a>
 </form>
 
+{{ pi_search_url|json_script:"pi_search_url" }}
+
 <script>
-  var pi_search_url = '{{ pi_search_url | safe }}';
+  var pi_search_url = JSON.parse(document.getElementById('pi_search_url').textContent);
+
   $("#navbar-main > ul > li.active").removeClass("active");
   $("#navbar-project-menu").addClass("active");
 

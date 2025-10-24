@@ -52,11 +52,12 @@ Add Users to Project
 </div>
 {% endblock %}
 
+{{ after_project_creation|json_script:"after_project_creation" }}
 
 {% block javascript %}
   {{ block.super }}
 <script>
-  var after_project_creation = {{ after_project_creation | safe }}
+  var after_project_creation = JSON.parse(document.getElementById('after_project_creation').textContent);
 
   $("#navbar-main > ul > li.active").removeClass("active");
   $("#navbar-project-menu").addClass("active");

@@ -154,14 +154,22 @@
   </div>
 </div>
 
+{{ current_num_managers|json_script:"current_num_managers" }}
+{{ max_managers|json_script:"max_managers" }}
+{{ matches|json_script:"matches" }}
+{{ after_project_creation|json_script:"after_project_creation" }}
+{{ user_accounts|json_script:"user_accounts" }}
+{{ resource_accounts|json_script:"resource_accounts" }}
+{{ all_accounts|json_script:"all_accounts" }}
+
 <script>
-  var current_num_managers = {{ current_num_managers | safe}};
-  var max_managers = {{ max_managers | safe }};
-  var matches = {{ matches | length | safe }};
-  var after_project_creation = {{ after_project_creation | safe }};
-  var user_accounts = {{ user_accounts | safe }};
-  var resource_accounts = {{ resource_accounts | safe }};
-  var all_accounts = {};
+  var current_num_managers = JSON.parse(document.getElementById('current_num_managers').textContent);
+  var max_managers = JSON.parse(document.getElementById('max_managers').textContent);
+  var matches = JSON.parse(document.getElementById('matches').textContent);
+  var after_project_creation = JSON.parse(document.getElementById('after_project_creation').textContent);
+  var user_accounts = JSON.parse(document.getElementById('user_accounts').textContent);
+  var resource_accounts = JSON.parse(document.getElementById('resource_accounts').textContent);
+  var all_accounts = JSON.parse(document.getElementById('all_accounts').textContent);
 
   function updateIcon(id_num, checked) {
     resources = $("input[name^='allocationform-']:checked");

@@ -38,15 +38,19 @@
   </div>
 {% endif %}
 
+{{ academic_analytics_form|json_script:"academic_analytics_form" }}
+
 <script>
-  var academic_analytics_form = $('#academic_analytics_form');
+  var academic_analytics_form = JSON.parse(document.getElementById('academic_analytics_form').textContent);
+
   academic_analytics_form.submit(function () {
+    var add_pub_button = $('#add_publications_btn')
     $('#academics_analytics_form_info').html('');
-    $('#add_publications_btn').html(
+    add_pub_button.html(
       '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding Publications...'
     );
-    $('#add_publications_btn').prop('disabled', true);
-    $('#add_publications_btn').blur();
+    add_pub_button.prop('disabled', true);
+    add_pub_button.blur();
     $.ajax({
       url: "{% url 'get-academic-analytics-publications' %}",
       method: "POST",

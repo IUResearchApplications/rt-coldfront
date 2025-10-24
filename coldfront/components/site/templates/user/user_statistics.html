@@ -12,8 +12,10 @@
   <p class="alert alert-info">There are no statistics to display!</p>
 {% endif %}
 
+{{ allocated_slate_storage_chart_data|json_script:"allocated_slate_storage_chart_data" }}
+
 <script>
-  var allocated_slate_storage_chart_data = {{ allocated_slate_storage_chart_data | safe }}
+  var allocated_slate_storage_chart_data = JSON.parse(document.getElementById('allocated_slate_storage_chart_data').textContent);
 
   $(document).ready(function () {
     drawAllocatedSlateStorageChart();
