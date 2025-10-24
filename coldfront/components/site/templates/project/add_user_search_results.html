@@ -156,7 +156,7 @@
 
 {{ current_num_managers|json_script:"current_num_managers" }}
 {{ max_managers|json_script:"max_managers" }}
-{{ matches|json_script:"matches" }}
+{{ num_matches|json_script:"num_matches" }}
 {{ after_project_creation|json_script:"after_project_creation" }}
 {{ user_accounts|json_script:"user_accounts" }}
 {{ resource_accounts|json_script:"resource_accounts" }}
@@ -165,7 +165,7 @@
 <script>
   var current_num_managers = JSON.parse(document.getElementById('current_num_managers').textContent);
   var max_managers = JSON.parse(document.getElementById('max_managers').textContent);
-  var matches = JSON.parse(document.getElementById('matches').textContent);
+  var num_matches = JSON.parse(document.getElementById('num_matches').textContent);
   var after_project_creation = JSON.parse(document.getElementById('after_project_creation').textContent) === 'true';
   var user_accounts = JSON.parse(document.getElementById('user_accounts').textContent);
   var resource_accounts = JSON.parse(document.getElementById('resource_accounts').textContent);
@@ -286,7 +286,7 @@
   $('document').ready(function () {
     $('[data-toggle="popover"]').popover();
     $('a.notnavigable').click(function(e) {e.preventDefault();});
-    for (var i = 0; i < matches; i++) {
+    for (var i = 0; i < num_matches; i++) {
       var username = user_accounts[i][0];
       all_accounts[username] = new Set();
       

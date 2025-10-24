@@ -50,9 +50,10 @@ Add Users to Project
       </div>
   </div>
 </div>
-{% endblock %}
 
 {{ after_project_creation|json_script:"after_project_creation" }}
+
+{% endblock %}
 
 {% block javascript %}
   {{ block.super }}
