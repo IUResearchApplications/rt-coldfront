@@ -657,10 +657,12 @@ Project Detail
 
 {{ display_modal|json_script:"display_modal" }}
 {{ display_project_created_modal|json_script:"display_project_created_modal" }}
+{{ gauge_data|json_script:"guage_data" }}
 
 <script>
-  var display_modal = JSON.parse(document.getElementById('display_modal').textContent);
-  var display_project_created_modal = JSON.parse(document.getElementById('display_project_created_modal').textContent);
+  var display_modal = JSON.parse(document.getElementById('display_modal').textContent) === 'true';
+  var display_project_created_modal = JSON.parse(document.getElementById('display_project_created_modal').textContent) === 'true';
+  var gauge_data = JSON.parse(document.getElementById('gauge_data').textContent);
 
   $("#navbar-main > ul > li.active").removeClass("active");
   $("#navbar-project-menu").addClass("active");
@@ -692,10 +694,9 @@ Project Detail
       icon.toggleClass("fa-plus fa-minus");
     });
 
-    var guage_data = {{ guage_data | safe }};
     $('[data-toggle="tooltip"]').tooltip()
 
-    drawGauges(guage_data);
+    drawGauges(gauge_data);
 
     if (display_modal) {
       $('#allocation_response_modal').modal('show');

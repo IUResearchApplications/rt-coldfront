@@ -57,7 +57,7 @@ Add Users to Project
 {% block javascript %}
   {{ block.super }}
 <script>
-  var after_project_creation = JSON.parse(document.getElementById('after_project_creation').textContent);
+  var after_project_creation = JSON.parse(document.getElementById('after_project_creation').textContent) === 'true';
 
   $("#navbar-main > ul > li.active").removeClass("active");
   $("#navbar-project-menu").addClass("active");
