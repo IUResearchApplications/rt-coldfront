@@ -84,7 +84,6 @@ Add Users to Project
     $.ajax({
         url : "/project/" + pk + "/add-users-search-results/", // the endpoint
         type : "POST", // http method
-        after_project_creation : after_project_creation,
         data : { 
           q : q, 
           search_by : search_by,

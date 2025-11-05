@@ -113,7 +113,7 @@
 
     <input id="q" type="hidden" name="q" value="{{user_search_string}}">
     <input id="search_by" type="hidden" name="search_by" value="{{search_by}}">
-    <input id="after_project_creation" type="hidden" name="after_project_creation" value="{{after_project_creation}}">
+    <input id="after_project_creation_field" type="hidden" name="after_project_creation_field" value="{{after_project_creation}}">
     <div class="mb-3">
       {% if matches %}
         {% if after_project_creation == 'true' %}
@@ -157,7 +157,6 @@
 {{ current_num_managers|json_script:"current_num_managers" }}
 {{ max_managers|json_script:"max_managers" }}
 {{ num_matches|json_script:"num_matches" }}
-{{ after_project_creation|json_script:"after_project_creation" }}
 {{ user_accounts|json_script:"user_accounts" }}
 {{ resource_accounts|json_script:"resource_accounts" }}
 {{ all_accounts|json_script:"all_accounts" }}
@@ -166,7 +165,6 @@
   var current_num_managers = JSON.parse(document.getElementById('current_num_managers').textContent);
   var max_managers = JSON.parse(document.getElementById('max_managers').textContent);
   var num_matches = JSON.parse(document.getElementById('num_matches').textContent);
-  var after_project_creation = JSON.parse(document.getElementById('after_project_creation').textContent) === 'true';
   var user_accounts = JSON.parse(document.getElementById('user_accounts').textContent);
   var resource_accounts = JSON.parse(document.getElementById('resource_accounts').textContent);
   var all_accounts = JSON.parse(document.getElementById('all_accounts').textContent);

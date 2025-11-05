@@ -265,10 +265,10 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
             if allocation.allocationuser_set.filter(user=self.request.user).exists():
                 user_status.append(allocation.allocationuser_set.get(user=self.request.user).status.name)
 
-        allocation_submitted = self.request.GET.get("allocation_submitted")
-        after_project_creation_get = self.request.GET.get("after_project_creation")
-        context["display_modal"] = str(allocation_submitted == "true").lower()
-        context["display_project_created_modal"] = str(after_project_creation_get == "true").lower()
+        allocation_submitted = self.request.GET.get("allocation_submitted") == "true"
+        after_project_creation = self.request.GET.get("after_project_creation") == "true"
+        context["display_modal"] = str(allocation_submitted).lower() if not after_project_creation else "false"
+        context["display_project_created_modal"] = str(after_project_creation).lower()
         context["publications"] = Publication.objects.filter(project=self.object, status="Active").order_by("-year")
         context["research_outputs"] = ResearchOutput.objects.filter(project=self.object).order_by("-created")
         context["grants"] = Grant.objects.filter(
@@ -987,6 +987,7 @@ class ProjectAddUsersSearchResultsView(LoginRequiredMixin, UserPassesTestMixin, 
 
         # Initial data for ProjectAddUserForm
         matches = context.get("matches")
+        context["num_matches"] = len(matches)
 
         user_accounts = []
         if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
@@ -1394,7 +1395,7 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
                 for error in allocation_formset.errors:
                     messages.error(request, error)
 
-        if request.POST.get("after_project_creation") == "true":
+        if request.POST.get("after_project_creation_field") == "true":
             return HttpResponseRedirect(
                 self.reverse_with_params(reverse("project-detail", kwargs={"pk": pk}), after_project_creation="true")
             )
