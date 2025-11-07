@@ -989,23 +989,19 @@ class ProjectAddUsersSearchResultsView(LoginRequiredMixin, UserPassesTestMixin, 
         matches = context.get("matches")
         context["num_matches"] = len(matches)
 
-        user_accounts = []
+        usernames = []
         if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
             from coldfront.plugins.ldap_user_search.utils import get_users_info
 
             users_info = get_users_info([match.get("username") for match in matches])
             for match in matches:
                 username = match.get("username")
-                user_info = users_info.get(username)
-                user_accounts.append([username, user_info.get("memberOf", [])])
-                role = "Group" if user_info.get("title") == "group" else "User"
+                usernames.append(username)
+                role = "Group" if users_info.get(username).get("title") == "group" else "User"
                 match.update({"role": ProjectUserRoleChoice.objects.get(name=role)})
         else:
             for match in matches:
                 match.update({"role": ProjectUserRoleChoice.objects.get(name="User")})
-
-        context["user_accounts"] = user_accounts
-        context["all_accounts"] = {}
 
         if matches:
             formset = formset_factory(ProjectAddUserForm, max_num=len(matches))
@@ -1034,12 +1030,13 @@ class ProjectAddUsersSearchResultsView(LoginRequiredMixin, UserPassesTestMixin, 
             initial=initial_data, prefix="allocationform", form_kwargs={"roles": roles}
         )
 
-        resource_accounts = []
+        account_statuses = {}
         for allocation in allocations:
             resource_obj = allocation.get_parent_resource
-            resource_accounts.append([resource_obj.name, resource_obj.get_assigned_account()])
+            if not account_statuses.get(resource_obj.pk):
+                account_statuses[resource_obj.name] = resource_obj.check_users_accounts(usernames)
 
-        context["resource_accounts"] = resource_accounts
+        context["account_statuses"] = account_statuses
 
         # The following block of code is used to hide/show the allocation div in the form.
         if initial_data:
