@@ -269,7 +269,7 @@ class Resource(TimeStampedModel):
         if resource is None:
             return {"exists": True, "reason": "not_required"}
 
-        if accounts[0] == "":
+        if not accounts:
             return {"exists": False, "reason": "no_account"}
 
         resource_acc = RESOURCE_ACCOUNTS.get(resource)
