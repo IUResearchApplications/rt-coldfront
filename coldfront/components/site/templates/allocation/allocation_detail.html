@@ -82,7 +82,7 @@ Allocation Detail
     {% endif %}
   </div>
   <div class="card-footer">
-    {% if allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 %}
+    {% if allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 allocation.status.name == 'Active' %}
     <div class="text-warning d-inline">
       <strong>
         <i class="far fa-clock" aria-hidden="true"></i>
@@ -399,7 +399,7 @@ Allocation Detail
   <div class="card-body">
     {% if allocation.get_parent_resource.name == 'Slate-Project' %}
       <div class="alert alert-info">
-        <i class="fas fa-info-circle" aria-hidden="true"></i> 
+        <i class="fas fa-info-circle" aria-hidden="true"></i>
         Below is a list of statuses a Slate-Project user can have:
         <ul>
           <li>Pending - This allocation hasn't been approved yet</li>
@@ -408,7 +408,7 @@ Allocation Detail
           <li>Disabled - This user's access to this allocation's space has been removed</li>
           <li>Retired - This user is no longer active in this allocation and likely should be removed</li>
         </ul>
-        If a user has an Active status and cannot access the storage space then they most likely need to log out (not disconnect) from all interactive login sessions and log back in for their newly added access to become active. 
+        If a user has an Active status and cannot access the storage space then they most likely need to log out (not disconnect) from all interactive login sessions and log back in for their newly added access to become active.
       </div>
     {% endif %}
     <div class="table-responsive">
