@@ -4,7 +4,7 @@ Your allocation change request for {{resource}} has been approved. The requested
 
 Additional Info:
 Project PI: {{ project_pi }}
-Project URL: {{ allocation_url }}
+Project URL: {{ project_url }}
 Allocation URL: {{ allocation_url }}
 {% for type, value in allocation_identifiers %}{{ type }}: {{ value }}{% endfor %}
 

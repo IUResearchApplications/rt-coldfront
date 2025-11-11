@@ -5,7 +5,7 @@ Your allocation change request for {{resource}} has been denied.
 We will be in touch to follow up with you about this, if we haven't already.
 Additional Info:
 Project PI: {{ project_pi }}
-Project URL: {{ allocation_url }}
+Project URL: {{ project_url }}
 Allocation URL: {{ allocation_url }}
 {% for type, value in allocation_identifiers %}{{ type }}: {{ value }}{% endfor %}
 
