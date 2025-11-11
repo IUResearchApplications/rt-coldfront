@@ -709,7 +709,7 @@ class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
 
         if PROJECT_CODE:
             """
-            Set the ProjectCode object, if PROJECT_CODE is defined. 
+            Set the ProjectCode object, if PROJECT_CODE is defined.
             If PROJECT_CODE_PADDING is defined, the set amount of padding will be added to PROJECT_CODE.
             """
             project_type_initial = form.instance.type.name[0]
@@ -851,7 +851,6 @@ class ProjectUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestM
         )
         project_obj.title = form_data.get("title")
         project_obj.description = form_data.get("description")
-        # project_obj.field_of_science = form_data.get('field_of_science')
         if save_form:
             project_obj.save()
 
@@ -865,7 +864,7 @@ class ProjectUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestM
 
     def get_success_url(self):
         # project signals
-        project_update.send(sender=self.__class__, project_obj=self.object)
+        project_update.send(sender=self.__class__, project_obj=get_object_or_404(Project, pk=self.kwargs.get("pk")))
         return reverse("project-detail", kwargs={"pk": self.kwargs.get("pk")})
 
 
