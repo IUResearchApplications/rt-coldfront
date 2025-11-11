@@ -124,7 +124,7 @@ class LDAPUserSearch(UserSearch):
             user_dict = self.MAPPING_CALLBACK(self.ATTRIBUTE_MAP, entry_dict)
             user_dict["source"] = self.search_source
             users.append(user_dict)
-        logger.info("LDAP user search for %s found %s results", user_search_string, len(users))
+        logger.debug("LDAP user search for %s found %s results", user_search_string, len(users))
         return users
 
 
