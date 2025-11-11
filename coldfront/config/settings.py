@@ -31,7 +31,6 @@ plugin_configs = {
     "PLUGIN_API": "plugins/api.py",
     "PLUGIN_AUTO_COMPUTE_ALLOCATION": "plugins/auto_compute_allocation.py",
     "PLUGIN_PROJECT_OPENLDAP": "plugins/project_openldap.py",
-    "PLUGIN_LDAP_USER_INFO": "plugins/ldap_user_info.py",
     "PLUGIN_CAS": "plugins/cas_login.py",
     "PLUGIN_ACADEMIC_ANALYTICS": "plugins/academic_analytics.py",
     "PLUGIN_ADVANCED_SEARCH": "plugins/advanced_search.py",
