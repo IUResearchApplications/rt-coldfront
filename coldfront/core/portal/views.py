@@ -23,6 +23,7 @@ from coldfront.core.portal.utils import (
     generate_total_grants_by_agency_chart_data,
     generate_user_counts,
     generate_user_timeline,
+    get_home_page_slurm_info,
 )
 from coldfront.core.project.models import Project
 from coldfront.core.publication.models import Publication
@@ -110,18 +111,7 @@ def home(request):
                     user_status.append(allocation.allocationuser_set.get(user=request.user).status.name)
             context["user_status"] = user_status
 
-        projects_with_a_slurm_account_to_list = []
-        for project in project_list:
-            resources_with_slurm_accounts = project.get_list_of_resources_with_slurm_accounts(request.user)
-            if resources_with_slurm_accounts:
-                project_dict = {
-                    "title": project.title,
-                    "project_code": project.project_code,
-                    "resources_with_slurm_accounts": ", ".join(resources_with_slurm_accounts),
-                }
-                projects_with_a_slurm_account_to_list.append(project_dict)
-        context["projects_with_a_slurm_account_to_list"] = projects_with_a_slurm_account_to_list
-
+        context["slurm_accounts"] = get_home_page_slurm_info(request.user)
         context["user"] = request.user
         context["project_list"] = project_list
         context["allocation_list"] = allocation_list

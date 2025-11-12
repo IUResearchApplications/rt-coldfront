@@ -294,30 +294,6 @@ put the approximate class size.
         project_managers = self.projectuser_set.filter(role=ProjectUserRoleChoice.objects.get(name="Manager"))
         return [manager.user.username for manager in project_managers]
 
-    def get_list_of_resources_with_slurm_accounts(self, user):
-        """
-        Returns:
-            bool: the list of resources in the project that require slurm accounts
-        """
-        resources = set()
-        allocations = self.allocation_set.filter(
-            status__name__in=[
-                "Active",
-                "Renewal Requested",
-            ],
-            allocationuser__user=user,
-            allocationuser__status__name="Active",
-        )
-        for allocation in allocations:
-            resource = allocation.get_parent_resource
-            slurm_cluster = None
-            if resource.parent_resource is not None:
-                slurm_cluster = resource.parent_resource.get_attribute("slurm_cluster")
-            if slurm_cluster:
-                resources.add(allocation.get_parent_resource.name)
-
-        return list(resources)
-
     def get_current_num_managers(self):
         """
         Returns:

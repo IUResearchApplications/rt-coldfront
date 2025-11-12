@@ -14,7 +14,7 @@
       request access to a project they already have.
       {% if not user.userprofile.title == 'group' %}<a href="{% url 'project-list' %}">Request a project &raquo;</a>{% endif %}
     </p>
-    
+
 
     {% if project_list %}
       <hr>
@@ -119,7 +119,7 @@
             <td>{{allocation.get_parent_resource}}
               {% if allocation.get_parent_resource.get_ondemand_status == 'Yes' and ondemand_url %}
               <a href = "{{ondemand_url}}"> {% load static %}  <img src="/static/core/portal/imgs/ondemand.png" alt="ondemand cta" width="25" height="25"></a>
-            {% endif %} 
+            {% endif %}
             </td>
             {%  if allocation.status.name == "Expired" and allocation.expires_in > ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING|change_sign %}
               <td>
@@ -164,7 +164,7 @@
   </div>
 </div>
 
-{% if projects_with_a_slurm_account_to_list %}
+{% if slurm_accounts %}
   <br>
   <div class="card mb-3">
     <div class="card-header">
@@ -172,21 +172,26 @@
     </div>
     <div class="card-body">
       <ul class="list-group list-group-flush">
-        {% for project in projects_with_a_slurm_account_to_list %}
+        {% for slurm_account, info in slurm_accounts.items %}
           <li class="list-group-item">
             <div class="container">
               <div class="row">
                 <div class="col px-0">
-                  <p><strong>Project:</strong> {{ project.title|truncatechars:50 }}</p>
+                  <strong>Project:</strong> <a href="{% url 'project-detail' info.project_pk %}" target="_blank">{{ info.project_title|truncatechars:50 }}</a>
                 </div>
                 <div class="col px-0">
-                  <p><strong>Account Name:</strong> {{ project.project_code }}</p>
+                  <p><strong>Account Name:</strong> {{ slurm_account }}</p>
                 </div>
               </div>
             </div>
-            <p><strong>Resources:</strong> {{ project.resources_with_slurm_accounts }}</p>
-            <p><strong>Add to Interactive Job Commands:</strong> srun -A {{ project.project_code }} &lt;commands&gt;</p>
-            <p><strong>Add to Batch Job Scripts:</strong> #SBATCH -A {{ project.project_code }}</p>
+            <p>
+              <strong>Resources:</strong>
+              {% for allocation_pk, resource_name in info.allocations.items %}
+                <a href="{% url 'allocation-detail' allocation_pk %}" target="_blank">{{ resource_name }}</a>{% if not forloop.last %},{% endif %}
+              {% endfor %}
+            </p>
+            <p><strong>Add to Interactive Job Commands:</strong> srun -A {{ slurm_account }} &lt;commands&gt;</p>
+            <p><strong>Add to Batch Job Scripts:</strong> #SBATCH -A {{ slurm_accounte }}</p>
           </li>
         {% endfor %}
       </ul>

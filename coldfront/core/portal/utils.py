@@ -6,7 +6,7 @@ import datetime
 
 from django.contrib.auth.models import User
 
-from coldfront.core.allocation.models import Allocation
+from coldfront.core.allocation.models import Allocation, AllocationAttribute
 from coldfront.core.project.models import Project, ProjectUser
 
 
@@ -354,3 +354,27 @@ def generate_user_timeline():
     }
 
     return user_timeline_chart_data, years_to_months_labels, years_to_months_values
+
+
+def get_home_page_slurm_info(user):
+    slurm_account_attribute_objs = AllocationAttribute.objects.filter(
+        allocation__status__name__in=[
+            "Active",
+            "Renewal Requested",
+        ],
+        allocation__allocationuser__user=user,
+        allocation__allocationuser__status__name="Active",
+        allocation_attribute_type__name="slurm_account_name",
+    ).select_related("allocation", "allocation__project")
+    slurm_accounts = {}
+    for slurm_account_obj in slurm_account_attribute_objs:
+        if not slurm_accounts.get(slurm_account_obj.value):
+            slurm_accounts[slurm_account_obj.value] = {
+                "project_pk": slurm_account_obj.allocation.project.pk,
+                "project_title": slurm_account_obj.allocation.project.title,
+                "allocations": {},
+            }
+        resource = slurm_account_obj.allocation.get_parent_resource
+        slurm_accounts[slurm_account_obj.value]["allocations"][slurm_account_obj.allocation.pk] = resource.name
+
+    return slurm_accounts
