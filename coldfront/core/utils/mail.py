@@ -154,9 +154,7 @@ def send_allocation_customer_email(
         template_name,
         ctx,
         EMAIL_SENDER,
-        [
-            EMAIL_TICKET_SYSTEM_ADDRESS,
-        ],
+        email_receiver_list,
     )
 
 
