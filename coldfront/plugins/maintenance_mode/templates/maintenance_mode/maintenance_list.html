@@ -1,0 +1,56 @@
+{% extends "common/base.html" %}
+{% load crispy_forms_tags %}
+{% load common_tags %}
+{% load static %}
+
+
+{% block title %}
+Maintenance Plans
+{% endblock %}
+
+{% block content %}
+<h2 class="d-inline">Maintenance Plans</h2>
+<a href="{% url 'maintenance-create' %}" class="float-right btn btn-success">Create New Plan</a>
+<hr>
+{% for maintenance_plan in object_list %}
+<div class="card">
+  <div class="card-header">
+    <h3><strong>{{ maintenance_plan.title }}</strong></h3>
+  </div>
+  <div class="card-body">
+    <p>
+      <strong>Prior Maintenance Message:</strong>
+      {{ maintenance_plan.prior_message }}
+    </p>
+    <p>
+      <strong>During Maintenance Message:</strong>
+      {{ maintenance_plan.during_message}}
+    </p>
+    <p>
+      <strong>Service Scheduled:</strong>
+      {{ maintenance_plan.type.name }}
+    </p>
+    <p>
+      <strong>Notify Users:</strong>
+      {{ maintenance_plan.notification_days }} days beforehand
+    </p>
+  </div>
+  <div class="card-footer">
+    <strong>
+      Time: {{ maintenance_plan.start_date_time }} -> {{ maintenance_plan.end_date_time }}
+    </strong>
+    <a href="{% url 'maintenance-update' maintenance_plan.pk %}" class="float-right btn btn-primary">Edit</a>
+  </div>
+</div>
+<br>
+{% empty %}
+<div class="alert alert-info" role="alert">
+  <i class="fas fa-info-circle" aria-hidden="true"></i> No maintenance plans to display.
+</div>
+{% endfor %}
+
+<script>
+  $("#navbar-main > ul > li.active").removeClass("active");
+  $("#navbar-maintenance-mode").addClass("active");
+</script>
+{% endblock %}

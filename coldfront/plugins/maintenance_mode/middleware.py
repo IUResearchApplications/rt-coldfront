@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.utils.cache import add_never_cache_headers
 
+from coldfront.plugins import maintenance_mode
+from coldfront.plugins.maintenance_mode.models import Maintenance
 from coldfront.plugins.maintenance_mode.utils import get_maintenance_mode_status
 
 
@@ -16,18 +18,23 @@ class MaintenanceModeMiddleware:
         if request.user.is_authenticated and request.user.is_superuser:
             return self.get_response(request)
 
-        if '/admin' in path:
+        if "/admin" in path:
             return self.get_response(request)
 
         # This allows the cas login to complete
-        if '/user/login' in path:
+        if "/user/login" in path:
             return self.get_response(request)
+
+        if "/__debug__" in path:
+            return self.get_response(request)
+
+        maintenance = Maintenance.objects.all().first().during_message
 
         response = render(
             request,
-            'maintenance_mode/503.html',
-            status=503
+            "maintenance_mode/503.html",
+            context={"message": Maintenance.objects.all().first().during_message},
+            status=503,
         )
         add_never_cache_headers(response)
-
         return response

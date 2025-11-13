@@ -19,6 +19,9 @@
     {% if 'advanced_search/navbar_advanced_search.html'|template_exists %}
       {% include 'advanced_search/navbar_advanced_search.html' %}
     {% endif %}
+    {% if 'maintenance_mode/navbar_maintenance.html'|template_exists %}
+      {% include 'maintenance_mode/navbar_maintenance.html' %}
+    {% endif %}
     <a id="navbar-grant-report" class="dropdown-item" href="{% url 'grant-report' %}">Grant Report</a>
   </div>
 </li>

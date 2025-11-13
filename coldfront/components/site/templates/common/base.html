@@ -1,4 +1,5 @@
 {% load static %}
+{% load common_tags %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -52,6 +53,10 @@
 
 <body>
   {% include "su/is_su.html" %}
+  {% block header %}
+  {% if 'maintenance_mode/maintenance_notification.html'|template_exists %}
+    {% include 'maintenance_mode/maintenance_notification.html' %}
+  {% endif %}
   <header>
     {% if user.is_authenticated %}
       {% include 'common/authorized_navbar.html' %}
@@ -59,6 +64,7 @@
       {% include 'common/nonauthorized_navbar.html' %}
     {% endif %}
   </header>
+  {% endblock header %}
 
   <!-- Begin page content -->
   <main class="container">

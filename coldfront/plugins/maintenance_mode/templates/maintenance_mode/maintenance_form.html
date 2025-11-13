@@ -1,0 +1,42 @@
+{% extends "common/base.html" %}
+{% load crispy_forms_tags %}
+{% load common_tags %}
+{% load static %}
+
+
+{% block title %}
+Add Maintenance Plan
+{% endblock %}
+
+{% block content %}
+{% if form.non_field_errors %}
+<div class="alert alert-danger" role="alert">
+  {{ form.non_field_errors }}
+</div>
+{% endif %}
+<h2 class="d-inline">Create New Maintenance Plan</h2>
+<hr>
+<form method="post">
+  {% csrf_token %}
+  {% for field in form %}
+  <div class="font-weight-bold">
+    {{ field|as_crispy_field }}
+  </div>
+  {% endfor %}
+  <button class="btn btn-primary" type="submit">Save</button>
+  <a href="{% url 'maintenance-list' %}" type="button" class="btn btn-secondary">Return</a>
+</form>
+
+<script>
+  $("#navbar-main > ul > li.active").removeClass("active");
+  $("#navbar-maintenance-mode").addClass("active");
+
+  $(document).ready(function () {
+    $(".datetimeinput").flatpickr({
+      enableTime: true,
+      altInput: true,
+      dateFormat: "Z"
+    });
+  })
+</script>
+{% endblock %}
