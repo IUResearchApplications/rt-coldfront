@@ -99,6 +99,9 @@ if "coldfront.plugins.request_forms" in settings.INSTALLED_APPS:
 if "django_su.backends.SuBackend" in settings.AUTHENTICATION_BACKENDS:
     urlpatterns.append(path("su/", include("django_su.urls")))
 
+if "coldfront.plugins.maintenance_mode" in settings.INSTALLED_APPS:
+    urlpatterns.append(path("maintenance/", include("coldfront.plugins.maintenance_mode.urls")))
+
 
 def export_as_json(modeladmin, request, queryset):
     response = HttpResponse(content_type="application/json")
