@@ -36,13 +36,13 @@ class Maintenance(TimeStampedModel):
 
     uuid = models.UUIDField(default=uuid.uuid4)
     title = models.CharField(max_length=512)
-    prior_message = models.CharField(max_length=512, verbose_name="upcoming maintenance message")
-    during_message = models.CharField(max_length=512, verbose_name="during maintenance message")
+    upcoming_message = models.CharField(max_length=512, verbose_name="upcoming maintenance message")
+    maintenance_message = models.CharField(max_length=512, verbose_name="during maintenance message")
     start_date_time = models.DateTimeField(verbose_name="maintenance start time")
     end_date_time = models.DateTimeField(verbose_name="maintenance end time")
     notification_days = models.IntegerField(verbose_name="days to notify users before maintenance")
-    type = models.ForeignKey(MaintenanceTypeChoice, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=False)
+    type = models.ForeignKey(MaintenanceTypeChoice, on_delete=models.CASCADE)
     history = HistoricalRecords()
 
     def clean(self):
@@ -57,4 +57,4 @@ class Maintenance(TimeStampedModel):
             | Q(start_date_time__lte=self.start_date_time, end_date_time__gte=self.start_date_time)
         )
         if query.exists():
-            raise ValidationError("Cannot schedule maintenance to run during an existing one.")
+            raise ValidationError("Cannot schedule maintenance during an existing one.")

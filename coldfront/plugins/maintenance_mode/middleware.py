@@ -1,7 +1,6 @@
 from django.shortcuts import render
 from django.utils.cache import add_never_cache_headers
 
-from coldfront.plugins import maintenance_mode
 from coldfront.plugins.maintenance_mode.models import Maintenance
 from coldfront.plugins.maintenance_mode.utils import get_maintenance_mode_status
 
@@ -28,12 +27,10 @@ class MaintenanceModeMiddleware:
         if "/__debug__" in path:
             return self.get_response(request)
 
-        maintenance = Maintenance.objects.all().first().during_message
-
         response = render(
             request,
             "maintenance_mode/503.html",
-            context={"message": Maintenance.objects.all().first().during_message},
+            context={"message": Maintenance.objects.get(is_active=True).maintenance_message},
             status=503,
         )
         add_never_cache_headers(response)
