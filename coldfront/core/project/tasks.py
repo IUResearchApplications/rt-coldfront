@@ -155,7 +155,7 @@ def check_current_pi_eligibilities():
         project_pis = set(Project.objects.filter(status__name="Active").values_list("pi__username", flat=True))
         users_info = get_users_info(project_pis)
         logger.info("Checking PI eligibilities...")
-        for username, user_info in users_info:
+        for username, user_info in users_info.items():
             if not check_if_pi_eligible(username, user_info.get("memberOf", [])):
                 logger.warning(f"PI {username} is no longer eligible to be a PI")
 
