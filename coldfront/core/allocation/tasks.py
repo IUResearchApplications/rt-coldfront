@@ -58,8 +58,8 @@ def update_statuses():
     for sub_obj in allocations_to_expire:
         sub_obj.status = expired_status_choice
         sub_obj.save()
+        allocation_expire.send(sender=update_statuses, allocation_pk=sub_obj.pk)
 
-    allocation_expire.send(sender=update_statuses, allocation_pk=sub_obj.pk)
     logger.info("Allocations set to expired: {}".format(allocations_to_expire.count()))
 
 
