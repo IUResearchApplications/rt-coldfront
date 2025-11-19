@@ -1598,21 +1598,18 @@ class ProjectUserDetail(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
 
     def get(self, request, *args, **kwargs):
         project_obj = get_object_or_404(Project, pk=self.kwargs.get("pk"))
-        project_user_pk = self.kwargs.get("project_user_pk")
+        project_user_obj = get_object_or_404(ProjectUser, pk=self.kwargs.get("project_user_pk"))
 
-        if project_obj.projectuser_set.filter(pk=project_user_pk).exists():
-            project_user_obj = project_obj.projectuser_set.get(pk=project_user_pk)
+        project_user_update_form = ProjectUserUpdateForm(
+            initial={"role": project_user_obj.role, "enable_notifications": project_user_obj.enable_notifications}
+        )
 
-            project_user_update_form = ProjectUserUpdateForm(
-                initial={"role": project_user_obj.role, "enable_notifications": project_user_obj.enable_notifications}
-            )
+        context = {}
+        context["project_obj"] = project_obj
+        context["project_user_update_form"] = project_user_update_form
+        context["project_user_obj"] = project_user_obj
 
-            context = {}
-            context["project_obj"] = project_obj
-            context["project_user_update_form"] = project_user_update_form
-            context["project_user_obj"] = project_user_obj
-
-            return render(request, self.template_name, context)
+        return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
         project_obj = get_object_or_404(Project, pk=self.kwargs.get("pk"))
@@ -1955,7 +1952,6 @@ class ProjectReviewView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
 
 class ProjectReviewListView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     template_name = "project/project_review_list.html"
-    login_url = "/"
 
     def test_func(self):
         """UserPassesTestMixin Tests"""
