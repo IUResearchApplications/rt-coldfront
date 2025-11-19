@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+import datetime
+
 import factory
 from django.contrib.auth.models import User
 from factory import SubFactory
@@ -42,6 +44,7 @@ from coldfront.core.project.models import (
     ProjectUserRoleChoice,
     ProjectUserStatusChoice,
 )
+from coldfront.core.project.utils import get_new_end_date_from_list
 from coldfront.core.publication.models import PublicationSource
 from coldfront.core.resource.models import Resource, ResourceType
 from coldfront.core.user.models import UserProfile
@@ -164,6 +167,13 @@ class ProjectFactory(DjangoModelFactory):
     type = SubFactory(ProjectTypeChoiceFactory)
     force_review = False
     requires_review = False
+    end_date = get_new_end_date_from_list(
+        [
+            datetime.datetime(datetime.datetime.today().year, 6, 30),
+        ],
+        datetime.datetime.today(),
+        90,
+    )
 
 
 class ProjectUserRoleChoiceFactory(DjangoModelFactory):
