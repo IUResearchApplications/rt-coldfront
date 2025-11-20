@@ -113,6 +113,15 @@ class ProjectDetailViewTest(ProjectViewTestBase):
         # non-manager user cannot see add notification button
         utils.page_does_not_contain_for_user(self, self.project_user.user, self.url, "Add Notification")
 
+    def test_projectdetail_adduser_button_visibility(self):
+        """Test visibility of projectdetail add user button across user levels"""
+        # admin can see add user button
+        utils.page_contains_for_user(self, self.admin_user, self.url, "Add Users")
+        # pi can see add user button
+        utils.page_contains_for_user(self, self.pi_user, self.url, "Add Users")
+        # non-manager user cannot see add user button
+        utils.page_does_not_contain_for_user(self, self.project_user.user, self.url, "Add Users")
+
 
 class ProjectCreateTest(ProjectViewTestBase):
     """Tests for project create view"""

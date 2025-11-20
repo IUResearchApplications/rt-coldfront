@@ -184,6 +184,29 @@ class TestProject(TestCase):
             Project.objects.get(pk=project_obj.pk)
         self.assertEqual(0, len(Project.objects.all()))
 
+    def test_type_foreignkey_on_delete(self):
+        """Test that a project is deleted when its type is deleted."""
+        project_obj = self.data.unsaved_object
+        project_obj.save()
+
+        self.assertEqual(1, len(Project.objects.all()))
+
+        project_obj.type.delete()
+
+        # expecting CASCADE
+        with self.assertRaises(Project.DoesNotExist):
+            Project.objects.get(pk=project_obj.pk)
+        self.assertEqual(0, len(Project.objects.all()))
+
+    # @patch("coldfront.config.core.PROJECT_END_DATE_CARRYOVER_DAYS", 30)
+    # def test_end_date_set_from_type(self):
+    #     """Test that a project's end date is set correctly based on its type."""
+    #     from coldfront.config.core import PROJECT_END_DATE_CARRYOVER_DAYS
+    #     project_obj = self.data.unsaved_object
+    #     project_obj.end_date = get_new_end_date_from_list(
+    #         project_obj.get_env.get("expiry_dates"), datetime.date(datetime.date.today().year, 2, 10)
+    #     )
+
 
 class TestProjectAttribute(TestCase):
     @classmethod
