@@ -168,10 +168,8 @@ class ProjectFactory(DjangoModelFactory):
     requires_review = False
     end_date = get_new_end_date_from_list(
         [
-            datetime.datetime(datetime.datetime.today().year, 6, 30),
-        ],
-        datetime.datetime.today(),
-        90,
+            (6, 30),
+        ]
     )
 
 

@@ -659,16 +659,9 @@ class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
             messages.error(self.request, "You have reached the max projects you can have of this type.")
             return super().form_invalid(form)
 
-        expiry_dates = project_obj.get_env.get("expiry_dates")
-        if expiry_dates:
-            full_expire_dates = []
-            for date in expiry_dates:
-                actual_date = datetime.date(datetime.date.today().year, date[0], date[1])
-                full_expire_dates.append(actual_date)
-        else:
-            full_expire_dates = [datetime.date.today() + datetime.timedelta(days=365)]
-
-        end_date = get_new_end_date_from_list(full_expire_dates, datetime.date.today(), PROJECT_END_DATE_CARRYOVER_DAYS)
+        end_date = get_new_end_date_from_list(
+            project_obj.get_env.get("expiry_dates"), buffer_days=PROJECT_END_DATE_CARRYOVER_DAYS
+        )
         if end_date is None:
             logger.error(f"End date for new project request was set to None on date {datetime.date.today()}")
             messages.error(
@@ -2734,16 +2727,9 @@ class ProjectReviewApproveView(LoginRequiredMixin, UserPassesTestMixin, View):
         project_obj = project_review_obj.project
         project_status_obj = ProjectStatusChoice.objects.get(name="Active")
 
-        expiry_dates = project_obj.get_env.get("expiry_dates")
-        if expiry_dates:
-            full_expire_dates = []
-            for date in expiry_dates:
-                actual_date = datetime.date(datetime.date.today().year, date[0], date[1])
-                full_expire_dates.append(actual_date)
-        else:
-            full_expire_dates = [datetime.date.today() + datetime.timedelta(days=365)]
-
-        end_date = get_new_end_date_from_list(full_expire_dates, datetime.date.today(), PROJECT_END_DATE_CARRYOVER_DAYS)
+        end_date = get_new_end_date_from_list(
+            project_obj.get_env.get("expiry_dates"), buffer_days=PROJECT_END_DATE_CARRYOVER_DAYS
+        )
 
         if end_date is None:
             logger.error(

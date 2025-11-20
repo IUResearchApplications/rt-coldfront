@@ -94,11 +94,11 @@ def determine_automated_institution_choice(project, institution_map: dict):
     return project.institution
 
 
-def get_new_end_date_from_list(expire_dates, check_date=None, buffer_days=0):
+def get_new_end_date_from_list(raw_expire_dates, check_date=None, buffer_days=0):
     """
     Finds a new end date based on the given list of expire dates.
 
-    :param expire_dates: List of expire dates
+    :param raw_expire_dates: List of expire dates tuples
     :param check_date: Date that is checked against the list of expire dates. If None then it's
     set to today
     :param buffer_days: Number of days before the current expire date where the end date should be
@@ -107,6 +107,14 @@ def get_new_end_date_from_list(expire_dates, check_date=None, buffer_days=0):
     """
     if check_date is None:
         check_date = datetime.date.today()
+
+    if raw_expire_dates:
+        expire_dates = []
+        for date in raw_expire_dates:
+            actual_date = datetime.date(datetime.date.today().year, date[0], date[1])
+            expire_dates.append(actual_date)
+    else:
+        expire_dates = [datetime.date.today() + datetime.timedelta(days=365)]
 
     expire_dates.sort()
 

@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-import datetime
 import logging
 from unittest.mock import patch
 
@@ -46,10 +45,8 @@ class TestProject(TestCase):
             type = ProjectTypeChoiceFactory(name="Research")
             end_date = get_new_end_date_from_list(
                 [
-                    datetime.date(datetime.datetime.today().year, 6, 30),
+                    (6, 30),
                 ],
-                datetime.date.today(),
-                90,
             )
 
             self.initial_fields = {
@@ -61,7 +58,7 @@ class TestProject(TestCase):
                 "status": status,
                 "type": type,
                 "force_review": True,
-                "end_date": end_date
+                "end_date": end_date,
             }
 
             self.unsaved_object = Project(**self.initial_fields)
@@ -238,10 +235,8 @@ class TestProjectCode(TransactionTestCase):
         self.type = ProjectTypeChoiceFactory(name="Research")
         self.end_date = get_new_end_date_from_list(
             [
-                datetime.date(datetime.datetime.today().year, 6, 30),
+                (6, 30),
             ],
-            datetime.date.today(),
-            90,
         )
 
     def create_project_with_code(self, title, project_code, project_code_padding=0):
@@ -314,10 +309,8 @@ class TestInstitution(TestCase):
         self.type = ProjectTypeChoiceFactory(name="Research")
         self.end_date = get_new_end_date_from_list(
             [
-                datetime.date(datetime.datetime.today().year, 6, 30),
+                (6, 30),
             ],
-            datetime.date.today(),
-            90,
         )
 
     def create_project_with_institution(self, title, institution_dict=None):
