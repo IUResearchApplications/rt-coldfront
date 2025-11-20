@@ -113,7 +113,7 @@ be stored. Please include your area of research and your department. If this is 
 put the approximate class size.
 """
 
-    title = models.CharField(max_length=255, db_collation="utf8mb4_0900_ai_ci")
+    title = models.CharField(max_length=255, db_collation="utf8mb4_unicode_ci")
     pi = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -128,7 +128,7 @@ put the approximate class size.
                 "The project description must be > 10 characters.",
             )
         ],
-        db_collation="utf8mb4_0900_ai_ci",
+        db_collation="utf8mb4_unicode_ci",
     )
 
     slurm_account_name = models.CharField(max_length=15, blank=True, null=True, unique=True)
