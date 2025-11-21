@@ -124,6 +124,12 @@ class ReviewGroupFilteredResourceQueryset(admin.ModelAdmin):
 
 @admin.register(Allocation)
 class AllocationAdmin(SimpleHistoryAdmin, ReviewGroupFilteredResourceQueryset):
+    readonly_fields_change = (
+        "project",
+        "justification",
+        "created",
+        "modified",
+    )
     fields_change = (
         "project",
         "resources",
