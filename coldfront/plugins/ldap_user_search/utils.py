@@ -134,7 +134,7 @@ def get_user_info(username, ldap_search=None):
     user_info = ldap_search.search_a_user(username, "username_only")
     if not user_info:
         return {}
-    return ldap_search.search_a_user(username, "username_only")[0]
+    return user_info[0]
 
 
 def get_users_info(usernames):
