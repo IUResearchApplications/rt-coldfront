@@ -2429,7 +2429,6 @@ class AllocationChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, FormVi
             )
 
         elif action == "approve":
-            allocation_obj = allocation_change_obj.allocation
             allocation_change_status_active_obj = AllocationChangeStatusChoice.objects.get(name="Approved")
             allocation_change_obj.status = allocation_change_status_active_obj
 
@@ -2459,7 +2458,7 @@ class AllocationChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, FormVi
                     allocation_attribute_changed.send(
                         sender=self.__class__,
                         attribute_pk=attribute_change.allocation_attribute.pk,
-                        allocation_pk=attribute_change.allocation.pk,
+                        allocation_pk=allocation_obj,
                     )
 
             messages.success(
