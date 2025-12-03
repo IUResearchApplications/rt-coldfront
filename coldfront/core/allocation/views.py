@@ -2478,6 +2478,7 @@ class AllocationChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, FormVi
             )
 
             send_allocation_customer_email(
+                request,
                 allocation_change_obj.allocation,
                 "Allocation Change Approved",
                 "email/allocation_change_approved.txt",
