@@ -529,8 +529,10 @@ Allocation Detail
   $("#navbar-project-menu").addClass("active");
 
   $(document).ready(function () {
-    var gauge_data = JSON.parse(document.getElementById('gauge_data').textContent);
-    drawGauges(gauge_data);
+    if (document.getElementById('gauge_data')){
+      var gauge_data = JSON.parse(document.getElementById('gauge_data').textContent);
+      drawGauges(gauge_data);
+    }
 
     $('#allocation_change_table').DataTable({
       lengthMenu: [5, 10, 20, 50, 100],
