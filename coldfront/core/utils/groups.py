@@ -1,5 +1,6 @@
 from django.contrib.auth.models import Permission
 
+
 def check_if_groups_in_review_groups(review_groups, groups, permission=None):
     """
     Returns True if at least one group in a group query is included in a review group query. An
@@ -24,9 +25,7 @@ def check_if_groups_in_review_groups(review_groups, groups, permission=None):
             return True
 
         matched_group_ids = [group.id for group in matched_groups]
-        permission_exists = Permission.objects.filter(
-            group__id__in=matched_group_ids, codename=permission
-        ).exists()
+        permission_exists = Permission.objects.filter(group__id__in=matched_group_ids, codename=permission).exists()
         if permission_exists:
             return True
 

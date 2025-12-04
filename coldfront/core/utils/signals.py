@@ -7,7 +7,7 @@ from simple_history.utils import update_change_reason
 def save_historical_change_reason(sender, instance, **kwargs):
     full_history = instance.history.all()
     if len(full_history) < 2:
-        update_change_reason(instance, 'Created')
+        update_change_reason(instance, "Created")
         return
 
     new_history, prev_history = full_history[:2]

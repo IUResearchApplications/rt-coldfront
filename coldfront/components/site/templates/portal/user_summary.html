@@ -9,11 +9,16 @@
   </div>
 </div>
 
+{{ user_counts|json_script:"user_counts" }}
+{{ user_timeline|json_script:"user_timeline" }}
+{{ years_to_months_labels|json_script:"years_to_months_labels" }}
+{{ years_to_months_values|json_script:"years_to_months_values" }}
+
 <script>
-  var user_counts = {{ user_counts | safe }}
-  var user_timeline = {{ user_timeline | safe }}
-  var years_to_months_labels = {{ years_to_months_labels | safe }}
-  var years_to_months_values = {{ years_to_months_values | safe }}
+  var user_counts = JSON.parse(document.getElementById('user_counts').textContent);
+  var user_timeline = JSON.parse(document.getElementById('user_timeline').textContent);
+  var years_to_months_labels = JSON.parse(document.getElementById('years_to_months_labels').textContent);
+  var years_to_months_values = JSON.parse(document.getElementById('years_to_months_values').textContent);
 
   var userYearTimelineChart;
   var userMonthTimelineChart;

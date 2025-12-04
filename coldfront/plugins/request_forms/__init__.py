@@ -1,1 +1,1 @@
-default_app_config = 'coldfront.plugins.request_forms.apps.RequestFormsConfig'
+default_app_config = "coldfront.plugins.request_forms.apps.RequestFormsConfig"

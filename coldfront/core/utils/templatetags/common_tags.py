@@ -11,27 +11,28 @@ register = template.Library()
 @register.simple_tag
 def settings_value(name):
     allowed_names = [
-        'LOGIN_FAIL_MESSAGE',
-        'ACCOUNT_CREATION_TEXT',
-        'CENTER_NAME',
-        'CENTER_HELP_URL',
-        'EMAIL_PROJECT_REVIEW_CONTACT',
-        'EMAIL_TICKET_SYSTEM_ADDRESS',
+        "LOGIN_FAIL_MESSAGE",
+        "ACCOUNT_CREATION_TEXT",
+        "CENTER_NAME",
+        "CENTER_HELP_URL",
+        "EMAIL_PROJECT_REVIEW_CONTACT",
+        "EMAIL_TICKET_SYSTEM_ADDRESS",
     ]
-    return mark_safe(getattr(settings, name, '') if name in allowed_names else '')
+    # FIXME: This is using mark_safe for now but settings should not contain HTML in the future
+    return mark_safe(getattr(settings, name, "") if name in allowed_names else "")  # noqa: S308
 
 
 @register.filter
 def get_icon(expand_accordion):
-    if expand_accordion == 'show':
-        return 'fa-minus'
+    if expand_accordion == "show":
+        return "fa-minus"
     else:
-        return 'fa-plus'
+        return "fa-plus"
 
 
 @register.filter
 def convert_boolean_to_icon(boolean):
-    if boolean == False:
+    if boolean is False:
         return mark_safe('<span class="badge badge-success"><i class="fas fa-check"></i></span>')
     else:
         return mark_safe('<span class="badge badge-danger"><i class="fas fa-times"></i></span>')
@@ -41,9 +42,9 @@ def convert_boolean_to_icon(boolean):
 def convert_status_to_icon(project):
     if project.last_project_review:
         status = project.last_project_review.status.name
-        if status == 'Pending':
+        if status == "Pending":
             return mark_safe('<h4><span class="badge badge-info"><i class="fas fa-exclamation-circle"></i></span></h4>')
-        elif status == 'Completed':
+        elif status == "Completed":
             return mark_safe('<h4><span class="badge badge-success"><i class="fas fa-check-circle"></i></span></h4>')
     elif project.needs_review and not project.last_project_review:
         return mark_safe('<h4><span class="badge badge-danger"><i class="fas fa-question-circle"></i></span></h4>')
@@ -53,15 +54,24 @@ def convert_status_to_icon(project):
 
 @register.filter()
 def color_text(status):
-    if status in ["Active", ]:
+    if status in [
+        "Active",
+    ]:
         return "text-success"
 
-    if status in ["Expired", "Denied", "Renewal Denied", "Removed", "Revoked", ]:
+    if status in [
+        "Expired",
+        "Denied",
+        "Renewal Denied",
+        "Removed",
+        "Revoked",
+    ]:
         return "text-danger"
 
     return "text-primary"
 
-@register.filter('get_value_from_dict')
+
+@register.filter("get_value_from_dict")
 def get_value_from_dict(dict_data, key):
     """
     usage example {{ your_dict|get_value_from_dict:your_key }}
@@ -70,6 +80,14 @@ def get_value_from_dict(dict_data, key):
         if type(dict_data) == str:
             dict_data = json.loads(dict_data)
         return dict_data.get(key)
+
+
+@register.filter("get_value_by_index")
+def get_value_by_index(array, index):
+    """
+    usage example {{ your_list|get_value_by_index:your_index }}
+    """
+    return array[index]
 
 
 @register.filter
@@ -85,6 +103,7 @@ def change_sign(int):
 @register.filter
 def divide(int, divisor):
     return int // divisor
+
 
 @register.filter
 def template_exists(value):

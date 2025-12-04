@@ -8,9 +8,12 @@
   </div>
 </div>
 
+{{ project_type_chart_data|json_script:"project_type_chart_data" }}
+{{ project_user_chart_data|json_script:"project_user_chart_data" }}
+
 <script>
-  var project_type_chart_data = {{ project_type_chart_data | safe }}
-  var project_user_chart_data = {{ project_user_chart_data | safe }}
+  var project_type_chart_data = JSON.parse(document.getElementById('project_type_chart_data').textContent);
+  var project_user_chart_data = JSON.parse(document.getElementById('project_user_chart_data').textContent);
 
   $(document).ready(function () {
     drawProjectTypes();

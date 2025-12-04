@@ -4,25 +4,23 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('allocation', '0004_auto_20211005_1108_squashed_0018_alter_allocation_options_and_more'),
+        ("allocation", "0004_auto_20211005_1108_squashed_0018_alter_allocation_options_and_more"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='MovableAllocation',
-            fields=[
-            ],
+            name="MovableAllocation",
+            fields=[],
             options={
-                'permissions': (('can_move_allocations', 'Can move allocations'),),
-                'proxy': True,
-                'default_permissions': (),
-                'indexes': [],
-                'constraints': [],
+                "permissions": (("can_move_allocations", "Can move allocations"),),
+                "proxy": True,
+                "default_permissions": (),
+                "indexes": [],
+                "constraints": [],
             },
-            bases=('allocation.allocation',),
+            bases=("allocation.allocation",),
         ),
     ]

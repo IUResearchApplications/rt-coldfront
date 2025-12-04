@@ -156,8 +156,10 @@ Project Review List
   </div>
 </div>
 
+{{ pi_projects|json_script:"pi_projects" }}
+
 <script>
-  pi_projects = {{ pi_projects | safe }};
+  var pi_projects = JSON.parse(document.getElementById('pi_projects').textContent);
 
   $("#navbar-main > ul > li.active").removeClass("active");
   $("#navbar-admin").addClass("active");

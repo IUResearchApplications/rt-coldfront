@@ -166,12 +166,9 @@ Project Detail
         </a>
       </p>
     {% endif %}
-    <p class="card-text text-justify"><strong>Description: </strong>{{ project.description|linebreaks }}</p>
+    <p class="card-text text-justify"><strong>Description: </strong>{{ project.description|linebreaksbr }}</p>
     <p class="card-text text-justify"><strong>Project Type: </strong>{{ project.type.name }}</p>
     <p class="card-text text-justify"><strong>Project ID: </strong>{{ project.pk }}</p>
-    {% if project.class_number %}
-      <p class="card-text text-justify"><strong>Class Number</strong> {{ project.class_number }}</p>
-    {% endif %}
     <p class="card-text text-justify"><strong>Project Status: </strong>
     {% if project.status.name == 'Active' %}
       {% if project.needs_review %}
@@ -319,13 +316,21 @@ Project Detail
             {% for allocation in allocations %}
             <tr>
               <td>{{ allocation.get_parent_resource.name }}</td>
+              {% if user_allocation_status|get_value_by_index:forloop.counter0 == 'PendingEULA' %}
+                <td class="test-nowrap"><a href="{% url 'allocation-review-eula' allocation.pk %}">Review and Accept EULA to activate</a> </td>
+              {% else %}
               {% if allocation.get_information != '' %}
                 <td>{{allocation.get_information}}</td>
               {% else %}
                 <td>{{allocation.description|default_if_none:""}}</td>
               {% endif %}
+              {% endif %}
               {% if allocation.status.name == 'Active' %}
+              {% if user_allocation_status|get_value_by_index:forloop.counter0 == 'PendingEULA' %}
+              <td class="text-success">{{ user_allocation_status|get_value_by_index:forloop.counter0 }}</td>
+              {% else %}
                 <td class="text-success"><strong>{{ allocation.status.name }}</strong></td>
+              {% endif %}
               {% elif  allocation.status.name == 'Expired' or allocation.status.name == 'Denied' %}
                 <td class="text-danger"><strong>{{ allocation.status.name }}</strong></td>
               {% else %}
@@ -354,12 +359,12 @@ Project Detail
               <td class="text-nowrap">
                 <div class="text-center">
                   <a
-                    class="btn {% if allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 %}btn-warning{% else %}btn-primary{% endif %}"
+                    class="btn {% if allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 and allocation.status.name == 'Active' %}btn-warning{% else %}btn-primary{% endif %}"
                     href="{% url 'allocation-detail' allocation.pk %}"
                     role="button"
                   >
                     <i class="far fa-folder-open" aria-hidden="true"></i> Details <br>
-                    {% if allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 %}
+                    {% if allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 and allocation.status.name == 'Active' %}
                       <div style="margin-top: -10px;">
                         <small><small>Expires in {{allocation.expires_in}} day{{allocation.expires_in|pluralize}}</small></small>
                       </div>
@@ -650,9 +655,14 @@ Project Detail
 </div>
 <!-- End Admin Messages -->
 
+{{ display_modal|json_script:"display_modal" }}
+{{ display_project_created_modal|json_script:"display_project_created_modal" }}
+{{ gauge_data|json_script:"gauge_data" }}
+
 <script>
-  var display_modal = {{ display_modal | safe }};
-  var display_project_created_modal = {{ display_project_created_modal | safe }}
+  var display_modal = JSON.parse(document.getElementById('display_modal').textContent) === 'true';
+  var display_project_created_modal = JSON.parse(document.getElementById('display_project_created_modal').textContent) === 'true';
+  var gauge_data = JSON.parse(document.getElementById('gauge_data').textContent);
 
   $("#navbar-main > ul > li.active").removeClass("active");
   $("#navbar-project-menu").addClass("active");
@@ -684,10 +694,9 @@ Project Detail
       icon.toggleClass("fa-plus fa-minus");
     });
 
-    var guage_data = {{ guage_data | safe }};
     $('[data-toggle="tooltip"]').tooltip()
 
-    drawGauges(guage_data);
+    drawGauges(gauge_data);
 
     if (display_modal) {
       $('#allocation_response_modal').modal('show');
@@ -713,7 +722,7 @@ Project Detail
       "order": [[ 1, "desc" ]]
     });
 
-    $('[data-toggle="popover"]').popover(); 
+    $('[data-toggle="popover"]').popover();
 
     $('#allocation_table').DataTable({
       'aoColumnDefs': [{

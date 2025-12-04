@@ -10,8 +10,8 @@ class CustomizableFormsConfig(AppConfig):
             replace_generic_form,
         )
         from coldfront.plugins.customizable_forms.utils import (
-            initialize_rule_functions,
             initialize_persistence_functions,
+            initialize_rule_functions,
         )
 
         add_additional_forms()

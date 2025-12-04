@@ -1,13 +1,14 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
 
 class AnnouncementMailingListChoice(TimeStampedModel):
-
     class Meta:
-        ordering = ['name', ]
+        ordering = [
+            "name",
+        ]
 
     class AnnouncementMailingListChoiceManager(models.Manager):
         def get_by_natural_key(self, name):
@@ -24,10 +25,12 @@ class AnnouncementMailingListChoice(TimeStampedModel):
     def natural_key(self):
         return (self.name,)
 
-class AnnouncementCategoryChoice(TimeStampedModel):
 
+class AnnouncementCategoryChoice(TimeStampedModel):
     class Meta:
-        ordering = ['name', ]
+        ordering = [
+            "name",
+        ]
 
     class AnnouncementCategoryChoiceManager(models.Manager):
         def get_by_natural_key(self, name):
@@ -47,9 +50,10 @@ class AnnouncementCategoryChoice(TimeStampedModel):
 
 
 class AnnouncementStatusChoice(TimeStampedModel):
-
     class Meta:
-        ordering = ['name', ]
+        ordering = [
+            "name",
+        ]
 
     class AnnouncementStatusChoiceManager(models.Manager):
         def get_by_natural_key(self, name):
@@ -66,15 +70,16 @@ class AnnouncementStatusChoice(TimeStampedModel):
 
 
 class Announcement(TimeStampedModel):
-
     class Meta:
-        ordering = ['created', ]
+        ordering = [
+            "created",
+        ]
 
     title = models.CharField(max_length=255)
     body = models.TextField()
     categories = models.ManyToManyField(AnnouncementCategoryChoice, blank=True)
     status = models.ForeignKey(AnnouncementStatusChoice, on_delete=models.CASCADE)
-    viewed_by = models.ManyToManyField(User, related_name='viewed_by', blank=True)
+    viewed_by = models.ManyToManyField(User, related_name="viewed_by", blank=True)
     pinned = models.BooleanField(default=False)
     mailing_lists = models.ManyToManyField(AnnouncementMailingListChoice, blank=True)
     details_url = models.URLField(blank=True)

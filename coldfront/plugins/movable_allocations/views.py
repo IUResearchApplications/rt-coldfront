@@ -1,32 +1,31 @@
 import logging
 
 from django.contrib import messages
-from django.contrib.auth.models import User
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.models import User
 from django.http import HttpResponseNotFound, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.generic import TemplateView
 
-from coldfront.core.allocation.utils import create_admin_action
-from coldfront.core.project.utils import generate_slurm_account_name
-from coldfront.core.utils.common import get_domain_url
-from coldfront.core.utils.mail import send_allocation_customer_email, send_allocation_admin_email
-from coldfront.core.utils.groups import check_if_groups_in_review_groups
 from coldfront.core.allocation.models import Allocation, AllocationAttribute, AllocationUserNote
+from coldfront.core.allocation.utils import create_admin_action
 from coldfront.core.project.models import (
     Project,
     ProjectUser,
+    ProjectUserMessage,
     ProjectUserRoleChoice,
     ProjectUserStatusChoice,
-    ProjectUserMessage,
 )
+from coldfront.core.utils.common import get_domain_url
+from coldfront.core.utils.groups import check_if_groups_in_review_groups
+from coldfront.core.utils.mail import send_allocation_admin_email, send_allocation_customer_email
 from coldfront.plugins.movable_allocations.forms import AllocationMoveForm
+from coldfront.plugins.movable_allocations.signals import allocation_moved
 from coldfront.plugins.movable_allocations.utils import (
     check_over_allocation_limit,
     check_resource_is_allowed,
 )
-from coldfront.plugins.movable_allocations.signals import allocation_moved
 
 logger = logging.getLogger(__name__)
 
@@ -57,21 +56,15 @@ class AllocationMoveView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         allocation_obj = get_object_or_404(Allocation, pk=kwargs.get("pk"))
         if allocation_obj.status.name not in ["Active", "Renewal Requested"]:
             messages.error(request, "You cannot move an inactive allocation.")
-            return HttpResponseRedirect(
-                reverse("allocation-detail", kwargs={"pk": kwargs.get("pk")})
-            )
+            return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": kwargs.get("pk")}))
 
         if allocation_obj.project.status.name not in ["Active", "Review Pending"]:
             messages.error(request, "You cannot move an allocation in an inactive project.")
-            return HttpResponseRedirect(
-                reverse("allocation-detail", kwargs={"pk": kwargs.get("pk")})
-            )
+            return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": kwargs.get("pk")}))
 
         if allocation_obj.is_locked:
             messages.error(request, "You cannot move a locked allocation")
-            return HttpResponseRedirect(
-                reverse("allocation-detail", kwargs={"pk": kwargs.get("pk")})
-            )
+            return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": kwargs.get("pk")}))
 
         return super().dispatch(request, *args, **kwargs)
 
@@ -82,9 +75,7 @@ class AllocationMoveView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         context = self.get_context_data()
         context["form"] = form
         context["allocation"] = allocation_obj
-        context["allocation_users"] = allocation_obj.allocationuser_set.filter(
-            status__name="Active"
-        )
+        context["allocation_users"] = allocation_obj.allocationuser_set.filter(status__name="Active")
         context["allocation_attributes"] = allocation_obj.allocationattribute_set.filter(
             allocation_attribute_type__is_private=False
         )
@@ -101,9 +92,7 @@ class AllocationMoveView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                 messages.error(request, error)
             return HttpResponseRedirect(reverse("move-allocation", kwargs={"pk": pk}))
 
-        destination_project_obj = Project.objects.filter(
-            id=form.cleaned_data.get("destination_project")
-        ).first()
+        destination_project_obj = Project.objects.filter(id=form.cleaned_data.get("destination_project")).first()
         if not destination_project_obj:
             messages.error(
                 request,
@@ -130,9 +119,7 @@ class AllocationMoveView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
             return HttpResponseRedirect(reverse("move-allocation", kwargs={"pk": pk}))
 
         if not check_resource_is_allowed(allocation_obj, destination_project_obj):
-            messages.error(
-                request, "The resource in this allocation is not allowed in this type of project."
-            )
+            messages.error(request, "The resource in this allocation is not allowed in this type of project.")
             return HttpResponseRedirect(reverse("move-allocation", kwargs={"pk": pk}))
 
         create_admin_action(
@@ -145,11 +132,10 @@ class AllocationMoveView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         allocation_obj.save()
 
         slurm_account_obj = AllocationAttribute.objects.filter(
-            allocation=allocation_obj,
-            allocation_attribute_type__name="slurm_account_name"
+            allocation=allocation_obj, allocation_attribute_type__name="slurm_account_name"
         ).first()
         if slurm_account_obj:
-            slurm_account_obj.value = generate_slurm_account_name(allocation_obj.project)
+            slurm_account_obj.value = allocation_obj.project.project_code
             slurm_account_obj.save()
 
         project_user_active_status = ProjectUserStatusChoice.objects.get(name="Active")
@@ -159,9 +145,7 @@ class AllocationMoveView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         ).first()
         enable_notifications = not (auto_disable and auto_disable.value == "Yes")
         for allocation_user in allocation_obj.allocationuser_set.all():
-            project_user_obj = destination_project_obj.projectuser_set.filter(
-                user=allocation_user.user
-            ).first()
+            project_user_obj = destination_project_obj.projectuser_set.filter(user=allocation_user.user).first()
             if project_user_obj:
                 if not project_user_obj.status.name == "Active":
                     if allocation_user.status.name in ["Active", "Invited", "Disabled", "Retired"]:
@@ -182,15 +166,9 @@ class AllocationMoveView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                 )
 
         domain_url = get_domain_url(request)
-        destination_project_url = (
-            f"{domain_url}{reverse('project-detail', kwargs={'pk': destination_project_obj.pk})}"
-        )
-        origin_project_url = (
-            f"{domain_url}{reverse('project-detail', kwargs={'pk': origin_project_obj.pk})}"
-        )
-        allocation_url = (
-            f"{domain_url}{reverse('allocation-detail', kwargs={'pk': allocation_obj.pk})}"
-        )
+        destination_project_url = f"{domain_url}{reverse('project-detail', kwargs={'pk': destination_project_obj.pk})}"
+        origin_project_url = f"{domain_url}{reverse('project-detail', kwargs={'pk': origin_project_obj.pk})}"
+        allocation_url = f"{domain_url}{reverse('allocation-detail', kwargs={'pk': allocation_obj.pk})}"
         AllocationUserNote.objects.create(
             allocation=allocation_obj,
             author=User.objects.get(username="coldft"),
@@ -276,14 +254,10 @@ class ProjectDetailView(LoginRequiredMixin, TemplateView):
 
         allocation_obj = get_object_or_404(Allocation, pk=allocation_pk)
         context["project"] = project_obj
-        allocation_objs = project_obj.allocation_set.filter(
-            status__name__in=["Active", "New", "Renewal Requested"]
-        )
+        allocation_objs = project_obj.allocation_set.filter(status__name__in=["Active", "New", "Renewal Requested"])
         context["already_in_project"] = allocation_obj in allocation_objs
         context["allocations"] = allocation_objs
-        context["over_allocation_limit"] = check_over_allocation_limit(
-            allocation_obj, allocation_objs
-        )
+        context["over_allocation_limit"] = check_over_allocation_limit(allocation_obj, allocation_objs)
         context["resource_allowed"] = check_resource_is_allowed(allocation_obj, project_obj)
 
         return self.render_to_response(context)

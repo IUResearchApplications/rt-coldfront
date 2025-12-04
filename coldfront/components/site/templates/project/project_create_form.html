@@ -9,8 +9,8 @@ Create Project
 
 
 {% block content %}
-  RT Projects is designed for labs, groups, and classes. If your group already has an existing project then you should
-  contact your PI about adding you to your groups project instead. Limiting projects to groups helps prevent user
+  RT Projects is designed for labs, groups, and classes. If your group has an existing project then please
+  contact your PI about adding you to that one instead. Limiting projects to groups helps prevent user
   access fragmentation and simplifies your PI's project management.
   <hr>
  <form method="post">
@@ -19,15 +19,17 @@ Create Project
   {{ form.title|as_crispy_field }}
   {{ form.description|as_crispy_field }}
   {{ form.pi_username|as_crispy_field }}
+  {{ form.pi|as_crispy_field }}
+  {{ form.requestor|as_crispy_field }}
   <div class="mb-3" id="pi_search_accordion" style="display: none;">
     <p>
-      This PI already has active projects. Please take a look and see if you can join one instead of creating a new one.
-      Joining an existing project can reduce the number of project's your PI has to manage.
+      This PI has active projects. Please look and see if you can join one instead of creating a new one.
+      Joining an existing project reduces the number of projects your PI needs to manage.
     </p>
     <div class="card">
       <div class="card-header">
         <a id="expand_pi_button" href="#collapse_pi" role="button" class="card-link" data-toggle="collapse">
-          Current Active Projects
+          Active Projects
           <i id="plus_minus_1" class="fas fa-plus float-right"></i>
         </a>
       </div>
@@ -49,9 +51,9 @@ Create Project
   {{ form.type|as_crispy_field }}
   <p id="div_id_class_info" class="alert alert-info" role="alert">
     <i class="fas fa-info-circle" aria-hidden="true"></i>
-    If you are a student you should contact your PI about creating a project for the class themselves
-    and adding all of the students who need access to it. Doing so will reduce the number of projects 
-    to manage for a single class.
+    If you are a student please contact your PI about creating a project for the class
+    and adding the students needing access to it. This reduces the number of projects 
+    your PI needs to manage for a single class.
   </p>
   {{ form.class_number|as_crispy_field }}
 
@@ -59,8 +61,11 @@ Create Project
   <a class="btn btn-secondary" href="{% url 'project-list' %}" role="button">Cancel</a>
 </form>
 
+{{ pi_search_url|json_script:"pi_search_url" }}
+
 <script>
-  var pi_search_url = '{{ pi_search_url | safe }}';
+  var pi_search_url = JSON.parse(document.getElementById('pi_search_url').textContent);
+
   $("#navbar-main > ul > li.active").removeClass("active");
   $("#navbar-project-menu").addClass("active");
 

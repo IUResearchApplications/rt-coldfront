@@ -36,9 +36,12 @@ Create Announcement
   </div>
 </form>
 
+{{ categories|json_script:"categories" }}
+{{ mailing_lists|json_script:"mailing_lists" }}
+
 <script>
-  var categories = {{ categories|safe }};
-  var mailing_lists = {{ mailing_lists|safe }};
+  var categories = JSON.parse(document.getElementById('categories').textContent);
+  var mailing_lists = JSON.parse(document.getElementById('mailing_lists').textContent);
 
   function setUpSelections(selection) {
     $('#div_id_' + selection).hide();

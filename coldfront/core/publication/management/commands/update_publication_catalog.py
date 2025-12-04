@@ -1,14 +1,14 @@
 import datetime
 import json
-from argparse import ArgumentParser
 import pathlib
-from urllib.parse import quote
-import requests
-import pymupdf
 import urllib.request
-import feedparser
+from argparse import ArgumentParser
+from urllib.parse import quote
 from xml.etree import ElementTree
 
+import feedparser
+import pymupdf
+import requests
 from django.core.management.base import BaseCommand
 
 from coldfront.core.publication.models import Publication
@@ -49,9 +49,7 @@ class Command(BaseCommand):
         dir = kwargs.get("dir")
 
         publications = set(
-            Publication.objects.filter()
-            .exclude(source__name="manual")
-            .values_list("id", "unique_id", "title")
+            Publication.objects.filter().exclude(source__name="manual").values_list("id", "unique_id", "title")
         )
 
         dir = pathlib.Path(dir)
@@ -183,9 +181,7 @@ class Command(BaseCommand):
         if png_file.exists():
             return True
 
-        parser = feedparser.parse(
-            f"http://export.arxiv.org/api/query?search_query=ti:{quote(title)}"
-        )
+        parser = feedparser.parse(f"http://export.arxiv.org/api/query?search_query=ti:{quote(title)}")
         for entry in parser.get("entries"):
             if entry.get("arxiv_doi") == unique_id:
                 for link in entry.get("links"):

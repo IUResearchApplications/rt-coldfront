@@ -6,6 +6,6 @@ logger = logging.getLogger(__name__)
 
 
 def run_update_user_profiles():
-    logger.info('Updating user profiles...')
+    logger.info("Updating user profiles...")
     update_all_user_profiles()
-    logger.info('Update complete')
+    logger.info("Update complete")

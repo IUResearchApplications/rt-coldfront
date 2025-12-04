@@ -41,7 +41,7 @@
             </thead>
             <tbody>
               {% for form in allocation_form %}
-                <tr>
+                <tr id="{{ form.resource.value }}-{{ forloop.counter }}">
                   <td>{{ form.selected }}</td>
                   <td><a href="{% url 'allocation-detail' form.pk.value %}" target="_blank">{{ form.pk.value }}</a></td>
                   <td>{{ form.resource.value }}</td>
@@ -83,7 +83,7 @@
         </thead>
         <tbody>
           {% for form in formset %}
-            <tr>
+            <tr id="{{ form.username.value }}">
               <td>{{ form.selected }}</td>
               <td>{{ forloop.counter }}</td>
               <td>
@@ -113,7 +113,7 @@
 
     <input id="q" type="hidden" name="q" value="{{user_search_string}}">
     <input id="search_by" type="hidden" name="search_by" value="{{search_by}}">
-    <input id="after_project_creation" type="hidden" name="after_project_creation" value="{{after_project_creation}}">
+    <input id="after_project_creation_field" type="hidden" name="after_project_creation_field" value="{{after_project_creation}}">
     <div class="mb-3">
       {% if matches %}
         {% if after_project_creation == 'true' %}
@@ -154,105 +154,72 @@
   </div>
 </div>
 
+{{ current_num_managers|json_script:"current_num_managers" }}
+{{ max_managers|json_script:"max_managers" }}
+{{ num_matches|json_script:"num_matches" }}
+{{ account_statuses|json_script:"account_statuses" }}
+
 <script>
-  var current_num_managers = {{ current_num_managers | safe}};
-  var max_managers = {{ max_managers | safe }};
-  var matches = {{ matches | length | safe }};
-  var after_project_creation = {{ after_project_creation | safe }};
-  var user_accounts = {{ user_accounts | safe }};
-  var resource_accounts = {{ resource_accounts | safe }};
-  var all_accounts = {};
+  var current_num_managers = JSON.parse(document.getElementById('current_num_managers').textContent);
+  var max_managers = JSON.parse(document.getElementById('max_managers').textContent);
+  var num_matches = JSON.parse(document.getElementById('num_matches').textContent);
+  var account_statuses = JSON.parse(document.getElementById('account_statuses').textContent);
 
-  function updateIcon(id_num, checked) {
-    resources = $("input[name^='allocationform-']:checked");
-    var id = parseInt(id_num) + 1;
-    icon = $("#status-" + id);
-    if (!checked) {
-      icon.attr('data-original-title', 'Not Selected');
-      icon.attr('data-content', 'Not selected to be added to the project');
-      icon.html('<span class="badge badge-secondary"><i class="fas fa-minus-circle"></i></span><span class="sr-only">Not selected to be added to the project</span>');
-      return;
+  function updateIcon(username, reason, missing_accounts) {
+    var icon = $($('#' + username)[0].childNodes[5].firstElementChild)
+    var title = "Has Accounts"
+    var content = "Can be added to all selected allocations"
+    var html = '<span class="badge badge-success"><i class="fas fa-check-circle"></i></span><span class="sr-only"></span>'
+    if (reason == "not_selected") {
+      title = "Not Selected"
+      content = "Not selected to be added to the project"
+      html = '<span class="badge badge-secondary"><i class="fas fa-minus-circle"></i></span><span class="sr-only">Not selected to be added to the project</span>'
+    } else if (reason == "no_selected_allocations") {
+      title = "No Allocations Selected"
+      content = "No allocations to check accounts on"
+      html = '<span class="badge badge-secondary"><i class="fas fa-minus-circle"></i></span><span class="sr-only">No allocations to check accounts on</span>'
+    } else if (reason == "no_account") {
+      title = "No IU Account"
+      content = `Will not be added to these resources: ${Array.from(missing_accounts).join(', ')}`
+      html = `<span class="badge badge-warning"><i class="fas fa-exclamation-circle"></i></span><span class="sr-only">${content}</span>`
+    } else if (reason == "no_resource_account") {
+      title = "Missing Resource Accounts"
+      content = `Will not be added to these resources: ${Array.from(missing_accounts).join(', ')}`
+      html = `<span class="badge badge-warning"><i class="fas fa-exclamation-circle"></i></span><span class="sr-only">${content}</span>`
     }
 
-    if (!resources.length) {
-      icon.attr('data-original-title', 'No Allocations Selected');
-      icon.attr('data-content', 'No allocations to check accounts on');
-      icon.html('<span class="badge badge-secondary"><i class="fas fa-minus-circle"></i></span><span class="sr-only">No allocations to check accounts on</span>');
-      return;
-    }
-
-    var username = user_accounts[id_num][0];
-    var accounts = user_accounts[id_num][1];
-    missing_accounts = all_accounts[username];
-
-    var new_title = 'Missing Resource Accounts';
-    if (!accounts.length || accounts[0] == '') {
-      new_title = 'No IU Account';
-    }
-    
-    var new_content = `Will not be added to these resources: ${Array.from(missing_accounts).join(', ')}`;
-    var new_html = `<span class="badge badge-warning"><i class="fas fa-exclamation-circle"></i></span><span class="sr-only">${new_content}</span>`;
-    if (!missing_accounts.size) {
-      new_title = 'Has Accounts';
-      new_content = 'Can be added to all selected allocations';
-      new_html = '<span class="badge badge-success"><i class="fas fa-check-circle"></i></span><span class="sr-only"></span>';
-    } 
-
-    icon.attr('data-original-title', new_title);
-    icon.attr('data-content', new_content);
-    icon.html(new_html);
+    icon.attr('data-original-title', title)
+    icon.attr('data-content', content)
+    icon.html(html)
   }
 
-  function checkUserAccounts(id_num, is_checked) {
-    if (isNaN(id_num)) {
-      return;
-    }
-    resources_selected = $("input[name^='allocationform-']:checked");
-    resources_not_selected = $("input[name^='allocationform-']:not(:checked)");
-    var username = user_accounts[id_num][0];
-    for (var i = 0; i < resources_not_selected.length; i++) {
-      var id = resources_not_selected[i].id;
-      resource_idx = id.split('-')[1];
-      if (isNaN(resource_idx)) {
-        continue;
-      }
-      resource_name = resource_accounts[resource_idx][0];
-      all_accounts[username].delete(resource_name);
-    }
-
+  function checkSelectedUserAccounts(user_field) {
+    var username = user_field.parentElement.parentElement.id
+    var resources_selected = $("input[name^='allocationform-']:checked")
     if (!resources_selected.length) {
-      updateIcon(id_num, is_checked);
-      return;
+      updateIcon(username, "no_selected_allocations", resources_selected)
+      return
+    } else if (!user_field.checked) {
+      updateIcon(username, "not_selected", resources_selected)
+      return
+    }
+  
+    var selected_resource_names = []
+    for (const resource_selected of resources_selected) {
+      selected_resource_names.push(resource_selected.parentElement.parentElement.id.split("-")[0])
     }
 
-    var accounts = user_accounts[id_num][1]
-    if (!is_checked) {
-      all_accounts[username] = new Set();
-      updateIcon(id_num, is_checked);
-      return;
-    }
-    
-    for (var i = 0; i < resources_selected.length; i++) {
-      var id = resources_selected[i].id;
-      resource_idx = id.split('-')[1];
-      resource_account = resource_accounts[resource_idx][1];
-      resource_name = resource_accounts[resource_idx][0];
-      if (resource_account === 'not_required') {
-        continue;
-      }
+    var missing_accounts = []
+    var reason = ""
+    for (const selected_resource_name of selected_resource_names) {
+      var resource_account_statuses = account_statuses[selected_resource_name]
+      var user_account_status = resource_account_statuses[username]
+      if (user_account_status["exists"]) { continue; }
 
-      if (resource_account === '') {
-        if (!accounts.length || accounts[0] == '') {
-          all_accounts[username].add(resource_name);
-        }
-        continue;
-      }
-
-      if (!(accounts.includes(resource_account))) {
-        all_accounts[username].add(resource_name);
-      }
+      missing_accounts.push(selected_resource_name)
+      reason = user_account_status["reason"]
     }
-    updateIcon(id_num, is_checked);
+    updateIcon(username, reason, missing_accounts);
   }
 
   function checkNumManagers() {
@@ -278,10 +245,10 @@
   $('document').ready(function () {
     $('[data-toggle="popover"]').popover();
     $('a.notnavigable').click(function(e) {e.preventDefault();});
-    for (var i = 0; i < matches; i++) {
-      var username = user_accounts[i][0];
-      all_accounts[username] = new Set();
-      
+    $('#warning').modal({ show: false});
+    $('#id_manager_warning').hide();
+
+    for (var i = 0; i < num_matches; i++) {
       if ($("#id_userform-" + i + "-role option:selected").text() == 'Group') {
         $("#id_userform-" + i + "-role option:not(:selected)").prop('disabled', true);
       }
@@ -298,13 +265,8 @@
     $('#id_confirm').click(function() {
       $('#postForm').submit()
     })
-
-    $('#warning').modal({ show: false})
-
     $('#postForm').submit(function (e) {
-      if ($('#warning').not(':hidden').length) {
-        return;
-      }
+      if ($('#warning').not(':hidden').length) { return; }
 
       var checked_users = $("input[name^='userform-']:checked");
       if (!checked_users.length) {
@@ -316,8 +278,6 @@
     if (after_project_creation){
       $('#id_allocationform-0-selected').prop('checked', true);
     }
-
-    $('#id_manager_warning').hide()
   })
 
   $("select[name^='userform-']").change(function() {
@@ -325,44 +285,33 @@
   });
 
   $("#selectAll").click(function () {
-    select_all = $("input[name^='userform-']");
-    select_all.prop('checked', $(this).prop('checked'));
-    checkNumManagers();
-
-    for (var i = 0; i < select_all.length; i++) {
-      entry = select_all[i];
-      id = $(entry).attr('id').split('-')[1];
-      checkUserAccounts(id, $(entry).is(':checked'));
+    if (this.checked) {
+      var select_all = $("input[name^='userform-']:visible").not(":checked")
+    } else {
+      var select_all = $("input[name^='userform-']:visible:checked")
     }
+    select_all.click()
   });
 
-  $("input[name^='userform-']").click(function (ele) {
-    var id = $(this).attr('id');
-    if ( id != "selectAll") {
-      $("#selectAll").prop('checked', false);
-    }
+  $("input[name^='userform-']:visible").click(function () {
     checkNumManagers();
-    checkUserAccounts(id.split('-')[1], $(this).is(':checked'));
+    checkSelectedUserAccounts(this);
   });
 
   $("#selectAllAllocations").click(function () {
-    $("input[name^='allocationform-']").not(":disabled").prop('checked', $(this).prop('checked'));
-    var users = $("input[name^='userform-']");
-    for (var i = 0; i < users.length; i++) {
-      entry = $(users[i]);
-      checkUserAccounts(entry.attr('id').split('-')[1], entry.is(':checked'));
+    $("input[name^='allocationform-']").prop('checked', this.checked);
+    var selected_users = $("input[name^='userform-']:visible");
+    for (selected_user of selected_users) {
+      checkSelectedUserAccounts(selected_user);
     }
   });
 
   $("input[name^='allocationform-']").click(function (ele) {
-    var id = $(this).attr('id');
-    if ( id != "selectAllAllocations") {
-      $("#selectAllAllocations").prop('checked', false);
-    }
-    var users = $("input[name^='userform-']");
-    for (var i = 0; i < users.length; i++) {
-      entry = $(users[i]);
-      checkUserAccounts(entry.attr('id').split('-')[1], entry.is(':checked'));
+    var selected_users = $("input[name^='userform-']:visible")
+    for (selected_user of selected_users) {
+      checkSelectedUserAccounts(selected_user);
     }
   });
 </script>
+
+{% comment %} if eula box is in focus, then required {% endcomment %}

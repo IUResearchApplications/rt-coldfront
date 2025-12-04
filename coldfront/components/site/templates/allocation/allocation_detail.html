@@ -82,13 +82,13 @@ Allocation Detail
     {% endif %}
   </div>
   <div class="card-footer">
-    {% if allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 %}
+    {% if allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 and allocation.status.name == 'Active' %}
+    <div class="text-warning d-inline">
       <strong>
-        <div class="text-warning d-inline">
-          <i class="far fa-clock" aria-hidden="true"></i>
-          Expires in {{allocation.expires_in}} day{{allocation.expires_in|pluralize}}
-        </div>
+        <i class="far fa-clock" aria-hidden="true"></i>
+        Expires in {{allocation.expires_in}} day{{allocation.expires_in|pluralize}}
       </strong>
+    </div>
     {% endif %}
     <div class="float-right">
       <a class="btn btn-primary mr-1" href="{% url 'allocation-list' %}">Return to Allocation List</a>
@@ -225,6 +225,41 @@ Allocation Detail
   {% include "service/reallms_api/reallms_api_key_div.html" %}
 {% endif %}
 
+{% if eulas %}
+<div class="card mb-3">
+  <div class="card-header">
+    <h3 class="d-inline"><i class="fas fa-info-circle" aria-hidden="true"></i> EULA Agreements </h3>
+  </div>
+  <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered table-sm">
+          <thead>
+            <tr>
+              <th scope="col">Resource</th>
+              <th scope="col">EULA</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <a href="{% url 'resource-detail' res %}">{{res_obj}}</a><br>
+              </td>
+              <td>
+                {{eulas}}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        {% if user_in_allocation %}
+          <div class="d-inline-flex">
+              <a href="{% url 'allocation-review-eula' allocation.pk %}">Review EULA Agreement</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
 {% if attributes or attributes_with_usage or user_has_permissions %}
   <div class="card mb-3">
     <div class="card-header">
@@ -234,8 +269,8 @@ Allocation Detail
           <a class="btn btn-success" href="{% url 'allocation-attribute-add' allocation.pk %}" role="button">
             <i class="fas fa-plus" aria-hidden="true"></i> Add Allocation Attribute
           </a>
-          <a class="btn btn-primary" href="{% url 'allocation-attribute-update' allocation.pk %}" role="button">
-            <i class="fas fa-edit" aria-hidden="true"></i> Update Allocation Attributes
+          <a class="btn btn-primary" href="{% url 'allocation-attribute-edit' allocation.pk %}" role="button">
+            <i class="fas fa-edit" aria-hidden="true"></i> Edit Allocation Attributes
           </a>
           <a class="btn btn-danger" href="{% url 'allocation-attribute-delete' allocation.pk %}" role="button">
             <i class="fas fa-minus" aria-hidden="true"></i> Delete Allocation Attributes
@@ -287,6 +322,7 @@ Allocation Detail
   </div>
 {% endif %}
 
+{% if not user_is_pending %}
 <!-- Start Allocation Change Requests -->
 {% if allocation_changes or allocation_changes_enabled %}
   <div class="card mb-3">
@@ -317,7 +353,6 @@ Allocation Detail
                     {% else %}
                       <td class="text-primary">{{ change_request.status.name }}</td>
                     {% endif %}
-                    </td>
                     {% if change_request.notes %}
                       <td>{{change_request.notes}}</td>
                     {% else %}
@@ -364,7 +399,7 @@ Allocation Detail
   <div class="card-body">
     {% if allocation.get_parent_resource.name == 'Slate-Project' %}
       <div class="alert alert-info">
-        <i class="fas fa-info-circle" aria-hidden="true"></i> 
+        <i class="fas fa-info-circle" aria-hidden="true"></i>
         Below is a list of statuses a Slate-Project user can have:
         <ul>
           <li>Pending - This allocation hasn't been approved yet</li>
@@ -373,7 +408,7 @@ Allocation Detail
           <li>Disabled - This user's access to this allocation's space has been removed</li>
           <li>Retired - This user is no longer active in this allocation and likely should be removed</li>
         </ul>
-        If a user has an Active status and cannot access the storage space then they most likely need to log out (not disconnect) from all interactive login sessions and log back in for their newly added access to become active. 
+        If a user has an Active status and cannot access the storage space then they most likely need to log out (not disconnect) from all interactive login sessions and log back in for their newly added access to become active.
       </div>
     {% endif %}
     <div class="table-responsive">
@@ -404,7 +439,9 @@ Allocation Detail
               {% endif %}
               {% if user.status.name == 'Active' %}
                 <td class="text-success"><strong>{{ user.status.name }}</strong></td>
-              {% elif user.status.name in 'Denied, Error, Expired' %}
+              {% elif user.status.name == 'PendingEULA' %}
+                <td class="text-info">{{ user.status.name }}</td>
+              {% elif user.status.name in 'Denied, Error, Expired, DeclinedEULA' %}
                 <td class="text-danger"><strong>{{ user.status.name }}</strong></td>
               {% else %}
                 <td class="text-primary"><strong>{{ user.status.name }}</strong></td>
@@ -483,14 +520,17 @@ Allocation Detail
     {% endif %}
   </div>
 </div>
+{% endif %}
+
+{{ gauge_data|json_script:"guage-data" }}
 
 <script>
   $("#navbar-main > ul > li.active").removeClass("active");
   $("#navbar-project-menu").addClass("active");
 
   $(document).ready(function () {
-    var guage_data = {{ guage_data | safe }};
-    drawGauges(guage_data);
+    var gauge_data = JSON.parse(document.getElementById('gauge_data').textContent);
+    drawGauges(gauge_data);
 
     $('#allocation_change_table').DataTable({
       lengthMenu: [5, 10, 20, 50, 100],

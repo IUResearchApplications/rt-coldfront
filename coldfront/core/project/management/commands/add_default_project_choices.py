@@ -1,47 +1,81 @@
-import os
-from inspect import Attribute
+# SPDX-FileCopyrightText: (C) ColdFront Authors
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 from django.core.management.base import BaseCommand
 
-from coldfront.core.project.models import (ProjectAttributeType,
-                                            ProjectReviewStatusChoice,
-                                            ProjectStatusChoice,
-                                            ProjectUserRoleChoice,
-                                            ProjectUserStatusChoice,
-                                            ProjectTypeChoice,
-                                            AttributeType)
+from coldfront.core.project.models import (
+    AttributeType,
+    ProjectAttributeType,
+    ProjectReviewStatusChoice,
+    ProjectStatusChoice,
+    ProjectTypeChoice,
+    ProjectUserRoleChoice,
+    ProjectUserStatusChoice,
+)
 
 
 class Command(BaseCommand):
-    help = 'Add default project related choices'
+    help = "Add default project related choices"
 
     def handle(self, *args, **options):
         ProjectStatusChoice.objects.all().delete()
-        for choice in ['New', 'Active', 'Archived', 'Denied', 'Expired', 'Renewal Denied',
-                       'Review Pending', 'Waiting For Admin Approval', 'Contacted By Admin', ]:
+        for choice in [
+            "New",
+            "Active",
+            "Archived",
+            "Denied",
+            "Expired",
+            "Renewal Denied",
+            "Review Pending",
+            "Waiting For Admin Approval",
+            "Contacted By Admin",
+        ]:
             ProjectStatusChoice.objects.get_or_create(name=choice)
 
         ProjectReviewStatusChoice.objects.all().delete()
-        for choice in ['Approved', 'Pending', 'Denied', 'Completed', 'Contacted By Admin', ]:
+        for choice in [
+            "Approved",
+            "Pending",
+            "Denied",
+            "Completed",
+            "Contacted By Admin",
+        ]:
             ProjectReviewStatusChoice.objects.get_or_create(name=choice)
 
         ProjectUserRoleChoice.objects.all().delete()
-        for choice in ['User', 'Manager', 'Group', ]:
+        for choice in [
+            "User",
+            "Manager",
+            "Group",
+        ]:
             ProjectUserRoleChoice.objects.get_or_create(name=choice)
 
-        for choice in ['Active', 'Pending - Add', 'Pending - Remove', 'Denied', 'Removed', ]:
+        for choice in [
+            "Active",
+            "Denied",
+            "Removed",
+        ]:
             ProjectUserStatusChoice.objects.get_or_create(name=choice)
 
-        for attribute_type in ('Date', 'Float', 'Int', 'Text', 'Yes/No'):
+        for attribute_type in ("Date", "Float", "Int", "Text", "Yes/No"):
             AttributeType.objects.get_or_create(name=attribute_type)
 
         for name, attribute_type, has_usage, is_private in (
-            ('Project ID', 'Text', False, False),
-            ('Account Number', 'Int', False, True),
-            ('Auto Disable User Notifications', 'Yes/No', False, True),
+            ("Project ID", "Text", False, False),
+            ("Account Number", "Int", False, True),
+            ("Auto Disable User Notifications", "Yes/No", False, True),
         ):
-            ProjectAttributeType.objects.get_or_create(name=name, attribute_type=AttributeType.objects.get(
-                name=attribute_type), has_usage=has_usage, is_private=is_private)
+            ProjectAttributeType.objects.get_or_create(
+                name=name,
+                attribute_type=AttributeType.objects.get(name=attribute_type),
+                has_usage=has_usage,
+                is_private=is_private,
+            )
 
         ProjectTypeChoice.objects.all().delete()
-        for choice in ['Research', 'Class', ]:
+        for choice in [
+            "Research",
+            "Class",
+        ]:
             ProjectTypeChoice.objects.get_or_create(name=choice)
