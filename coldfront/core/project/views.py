@@ -80,8 +80,6 @@ from coldfront.core.project.signals import (
     project_user_role_changed,
 )
 from coldfront.core.project.utils import (
-    check_if_pi_eligible,
-    check_if_pis_eligible,
     create_admin_action,
     create_admin_action_for_creation,
     create_admin_action_for_deletion,
@@ -1847,7 +1845,11 @@ class ProjectReviewView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                 ).order_by("user__last_name")
             ]
         )
-        context["ineligible_pi"] = not check_if_pi_eligible(project_obj.pi)
+        try:
+            from coldfront.plugins.ldap_misc.utils.project import check_if_pi_eligible
+            context["ineligible_pi"] = not check_if_pi_eligible(project_obj.pi)
+        except ImportError:
+            context["ineligible_pi"] = False
         context["formset"] = []
         allocation_data = self.get_allocation_data(project_obj)
         if allocation_data:
@@ -1968,7 +1970,11 @@ class ProjectReviewListView(LoginRequiredMixin, UserPassesTestMixin, TemplateVie
                 "Contacted By Admin",
             ]
         ).order_by("created")
-        pi_eligibilities = check_if_pis_eligible(set([project_review.project.pi for project_review in project_reviews]))
+        try:
+            from coldfront.plugins.ldap_misc.utils.project import check_if_pis_eligible
+            pi_eligibilities = check_if_pis_eligible(set([project_review.project.pi for project_review in project_reviews]))
+        except ImportError:
+            pi_eligibilities = [True] * len(set([project_review.project.pi for project_review in project_reviews]))
         context["project_review_list"] = project_reviews
         context["pi_eligibilities"] = pi_eligibilities
 
