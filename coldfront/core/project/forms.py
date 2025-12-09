@@ -15,7 +15,6 @@ from coldfront.core.project.models import (
     ProjectReview,
     ProjectUserRoleChoice,
 )
-from coldfront.core.project.utils import check_if_pi_eligible
 from coldfront.core.utils.common import import_from_settings
 
 EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL = import_from_settings("EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL")
@@ -204,7 +203,11 @@ class ProjectCreationForm(forms.ModelForm):
 
     def __init__(self, user, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["pi_username"].required = not check_if_pi_eligible(user)
+        try:
+            from coldfront.plugins.ldap_misc.utils.project import check_if_pi_eligible
+            self.fields["pi_username"].required = not check_if_pi_eligible(user)
+        except ImportError:
+            self.fields["pi_username"].required = False
         self.fields["description"].widget.attrs.update(
             {
                 "placeholder": (
@@ -251,12 +254,16 @@ class ProjectCreationForm(forms.ModelForm):
                 }
             )
 
-        if not check_if_pi_eligible(pi_obj):
-            if pi_username:
-                message = {"pi_username": "Only faculty and staff can be the PI"}
-            else:
-                message = "Only faculty and staff can be the PI"
-            raise forms.ValidationError(message)
+        try:
+            from coldfront.plugins.ldap_misc.utils.project import check_if_pi_eligible
+            if not check_if_pi_eligible(pi_obj):
+                if pi_username:
+                    message = {"pi_username": "Only faculty and staff can be the PI"}
+                else:
+                    message = "Only faculty and staff can be the PI"
+                raise forms.ValidationError(message)
+        except ImportError:
+            pass
 
         cleaned_data["pi"] = pi_obj
         return cleaned_data
