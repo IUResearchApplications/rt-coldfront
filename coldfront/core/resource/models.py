@@ -13,7 +13,6 @@ from simple_history.models import HistoricalRecords
 
 import coldfront.core.attribute_expansion as attribute_expansion
 from coldfront.core.utils.common import import_from_settings
-from coldfront.plugins.ldap_user_search.utils import get_user_info, get_users_info
 
 logger = logging.getLogger(__name__)
 
@@ -244,7 +243,9 @@ class Resource(TimeStampedModel):
 
     def check_users_accounts(self, usernames):
         results = {}
-        if not any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
+        try:
+            from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_users_info
+        except ImportError:
             for username in usernames:
                 results[username] = {"exists": True, "reason": "not_enabled"}
             return results
@@ -294,7 +295,9 @@ class Resource(TimeStampedModel):
         if not RESOURCE_ENABLE_ACCOUNT_CHECKING:
             return {"exists": True, "reason": "not_enabled"}
 
-        if not any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
+        try:
+            from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_user_info
+        except ImportError:
             return {"exists": True, "reason": "not_enabled"}
 
         resource = self.get_attribute("check_user_account")

@@ -594,10 +594,10 @@ class AllocationAttribute(TimeStampedModel):
                     % (self.value, self.allocation_attribute_type.name)
                 )
 
-        linked_attribute_type_obj = self.allocation_attribute_type.linked_resource_attribute_type
-        if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
-            from coldfront.plugins.ldap_user_search.utils import get_user_info
+        try:
+            from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_user_info
 
+            linked_attribute_type_obj = self.allocation_attribute_type.linked_resource_attribute_type
             linked_attribute_obj = ResourceAttribute.objects.filter(
                 resource=self.allocation.get_parent_resource,
                 resource_attribute_type=linked_attribute_type_obj,
@@ -606,6 +606,8 @@ class AllocationAttribute(TimeStampedModel):
             if linked_attribute_obj.exists():
                 if not get_user_info(self.value):
                     raise ValidationError(f"{self.allocation_attribute_type.name} does not have a valid username")
+        except ImportError:
+            pass
 
     def __str__(self):
         return "%s" % (self.allocation_attribute_type.name)

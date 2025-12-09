@@ -982,8 +982,8 @@ class ProjectAddUsersSearchResultsView(LoginRequiredMixin, UserPassesTestMixin, 
         context["num_matches"] = len(matches)
 
         usernames = []
-        if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
-            from coldfront.plugins.ldap_user_search.utils import get_users_info
+        try:
+            from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_users_info
 
             users_info = get_users_info([match.get("username") for match in matches])
             for match in matches:
@@ -991,7 +991,7 @@ class ProjectAddUsersSearchResultsView(LoginRequiredMixin, UserPassesTestMixin, 
                 usernames.append(username)
                 role = "Group" if users_info.get(username).get("title") == "group" else "User"
                 match.update({"role": ProjectUserRoleChoice.objects.get(name=role)})
-        else:
+        except ImportError:
             for match in matches:
                 match.update({"role": ProjectUserRoleChoice.objects.get(name="User")})
 
@@ -1099,12 +1099,14 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
                 selected_users_usernames.append(user_form_data.get("username"))
                 selected_users_accounts[user_form_data.get("username")] = []
 
-        if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
-            from coldfront.plugins.ldap_user_search.utils import get_users_info
+        try:
+            from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_users_info
 
             users_info = get_users_info(selected_users_usernames)
             for username, user_info in users_info.items():
                 selected_users_accounts[username] = user_info.get("memberOf")
+        except ImportError:
+            pass
 
         return selected_users_accounts
 
@@ -1133,8 +1135,8 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
 
         # Initial data for ProjectAddUserForm
         matches = context.get("matches")
-        if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
-            from coldfront.plugins.ldap_user_search.utils import get_users_info
+        try:
+            from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_users_info
 
             users = [match.get("username") for match in matches]
             results = get_users_info(users)
@@ -1143,7 +1145,7 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
                     match.update({"role": ProjectUserRoleChoice.objects.get(name="Group")})
                 else:
                     match.update({"role": ProjectUserRoleChoice.objects.get(name="User")})
-        else:
+        except ImportError:
             for match in matches:
                 match.update({"role": ProjectUserRoleChoice.objects.get(name="User")})
 

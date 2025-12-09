@@ -231,12 +231,14 @@ class ProjectCreationForm(forms.ModelForm):
         else:
             pi_obj = requestor
         if pi_obj is None:
-            if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
-                from coldfront.plugins.ldap_user_search.utils import get_user_info
+            try:
+                from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_user_info
 
                 user_info = get_user_info(pi_username)
                 if not user_info:
                     raise forms.ValidationError({"pi_username": "This PI's username does not exist."})
+            except ImportError:
+                pass
 
             raise forms.ValidationError(
                 {

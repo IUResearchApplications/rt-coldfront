@@ -5,12 +5,10 @@ from django.views.generic import FormView
 
 from coldfront.core.utils.common import import_from_settings
 from coldfront.core.utils.mail import send_email_template
-from coldfront.plugins.ldap_user_search.utils import get_user_info
 from coldfront.plugins.request_forms.forms import SoftwareRequestForm, StatsRequestForm
 
 REQUEST_FORMS_EMAILS = import_from_settings("REQUEST_FORMS_EMAILS", {})
 EMAIL_SENDER = import_from_settings("EMAIL_SENDER", "")
-PROJECT_PI_ELIGIBLE_ADS_GROUPS = import_from_settings("PROJECT_PI_ELIGIBLE_ADS_GROUPS", "")
 
 
 class SoftwareRequestView(LoginRequiredMixin, UserPassesTestMixin, FormView):
@@ -21,10 +19,12 @@ class SoftwareRequestView(LoginRequiredMixin, UserPassesTestMixin, FormView):
         if self.request.user.is_superuser:
             return True
 
-        memberships = get_user_info(self.request.user.username).get("memberOf")
-        for membership in memberships:
-            if membership in PROJECT_PI_ELIGIBLE_ADS_GROUPS:
+        try:
+            from coldfront.plugins.ldap_misc.utils.project import check_if_pi_eligible
+            if check_if_pi_eligible(self.request.user.username):
                 return True
+        except ImportError:
+            pass
 
         messages.error(self.request, "Only Staff or Faculty can request HPC software.")
 

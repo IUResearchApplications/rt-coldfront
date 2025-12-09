@@ -149,14 +149,12 @@ def send_expiry_emails():
 
 
 def check_current_pi_eligibilities():
-    if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
-        from coldfront.plugins.ldap_user_search.utils import get_users_info
+    try:
+        from coldfront.plugins.ldap_misc.utils.project import check_current_pi_eligibilities
 
-        project_pis = set(Project.objects.filter(status__name="Active").values_list("pi__username", flat=True))
-        users_info = get_users_info(project_pis)
         logger.info("Checking PI eligibilities...")
-        for username, user_info in users_info.items():
-            if not check_if_pi_eligible(username, user_info.get("memberOf", [])):
-                logger.warning(f"PI {username} is no longer eligible to be a PI")
-
+        ineligible_pis = check_current_pi_eligibilities(Project.objects.filter(status__name="Active"))
+        logger.warning(f"PIs {', '.join(ineligible_pis)} are no longer eligible to be PIs")
         logger.info("Done checking PI eligibilities")
+    except ImportError:
+        logger.warning("ldap_misc plugin not enabled, skipping PI eligibility check")

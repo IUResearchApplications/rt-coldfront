@@ -19,25 +19,27 @@ ADDITIONAL_USER_SEARCH_CLASSES = import_from_settings("ADDITIONAL_USER_SEARCH_CL
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         user_profile = UserProfile.objects.create(user=instance, title="", department="", division="")
-        if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
-            from coldfront.plugins.ldap_user_search.utils import get_user_info
+        try:
+            from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_user_info
+        except ImportError:
+            return
 
-            attributes = get_user_info(instance.username)
-            if not attributes:
-                return
-            user_profile = instance.userprofile
-            for name, value in attributes.items():
-                if name == "title" and not value == "group":
-                    user_profile.is_pi = True
-                user_profile_attr = getattr(user_profile, name, None)
-                if user_profile_attr is not None and not user_profile_attr == value:
-                    setattr(user_profile, name, value)
-                    continue
-                user_attr = getattr(instance, name, None)
-                if user_attr is not None and not user_attr == value:
-                    setattr(instance, name, value)
+        attributes = get_user_info(instance.username)
+        if not attributes:
+            return
+        user_profile = instance.userprofile
+        for name, value in attributes.items():
+            if name == "title" and not value == "group":
+                user_profile.is_pi = True
+            user_profile_attr = getattr(user_profile, name, None)
+            if user_profile_attr is not None and not user_profile_attr == value:
+                setattr(user_profile, name, value)
+                continue
+            user_attr = getattr(instance, name, None)
+            if user_attr is not None and not user_attr == value:
+                setattr(instance, name, value)
 
-            instance.save()
+        instance.save()
 
 
 @receiver(post_save, sender=User)
@@ -49,30 +51,32 @@ def save_user_profile(sender, instance, **kwargs):
 def update_user_profile(sender, user, **kwargs):
     logger.info(f"{user.username} logged in")
 
-    if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
-        from coldfront.plugins.ldap_user_search.utils import get_user_info
+    try:
+        from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_user_info
+    except ImportError:
+        return
 
-        attributes = get_user_info(user.username)
-        if not attributes:
-            return
-        save_changes = False
-        if not user.email == attributes.get("email"):
-            user.email = attributes.get("email")
+    attributes = get_user_info(user.username)
+    if not attributes:
+        return
+    save_changes = False
+    if not user.email == attributes.get("email"):
+        user.email = attributes.get("email")
+        save_changes = True
+
+    user_profile = user.userprofile
+    for name, value in attributes.items():
+        user_profile_attr = getattr(user_profile, name, None)
+        if user_profile_attr is not None and not user_profile_attr == value:
+            setattr(user_profile, name, value)
             save_changes = True
 
-        user_profile = user.userprofile
-        for name, value in attributes.items():
-            user_profile_attr = getattr(user_profile, name, None)
-            if user_profile_attr is not None and not user_profile_attr == value:
-                setattr(user_profile, name, value)
-                save_changes = True
+    if not user_profile.user.email == attributes.get("email"):
+        user_profile.user.email = attributes.get("email")
+        user_profile.user.save()
 
-        if not user_profile.user.email == attributes.get("email"):
-            user_profile.user.email = attributes.get("email")
-            user_profile.user.save()
-
-        if save_changes:
-            user.save()
+    if save_changes:
+        user.save()
 
 
 @receiver(cas_user_authenticated)
