@@ -1,11 +1,16 @@
 from coldfront.core.user.models import UserProfile
-from coldfront.plugins.ldap_user_search.utils import LDAPUserSearch, get_user_info
 
 
 def update_all_user_profiles():
     """
     Updates all user profiles.
     """
+    try:
+        from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_user_info
+        from coldfront.plugins.ldap_user_search.utils import LDAPUserSearch
+    except ImportError:
+        return
+
     ldap_search = LDAPUserSearch(None, None)
     user_profiles = UserProfile.objects.select_related("user").all()
     for user_profile in user_profiles:
