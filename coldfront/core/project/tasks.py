@@ -4,7 +4,6 @@ import logging
 from django.contrib.auth.models import User
 
 from coldfront.core.project.models import Project, ProjectStatusChoice
-from coldfront.core.project.utils import check_if_pi_eligible
 from coldfront.core.utils.common import import_from_settings
 from coldfront.core.utils.mail import send_email_template
 
