@@ -153,7 +153,9 @@ def check_current_pi_eligibilities():
         from coldfront.plugins.ldap_misc.utils.project import check_current_pi_eligibilities
 
         logger.info("Checking PI eligibilities...")
-        ineligible_pis = check_current_pi_eligibilities(Project.objects.filter(status__name="Active"))
+        ineligible_pis = check_current_pi_eligibilities(
+            Project.objects.filter(status__name="Active").values_list("pi__username", flat=True)
+        )
         logger.warning(f"PIs {', '.join(ineligible_pis)} are no longer eligible to be PIs")
         logger.info("Done checking PI eligibilities")
     except ImportError:

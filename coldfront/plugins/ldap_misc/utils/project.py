@@ -1,6 +1,5 @@
 from django.conf import settings
 
-from coldfront.core.project.models import Project
 from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_user_info, get_users_info
 
 
@@ -37,9 +36,8 @@ def check_if_pis_eligible(usernames: list[str]) -> dict:
     return eligible_statuses
 
 
-def check_current_pi_eligibilities(project_objs: Project) -> list[str]:
-    project_pis = set(project_objs.values_list("pi__username", flat=True))
-    users_info = get_users_info(project_pis)
+def check_current_pi_eligibilities(project_usernames: list[str]) -> list[str]:
+    users_info = get_users_info(project_usernames)
 
     ineligible_pis = []
     for username, user_info in users_info.items():
