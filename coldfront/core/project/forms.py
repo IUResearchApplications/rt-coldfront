@@ -205,7 +205,7 @@ class ProjectCreationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         try:
             from coldfront.plugins.ldap_misc.utils.project import check_if_pi_eligible
-            self.fields["pi_username"].required = not check_if_pi_eligible(user)
+            self.fields["pi_username"].required = not check_if_pi_eligible(user.username)
         except ImportError:
             self.fields["pi_username"].required = False
         self.fields["description"].widget.attrs.update(
@@ -256,7 +256,7 @@ class ProjectCreationForm(forms.ModelForm):
 
         try:
             from coldfront.plugins.ldap_misc.utils.project import check_if_pi_eligible
-            if not check_if_pi_eligible(pi_obj):
+            if not check_if_pi_eligible(pi_obj.username):
                 if pi_username:
                     message = {"pi_username": "Only faculty and staff can be the PI"}
                 else:

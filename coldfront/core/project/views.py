@@ -1847,6 +1847,7 @@ class ProjectReviewView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         )
         try:
             from coldfront.plugins.ldap_misc.utils.project import check_if_pi_eligible
+
             context["ineligible_pi"] = not check_if_pi_eligible(project_obj.pi)
         except ImportError:
             context["ineligible_pi"] = False
@@ -1972,7 +1973,10 @@ class ProjectReviewListView(LoginRequiredMixin, UserPassesTestMixin, TemplateVie
         ).order_by("created")
         try:
             from coldfront.plugins.ldap_misc.utils.project import check_if_pis_eligible
-            pi_eligibilities = check_if_pis_eligible(set([project_review.project.pi for project_review in project_reviews]))
+
+            pi_eligibilities = check_if_pis_eligible(
+                set([project_review.project.pi.username for project_review in project_reviews])
+            )
         except ImportError:
             pi_eligibilities = [True] * len(set([project_review.project.pi for project_review in project_reviews]))
         context["project_review_list"] = project_reviews

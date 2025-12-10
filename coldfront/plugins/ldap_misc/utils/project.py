@@ -1,16 +1,15 @@
 from django.conf import settings
-from django.contrib.auth.models import User
 
 from coldfront.core.project.models import Project
 from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_user_info, get_users_info
 
 
-def check_if_pi_eligible(user: User, memberships=None) -> bool:
+def check_if_pi_eligible(username: str, memberships=None) -> bool:
     if not settings.LDAP_ENABLE_PROJECT_PI_ELIGIBLE_ADS_GROUPS:
         return True
 
     if not memberships:
-        memberships = get_user_info(user.username).get("memberOf")
+        memberships = get_user_info(username).get("memberOf")
 
     if not memberships:
         return False
@@ -22,11 +21,10 @@ def check_if_pi_eligible(user: User, memberships=None) -> bool:
     return False
 
 
-def check_if_pis_eligible(users: list[User]) -> dict:
+def check_if_pis_eligible(usernames: list[str]) -> dict:
     if not settings.LDAP_ENABLE_PROJECT_PI_ELIGIBLE_ADS_GROUPS:
         return {}
 
-    usernames = [user.username for user in set(users)]
     eligible_statuses = {}
     users_info = get_users_info(usernames)
     for username, user_info in users_info.items():
