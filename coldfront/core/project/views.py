@@ -80,7 +80,6 @@ from coldfront.core.project.signals import (
     project_user_role_changed,
 )
 from coldfront.core.project.utils import (
-    check_if_pi_eligible,
     check_if_pis_eligible,
     create_admin_action,
     create_admin_action_for_creation,
@@ -101,7 +100,6 @@ from coldfront.core.utils.slack import send_message
 
 if "coldfront.plugins.ldap_misc" in settings.INSTALLED_APPS:
     from coldfront.plugins.ldap_misc.utils.project import (
-        check_if_pi_eligible,
         check_if_pis_eligible,
         update_project_user_matches,
     )
@@ -1821,7 +1819,9 @@ class ProjectReviewView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                 ).order_by("user__last_name")
             ]
         )
-        context["ineligible_pi"] = not check_if_pi_eligible(project_obj.pi)
+        context["ineligible_pi"] = not check_if_pis_eligible([project_obj.pi.username]).get(
+            project_obj.pi.username, True
+        )
         context["formset"] = []
         allocation_data = self.get_allocation_data(project_obj)
         if allocation_data:

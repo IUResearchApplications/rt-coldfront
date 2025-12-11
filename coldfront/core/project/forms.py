@@ -16,12 +16,12 @@ from coldfront.core.project.models import (
     ProjectReview,
     ProjectUserRoleChoice,
 )
-from coldfront.core.project.utils import check_if_pi_eligible
+from coldfront.core.project.utils import check_if_pis_eligible
 from coldfront.core.utils.common import get_user_info, import_from_settings
 
 if "coldfront.plugins.ldap_misc" in settings.INSTALLED_APPS:
     from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_user_info
-    from coldfront.plugins.ldap_misc.utils.project import check_if_pi_eligible
+    from coldfront.plugins.ldap_misc.utils.project import check_if_pis_eligible
 
 EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL = import_from_settings("EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL")
 EMAIL_ADMIN_LIST = import_from_settings("EMAIL_ADMIN_LIST", [])
@@ -210,7 +210,7 @@ class ProjectCreationForm(forms.ModelForm):
     def __init__(self, user, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.fields["pi_username"].required = not check_if_pi_eligible(user.username)
+        self.fields["pi_username"].required = not check_if_pis_eligible([user.username]).get(user.username, False)
         self.fields["description"].widget.attrs.update(
             {
                 "placeholder": (
@@ -252,7 +252,7 @@ class ProjectCreationForm(forms.ModelForm):
                 }
             )
 
-        if not check_if_pi_eligible(pi_obj.username):
+        if not check_if_pis_eligible([pi_obj.username]).get(pi_obj.username, True):
             if pi_username:
                 message = {"pi_username": "Only faculty and staff can be the PI"}
             else:

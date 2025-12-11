@@ -5,12 +5,12 @@ from django.conf import settings
 from django.contrib.auth.models import User
 
 from coldfront.core.project.models import Project, ProjectStatusChoice
-from coldfront.core.project.utils import check_current_pi_eligibilities
+from coldfront.core.project.utils import get_ineligible_pis
 from coldfront.core.utils.common import import_from_settings
 from coldfront.core.utils.mail import send_email_template
 
 if "coldfront.plugins.ldap_misc" in settings.INSTALLED_APPS:
-    from coldfront.plugins.ldap_misc.utils.project import check_current_pi_eligibilities
+    from coldfront.plugins.ldap_misc.utils.project import get_ineligible_pis
 
 logger = logging.getLogger(__name__)
 
@@ -152,9 +152,9 @@ def send_expiry_emails():
             logger.debug(f"Project(s) expired email sent to user {user}.")
 
 
-def check_current_pi_eligibilities_task():
+def get_ineligible_pis():
     logger.info("Checking PI eligibilities...")
-    ineligible_pis = check_current_pi_eligibilities(
+    ineligible_pis = get_ineligible_pis(
         Project.objects.filter(status__name="Active").values_list("pi__username", flat=True)
     )
     if ineligible_pis:

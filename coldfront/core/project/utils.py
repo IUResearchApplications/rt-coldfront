@@ -204,10 +204,6 @@ def create_admin_action_for_project_creation(user, project):
     )
 
 
-def check_if_pi_eligible(project_pi_username):
-    return True
-
-
 def check_if_pis_eligible(project_pi_usernames):
     return dict.fromkeys(project_pi_usernames, True)
 
@@ -220,5 +216,5 @@ def update_project_user_matches(matches):
     return matches
 
 
-def check_current_pi_eligibilities(project_pi_usernames):
+def get_ineligible_pis(project_pi_usernames):
     return None
