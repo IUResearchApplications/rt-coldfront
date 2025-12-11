@@ -4,6 +4,7 @@
 
 
 from django import forms
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.validators import MinLengthValidator
 from django.db.models.functions import Lower
@@ -15,7 +16,12 @@ from coldfront.core.project.models import (
     ProjectReview,
     ProjectUserRoleChoice,
 )
-from coldfront.core.utils.common import import_from_settings
+from coldfront.core.project.utils import check_if_pi_eligible
+from coldfront.core.utils.common import get_user_info, import_from_settings
+
+if "coldfront.plugins.ldap_misc" in settings.INSTALLED_APPS:
+    from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_user_info
+    from coldfront.plugins.ldap_misc.utils.project import check_if_pi_eligible
 
 EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL = import_from_settings("EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL")
 EMAIL_ADMIN_LIST = import_from_settings("EMAIL_ADMIN_LIST", [])
@@ -203,11 +209,8 @@ class ProjectCreationForm(forms.ModelForm):
 
     def __init__(self, user, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        try:
-            from coldfront.plugins.ldap_misc.utils.project import check_if_pi_eligible
-            self.fields["pi_username"].required = not check_if_pi_eligible(user.username)
-        except ImportError:
-            self.fields["pi_username"].required = False
+
+        self.fields["pi_username"].required = not check_if_pi_eligible(user.username)
         self.fields["description"].widget.attrs.update(
             {
                 "placeholder": (
@@ -234,14 +237,9 @@ class ProjectCreationForm(forms.ModelForm):
         else:
             pi_obj = requestor
         if pi_obj is None:
-            try:
-                from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_user_info
-
-                user_info = get_user_info(pi_username)
-                if not user_info:
-                    raise forms.ValidationError({"pi_username": "This PI's username does not exist."})
-            except ImportError:
-                pass
+            user_info = get_user_info(pi_username)
+            if user_info is not None and not user_info:
+                raise forms.ValidationError({"pi_username": "This PI's username does not exist."})
 
             raise forms.ValidationError(
                 {
@@ -254,16 +252,12 @@ class ProjectCreationForm(forms.ModelForm):
                 }
             )
 
-        try:
-            from coldfront.plugins.ldap_misc.utils.project import check_if_pi_eligible
-            if not check_if_pi_eligible(pi_obj.username):
-                if pi_username:
-                    message = {"pi_username": "Only faculty and staff can be the PI"}
-                else:
-                    message = "Only faculty and staff can be the PI"
-                raise forms.ValidationError(message)
-        except ImportError:
-            pass
+        if not check_if_pi_eligible(pi_obj.username):
+            if pi_username:
+                message = {"pi_username": "Only faculty and staff can be the PI"}
+            else:
+                message = "Only faculty and staff can be the PI"
+            raise forms.ValidationError(message)
 
         cleaned_data["pi"] = pi_obj
         return cleaned_data

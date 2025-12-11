@@ -7,6 +7,7 @@ import logging
 from ast import literal_eval
 from enum import Enum
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -19,8 +20,11 @@ from simple_history.models import HistoricalRecords
 import coldfront.core.attribute_expansion as attribute_expansion
 from coldfront.core.project.models import Project, ProjectPermission
 from coldfront.core.resource.models import Resource, ResourceAttribute, ResourceAttributeType
-from coldfront.core.utils.common import import_from_settings
+from coldfront.core.utils.common import get_user_info, import_from_settings
 from coldfront.core.utils.groups import check_if_groups_in_review_groups
+
+if "coldfront.plugins.ldap_misc" in settings.INSTALLED_APPS:
+    from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_user_info
 
 logger = logging.getLogger(__name__)
 
@@ -594,20 +598,15 @@ class AllocationAttribute(TimeStampedModel):
                     % (self.value, self.allocation_attribute_type.name)
                 )
 
-        try:
-            from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_user_info
-
-            linked_attribute_type_obj = self.allocation_attribute_type.linked_resource_attribute_type
-            linked_attribute_obj = ResourceAttribute.objects.filter(
-                resource=self.allocation.get_parent_resource,
-                resource_attribute_type=linked_attribute_type_obj,
-                check_if_username_exists=True,
-            )
-            if linked_attribute_obj.exists():
-                if not get_user_info(self.value):
-                    raise ValidationError(f"{self.allocation_attribute_type.name} does not have a valid username")
-        except ImportError:
-            pass
+        linked_attribute_type_obj = self.allocation_attribute_type.linked_resource_attribute_type
+        linked_attribute_obj = ResourceAttribute.objects.filter(
+            resource=self.allocation.get_parent_resource,
+            resource_attribute_type=linked_attribute_type_obj,
+            check_if_username_exists=True,
+        )
+        if linked_attribute_obj.exists():
+            if not get_user_info(self.value):
+                raise ValidationError(f"{self.allocation_attribute_type.name} does not have a valid username")
 
     def __str__(self):
         return "%s" % (self.allocation_attribute_type.name)

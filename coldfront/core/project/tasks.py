@@ -1,11 +1,16 @@
 import datetime
 import logging
 
+from django.conf import settings
 from django.contrib.auth.models import User
 
 from coldfront.core.project.models import Project, ProjectStatusChoice
+from coldfront.core.project.utils import check_current_pi_eligibilities
 from coldfront.core.utils.common import import_from_settings
 from coldfront.core.utils.mail import send_email_template
+
+if "coldfront.plugins.ldap_misc" in settings.INSTALLED_APPS:
+    from coldfront.plugins.ldap_misc.utils.project import check_current_pi_eligibilities
 
 logger = logging.getLogger(__name__)
 
@@ -147,15 +152,11 @@ def send_expiry_emails():
             logger.debug(f"Project(s) expired email sent to user {user}.")
 
 
-def check_current_pi_eligibilities():
-    try:
-        from coldfront.plugins.ldap_misc.utils.project import check_current_pi_eligibilities
-
-        logger.info("Checking PI eligibilities...")
-        ineligible_pis = check_current_pi_eligibilities(
-            Project.objects.filter(status__name="Active").values_list("pi__username", flat=True)
-        )
+def check_current_pi_eligibilities_task():
+    logger.info("Checking PI eligibilities...")
+    ineligible_pis = check_current_pi_eligibilities(
+        Project.objects.filter(status__name="Active").values_list("pi__username", flat=True)
+    )
+    if ineligible_pis:
         logger.warning(f"PIs {', '.join(ineligible_pis)} are no longer eligible to be PIs")
-        logger.info("Done checking PI eligibilities")
-    except ImportError:
-        logger.warning("ldap_misc plugin not enabled, skipping PI eligibility check")
+    logger.info("Done checking PI eligibilities")

@@ -1001,8 +1001,8 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
 
     def get_disable_select_list(self, allocation_obj, usernames):
         disable_select_list = [False] * len(usernames)
-        results = allocation_obj.get_parent_resource.check_users_accounts(usernames)
-        for i, result in enumerate(results.values()):
+        user_account_statuses = allocation_obj.get_parent_resource.get_user_account_statuses(usernames)
+        for i, result in enumerate(user_account_statuses.values()):
             if not result.get("exists"):
                 disable_select_list[i] = True
         return disable_select_list
@@ -1014,12 +1014,12 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
         users_to_add = self.get_users_to_add(allocation_obj)
         context = {}
 
-        results = {}
+        user_account_statuses = {}
         if users_to_add:
             formset = formset_factory(
                 AllocationAddUserForm, max_num=len(users_to_add), formset=AllocationAddUserFormset
             )
-            results = allocation_obj.get_parent_resource.check_users_accounts(
+            user_account_statuses = allocation_obj.get_parent_resource.get_user_account_statuses(
                 [user.get("username") for user in users_to_add]
             )
             formset = formset(
@@ -1027,7 +1027,7 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                 prefix="userform",
                 form_kwargs={
                     "resource": allocation_obj.get_parent_resource,
-                    "disable_selected": [not result.get("exists") for result in results.values()],
+                    "disable_selected": [not result.get("exists") for result in user_account_statuses.values()],
                 },
             )
             context["formset"] = formset
@@ -1036,7 +1036,7 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
         context["allocation"] = allocation_obj
 
         account_results = {}
-        for username, result in results.items():
+        for username, result in user_account_statuses.items():
             account_results[username] = result.get("reason")
         context["account_results"] = account_results
 
@@ -1077,13 +1077,13 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                 allocation_user_pending_status_choice = AllocationUserStatusChoice.objects.get(name="PendingEULA")
             selected_users = self.get_dict_of_users_to_add(formset)
 
-            user_account_results = allocation_obj.get_parent_resource.check_users_accounts(
+            user_account_statuses = allocation_obj.get_parent_resource.get_user_account_statuses(
                 [selected_user for selected_user in selected_users.keys()]
             )
 
             missing_accounts = []
             missing_resource_accounts = []
-            for username, result in user_account_results.items():
+            for username, result in user_account_statuses.items():
                 if not result.get("exists"):
                     if result.get("reason") == "no_account":
                         missing_accounts.append(username)

@@ -4,9 +4,10 @@
 import datetime
 import logging
 
+from django.conf import settings
 from django.forms.models import model_to_dict
 
-from coldfront.core.project.models import Project, ProjectAdminAction
+from coldfront.core.project.models import Project, ProjectAdminAction, ProjectUserRoleChoice
 
 logger = logging.getLogger(__name__)
 
@@ -201,3 +202,23 @@ def create_admin_action_for_project_creation(user, project):
     ProjectAdminAction.objects.create(
         user=user, project=project, action=f'Created a project with status "{project.status.name}"'
     )
+
+
+def check_if_pi_eligible(project_pi_username):
+    return True
+
+
+def check_if_pis_eligible(project_pi_usernames):
+    return dict.fromkeys(project_pi_usernames, True)
+
+
+def update_project_user_matches(matches):
+    project_user_role_obj = ProjectUserRoleChoice.objects.get(name="User")
+    for match in matches:
+        match.update({"role": project_user_role_obj})
+
+    return matches
+
+
+def check_current_pi_eligibilities(project_pi_usernames):
+    return None

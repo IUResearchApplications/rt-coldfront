@@ -1,5 +1,6 @@
 from django.conf import settings
 
+from coldfront.core.project.models import ProjectUserRoleChoice
 from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_user_info, get_users_info
 
 
@@ -61,3 +62,13 @@ def check_current_pi_eligibilities(project_pi_usernames: list[str]) -> list[str]
             ineligible_pis.append(username)
 
     return ineligible_pis
+
+
+def update_project_user_matches(matches: dict) -> dict:
+    users_info = get_users_info([match.get("username") for match in matches])
+    for match in matches:
+        username = match.get("username")
+        role = "Group" if users_info.get(username).get("title") == "group" else "User"
+        match.update({"role": ProjectUserRoleChoice.objects.get(name=role)})
+
+    return matches
