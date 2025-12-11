@@ -17,6 +17,9 @@ def check_if_pis_eligible(project_pi_usernames: list[str]) -> dict:
     eligible_statuses = {}
     users_info = get_users_info(project_pi_usernames)
     for username, user_info in users_info.items():
+        if user_info is None:
+            eligible_statuses[username] = True
+            continue
         for user_membersip in user_info.get("memberOf", []):
             eligible = user_membersip in settings.LDAP_PROJECT_PI_ELIGIBLE_ADS_GROUPS
             eligible_statuses[username] = eligible
@@ -40,11 +43,11 @@ def get_ineligible_pis(project_pi_usernames: list[str]) -> list[str]:
     return ineligible_pis
 
 
-def update_project_user_matches(matches: dict) -> dict:
+def update_project_user_matches(matches: list[dict]) -> dict:
     users_info = get_users_info([match.get("username") for match in matches])
     for match in matches:
-        username = match.get("username")
-        role = "Group" if users_info.get(username).get("title") == "group" else "User"
+        user_info = users_info.get(match.get("username"))
+        role = "Group" if user_info is not None and user_info.get("title") == "group" else "User"
         match.update({"role": ProjectUserRoleChoice.objects.get(name=role)})
 
     return matches

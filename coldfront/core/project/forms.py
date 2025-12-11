@@ -17,10 +17,10 @@ from coldfront.core.project.models import (
     ProjectUserRoleChoice,
 )
 from coldfront.core.project.utils import check_if_pis_eligible
-from coldfront.core.utils.common import get_user_info, import_from_settings
+from coldfront.core.utils.common import get_users_info, import_from_settings
 
 if "coldfront.plugins.ldap_misc" in settings.INSTALLED_APPS:
-    from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_user_info
+    from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_users_info
     from coldfront.plugins.ldap_misc.utils.project import check_if_pis_eligible
 
 EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL = import_from_settings("EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL")
@@ -237,7 +237,7 @@ class ProjectCreationForm(forms.ModelForm):
         else:
             pi_obj = requestor
         if pi_obj is None:
-            user_info = get_user_info(pi_username)
+            user_info = get_users_info([pi_username]).get(pi_username)
             if user_info is not None and not user_info:
                 raise forms.ValidationError({"pi_username": "This PI's username does not exist."})
 

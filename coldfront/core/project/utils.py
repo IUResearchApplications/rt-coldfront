@@ -4,7 +4,6 @@
 import datetime
 import logging
 
-from django.conf import settings
 from django.forms.models import model_to_dict
 
 from coldfront.core.project.models import Project, ProjectAdminAction, ProjectUserRoleChoice

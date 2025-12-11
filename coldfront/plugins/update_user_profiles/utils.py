@@ -1,20 +1,23 @@
+from django.conf import settings
+
 from coldfront.core.user.models import UserProfile
+from coldfront.core.utils.common import get_users_info
+
+if "coldfront.plugins.ldap_misc" in settings.INSTALLED_APPS:
+    from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_users_info
 
 
 def update_all_user_profiles():
     """
     Updates all user profiles.
     """
-    try:
-        from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_user_info
-        from coldfront.plugins.ldap_user_search.utils import LDAPUserSearch
-    except ImportError:
-        return
-
-    ldap_search = LDAPUserSearch(None, None)
     user_profiles = UserProfile.objects.select_related("user").all()
+    users_info = get_users_info([user_profile.user.username for user_profile in user_profiles])
     for user_profile in user_profiles:
-        attributes = get_user_info(user_profile.user.username, ldap_search)
+        attributes = users_info.get(user_profile.user.username)
+        if attributes is None:
+            # If one is None then all are None
+            return
 
         save_changes = False
         for name, value in attributes.items():

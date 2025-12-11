@@ -20,11 +20,11 @@ from simple_history.models import HistoricalRecords
 import coldfront.core.attribute_expansion as attribute_expansion
 from coldfront.core.project.models import Project, ProjectPermission
 from coldfront.core.resource.models import Resource, ResourceAttribute, ResourceAttributeType
-from coldfront.core.utils.common import get_user_info, import_from_settings
+from coldfront.core.utils.common import get_users_info, import_from_settings
 from coldfront.core.utils.groups import check_if_groups_in_review_groups
 
 if "coldfront.plugins.ldap_misc" in settings.INSTALLED_APPS:
-    from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_user_info
+    from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_users_info
 
 logger = logging.getLogger(__name__)
 
@@ -605,7 +605,8 @@ class AllocationAttribute(TimeStampedModel):
             check_if_username_exists=True,
         )
         if linked_attribute_obj.exists():
-            if not get_user_info(self.value):
+            username = get_users_info([self.value]).get(self.value).get(self.value, "")
+            if username is not None and not username:
                 raise ValidationError(f"{self.allocation_attribute_type.name} does not have a valid username")
 
     def __str__(self):

@@ -2,17 +2,22 @@ from unittest import mock
 
 from django.test import TestCase, override_settings
 
+from coldfront.core.project.models import ProjectUserRoleChoice
+from coldfront.core.test_helpers.factories import ProjectUserRoleChoiceFactory
 from coldfront.plugins.ldap_misc.utils.project import (
     check_if_pis_eligible,
     get_ineligible_pis,
+    update_project_user_matches,
 )
 
 
-@override_settings(
-    LDAP_ENABLE_PROJECT_PI_ELIGIBLE_ADS_GROUPS=True,
-    LDAP_PROJECT_PI_ELIGIBLE_ADS_GROUPS=["test-group"],
-)
+@override_settings(LDAP_ENABLE_PROJECT_PI_ELIGIBLE_ADS_GROUPS=True, LDAP_PROJECT_PI_ELIGIBLE_ADS_GROUPS=["test-group"])
 class ProjectTestCase(TestCase):
+    def setUp(self) -> None:
+        ProjectUserRoleChoiceFactory(name="User")
+        ProjectUserRoleChoiceFactory(name="Group")
+        return super().setUp()
+
     @mock.patch("coldfront.plugins.ldap_misc.utils.project.get_users_info")
     def test_check_if_pis_eligible_variants(self, mock_get_users_info):
         usernames = ["john", "doe"]
@@ -50,3 +55,17 @@ class ProjectTestCase(TestCase):
         mock_check_if_pis_eligible.return_value = {"john": True, "doe": True}
         result = get_ineligible_pis(usernames)
         assert_in_not_in_helper(usernames, result, self.assertNotIn)
+
+    @mock.patch("coldfront.plugins.ldap_misc.utils.project.get_users_info")
+    def test_update_project_user_matches(self, mock_get_users_info):
+        matches = [{"username": "john", "role": None}, {"username": "doe", "role": None}]
+
+        mock_get_users_info.return_value = {"john": {}, "doe": {}}
+        update_project_user_matches(matches)
+        for match in matches:
+            self.assertEqual(ProjectUserRoleChoice.objects.get(name="User"), match.get("role"))
+
+        mock_get_users_info.return_value = {"john": {"title": "group"}, "doe": {"title": "group"}}
+        update_project_user_matches(matches)
+        for match in matches:
+            self.assertEqual(ProjectUserRoleChoice.objects.get(name="Group"), match.get("role"))

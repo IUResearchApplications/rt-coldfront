@@ -50,12 +50,8 @@ def su_login_callback(user):
     return False
 
 
-def get_user_info(username):
-    return None
-
-
 def get_users_info(usernames):
-    return None
+    return dict.fromkeys(usernames, None)
 
 
 def get_users_accounts(usernames):

@@ -9,10 +9,10 @@ from django.dispatch import receiver
 from django_cas_ng.signals import cas_user_authenticated, cas_user_logout
 
 from coldfront.core.user.models import UserProfile
-from coldfront.core.utils.common import get_user_info, import_from_settings
+from coldfront.core.utils.common import get_users_info, import_from_settings
 
 if "coldfront.plugins.ldap_misc" in settings.INSTALLED_APPS:
-    from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_user_info
+    from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_users_info
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ ADDITIONAL_USER_SEARCH_CLASSES = import_from_settings("ADDITIONAL_USER_SEARCH_CL
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
         user_profile = UserProfile.objects.create(user=instance, title="", department="", division="")
-        attributes = get_user_info(instance.username)
+        attributes = get_users_info([instance.username]).get(instance.username)
         if not attributes:
             return
         user_profile = instance.userprofile
@@ -49,7 +49,7 @@ def save_user_profile(sender, instance, **kwargs):
 @receiver(user_logged_in, sender=User)
 def update_user_profile(sender, user, **kwargs):
     logger.info(f"{user.username} logged in")
-    attributes = get_user_info(user.username)
+    attributes = get_users_info([user.username]).get(user.username)
     if not attributes:
         return
     save_changes = False

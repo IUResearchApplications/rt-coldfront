@@ -10,7 +10,10 @@ def get_users_accounts(usernames: list[str]) -> dict | None:
     results = {}
     users_info = get_users_info(usernames)
     for username, user_info in users_info.items():
-        results[username] = user_info.get("memberOf", [])
+        if user_info is None:
+            results[username] = []
+        else:
+            results[username] = user_info.get("memberOf", [])
 
     return results
 

@@ -1,47 +1,29 @@
 from unittest import mock
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
-from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_user_info, get_users_info
+from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_users_info
 
 
+@override_settings(LDAP_ENABLE_USER_INFO=True)
 class LDAPUserSearchTestCase(TestCase):
     @mock.patch("coldfront.plugins.ldap_misc.utils.ldap_user_search.LDAPUserSearch")
-    def test_get_user_info(self, mock_ldap_search):
-        username = "john"
-
-        # Test when no user is found
-        mock_ldap_search.attribute = "search_a_user"
-        mock_ldap_search.search_a_user.return_value = []
-        user_info = get_user_info(username, mock_ldap_search)
-        mock_ldap_search.search_a_user.assert_called_once_with(username, "username_only")
-        self.assertEqual(user_info, {})
-        mock_ldap_search.search_a_user.reset_mock()
-
-        # Test when a user is found
-        mock_ldap_search.search_a_user.return_value = [{"username": "john"}]
-        user_info = get_user_info(username, mock_ldap_search)
-        mock_ldap_search.search_a_user.assert_called_once_with(username, "username_only")
-        self.assertEqual(user_info, {"username": "john"})
-
-    @mock.patch("coldfront.plugins.ldap_misc.utils.ldap_user_search.LDAPUserSearch")
-    @mock.patch("coldfront.plugins.ldap_misc.utils.ldap_user_search.get_user_info")
-    def test_get_users_info(self, mock_get_user_info, mock_ldap_search):
+    def test_get_users_info(self, mock_ldap_search):
         usernames = ["john", "doe"]
 
-        # Mock LDAP user search since we tested it earlier
-        mock_ldap_search.return_value = mock.Mock()
+        # Grab the instance
+        mock_ldap_search = mock_ldap_search.return_value
 
         # Test not finding the users
-        mock_get_user_info.side_effect = [{}, {}]
+        mock_ldap_search.search_a_user.side_effect = [[], []]
         users_info = get_users_info(usernames)
-        for name in usernames:
+        for name, user_info in users_info.items():
             with self.subTest(name=name):
-                self.assertEqual(users_info.get(name), {})
+                self.assertEqual(user_info, {})
 
         # Test finding the users
-        mock_get_user_info.side_effect = [{"username": "john"}, {"username": "doe"}]
+        mock_ldap_search.search_a_user.side_effect = [[{"username": "john"}], [{"username": "doe"}]]
         users_info = get_users_info(usernames)
-        for name in usernames:
+        for name, user_info in users_info.items():
             with self.subTest(name=name):
-                self.assertEqual(users_info.get(name), {"username": name})
+                self.assertEqual(user_info, {"username": name})
