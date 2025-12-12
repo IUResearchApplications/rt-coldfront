@@ -5,11 +5,14 @@ from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_users_info
 
 
 def check_if_pis_eligible(project_pi_usernames: list[str]) -> dict:
-    """
-    Returns a dictionary of project PIs with their usernames as the key and their eligibility to be a PI as the value.
-    Returns an empty dictionary if LDAP_ENABLE_PROJECT_PI_ELIGIBLE_ADS_GROUPS is False.
+    """Checks the elgibility of project PIs.
 
-    :param project_pi_usernames: A list of project PI usernames
+    Params:
+        project_pi_usernames (list): a list of project PI usernames
+
+    Returns:
+        dict: a dictionary of project PIs' eligibilities, if LDAP_ENABLE_PROJECT_PI_ELIGIBLE_ADS_GROUPS is False then
+        it's empty
     """
     if not settings.LDAP_ENABLE_PROJECT_PI_ELIGIBLE_ADS_GROUPS:
         return {}
@@ -30,10 +33,13 @@ def check_if_pis_eligible(project_pi_usernames: list[str]) -> dict:
 
 
 def get_ineligible_pis(project_pi_usernames: list[str]) -> list[str]:
-    """
-    Returns a list of project PI usernames that are not eligible to be a PI.
+    """Finds project PIs that are not eligible to be a PI.
 
-    :param project_pi_usernames: A list of project PI usernames
+    Params:
+        project_pi_usernames (list): a list of project PI usernames
+
+    Returns:
+        list: a list of project PI usernames that are not eligible to be a PI
     """
     ineligible_pis = []
     for username, eligible in check_if_pis_eligible(project_pi_usernames).items():
@@ -43,7 +49,15 @@ def get_ineligible_pis(project_pi_usernames: list[str]) -> list[str]:
     return ineligible_pis
 
 
-def update_project_user_matches(matches: list[dict]) -> dict:
+def update_project_user_matches(matches: list[dict]) -> list:
+    """Update the roles in each match based on if they are a group account.
+
+    Params:
+        matches (list): a list of matches found
+
+    Returns:
+        list: the list of matches with their updated roles
+    """
     users_info = get_users_info([match.get("username") for match in matches])
     for match in matches:
         user_info = users_info.get(match.get("username"))

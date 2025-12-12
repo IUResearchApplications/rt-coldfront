@@ -4,6 +4,14 @@ from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_users_info
 
 
 def get_users_accounts(usernames: list[str]) -> dict | None:
+    """Finds the accounts the users have with LDAP.
+
+    Params:
+        usernames (list): a list of usernames
+
+    Returns:
+        dict | None: a dictionary with the users' accounts or None if LDAP_ENABLE_RESOURCE_ACCOUNT_CHECKING is False
+    """
     if not settings.LDAP_ENABLE_RESOURCE_ACCOUNT_CHECKING:
         return None
 
