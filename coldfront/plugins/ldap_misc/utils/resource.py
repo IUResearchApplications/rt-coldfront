@@ -4,7 +4,7 @@ from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_users_info
 
 
 def get_users_accounts(usernames: list[str]) -> dict | None:
-    if not settings.LDAP_RESOURCE_ENABLE_ACCOUNT_CHECKING:
+    if not settings.LDAP_ENABLE_RESOURCE_ACCOUNT_CHECKING:
         return None
 
     results = {}

@@ -6,7 +6,7 @@ from coldfront.plugins.ldap_misc.utils.resource import get_user_account_statuses
 
 
 @override_settings(
-    LDAP_RESOURCE_ENABLE_ACCOUNT_CHECKING=True,
+    LDAP_ENABLE_RESOURCE_ACCOUNT_CHECKING=True,
     LDAP_RESOURCE_ACCOUNTS={"test_resource": "test1"},
 )
 class ResourceTestCase(TestCase):
