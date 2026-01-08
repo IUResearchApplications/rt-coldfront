@@ -80,7 +80,6 @@ from coldfront.core.project.signals import (
     project_user_role_changed,
 )
 from coldfront.core.project.utils import (
-    check_if_pi_eligible,
     check_if_pis_eligible,
     create_admin_action,
     create_admin_action_for_creation,
@@ -89,14 +88,22 @@ from coldfront.core.project.utils import (
     generate_project_code,
     get_new_end_date_from_list,
     get_project_user_emails,
+    update_project_user_matches,
 )
 from coldfront.core.publication.models import Publication
 from coldfront.core.research_output.models import ResearchOutput
 from coldfront.core.user.forms import UserSearchForm
 from coldfront.core.user.utils import CombinedUserSearch
-from coldfront.core.utils.common import get_domain_url, import_from_settings
+from coldfront.core.utils.common import get_domain_url, get_users_accounts, import_from_settings
 from coldfront.core.utils.mail import send_email, send_email_template
 from coldfront.core.utils.slack import send_message
+
+if "coldfront.plugins.ldap_misc" in settings.INSTALLED_APPS:
+    from coldfront.plugins.ldap_misc.utils.project import (
+        check_if_pis_eligible,
+        update_project_user_matches,
+    )
+    from coldfront.plugins.ldap_misc.utils.resource import get_users_accounts
 
 EMAIL_ENABLED = import_from_settings("EMAIL_ENABLED", False)
 ALLOCATION_ENABLE_ALLOCATION_RENEWAL = import_from_settings("ALLOCATION_ENABLE_ALLOCATION_RENEWAL", True)
@@ -980,20 +987,7 @@ class ProjectAddUsersSearchResultsView(LoginRequiredMixin, UserPassesTestMixin, 
         # Initial data for ProjectAddUserForm
         matches = context.get("matches")
         context["num_matches"] = len(matches)
-
-        usernames = []
-        if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
-            from coldfront.plugins.ldap_user_search.utils import get_users_info
-
-            users_info = get_users_info([match.get("username") for match in matches])
-            for match in matches:
-                username = match.get("username")
-                usernames.append(username)
-                role = "Group" if users_info.get(username).get("title") == "group" else "User"
-                match.update({"role": ProjectUserRoleChoice.objects.get(name=role)})
-        else:
-            for match in matches:
-                match.update({"role": ProjectUserRoleChoice.objects.get(name="User")})
+        matches = update_project_user_matches(matches)
 
         if matches:
             formset = formset_factory(ProjectAddUserForm, max_num=len(matches))
@@ -1026,8 +1020,9 @@ class ProjectAddUsersSearchResultsView(LoginRequiredMixin, UserPassesTestMixin, 
         for allocation in allocations:
             resource_obj = allocation.get_parent_resource
             if not account_statuses.get(resource_obj.pk):
-                account_statuses[resource_obj.name] = resource_obj.check_users_accounts(usernames)
-
+                account_statuses[resource_obj.name] = resource_obj.get_user_account_statuses(
+                    [match.get("username") for match in matches]
+                )
         context["account_statuses"] = account_statuses
 
         # The following block of code is used to hide/show the allocation div in the form.
@@ -1090,24 +1085,6 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
 
         return initial_data
 
-    def get_users_accounts(self, formset):
-        selected_users_accounts = {}
-        selected_users_usernames = []
-        for form in formset:
-            user_form_data = form.cleaned_data
-            if user_form_data.get("selected"):
-                selected_users_usernames.append(user_form_data.get("username"))
-                selected_users_accounts[user_form_data.get("username")] = []
-
-        if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
-            from coldfront.plugins.ldap_user_search.utils import get_users_info
-
-            users_info = get_users_info(selected_users_usernames)
-            for username, user_info in users_info.items():
-                selected_users_accounts[username] = user_info.get("memberOf")
-
-        return selected_users_accounts
-
     def get_allocation_user_roles(self, allocations):
         return [allocation.get_user_roles().values_list("name", flat=True) for allocation in allocations]
 
@@ -1133,19 +1110,7 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
 
         # Initial data for ProjectAddUserForm
         matches = context.get("matches")
-        if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
-            from coldfront.plugins.ldap_user_search.utils import get_users_info
-
-            users = [match.get("username") for match in matches]
-            results = get_users_info(users)
-            for match in matches:
-                if results.get(match.get("username")).get("title") == "group":
-                    match.update({"role": ProjectUserRoleChoice.objects.get(name="Group")})
-                else:
-                    match.update({"role": ProjectUserRoleChoice.objects.get(name="User")})
-        else:
-            for match in matches:
-                match.update({"role": ProjectUserRoleChoice.objects.get(name="User")})
+        matches = update_project_user_matches(matches)
 
         auto_disable_notifications = False
         auto_disable_obj = project_obj.projectattribute_set.filter(
@@ -1183,7 +1148,10 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
             for allocation in allocation_formset:
                 cleaned_data = allocation.cleaned_data
                 if cleaned_data["selected"]:
-                    selected_users_accounts = self.get_users_accounts(formset)
+                    allocation = allocations.get(pk=cleaned_data["pk"])
+                    selected_users_accounts = get_users_accounts(
+                        [form.cleaned_data.get("username") for form in formset if form.cleaned_data.get("selected")]
+                    )
                     break
 
             for form in formset:
@@ -1202,11 +1170,11 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
 
                     # If no more managers can be added then give the user the 'User' role.
                     if role_choice.name == "Manager":
-                        if project_obj.check_exceeds_max_managers(1):
+                        if project_obj.check_exceeds_max_managers(1):  # TODO - See what this is doing
                             role_choice = ProjectUserRoleChoice.objects.get(name="User")
                             managers_rejected.append(user_form_data.get("username"))
 
-                    enable_notifications = True
+                    enable_notifications = True  # TODO - Could simplify this a little
                     if role_choice.name == "Group":
                         # Notifications by default will be disabled for group accounts.
                         enable_notifications = False
@@ -1245,8 +1213,14 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
                                 allocations_added_to[allocation] = []
 
                             # If the user does not have an account on the resource in the allocation then do not add them to it.
-                            accounts = selected_users_accounts.get(username)
-                            account_exists, reason = allocation.get_parent_resource.check_accounts(accounts).values()
+                            account_exists, reason = allocation.get_parent_resource.get_user_account_statuses(
+                                [
+                                    form.cleaned_data.get("username")
+                                    for form in formset
+                                    if form.cleaned_data.get("selected")
+                                ],
+                                selected_users_accounts,
+                            ).get(username)
                             if not account_exists:
                                 # Make sure there are no duplicates for a user if there's more than one instance of a resource.
                                 if reason == "no_account":
@@ -1845,7 +1819,9 @@ class ProjectReviewView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                 ).order_by("user__last_name")
             ]
         )
-        context["ineligible_pi"] = not check_if_pi_eligible(project_obj.pi)
+        context["ineligible_pi"] = not check_if_pis_eligible([project_obj.pi.username]).get(
+            project_obj.pi.username, True
+        )
         context["formset"] = []
         allocation_data = self.get_allocation_data(project_obj)
         if allocation_data:
@@ -1966,7 +1942,10 @@ class ProjectReviewListView(LoginRequiredMixin, UserPassesTestMixin, TemplateVie
                 "Contacted By Admin",
             ]
         ).order_by("created")
-        pi_eligibilities = check_if_pis_eligible(set([project_review.project.pi for project_review in project_reviews]))
+
+        pi_eligibilities = check_if_pis_eligible(
+            set([project_review.project.pi.username for project_review in project_reviews])
+        )
         context["project_review_list"] = project_reviews
         context["pi_eligibilities"] = pi_eligibilities
 
