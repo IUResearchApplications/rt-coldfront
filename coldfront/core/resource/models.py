@@ -21,9 +21,6 @@ if "coldfront.plugins.ldap_misc" in settings.INSTALLED_APPS:
 
 logger = logging.getLogger(__name__)
 
-RESOURCE_ENABLE_ACCOUNT_CHECKING = import_from_settings("RESOURCE_ENABLE_ACCOUNT_CHECKING", True)
-RESOURCE_ACCOUNTS = import_from_settings("RESOURCE_ACCOUNTS", {})
-
 ADDITIONAL_USER_SEARCH_CLASSES = import_from_settings("ADDITIONAL_USER_SEARCH_CLASSES", [])
 
 
