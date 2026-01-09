@@ -1,4 +1,4 @@
-from coldfront.config.base import INSTALLED_APPS
+from coldfront.config.base import INSTALLED_APPS, MIDDLEWARE
 from coldfront.config.env import ENV
 
 INSTALLED_APPS += [
@@ -53,6 +53,8 @@ if ENABLE_LDAP_ELIGIBILITY_SERVER:
     LDAP_ELIGIBILITY_CONNECT_TIMEOUT = ENV.str("LDAP_ELIGIBILITY_CONNECT_TIMEOUT", 2.5)
     LDAP_ADS_NETID_FORMAT = ENV.str("LDAP_ADS_NETID_FORMAT", "")
 SLATE_PROJECT_FIELD_MAP = ENV.dict("SLATE_PROJECT_FIELD_MAP", default={})
+
+MIDDLEWARE += ["coldfront_custom_resources.storage.slate_project.middleware.SlateProjectMiddleware"]
 
 REALLMS_API_URL = ENV.str("REALLMS_API_URL", "")
 REALLMS_API_KEY = ENV.str("REALLMS_API_KEY", "")
