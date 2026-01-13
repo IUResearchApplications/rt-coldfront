@@ -152,7 +152,7 @@ def send_expiry_emails():
             logger.debug(f"Project(s) expired email sent to user {user}.")
 
 
-def get_ineligible_pis():
+def check_ineligible_pis():
     logger.info("Checking PI eligibilities...")
     ineligible_pis = get_ineligible_pis(
         Project.objects.filter(status__name="Active").values_list("pi__username", flat=True)
