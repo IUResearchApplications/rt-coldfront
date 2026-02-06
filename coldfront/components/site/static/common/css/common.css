@@ -224,3 +224,20 @@ a {
 a:hover {
   color: #01426A;
 }
+
+.dropdown-submenu {
+  position: relative;
+}
+
+.dropdown-submenu .dropdown-menu {
+  top: 0;
+  left: 100%;
+  padding-top: 0;
+  margin-top: 0;
+  margin-left: .1rem;
+  margin-right: .1rem;
+}
+
+.dropdown-submenu a::after{
+    transform: rotate(-90deg);
+}

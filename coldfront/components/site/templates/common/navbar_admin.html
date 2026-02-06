@@ -1,24 +1,44 @@
 {% load common_tags %}
 
 <li id="navbar-admin" class="nav-item dropdown">
-  <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Admin</a>
-  <div class="dropdown-menu">
-    <a class="dropdown-item" href="/admin">RT Projects Administration</a>
-    <a id="navbar-user-search" class="dropdown-item" href="{% url 'user-search-home' %}">User Search</a>
-    <a class="dropdown-item" href="{% url 'project-list' %}?show_all_projects=on">All Projects</a>
-    <a class="dropdown-item" href="{% url 'allocation-list' %}?show_all_allocations=on">All Allocations</a>
-    <a class="dropdown-item" href="{% url 'resource-list' %}">All Resources</a>
-    <a id="navbar-project-reviews" class="dropdown-item" href="{% url 'project-review-list' %}">Project Reviews/Requests</a>
-    <a id="navbar-allocation-requests" class="dropdown-item" href="{% url 'allocation-request-list' %}">
-      Allocation Requests</a>
-    {% if 'allocation_removal_requests/navbar_allocation_removal_requests.html'|template_exists %}
-      {% include 'allocation_removal_requests/navbar_allocation_removal_requests.html' %}
-    {% endif %}
-    <a id="navbar-allocation-change-request" class="dropdown-item" href="{% url 'allocation-change-list' %}">
-      Allocation Change Requests</a>
+  <a id="navbarAdminDropdownMenuLink" class="nav-link dropdown-toggle" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Admin</a>
+  <ul class="dropdown-menu" aria-labelledby="navbarAdminDropdownMenuLink">
+    <li><a class="dropdown-item" href="/admin">RT Projects Administration</a></li>
+    <li><a id="navbar-user-search" class="dropdown-item" href="{% url 'user-search-home' %}">User Search</a></li>
+    <li class="dropdown-submenu">
+      <a class="dropdown-item dropdown-toggle" href="#">Projects</a>
+      <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="{% url 'project-list' %}?show_all_projects=on">All Projects</a></li>
+        <li>
+          <a id="navbar-project-reviews" class="dropdown-item" href="{% url 'project-review-list' %}">
+            Project Reviews/Requests
+          </a>
+        </li>
+      </ul>
+    </li>
+    <li class="dropdown-submenu">
+      <a class="dropdown-item dropdown-toggle" href="#">Allocations</a>
+      <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="{% url 'allocation-list' %}?show_all_allocations=on">All Allocations</a></li>
+        <li>
+          <a id="navbar-allocation-requests" class="dropdown-item" href="{% url 'allocation-request-list' %}">
+            Allocation Requests
+          </a>
+        </li>
+        {% if 'allocation_removal_requests/navbar_allocation_removal_requests.html'|template_exists %}
+          <li>{% include 'allocation_removal_requests/navbar_allocation_removal_requests.html' %}</li>
+        {% endif %}
+        <li>
+          <a id="navbar-allocation-change-request" class="dropdown-item" href="{% url 'allocation-change-list' %}">
+            Allocation Change Requests
+          </a>
+        </li>
+      </ul>
+    </li>
+    <li><a class="dropdown-item" href="{% url 'resource-list' %}">All Resources</a></li>
     {% if 'advanced_search/navbar_advanced_search.html'|template_exists %}
-      {% include 'advanced_search/navbar_advanced_search.html' %}
+      <li>{% include 'advanced_search/navbar_advanced_search.html' %}</li>
     {% endif %}
-    <a id="navbar-grant-report" class="dropdown-item" href="{% url 'grant-report' %}">Grant Report</a>
-  </div>
+    <li><a id="navbar-grant-report" class="dropdown-item" href="{% url 'grant-report' %}">Grant Report</a></li>
+  </ul>
 </li>

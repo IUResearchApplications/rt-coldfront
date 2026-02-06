@@ -59,3 +59,21 @@
     </div>
   </div>
 </nav>
+
+<script>
+  $(document).ready(function() {
+    $('.dropdown-menu a.dropdown-toggle').on('click', function() {
+      var ele = $(this)
+      if (!$(this).next().hasClass('show')) {
+        ele.parents('.dropdown-menu').first().find('.show').removeClass('show');
+      }
+      ele.next('.dropdown-menu').toggleClass('show');
+
+      ele.parents('li.nav-item.dropdown.show').on('hidden.bs.dropdown', function() {
+        $('.dropdown-submenu .show').removeClass('show');
+      });
+
+      return false;
+    });
+  })
+</script>
