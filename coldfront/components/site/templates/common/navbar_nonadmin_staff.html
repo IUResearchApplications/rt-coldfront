@@ -61,5 +61,14 @@
         <li>{% include 'advanced_search/navbar_advanced_search.html' %}</li>
       {% endif %}
     {% endif %}
+    {% if 'request_forms/software_request.html'|template_exists %}
+      <li class="dropdown-submenu">
+        <a class="dropdown-item dropdown-toggle" href="#">Additional Forms</a>
+        <ul class="dropdown-menu">
+          <li>{% include 'request_forms/navbar_software_request.html' %}</li>
+          <li>{% include 'request_forms/navbar_stats_request.html' %}</li>
+        </ul>
+      </li>
+    {% endif %}
   </ul>
 </li>
