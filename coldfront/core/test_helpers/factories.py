@@ -46,7 +46,13 @@ from coldfront.core.project.models import (
 )
 from coldfront.core.project.utils import get_new_end_date_from_list
 from coldfront.core.publication.models import PublicationSource
-from coldfront.core.resource.models import Resource, ResourceType
+from coldfront.core.resource.models import (
+    AttributeType,
+    Resource,
+    ResourceAttribute,
+    ResourceAttributeType,
+    ResourceType,
+)
 from coldfront.core.user.models import UserProfile
 
 ### Default values and Faker provider setup ###
@@ -259,6 +265,32 @@ class ResourceFactory(DjangoModelFactory):
 
     description = factory.Faker("sentence")
     resource_type = SubFactory(ResourceTypeFactory)
+
+
+class RAttributeTypeFactory(DjangoModelFactory):
+    class Meta:
+        model = AttributeType
+        django_get_or_create = ("name",)
+
+    name = "Text"
+
+
+class ResourceAttributeTypeFactory(DjangoModelFactory):
+    class Meta:
+        model = ResourceAttributeType
+        django_get_or_create = ("name",)
+
+    name = "storage"
+    attribute_type = SubFactory(RAttributeTypeFactory)
+
+
+class ResourceAttributeFactory(DjangoModelFactory):
+    class Meta:
+        model = ResourceAttribute
+
+    resource_attribute_type = SubFactory(ResourceAttributeTypeFactory)
+    value = "Test attribute value"
+    resource = SubFactory(ResourceFactory)
 
 
 ### Allocation factories ###

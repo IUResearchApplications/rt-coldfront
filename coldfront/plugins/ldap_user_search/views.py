@@ -8,7 +8,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render
 from django.views.generic import View
 
-from coldfront.plugins.ldap_user_search.utils import get_user_info
+from coldfront.plugins.ldap_user_search.utils import LDAPUserSearch
 
 
 class LDAPUserSearchView(LoginRequiredMixin, View):
@@ -21,7 +21,11 @@ class LDAPUserSearchView(LoginRequiredMixin, View):
             "message": "Invalid username",
         }
 
-        attributes = get_user_info(request.POST.get("username"))
+
+        attributes = LDAPUserSearch(None, None).search_a_user(request.POST.get("username"), "username_only")
+        if not attributes:
+            attributes =  {}
+        attributes = attributes[0]
         display_name = attributes.get("displayName")
         # If one exists so does the other
         if display_name:

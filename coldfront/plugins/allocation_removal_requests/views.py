@@ -304,7 +304,6 @@ class AllocationDenyRemovalRequestView(LoginRequiredMixin, UserPassesTestMixin, 
             self.request.user.groups.all(),
             "change_allocationremovalrequest",
         )
-        print(group_exists)
         if group_exists:
             return True
 
