@@ -97,7 +97,7 @@ if "coldfront.plugins.request_forms" in settings.INSTALLED_APPS:
     urlpatterns.append(path("request_forms/", include("coldfront.plugins.request_forms.urls")))
     
 if "coldfront.plugins.history_report" in settings.INSTALLED_APPS:
-    urlpatterns.append(path("request_forms/", include("coldfront.plugins.history_report.urls")))
+    urlpatterns.append(path("history_report/", include("coldfront.plugins.history_report.urls")))
 
 if "django_su.backends.SuBackend" in settings.AUTHENTICATION_BACKENDS:
     urlpatterns.append(path("su/", include("django_su.urls")))

@@ -37,6 +37,7 @@ ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings("ALLOCATION_DAYS
 
 
 def home(request):
+    import coldfront_custom_resources.storage.slate_project.tasks
     context = {}
     next_url = ""
     if request.user.is_authenticated:

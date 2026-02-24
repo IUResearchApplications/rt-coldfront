@@ -70,5 +70,8 @@
         </ul>
       </li>
     {% endif %}
+    {% if 'history_report/history_report.html'|template_exists %}
+      <li>{% include 'history_report/navbar_history_report.html' %}</li>
+    {% endif %}
   </ul>
 </li>
