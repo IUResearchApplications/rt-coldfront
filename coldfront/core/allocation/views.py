@@ -1019,14 +1019,13 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
             formset = formset_factory(
                 AllocationAddUserForm, max_num=len(users_to_add), formset=AllocationAddUserFormset
             )
-            user_account_statuses = allocation_obj.get_parent_resource.get_user_account_statuses(
-                [user.get("username") for user in users_to_add]
-            )
+            resource = allocation_obj.get_parent_resource
+            user_account_statuses = resource.get_user_account_statuses([user.get("username") for user in users_to_add])
             formset = formset(
                 initial=users_to_add,
                 prefix="userform",
                 form_kwargs={
-                    "resource": allocation_obj.get_parent_resource,
+                    "resource": resource,
                     "disable_selected": [not result.get("exists") for result in user_account_statuses.values()],
                 },
             )
@@ -1054,6 +1053,10 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
             string_accumulator += f"{res}: {value}\n"
         context["compiled_eula"] = str(string_accumulator)
 
+        context["allocation_users"] = allocation_obj.allocationuser_set.filter(
+            status__name__in=["Active", "Invited", "Disabled", "Retired"]
+        ).select_related("user")
+
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
@@ -1061,14 +1064,15 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
         allocation_obj = get_object_or_404(Allocation, pk=pk)
 
         users_to_add = self.get_users_to_add(allocation_obj)
-        allocation_user_limit = allocation_obj.get_parent_resource.get_attribute("user_limit")
+        resource = allocation_obj.get_parent_resource
+        allocation_user_limit = resource.get_attribute("user_limit")
 
         formset = formset_factory(AllocationAddUserForm, max_num=len(users_to_add))
         formset = formset(
             request.POST,
             initial=users_to_add,
             prefix="userform",
-            form_kwargs={"resource": allocation_obj.get_parent_resource},
+            form_kwargs={"resource": resource},
         )
 
         if formset.is_valid():
@@ -1077,7 +1081,7 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                 allocation_user_pending_status_choice = AllocationUserStatusChoice.objects.get(name="PendingEULA")
             selected_users = self.get_dict_of_users_to_add(formset)
 
-            user_account_statuses = allocation_obj.get_parent_resource.get_user_account_statuses(
+            user_account_statuses = resource.get_user_account_statuses(
                 [selected_user for selected_user in selected_users.keys()]
             )
 
@@ -1098,7 +1102,7 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                 messages.warning(request, f"{message} {', '.join(missing_accounts)}")
                 logger.info(
                     f"User(s) {', '.join(missing_accounts)} do not have IU accounts and "
-                    f"were not added to a {allocation_obj.get_parent_resource.name} "
+                    f"were not added to a {resource.name} "
                     f"allocation (allocation pk={allocation_obj.pk})"
                 )
 
@@ -1117,7 +1121,7 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
 
                 logger.info(
                     f"User(s) {', '.join(missing_resource_accounts)} were missing accounts for a "
-                    f"{allocation_obj.get_parent_resource.name} allocation (allocation pk={allocation_obj.pk})"
+                    f"{resource.name} allocation (allocation pk={allocation_obj.pk})"
                 )
 
             if allocation_user_limit:
@@ -1142,10 +1146,10 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                     if ALLOCATION_EULA_ENABLE and not user_obj.userprofile.is_pi and allocation_obj.get_eula():
                         allocation_user_obj.status = allocation_user_pending_status_choice
                         send_email_template(
-                            f"Agree to EULA for {allocation_obj.get_parent_resource.__str__()}",
+                            f"Agree to EULA for {resource.__str__()}",
                             "email/allocation_agree_to_eula.txt",
                             {
-                                "resource": allocation_obj.get_parent_resource,
+                                "resource": resource,
                                 "url": build_link(
                                     reverse("allocation-review-eula", kwargs={"pk": allocation_obj.pk}),
                                     domain_url=get_domain_url(self.request),
@@ -1167,10 +1171,10 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                             role=role,
                         )
                         send_email_template(
-                            f"Agree to EULA for {allocation_obj.get_parent_resource.__str__()}",
+                            f"Agree to EULA for {resource.__str__()}",
                             "email/allocation_agree_to_eula.txt",
                             {
-                                "resource": allocation_obj.get_parent_resource,
+                                "resource": resource,
                                 "url": build_link(
                                     reverse("allocation-review-eula", kwargs={"pk": allocation_obj.pk}),
                                     domain_url=get_domain_url(self.request),
@@ -1208,7 +1212,7 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
 
                 logger.info(
                     f"User {request.user.username} added {', '.join(selected_users.keys())} "
-                    f"to a {allocation_obj.get_parent_resource.name} allocation "
+                    f"to a {resource.name} allocation "
                     f"(allocation pk={allocation_obj.pk})"
                 )
         else:
