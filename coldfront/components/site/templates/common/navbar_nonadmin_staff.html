@@ -5,41 +5,70 @@
   since existing templates use javascript to target it by ID
 {% endcomment %}
 <li id="navbar-admin" class="nav-item dropdown">
-  <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Staff</a>
-  <div class="dropdown-menu">
-    <a class="dropdown-item" href="/admin">RT Projects Administration</a>
+  <a id="navbarNonadminDropdownMenuLink" class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Staff</a>
+  <ul class="dropdown-menu" aria-labelledby="navbarNonadminDropdownMenuLink">
+    <li><a class="dropdown-item" href="/admin">RT Projects Administration</a></li>
     {# all staff can perform a user search #}
-    <a id="navbar-user-search" class="dropdown-item" href="{% url 'user-search-home' %}">User Search</a>
-    {% if perms.project.can_view_all_projects %}
-      <a class="dropdown-item" href="{% url 'project-list' %}?show_all_projects=on">All Projects</a>
-    {% endif %}
-    {% if perms.allocation.can_view_all_allocations %}
-      <a class="dropdown-item" href="{% url 'allocation-list' %}?show_all_allocations=on">All Allocations</a>
-    {% endif %}
-    <a class="dropdown-item" href="{% url 'resource-list' %}">All Resources</a>
-    {% if perms.project.can_review_pending_projects %}
-      <a id="navbar-project-reviews" class="dropdown-item" href="{% url 'project-review-list' %}">Project Reviews/Requests</a>
-    {% endif %}
-    {% if perms.allocation.can_review_allocation_requests %}
-      <a id="navbar-allocation-requests" class="dropdown-item" href="{% url 'allocation-request-list' %}">
-        Allocation Requests</a>
-    {% endif %}
-    {% if 'allocation_removal_requests/navbar_allocation_removal_requests.html'|template_exists %}
-      {% if perms.allocation_removal_requests.view_allocationremovalrequest %}
-        {% include 'allocation_removal_requests/navbar_allocation_removal_requests.html' %}
-      {% endif %}
-    {% endif %}
-    {% if perms.allocation.can_view_all_allocations %}
-      <a id="navbar-allocation-change-requests" class="dropdown-item" href="{% url 'allocation-change-list' %}">
-        Allocation Change Requests</a>
-    {% endif %}
+    <li><a id="navbar-user-search" class="dropdown-item" href="{% url 'user-search-home' %}">User Search</a></li>
+    <li class="dropdown-submenu">
+      <a class="dropdown-item dropdown-toggle" href="#">Projects</a>
+      <ul class="dropdown-menu">
+        {% if perms.project.can_view_all_projects %}
+          <li><a class="dropdown-item" href="{% url 'project-list' %}?show_all_projects=on">All Projects</a></li>
+        {% endif %}
+        {% if perms.project.can_review_pending_projects %}
+          <li>
+            <a id="navbar-project-reviews" class="dropdown-item" href="{% url 'project-review-list' %}">
+              Project Reviews/Requests
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+    </li>
+    <li class="dropdown-submenu">
+      <a class="dropdown-item dropdown-toggle" href="#">Allocations</a>
+      <ul class="dropdown-menu">
+        {% if perms.allocation.can_view_all_allocations %}
+          <li><a class="dropdown-item" href="{% url 'allocation-list' %}?show_all_allocations=on">All Allocations</a></li>
+        {% endif %}
+        {% if perms.allocation.can_review_allocation_requests %}
+          <li>
+            <a id="navbar-allocation-requests" class="dropdown-item" href="{% url 'allocation-request-list' %}">
+              Allocation Requests
+            </a>
+          </li>
+        {% endif %}
+        {% if 'allocation_removal_requests/navbar_allocation_removal_requests.html'|template_exists %}
+          {% if perms.allocation_removal_requests.view_allocationremovalrequest %}
+            <li>{% include 'allocation_removal_requests/navbar_allocation_removal_requests.html' %}</li>
+          {% endif %}
+        {% endif %}
+        {% if perms.allocation.can_view_all_allocations %}
+          <li>
+            <a id="navbar-allocation-change-requests" class="dropdown-item" href="{% url 'allocation-change-list' %}">
+              Allocation Change Requests
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+    </li>
+    <li><a class="dropdown-item" href="{% url 'resource-list' %}">All Resources</a></li>
     {% if perms.grant.can_view_all_grants %}
-      <a id="navbar-grant-report" class="dropdown-item" href="{% url 'grant-report' %}">Grant Report</a>
+      <li><a id="navbar-grant-report" class="dropdown-item" href="{% url 'grant-report' %}">Grant Report</a></li>
     {% endif %}
     {% if 'advanced_search/navbar_advanced_search.html'|template_exists %}
       {% if perms.project.can_view_all_projects and perms.allocation.can_view_all_allocations %}
-        {% include 'advanced_search/navbar_advanced_search.html' %}
+        <li>{% include 'advanced_search/navbar_advanced_search.html' %}</li>
       {% endif %}
     {% endif %}
-  </div>
+    {% if 'request_forms/software_request.html'|template_exists %}
+      <li class="dropdown-submenu">
+        <a class="dropdown-item dropdown-toggle" href="#">Additional Forms</a>
+        <ul class="dropdown-menu">
+          <li>{% include 'request_forms/navbar_software_request.html' %}</li>
+          <li>{% include 'request_forms/navbar_stats_request.html' %}</li>
+        </ul>
+      </li>
+    {% endif %}
+  </ul>
 </li>

@@ -1,16 +1,19 @@
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse
 from django.views.generic import FormView
 
+from coldfront.core.project.utils import check_if_pis_eligible
 from coldfront.core.utils.common import import_from_settings
 from coldfront.core.utils.mail import send_email_template
-from coldfront.plugins.ldap_user_search.utils import get_user_info
 from coldfront.plugins.request_forms.forms import SoftwareRequestForm, StatsRequestForm
+
+if "coldfront.plugins.ldap_misc" in settings.INSTALLED_APPS:
+    from coldfront.plugins.ldap_misc.utils.project import check_if_pis_eligible
 
 REQUEST_FORMS_EMAILS = import_from_settings("REQUEST_FORMS_EMAILS", {})
 EMAIL_SENDER = import_from_settings("EMAIL_SENDER", "")
-PROJECT_PI_ELIGIBLE_ADS_GROUPS = import_from_settings("PROJECT_PI_ELIGIBLE_ADS_GROUPS", "")
 
 
 class SoftwareRequestView(LoginRequiredMixin, UserPassesTestMixin, FormView):
@@ -18,13 +21,12 @@ class SoftwareRequestView(LoginRequiredMixin, UserPassesTestMixin, FormView):
     template_name = "request_forms/software_request.html"
 
     def test_func(self):
-        if self.request.user.is_superuser:
+        user = self.request.user
+        if user.is_superuser:
             return True
 
-        memberships = get_user_info(self.request.user.username).get("memberOf")
-        for membership in memberships:
-            if membership in PROJECT_PI_ELIGIBLE_ADS_GROUPS:
-                return True
+        if check_if_pis_eligible([user.username]).get(user.username, True):
+            return True
 
         messages.error(self.request, "Only Staff or Faculty can request HPC software.")
 

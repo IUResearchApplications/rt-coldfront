@@ -7,6 +7,7 @@ import logging
 from ast import literal_eval
 from enum import Enum
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -19,8 +20,11 @@ from simple_history.models import HistoricalRecords
 import coldfront.core.attribute_expansion as attribute_expansion
 from coldfront.core.project.models import Project, ProjectPermission
 from coldfront.core.resource.models import Resource, ResourceAttribute, ResourceAttributeType
-from coldfront.core.utils.common import import_from_settings
+from coldfront.core.utils.common import get_users_info, import_from_settings
 from coldfront.core.utils.groups import check_if_groups_in_review_groups
+
+if "coldfront.plugins.ldap_misc" in settings.INSTALLED_APPS:
+    from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_users_info
 
 logger = logging.getLogger(__name__)
 
@@ -568,18 +572,24 @@ class AllocationAttribute(TimeStampedModel):
 
         expected_value_type = self.allocation_attribute_type.attribute_type.name.strip()
 
-        if expected_value_type == "Int" and not isinstance(literal_eval(self.value), int):
-            raise ValidationError(
-                'Invalid Value "%s" for "%s". Value must be an integer.'
-                % (self.value, self.allocation_attribute_type.name)
-            )
-        elif expected_value_type == "Float" and not (
-            isinstance(literal_eval(self.value), float) or isinstance(literal_eval(self.value), int)
-        ):
-            raise ValidationError(
-                'Invalid Value "%s" for "%s". Value must be a float.'
-                % (self.value, self.allocation_attribute_type.name)
-            )
+        if expected_value_type == "Int":
+            try:
+                if not isinstance(literal_eval(self.value), int):
+                    raise TypeError
+            except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError) as e:
+                raise ValidationError(
+                    'Invalid Value "%s" for "%s". Value must be an integer.'
+                    % (self.value, self.allocation_attribute_type.name)
+                ) from e
+        elif expected_value_type == "Float":
+            try:
+                if not (isinstance(literal_eval(self.value), int) or isinstance(literal_eval(self.value), float)):
+                    raise TypeError
+            except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError) as e:
+                raise ValidationError(
+                    'Invalid Value "%s" for "%s". Value must be a float.'
+                    % (self.value, self.allocation_attribute_type.name)
+                ) from e
         elif expected_value_type == "Yes/No" and self.value not in ["Yes", "No"]:
             raise ValidationError(
                 'Invalid Value "%s" for "%s". Allowed inputs are "Yes" or "No".'
@@ -595,17 +605,15 @@ class AllocationAttribute(TimeStampedModel):
                 )
 
         linked_attribute_type_obj = self.allocation_attribute_type.linked_resource_attribute_type
-        if any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
-            from coldfront.plugins.ldap_user_search.utils import get_user_info
-
-            linked_attribute_obj = ResourceAttribute.objects.filter(
-                resource=self.allocation.get_parent_resource,
-                resource_attribute_type=linked_attribute_type_obj,
-                check_if_username_exists=True,
-            )
-            if linked_attribute_obj.exists():
-                if not get_user_info(self.value):
-                    raise ValidationError(f"{self.allocation_attribute_type.name} does not have a valid username")
+        linked_attribute_obj = ResourceAttribute.objects.filter(
+            resource=self.allocation.get_parent_resource,
+            resource_attribute_type=linked_attribute_type_obj,
+            check_if_username_exists=True,
+        )
+        if linked_attribute_obj.exists():
+            username = get_users_info([self.value]).get(self.value).get(self.value, "")
+            if username is not None and not username:
+                raise ValidationError(f"{self.allocation_attribute_type.name} does not have a valid username")
 
     def __str__(self):
         return "%s" % (self.allocation_attribute_type.name)

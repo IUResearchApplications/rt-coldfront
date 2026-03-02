@@ -6,11 +6,7 @@ import logging
 
 from django.forms.models import model_to_dict
 
-from coldfront.core.project.models import Project, ProjectAdminAction
-from coldfront.core.utils.common import import_from_settings
-from coldfront.plugins.ldap_user_search.utils import get_user_info, get_users_info
-
-PROJECT_PI_ELIGIBLE_ADS_GROUPS = import_from_settings("PROJECT_PI_ELIGIBLE_ADS_GROUPS", [])
+from coldfront.core.project.models import Project, ProjectAdminAction, ProjectUserRoleChoice
 
 logger = logging.getLogger(__name__)
 
@@ -207,35 +203,17 @@ def create_admin_action_for_project_creation(user, project):
     )
 
 
-def check_if_pi_eligible(user, memberships=None):
-    if not PROJECT_PI_ELIGIBLE_ADS_GROUPS:
-        return True
-
-    if not memberships:
-        memberships = get_user_info(user.username).get("memberOf")
-
-    if not memberships:
-        return False
-
-    for membership in memberships:
-        if membership in PROJECT_PI_ELIGIBLE_ADS_GROUPS:
-            return True
-
-    return False
+def check_if_pis_eligible(project_pi_usernames):
+    return dict.fromkeys(project_pi_usernames, True)
 
 
-def check_if_pis_eligible(users):
-    if not PROJECT_PI_ELIGIBLE_ADS_GROUPS:
-        return {}
+def update_project_user_matches(matches):
+    project_user_role_obj = ProjectUserRoleChoice.objects.get(name="User")
+    for match in matches:
+        match.update({"role": project_user_role_obj})
 
-    usernames = [user.username for user in set(users)]
-    eligible_statuses = {}
-    users_info = get_users_info(usernames)
-    for username, user_info in users_info.items():
-        for user_membersip in user_info.get("memberOf", []):
-            eligible = user_membersip in PROJECT_PI_ELIGIBLE_ADS_GROUPS
-            eligible_statuses[username] = eligible
-            if eligible:
-                break
+    return matches
 
-    return eligible_statuses
+
+def get_ineligible_pis(project_pi_usernames):
+    return None

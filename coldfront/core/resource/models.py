@@ -5,6 +5,7 @@
 import logging
 from datetime import datetime
 
+from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -12,13 +13,13 @@ from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
 import coldfront.core.attribute_expansion as attribute_expansion
+from coldfront.core.resource.utils import get_user_account_statuses
 from coldfront.core.utils.common import import_from_settings
-from coldfront.plugins.ldap_user_search.utils import get_user_info, get_users_info
+
+if "coldfront.plugins.ldap_misc" in settings.INSTALLED_APPS:
+    from coldfront.plugins.ldap_misc.utils.resource import get_user_account_statuses
 
 logger = logging.getLogger(__name__)
-
-RESOURCE_ENABLE_ACCOUNT_CHECKING = import_from_settings("RESOURCE_ENABLE_ACCOUNT_CHECKING", True)
-RESOURCE_ACCOUNTS = import_from_settings("RESOURCE_ACCOUNTS", {})
 
 ADDITIONAL_USER_SEARCH_CLASSES = import_from_settings("ADDITIONAL_USER_SEARCH_CLASSES", [])
 
@@ -242,88 +243,8 @@ class Resource(TimeStampedModel):
             return ondemand.value
         return None
 
-    def check_users_accounts(self, usernames):
-        results = {}
-        if not any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
-            for username in usernames:
-                results[username] = {"exists": True, "reason": "not_enabled"}
-            return results
-
-        users_info = get_users_info(usernames)
-        for username, user_info in users_info.items():
-            result = self.check_user_account(username, user_info.get("memberOf", []))
-            results[username] = result
-
-        return results
-
-    def check_accounts(self, accounts):
-        """Checks if an account exists for the resource by comparing the provided list
-
-        Params:
-            accounts: What accounts to check
-
-        Returns:
-            dict(exists: bool - If the require account exists, reason: str - Why the account was found/not found)
-        """
-        resource = self.get_attribute("check_user_account")
-        if resource is None:
-            return {"exists": True, "reason": "not_required"}
-
-        if not accounts:
-            return {"exists": False, "reason": "no_account"}
-
-        resource_acc = RESOURCE_ACCOUNTS.get(resource)
-        if not resource_acc:
-            return {"exists": True, "reason": "has_account"}
-
-        if resource_acc in accounts:
-            return {"exists": True, "reason": "has_resource_account"}
-
-        return {"exists": False, "reason": "no_resource_account"}
-
-    def check_user_account(self, username, users_accounts=None):
-        """Checks if an account exists for the resource by running an LDAP query
-
-        Params:
-            username: Username to check
-            ldap_conn: LDAP connection to grab the accounts from
-
-        Returns:
-            dict(exists: bool - If the require account exists, reason: str - Why the account was found/not found)
-        """
-        if not RESOURCE_ENABLE_ACCOUNT_CHECKING:
-            return {"exists": True, "reason": "not_enabled"}
-
-        if not any("LDAPUserSearch" in ele for ele in ADDITIONAL_USER_SEARCH_CLASSES):
-            return {"exists": True, "reason": "not_enabled"}
-
-        resource = self.get_attribute("check_user_account")
-        if resource is None:
-            return {"exists": True, "reason": "not_required"}
-
-        if users_accounts is None:
-            accounts = get_user_info(username).get("memberOf")
-        else:
-            accounts = users_accounts
-
-        if not accounts:
-            return {"exists": False, "reason": "no_account"}
-
-        resource_acc = RESOURCE_ACCOUNTS.get(resource)
-        if not resource_acc:
-            return {"exists": True, "reason": "has_account"}
-
-        if resource_acc in accounts:
-            return {"exists": True, "reason": "has_resource_account"}
-
-        return {"exists": False, "reason": "no_resource_account"}
-
-    def get_assigned_account(self):
-        resource = self.get_attribute("check_user_account")
-        if resource is None:
-            return "not_required"
-
-        return RESOURCE_ACCOUNTS.get(resource, "")
+    def get_user_account_statuses(self, usernames, accounts=None):
+        return get_user_account_statuses(usernames, self.get_attribute("check_user_account"), accounts)
 
     def __str__(self):
         return "%s (%s)" % (self.name, self.resource_type.name)
