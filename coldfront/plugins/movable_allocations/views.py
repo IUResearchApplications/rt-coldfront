@@ -75,7 +75,9 @@ class AllocationMoveView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         context = self.get_context_data()
         context["form"] = form
         context["allocation"] = allocation_obj
-        context["allocation_users"] = allocation_obj.allocationuser_set.filter(status__name="Active")
+        context["allocation_users"] = allocation_obj.allocationuser_set.filter(
+            status__name__in=["Active", "Invited", "Disabled", "Retired"]
+        )
         context["allocation_attributes"] = allocation_obj.allocationattribute_set.filter(
             allocation_attribute_type__is_private=False
         )
