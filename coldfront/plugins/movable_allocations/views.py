@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.generic import TemplateView
 
-from coldfront.core.allocation.models import Allocation, AllocationAttribute, AllocationUserNote
+from coldfront.core.allocation.models import Allocation, AllocationAttribute, AllocationStatusChoice, AllocationUserNote
 from coldfront.core.allocation.utils import create_admin_action
 from coldfront.core.project.models import (
     Project,
@@ -54,7 +54,7 @@ class AllocationMoveView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
             return super().dispatch(request, *args, **kwargs)
 
         allocation_obj = get_object_or_404(Allocation, pk=kwargs.get("pk"))
-        if allocation_obj.status.name not in ["Active", "Renewal Requested"]:
+        if allocation_obj.status.name not in ["Active", "Renewal Requested", "Expired"]:
             messages.error(request, "You cannot move an inactive allocation.")
             return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": kwargs.get("pk")}))
 
@@ -166,6 +166,11 @@ class AllocationMoveView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                     status=status,
                     enable_notifications=enable_notifications,
                 )
+
+        if allocation_obj.status.name == "Expired":
+            allocation_obj.status = AllocationStatusChoice.objects.get(name="Active")
+            allocation_obj.end_date = allocation_obj.project.end_date
+            allocation_obj.save()
 
         domain_url = get_domain_url(request)
         destination_project_url = f"{domain_url}{reverse('project-detail', kwargs={'pk': destination_project_obj.pk})}"
