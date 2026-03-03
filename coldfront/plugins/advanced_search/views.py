@@ -137,12 +137,6 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                     )
 
         context["columns"] = columns
-        num_rows = 0
-        has_results = False
-        if columns:
-            has_results = True
-            num_rows = len(rows)
-        context["entries"] = num_rows
         context["rows"] = rows
         context["allocation_attribute_type_ids"] = allocation_attribute_types_with_usage
         context["project_attribute_type_ids"] = project_attribute_types_with_usage
@@ -152,7 +146,6 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         context["projectattribute_form"] = project_formset
         context["projectattribute_helper"] = ProjectAttributeFormSetHelper()
         context["active_tab"] = active_tab
-        context["has_results"] = has_results
 
         context["project_form"] = project_search_form
         context["allocation_form"] = allocation_search_form

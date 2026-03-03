@@ -34,14 +34,18 @@ class ProjectTable:
     def get_project_queryset(self):
         data = self.form_data
         projects = (
-            Project.objects.prefetch_related(
+            Project.objects.select_related(
                 "pi",
                 "requestor",
                 "status",
                 "type",
+            )
+            .prefetch_related(
                 "projectuser_set",
                 "projectuser_set__status",
                 "projectuser_set__user",
+                "allocation_set",
+                "allocation_set__status",
             )
             .all()
             .order_by("id")
@@ -174,14 +178,13 @@ class ProjectTable:
                         current_attribute = ", ".join(filtered_project_users)
 
                     elif "project__resources" in column.get("field_name"):
-                        all_project_allocations = project_obj.allocation_set.filter(
-                            status__name__in=["Active", "Renewal Requested"]
-                        )
+                        all_project_allocations = project_obj.allocation_set.all()
                         resource_list = []
                         for project_allocation in all_project_allocations:
-                            resource_list.append(
-                                f"{project_allocation.get_parent_resource.name} ({project_allocation.pk})"
-                            )
+                            if project_allocation.status.name in ["Active", "Renewal Requested"]:
+                                resource_list.append(
+                                    f"{project_allocation.get_parent_resource.name} ({project_allocation.pk})"
+                                )
                         current_attribute = ", ".join(resource_list)
                     elif "project__url" in column.get("field_name"):
                         current_attribute = (
@@ -224,7 +227,7 @@ class ProjectTable:
         for entry in self.project_attribute_form_data:
             project_attribute_type = entry.get("projectattribute__name")
             if project_attribute_type:
-                project_attributes = ProjectAttribute.objects.prefetch_related("project", "proj_attr_type").filter(
+                project_attributes = ProjectAttribute.objects.select_related("project", "proj_attr_type").filter(
                     proj_attr_type=project_attribute_type
                 )
                 for project_attribute in project_attributes:
@@ -242,7 +245,7 @@ class ProjectTable:
             for project_attributes in additional_data.values()
             for project_attribute in project_attributes
         ]
-        project_attribute_usages = ProjectAttributeUsage.objects.prefetch_related("project_attribute").filter(
+        project_attribute_usages = ProjectAttributeUsage.objects.select_related("project_attribute").filter(
             project_attribute__in=project_attributes
         )
         for project_attribute_usage in project_attribute_usages:
@@ -321,18 +324,20 @@ class AllocationTable:
     def get_allocation_queryset(self):
         data = self.form_data
         allocations = (
-            Allocation.objects.prefetch_related(
+            Allocation.objects.select_related(
                 "project",
                 "project__pi",
                 "project__requestor",
                 "project__status",
                 "project__type",
+                "status",
+            )
+            .prefetch_related(
                 "project__projectuser_set",
                 "project__projectuser_set__status",
                 "allocationuser_set",
                 "allocationuser_set__status",
                 "allocationuser_set__user",
-                "status",
                 "resources",
                 "resources__resource_type",
             )
@@ -359,11 +364,13 @@ class AllocationTable:
     def get_project_queryset(self):
         data = self.form_data
         projects = (
-            Project.objects.prefetch_related(
+            Project.objects.select_related(
                 "pi",
                 "requestor",
                 "status",
                 "type",
+            )
+            .prefetch_related(
                 "projectuser_set",
                 "projectuser_set__status",
                 "projectuser_set__user",
@@ -400,7 +407,7 @@ class AllocationTable:
 
     def get_resource_queryset(self):
         data = self.form_data
-        resources = Resource.objects.prefetch_related(
+        resources = Resource.objects.select_related(
             "resource_type",
         ).filter(is_allocatable=True)
 
@@ -662,7 +669,7 @@ class UserTable:
 
     def get_user_queryset(self):
         data = self.data
-        users = User.objects.prefetch_related("userprofile")
+        users = User.objects.select_related("userprofile")
         if data.get("user__type") == "project":
             project_usernames = set(
                 ProjectUser.objects.filter(status__name="Active", project__status__name="Active").values_list(
