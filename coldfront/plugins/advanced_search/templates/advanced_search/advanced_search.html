@@ -104,15 +104,20 @@ Project and Allocation Export List
   </div>
 </div>
 
+{{ allocation_attribute_type_ids|json_script:"allocation_attribute_type_ids" }}
+{{ project_attribute_type_ids|json_script:"project_attribute_type_ids" }}
+{{ linked_allocation_attribute_types|json_script:"linked_allocation_attribute_types" }}
+{{ active_tab|json_script:"active_tab" }}
+{{ rows|json_script:"rows" }}
+{{ columns|json_script:"columns" }}
+
 <script>
-  var columns = {{ columns | safe }}
-  var rows = {{ rows | safe }}
-  var allocation_form_count = {{ allocationattribute_form.total_form_count | safe}}
-  var allocation_attribute_type_ids = {{ allocation_attribute_type_ids | safe}}
-  var project_form_count = {{ projectattribute_form.total_form_count | safe}}
-  var project_attribute_type_ids = {{ project_attribute_type_ids | safe}}
-  var linked_allocation_attribute_types = {{ linked_allocation_attribute_types | safe }}
-  var active_tab = '{{ active_tab | safe }}'
+  var columns = JSON.parse(document.getElementById("columns").textContent)
+  var rows = JSON.parse(document.getElementById("rows").textContent)
+  var allocation_attribute_type_ids = JSON.parse(document.getElementById("allocation_attribute_type_ids").textContent)
+  var project_attribute_type_ids = JSON.parse(document.getElementById("project_attribute_type_ids").textContent)
+  var linked_allocation_attribute_types = JSON.parse(document.getElementById("linked_allocation_attribute_types").textContent)
+  var active_tab = JSON.parse(document.getElementById("active_tab").textContent)
 
   function toggleUsageFields(value, base_div_id, type) {
     if (type == 'allocation') {
@@ -307,6 +312,7 @@ Project and Allocation Export List
 
   $("#id_formset_add_allocation_attribute_button").on('click', function() {
     // The formset must have at least one initial form for this to work.
+    var allocation_form_count = $("#id_allocationattribute-TOTAL_FORMS").val()
     let row = $("#id_allocationattribute_formset > div:nth-child(3)")[0].cloneNode(true);
     row.innerHTML = row.innerHTML.replaceAll('-0-', '-' + allocation_form_count + '-');
     $("#id_allocationattribute_formset").append(row);
@@ -331,6 +337,7 @@ Project and Allocation Export List
 
   $("#id_formset_add_project_attribute_button").on('click', function() {
     // The formset must have at least one initial form for this to work.
+    var project_form_count = $("#id_projectattribute-TOTAL_FORMS").val()
     let row = $("#id_projectattribute_formset > div:nth-child(3)")[0].cloneNode(true);
     row.innerHTML = row.innerHTML.replaceAll('-0-', '-' + project_form_count + '-');
     $("#id_projectattribute_formset").append(row);
