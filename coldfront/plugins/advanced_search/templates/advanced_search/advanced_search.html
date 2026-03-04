@@ -126,10 +126,10 @@ Project and Allocation Export List
       attribute_type_ids = project_attribute_type_ids
     }
     if (attribute_type_ids.includes(value)) {
-      $(base_div_id + type + '__has_usage').show();
-      $(base_div_id + type + '__equality').show();
-      $(base_div_id + type + '__usage').show();
-      $(base_div_id + type + '__usage_format').show();
+      $(base_div_id + type + 'attribute__has_usage').show();
+      $(base_div_id + type + 'attribute__equality').show();
+      $(base_div_id + type + 'attribute__usage').show();
+      $(base_div_id + type + 'attribute__usage_format').show();
     }
     else {
       $(base_div_id + type + 'attribute__has_usage').hide();
