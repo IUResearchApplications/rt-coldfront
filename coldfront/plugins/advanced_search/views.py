@@ -14,7 +14,6 @@ from django.views.generic import TemplateView, View
 
 from coldfront.core.allocation.models import AllocationAttributeType
 from coldfront.core.project.models import ProjectAttributeType
-from coldfront.core.utils.common import Echo, import_from_settings
 from coldfront.plugins.advanced_search.forms import (
     AllocationAttributeFormSetHelper,
     AllocationAttributeSearchForm,
