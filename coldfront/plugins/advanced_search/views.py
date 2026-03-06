@@ -2,6 +2,7 @@ import csv
 import json
 import logging
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.utils import cached_property
@@ -26,8 +27,6 @@ from coldfront.plugins.advanced_search.forms import (
 from coldfront.plugins.advanced_search.utils import AllocationTable, ProjectTable, UserTable
 
 logger = logging.getLogger(__name__)
-
-CENTER_BASE_URL = import_from_settings("CENTER_BASE_URL", "")
 
 
 class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
@@ -150,7 +149,7 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                 "projectattribute_form": self.create_formset(ProjectAttributeSearchForm, "projectattribute"),
                 "allocationattribute_helper": AllocationAttributeFormSetHelper(),
                 "projectattribute_helper": ProjectAttributeFormSetHelper(),
-                "CENTER_BASE_URL": CENTER_BASE_URL,
+                "CENTER_BASE_URL": settings.CENTER_BASE_URL,
                 "active_tab": context.get("active_tab", "project-search"),
             }
         )
