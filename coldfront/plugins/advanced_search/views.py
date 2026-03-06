@@ -71,12 +71,13 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         project_attribute_data = self.clean_formset_data(
             project_search_formset,
             self.usage_attribute_ids["project"],
-            "projectattribute__name",
+            "projectattribute",
         )
 
         if project_search_form.is_valid():
             table = ProjectTable(project_search_form.cleaned_data, project_attribute_data)
             context["rows"], context["columns"] = table.build_table()
+            context["projectattribute_form"] = project_search_formset
         else:
             context["project_form"] = ProjectSearchForm(prefix="project_search")
 
@@ -102,6 +103,7 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         if allocation_search_form.is_valid():
             table = AllocationTable(allocation_search_form.cleaned_data, allocation_attribute_data)
             context["rows"], context["columns"] = table.build_table()
+            context["allocationattribute_form"] = allocation_search_formset
         else:
             context["allocation_form"] = AllocationSearchForm(prefix="allocation_search")
 
@@ -130,6 +132,10 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         context["project_form"] = ProjectSearchForm(prefix="project_search")
         context["allocation_form"] = AllocationSearchForm(prefix="allocation_search")
         context["user_form"] = UserSearchForm(prefix="user_search")
+        allocation_search_formset = formset_factory(AllocationAttributeSearchForm, extra=1)
+        context["allocationattribute_form"] = allocation_search_formset(prefix="allocationattribute")
+        project_search_formset = formset_factory(ProjectAttributeSearchForm, extra=1)
+        context["projectattribute_form"] = project_search_formset(prefix="projectattribute")
         context["rows"], context["columns"] = [], []
 
         submit = self.request.GET.get("submit")
@@ -145,8 +151,6 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                 "allocation_attribute_type_ids": list(self.usage_attribute_ids["allocation"]),
                 "project_attribute_type_ids": list(self.usage_attribute_ids["project"]),
                 "linked_allocation_attribute_types": self.linked_allocation_attribute_types(),
-                "allocationattribute_form": self.create_formset(AllocationAttributeSearchForm, "allocationattribute"),
-                "projectattribute_form": self.create_formset(ProjectAttributeSearchForm, "projectattribute"),
                 "allocationattribute_helper": AllocationAttributeFormSetHelper(),
                 "projectattribute_helper": ProjectAttributeFormSetHelper(),
                 "CENTER_BASE_URL": settings.CENTER_BASE_URL,
