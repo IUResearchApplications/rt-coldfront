@@ -2,9 +2,12 @@ import csv
 import json
 import logging
 
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.forms import formset_factory
+from django.http import HttpResponseRedirect
 from django.http.response import StreamingHttpResponse
+from django.urls import reverse
 from django.views.generic import TemplateView, View
 
 from coldfront.core.allocation.models import AllocationAttributeType
@@ -134,12 +137,6 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                     )
 
         context["columns"] = columns
-        num_rows = 0
-        has_results = False
-        if columns:
-            has_results = True
-            num_rows = len(rows)
-        context["entries"] = num_rows
         context["rows"] = rows
         context["allocation_attribute_type_ids"] = allocation_attribute_types_with_usage
         context["project_attribute_type_ids"] = project_attribute_types_with_usage
@@ -149,7 +146,6 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         context["projectattribute_form"] = project_formset
         context["projectattribute_helper"] = ProjectAttributeFormSetHelper()
         context["active_tab"] = active_tab
-        context["has_results"] = has_results
 
         context["project_form"] = project_search_form
         context["allocation_form"] = allocation_search_form
@@ -172,6 +168,9 @@ class AdvancedExportView(LoginRequiredMixin, UserPassesTestMixin, View):
         data = json.loads(request.POST.get("data"))
         columns = data.get("columns")
         column_names = [column.get("display_name") for column in columns]
+        if not column_names:
+            messages.error(request, "Nothing to export.")
+            return HttpResponseRedirect(reverse("advanced-search"))
         rows = data.get("rows")
         rows = [value for value in rows.values()]
 
