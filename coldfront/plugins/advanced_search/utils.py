@@ -26,7 +26,7 @@ class BaseSearchTable:
     type = None
     attr_type = None
 
-    def __init__(self, search_data: dict, attribute_data: list | None =None):
+    def __init__(self, search_data: dict, attribute_data: list | None = None):
         self.search_data = search_data
         self.attribute_data = attribute_data or []
         self.attribute_queryset = None
@@ -42,16 +42,19 @@ class BaseSearchTable:
 
     def get_attribute_data(self) -> dict:
         all_attributes = {}
+        attribute_types = []
         for entry in self.attribute_data:
             attribute_type = entry.get(f"{self.type}attribute__name")
             if attribute_type:
-                attributes = (
-                    self.get_attribute_model()
-                    .objects.select_related(self.type, self.attr_type)
-                    .filter(**{self.attr_type: attribute_type})
-                )
-                for attribute in attributes:
-                    all_attributes.setdefault(getattr(attribute, self.type).id, []).append(attribute)
+                attribute_types.append(attribute_type)
+
+        attributes = (
+            self.get_attribute_model()
+            .objects.select_related(self.type, self.attr_type)
+            .filter(**{f"{self.attr_type}__id__in": [attr.id for attr in attribute_types]})
+        )
+        for attribute in attributes:
+            all_attributes.setdefault(getattr(attribute, self.type).id, []).append(attribute)
 
         return all_attributes
 
@@ -310,7 +313,7 @@ class ProjectTable(BaseSearchTable):
 
             row.append(current_attribute)
         return row
-        
+
     def get_attribute_model(self):
         return ProjectAttribute
 
