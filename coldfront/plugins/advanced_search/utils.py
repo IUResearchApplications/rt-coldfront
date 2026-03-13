@@ -26,7 +26,7 @@ class BaseSearchTable:
     type = None
     attr_type = None
 
-    def __init__(self, search_data, attribute_data=None):
+    def __init__(self, search_data: dict, attribute_data: list | None =None):
         self.search_data = search_data
         self.attribute_data = attribute_data or []
         self.attribute_queryset = None
@@ -34,13 +34,13 @@ class BaseSearchTable:
         self.columns = []
         self.rows = {}
 
-    def get_queryset(self):
+    def get_queryset(self) -> None:
         raise NotImplementedError()
 
-    def get_attribute_model(self):
+    def get_attribute_model(self) -> None:
         raise NotImplementedError()
 
-    def get_attribute_data(self):
+    def get_attribute_data(self) -> dict:
         all_attributes = {}
         for entry in self.attribute_data:
             attribute_type = entry.get(f"{self.type}attribute__name")
@@ -55,10 +55,10 @@ class BaseSearchTable:
 
         return all_attributes
 
-    def get_attribute_usage_model(self):
+    def get_attribute_usage_model(self) -> None:
         raise NotImplementedError()
 
-    def get_attribute_usage(self, additional_data):
+    def get_attribute_usage(self, additional_data: dict) -> dict:
         all_attribute_usages = {}
         attributes = [attribute for attributes in additional_data.values() for attribute in attributes]
         attribute_usages = (
@@ -73,13 +73,13 @@ class BaseSearchTable:
 
         return all_attribute_usages
 
-    def build_rows(self, *args):
+    def build_rows(self, *args: any) -> dict:
         rows = {}
         for idx, obj in enumerate(self.queryset):
             rows[idx] = self.build_row(obj, *args)
         self.rows = rows
 
-    def build_columns(self):
+    def build_columns(self) -> list:
         columns = []
         for key, value in self.search_data.items():
             if "display" in key and value:
@@ -103,7 +103,7 @@ class BaseSearchTable:
 
         self.columns = columns
 
-    def build_table(self):
+    def build_table(self) -> tuple:
         self.get_queryset()
         self.build_columns()
         if self.attribute_data:
