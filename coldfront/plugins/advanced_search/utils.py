@@ -23,6 +23,9 @@ CENTER_BASE_URL = import_from_settings("CENTER_BASE_URL", "")
 
 
 class BaseSearchTable:
+    type = None
+    attr_type = None
+
     def __init__(self, search_data, attribute_data=None):
         self.search_data = search_data
         self.attribute_data = attribute_data or []
@@ -34,11 +37,41 @@ class BaseSearchTable:
     def get_queryset(self):
         raise NotImplementedError()
 
-    def get_attribute_data(self):
+    def get_attribute_model(self):
         raise NotImplementedError()
 
-    def get_attribute_usage(self):
+    def get_attribute_data(self):
+        all_attributes = {}
+        for entry in self.attribute_data:
+            attribute_type = entry.get(f"{self.type}attribute__name")
+            if attribute_type:
+                attributes = (
+                    self.get_attribute_model()
+                    .objects.select_related(self.type, self.attr_type)
+                    .filter(**{self.attr_type: attribute_type})
+                )
+                for attribute in attributes:
+                    all_attributes.setdefault(getattr(attribute, self.type).id, []).append(attribute)
+
+        return all_attributes
+
+    def get_attribute_usage_model(self):
         raise NotImplementedError()
+
+    def get_attribute_usage(self, additional_data):
+        all_attribute_usages = {}
+        attributes = [attribute for attributes in additional_data.values() for attribute in attributes]
+        attribute_usages = (
+            self.get_attribute_usage_model()
+            .objects.prefetch_related(f"{self.type}_attribute")
+            .filter(**{f"{self.type}_attribute__in": attributes})
+        )
+        for attribute_usage in attribute_usages:
+            attribute = getattr(attribute_usage, f"{self.type}_attribute")
+            parent_id = getattr(attribute, self.type).id
+            all_attribute_usages.setdefault(parent_id, []).append(attribute_usage)
+
+        return all_attribute_usages
 
     def build_rows(self, *args):
         rows = {}
@@ -54,6 +87,19 @@ class BaseSearchTable:
                 display_name = " ".join(display_name.split("_"))
                 field_name = key[len("display") + 2 :]
                 columns.append({"display_name": display_name.title(), "field_name": field_name})
+
+        for entry in self.attribute_data:
+            attribute_type = entry.get(f"{self.type}attribute__name")
+            if attribute_type:
+                display_name = attribute_type.name
+                field_name = f"{self.type}attribute__name"
+                columns.append({"display_name": display_name, "field_name": field_name, "id": attribute_type.id})
+
+                has_usage = int(entry.get(f"{self.type}attribute__has_usage"))
+                if has_usage and int(has_usage):
+                    display_name += " Usage"
+                    field_name = f"{self.type}attribute__has_usage"
+                    columns.append({"display_name": display_name, "field_name": field_name, "id": attribute_type.id})
 
         self.columns = columns
 
@@ -71,6 +117,9 @@ class BaseSearchTable:
 
 
 class ProjectTable(BaseSearchTable):
+    type = "project"
+    attr_type = "proj_attr_type"
+
     def get_queryset(self):
         data = self.search_data
         projects = (
@@ -261,64 +310,18 @@ class ProjectTable(BaseSearchTable):
 
             row.append(current_attribute)
         return row
+        
+    def get_attribute_model(self):
+        return ProjectAttribute
 
-    def get_attribute_data(self):
-        all_project_attributes = {}
-        for entry in self.attribute_data:
-            project_attribute_type = entry.get("projectattribute__name")
-            if project_attribute_type:
-                project_attributes = ProjectAttribute.objects.select_related("project", "proj_attr_type").filter(
-                    proj_attr_type=project_attribute_type
-                )
-                for project_attribute in project_attributes:
-                    if all_project_attributes.get(project_attribute.project.id) is None:
-                        all_project_attributes[project_attribute.project.id] = [project_attribute]
-                    else:
-                        all_project_attributes[project_attribute.project.id].append(project_attribute)
-
-        return all_project_attributes
-
-    def get_attribute_usage(self, additional_data):
-        all_project_attribute_usages = {}
-        project_attributes = [
-            project_attribute
-            for project_attributes in additional_data.values()
-            for project_attribute in project_attributes
-        ]
-        project_attribute_usages = ProjectAttributeUsage.objects.select_related("project_attribute").filter(
-            project_attribute__in=project_attributes
-        )
-        for project_attribute_usage in project_attribute_usages:
-            project_attribute = project_attribute_usage.project_attribute
-            if all_project_attribute_usages.get(project_attribute.id) is None:
-                all_project_attribute_usages[project_attribute.project.id] = [project_attribute_usage]
-            else:
-                all_project_attribute_usages[project_attribute.project.id].append(project_attribute_usage)
-
-        return all_project_attribute_usages
-
-    def build_columns(self):
-        super().build_columns()
-
-        for entry in self.attribute_data:
-            project_attribute_type = entry.get("projectattribute__name")
-            if project_attribute_type:
-                display_name = project_attribute_type.name
-                field_name = "projectattribute__name"
-                self.columns.append(
-                    {"display_name": display_name, "field_name": field_name, "id": project_attribute_type.id}
-                )
-
-                has_usage = int(entry.get("projectattribute__has_usage"))
-                if has_usage and int(has_usage):
-                    display_name += " Usage"
-                    field_name = "projectattribute__has_usage"
-                    self.columns.append(
-                        {"display_name": display_name, "field_name": field_name, "id": project_attribute_type.id}
-                    )
+    def get_attribute_usage_model(self):
+        return ProjectAttributeUsage
 
 
 class AllocationTable(BaseSearchTable):
+    type = "allocation"
+    attr_type = "allocation_attribute_type"
+
     def get_queryset(self):
         allocation_queryset = self.get_allocation_queryset()
 
@@ -486,26 +489,6 @@ class AllocationTable(BaseSearchTable):
 
         return allocation_queryset
 
-    def build_columns(self):
-        super().build_columns()
-
-        for entry in self.attribute_data:
-            allocation_attribute_type = entry.get("allocationattribute__name")
-            if allocation_attribute_type:
-                display_name = allocation_attribute_type.name
-                field_name = "allocationattribute__name"
-                self.columns.append(
-                    {"display_name": display_name, "field_name": field_name, "id": allocation_attribute_type.id}
-                )
-
-                has_usage = int(entry.get("allocationattribute__has_usage"))
-                if has_usage and int(has_usage):
-                    display_name += " Usage"
-                    field_name = "allocationattribute__has_usage"
-                    self.columns.append(
-                        {"display_name": display_name, "field_name": field_name, "id": allocation_attribute_type.id}
-                    )
-
     def build_row(self, allocation_obj, additional_data, additional_usage_data):
         row = []
         for column in self.columns:
@@ -601,43 +584,16 @@ class AllocationTable(BaseSearchTable):
 
         return row
 
-    def get_attribute_data(self):
-        all_allocation_attributes = {}
-        for entry in self.attribute_data:
-            allocation_attribute_type = entry.get("allocationattribute__name")
-            if allocation_attribute_type:
-                allocation_attributes = AllocationAttribute.objects.prefetch_related(
-                    "allocation", "allocation_attribute_type"
-                ).filter(allocation_attribute_type=allocation_attribute_type)
-                for allocation_attribute in allocation_attributes:
-                    if all_allocation_attributes.get(allocation_attribute.allocation.id) is None:
-                        all_allocation_attributes[allocation_attribute.allocation.id] = [allocation_attribute]
-                    else:
-                        all_allocation_attributes[allocation_attribute.allocation.id].append(allocation_attribute)
+    def get_attribute_model(self):
+        return AllocationAttribute
 
-        return all_allocation_attributes
-
-    def get_attribute_usage(self, additional_data):
-        all_allocation_attribute_usages = {}
-        allocation_attributes = [
-            allocation_attribute
-            for allocation_attributes in additional_data.values()
-            for allocation_attribute in allocation_attributes
-        ]
-        allocation_attribute_usages = AllocationAttributeUsage.objects.prefetch_related("allocation_attribute").filter(
-            allocation_attribute__in=allocation_attributes
-        )
-        for allocation_attribute_usage in allocation_attribute_usages:
-            allocation_attribute = allocation_attribute_usage.allocation_attribute
-            if all_allocation_attribute_usages.get(allocation_attribute.id) is None:
-                all_allocation_attribute_usages[allocation_attribute.allocation.id] = [allocation_attribute_usage]
-            else:
-                all_allocation_attribute_usages[allocation_attribute.allocation.id].append(allocation_attribute_usage)
-
-        return all_allocation_attribute_usages
+    def get_attribute_usage_model(self):
+        return AllocationAttributeUsage
 
 
 class UserTable(BaseSearchTable):
+    type = "user"
+
     def get_queryset(self):
         user_queryset = self.get_user_queryset()
 
