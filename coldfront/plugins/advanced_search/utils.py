@@ -22,17 +22,57 @@ from coldfront.core.utils.common import import_from_settings
 CENTER_BASE_URL = import_from_settings("CENTER_BASE_URL", "")
 
 
-class ProjectTable:
-    def __init__(self, form_data, project_attribute_form_data):
-        self.project_queryset = None
-        self.project_attribute_queryset = None
+class BaseSearchTable:
+    def __init__(self, search_data, attribute_data=None):
+        self.search_data = search_data
+        self.attribute_data = attribute_data or []
+        self.attribute_queryset = None
+        self.queryset = None
         self.columns = []
         self.rows = {}
-        self.form_data = form_data
-        self.project_attribute_form_data = project_attribute_form_data
 
-    def get_project_queryset(self):
-        data = self.form_data
+    def get_queryset(self):
+        raise NotImplementedError()
+
+    def get_attribute_data(self):
+        raise NotImplementedError()
+
+    def get_attribute_usage(self):
+        raise NotImplementedError()
+
+    def build_rows(self, *args):
+        rows = {}
+        for idx, obj in enumerate(self.queryset):
+            rows[idx] = self.build_row(obj, *args)
+        self.rows = rows
+
+    def build_columns(self):
+        columns = []
+        for key, value in self.search_data.items():
+            if "display" in key and value:
+                display_name = " ".join(key.split("__")[1:])
+                display_name = " ".join(display_name.split("_"))
+                field_name = key[len("display") + 2 :]
+                columns.append({"display_name": display_name.title(), "field_name": field_name})
+
+        self.columns = columns
+
+    def build_table(self):
+        self.get_queryset()
+        self.build_columns()
+        if self.attribute_data:
+            additional_data = self.get_attribute_data()
+            additional_usage_data = self.get_attribute_usage(additional_data)
+            self.build_rows(additional_data, additional_usage_data)
+        else:
+            self.build_rows()
+
+        return self.rows, self.columns
+
+
+class ProjectTable(BaseSearchTable):
+    def get_queryset(self):
+        data = self.search_data
         projects = (
             Project.objects.select_related(
                 "pi",
@@ -83,10 +123,10 @@ class ProjectTable:
 
         projects = self.filter_by_project_attribute_parameters(projects)
 
-        self.project_queryset = projects
+        self.queryset = projects
 
     def filter_by_project_attribute_parameters(self, project_queryset):
-        for entry in self.project_attribute_form_data:
+        for entry in self.attribute_data:
             project_attribute_type = entry.get("projectattribute__name")
             project_attribute_value = entry.get("projectattribute__value")
             project_attribute_has_usage = entry.get("projectattribute__has_usage")
@@ -222,9 +262,9 @@ class ProjectTable:
             row.append(current_attribute)
         return row
 
-    def get_project_attribute_data(self):
+    def get_attribute_data(self):
         all_project_attributes = {}
-        for entry in self.project_attribute_form_data:
+        for entry in self.attribute_data:
             project_attribute_type = entry.get("projectattribute__name")
             if project_attribute_type:
                 project_attributes = ProjectAttribute.objects.select_related("project", "proj_attr_type").filter(
@@ -238,7 +278,7 @@ class ProjectTable:
 
         return all_project_attributes
 
-    def get_project_attribute_usage(self, additional_data):
+    def get_attribute_usage(self, additional_data):
         all_project_attribute_usages = {}
         project_attributes = [
             project_attribute
@@ -257,27 +297,15 @@ class ProjectTable:
 
         return all_project_attribute_usages
 
-    def build_rows(self, additional_data, additional_usage_data):
-        rows = {}
-        for idx, project_obj in enumerate(self.project_queryset):
-            rows[idx] = self.build_row(project_obj, additional_data, additional_usage_data)
-        self.rows = rows
-
     def build_columns(self):
-        columns = []
-        for key, value in self.form_data.items():
-            if "display" in key and value:
-                display_name = " ".join(key.split("__")[1:])
-                display_name = " ".join(display_name.split("_"))
-                field_name = key[len("display") + 2 :]
-                columns.append({"display_name": display_name.title(), "field_name": field_name})
+        super().build_columns()
 
-        for entry in self.project_attribute_form_data:
+        for entry in self.attribute_data:
             project_attribute_type = entry.get("projectattribute__name")
             if project_attribute_type:
                 display_name = project_attribute_type.name
                 field_name = "projectattribute__name"
-                columns.append(
+                self.columns.append(
                     {"display_name": display_name, "field_name": field_name, "id": project_attribute_type.id}
                 )
 
@@ -285,31 +313,13 @@ class ProjectTable:
                 if has_usage and int(has_usage):
                     display_name += " Usage"
                     field_name = "projectattribute__has_usage"
-                    columns.append(
+                    self.columns.append(
                         {"display_name": display_name, "field_name": field_name, "id": project_attribute_type.id}
                     )
 
-        self.columns = columns
 
-    def build_table(self):
-        self.get_project_queryset()
-        self.build_columns()
-        additional_data = self.get_project_attribute_data()
-        additional_usage_data = self.get_project_attribute_usage(additional_data)
-        self.build_rows(additional_data, additional_usage_data)
-        return self.rows, self.columns
-
-
-class AllocationTable:
-    def __init__(self, form_data, allocation_attribute_form_data):
-        self.allocation_queryset = None
-        self.allocation_attribute_queryset = None
-        self.columns = []
-        self.rows = {}
-        self.form_data = form_data
-        self.allocation_attribute_form_data = allocation_attribute_form_data
-
-    def build_allocation_queryset(self):
+class AllocationTable(BaseSearchTable):
+    def get_queryset(self):
         allocation_queryset = self.get_allocation_queryset()
 
         project_queryset = self.get_project_queryset()
@@ -319,10 +329,10 @@ class AllocationTable:
         allocation_queryset = allocation_queryset.filter(resources__in=list(resource_queryset))
 
         allocation_queryset = self.filter_by_allocation_attribute_parameters(allocation_queryset)
-        self.allocation_queryset = allocation_queryset
+        self.queryset = allocation_queryset
 
     def get_allocation_queryset(self):
-        data = self.form_data
+        data = self.search_data
         allocations = (
             Allocation.objects.select_related(
                 "project",
@@ -362,7 +372,7 @@ class AllocationTable:
         return allocations
 
     def get_project_queryset(self):
-        data = self.form_data
+        data = self.search_data
         projects = (
             Project.objects.select_related(
                 "pi",
@@ -406,7 +416,7 @@ class AllocationTable:
         return projects
 
     def get_resource_queryset(self):
-        data = self.form_data
+        data = self.search_data
         resources = Resource.objects.select_related(
             "resource_type",
         ).filter(is_allocatable=True)
@@ -419,7 +429,7 @@ class AllocationTable:
         return resources
 
     def filter_by_allocation_attribute_parameters(self, allocation_queryset):
-        for entry in self.allocation_attribute_form_data:
+        for entry in self.attribute_data:
             allocation_attribute_type = entry.get("allocationattribute__name")
             allocation_attribute_value = entry.get("allocationattribute__value")
             allocation_attribute_has_usage = entry.get("allocationattribute__has_usage")
@@ -477,20 +487,14 @@ class AllocationTable:
         return allocation_queryset
 
     def build_columns(self):
-        columns = []
-        for key, value in self.form_data.items():
-            if "display" in key and value:
-                display_name = " ".join(key.split("__")[1:])
-                display_name = " ".join(display_name.split("_"))
-                field_name = key[len("display") + 2 :]
-                columns.append({"display_name": display_name.title(), "field_name": field_name})
+        super().build_columns()
 
-        for entry in self.allocation_attribute_form_data:
+        for entry in self.attribute_data:
             allocation_attribute_type = entry.get("allocationattribute__name")
             if allocation_attribute_type:
                 display_name = allocation_attribute_type.name
                 field_name = "allocationattribute__name"
-                columns.append(
+                self.columns.append(
                     {"display_name": display_name, "field_name": field_name, "id": allocation_attribute_type.id}
                 )
 
@@ -498,19 +502,9 @@ class AllocationTable:
                 if has_usage and int(has_usage):
                     display_name += " Usage"
                     field_name = "allocationattribute__has_usage"
-                    columns.append(
+                    self.columns.append(
                         {"display_name": display_name, "field_name": field_name, "id": allocation_attribute_type.id}
                     )
-
-        self.columns = columns
-
-    def build_rows(self, additional_data, additional_usage_data):
-        rows_dict = {}
-        for idx, allocation_obj in enumerate(self.allocation_queryset):
-            row = self.build_row(allocation_obj, additional_data, additional_usage_data)
-            rows_dict[idx] = row
-
-        self.rows = rows_dict
 
     def build_row(self, allocation_obj, additional_data, additional_usage_data):
         row = []
@@ -607,9 +601,9 @@ class AllocationTable:
 
         return row
 
-    def get_allocation_attribute_data(self):
+    def get_attribute_data(self):
         all_allocation_attributes = {}
-        for entry in self.allocation_attribute_form_data:
+        for entry in self.attribute_data:
             allocation_attribute_type = entry.get("allocationattribute__name")
             if allocation_attribute_type:
                 allocation_attributes = AllocationAttribute.objects.prefetch_related(
@@ -623,7 +617,7 @@ class AllocationTable:
 
         return all_allocation_attributes
 
-    def get_allocation_attribute_usage(self, additional_data):
+    def get_attribute_usage(self, additional_data):
         all_allocation_attribute_usages = {}
         allocation_attributes = [
             allocation_attribute
@@ -642,33 +636,18 @@ class AllocationTable:
 
         return all_allocation_attribute_usages
 
-    def build_table(self):
-        self.build_allocation_queryset()
-        self.build_columns()
-        additional_data = self.get_allocation_attribute_data()
-        additional_usage_data = self.get_allocation_attribute_usage(additional_data)
-        self.build_rows(additional_data, additional_usage_data)
 
-        return self.rows, self.columns
-
-
-class UserTable:
-    def __init__(self, data):
-        self.data = data
-        self.rows = {}
-        self.columns = []
-        self.user_queryset = None
-
-    def build_user_queryset(self):
+class UserTable(BaseSearchTable):
+    def get_queryset(self):
         user_queryset = self.get_user_queryset()
 
-        user_profile_queryset = self.get_user_profile_querset()
+        user_profile_queryset = self.get_user_profile_queryset()
         user_queryset = user_queryset.filter(userprofile__in=user_profile_queryset)
 
-        self.user_queryset = user_queryset
+        self.queryset = user_queryset
 
     def get_user_queryset(self):
-        data = self.data
+        data = self.search_data
         users = User.objects.select_related("userprofile")
         if data.get("user__type") == "project":
             project_usernames = set(
@@ -698,8 +677,8 @@ class UserTable:
 
         return users
 
-    def get_user_profile_querset(self):
-        data = self.data
+    def get_user_profile_queryset(self):
+        data = self.search_data
         user_profiles = UserProfile.objects.all()
 
         if data.get("user__userprofile__title"):
@@ -708,23 +687,6 @@ class UserTable:
             user_profiles = user_profiles.filter(department__icontains=data.get("user__userprofile__department"))
 
         return user_profiles
-
-    def build_columns(self):
-        data = self.data
-        columns = []
-        for key, value in data.items():
-            if "display" in key and value:
-                display_name = " ".join(key.split("_")[1:])
-                field_name = key[len("display") + 2 :]
-                columns.append({"display_name": display_name.title(), "field_name": field_name})
-
-        self.columns = columns
-
-    def build_rows(self):
-        rows = {}
-        for idx, user_obj in enumerate(self.user_queryset):
-            rows[idx] = self.build_row(user_obj)
-        self.rows = rows
 
     def build_row(self, user_obj):
         row = []
@@ -760,35 +722,3 @@ class UserTable:
                 current_attribute = ""
             row.append(current_attribute)
         return row
-
-    def build_table(self):
-        self.build_user_queryset()
-        self.build_columns()
-        self.build_rows()
-
-        return self.rows, self.columns
-
-
-def build_table(data, allocationattribute_data, get_request):
-    """
-    Creates a the rows and columns for the table.
-
-    Params:
-        allocationattribute_data (dict): Information filled out on the allocation attribute search form.
-        request (dict): GET request sent by the server.
-
-    Returns:
-        rows (dict): Rows of the table.
-        columns (list): Columns of the table.
-    """
-    if data.get("current_tab") == 2:
-        user_table = UserTable(data)
-        return user_table.build_table()
-
-    if data.get("current_tab") == 1:
-        if data.get("only_search_projects"):
-            project_table = ProjectTable(data)
-            return project_table.build_table()
-
-        allocation_table = AllocationTable(data, allocationattribute_data)
-        return allocation_table.build_table()
