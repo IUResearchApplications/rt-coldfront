@@ -1,6 +1,7 @@
 import datetime
 
 from django.contrib.auth.models import User
+from django.db.models.query import QuerySet
 from django.urls import reverse
 
 from coldfront.core.allocation.models import (
@@ -26,7 +27,7 @@ class BaseSearchTable:
     type = None
     attr_type = None
 
-    def __init__(self, search_data: dict, attribute_data: list | None = None):
+    def __init__(self, search_data: dict, attribute_data: list | None = None) -> None:
         self.search_data = search_data
         self.attribute_data = attribute_data or []
         self.attribute_queryset = None
@@ -38,6 +39,9 @@ class BaseSearchTable:
         raise NotImplementedError()
 
     def get_attribute_model(self) -> None:
+        raise NotImplementedError()
+        
+    def get_attribute_usage_model(self) -> None:
         raise NotImplementedError()
 
     def get_attribute_data(self) -> dict:
@@ -57,9 +61,6 @@ class BaseSearchTable:
             all_attributes.setdefault(getattr(attribute, self.type).id, []).append(attribute)
 
         return all_attributes
-
-    def get_attribute_usage_model(self) -> None:
-        raise NotImplementedError()
 
     def get_attribute_usage(self, additional_data: dict) -> dict:
         all_attribute_usages = {}
@@ -118,7 +119,7 @@ class BaseSearchTable:
 
         return self.rows, self.columns
 
-    def filter_by_attribute(self, queryset, entry):
+    def filter_by_attribute(self, queryset: QuerySet, entry: dict) -> QuerySet:
         attribute_type = entry.get(f"{self.type}attribute__name")
         attribute_value = entry.get(f"{self.type}attribute__value")
         if not (attribute_type and attribute_value):
@@ -131,7 +132,7 @@ class BaseSearchTable:
             }
         )
 
-    def filter_by_usage(self, queryset, entry):
+    def filter_by_usage(self, queryset: QuerySet, entry: dict) -> QuerySet:
         attribute_has_usage = entry.get(f"{self.type}attribute__has_usage")
         if attribute_has_usage is None or not int(attribute_has_usage):
             return queryset
@@ -175,7 +176,7 @@ class BaseSearchTable:
 
         return queryset
 
-    def filter_by_attribute_parameters(self, queryset):
+    def filter_by_attribute_parameters(self, queryset: QuerySet) -> QuerySet:
         for entry in self.attribute_data:
             queryset = self.filter_by_attribute(queryset, entry)
             queryset = self.filter_by_usage(queryset, entry)
