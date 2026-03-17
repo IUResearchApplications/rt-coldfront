@@ -76,13 +76,7 @@ class BaseSearchTable:
 
         return all_attribute_usages
 
-    def build_rows(self, *args: any) -> dict:
-        rows = {}
-        for idx, obj in enumerate(self.queryset):
-            rows[idx] = self.build_row(obj, *args)
-        self.rows = rows
-
-    def build_columns(self) -> list:
+    def build_columns(self) -> None:
         columns = []
         for key, value in self.search_data.items():
             if "display" in key and value:
@@ -106,6 +100,12 @@ class BaseSearchTable:
 
         self.columns = columns
 
+    def build_rows(self, *args: any) -> None:
+        rows = {}
+        for idx, obj in enumerate(self.queryset):
+            rows[idx] = self.build_row(obj, *args)
+        self.rows = rows
+
     def build_table(self) -> tuple:
         self.get_queryset()
         self.build_columns()
@@ -117,6 +117,70 @@ class BaseSearchTable:
             self.build_rows()
 
         return self.rows, self.columns
+
+    def filter_by_attribute(self, queryset, entry):
+        attribute_type = entry.get(f"{self.type}attribute__name")
+        attribute_value = entry.get(f"{self.type}attribute__value")
+        if not (attribute_type and attribute_value):
+            return queryset
+
+        return queryset.filter(
+            **{
+                f"{self.type}attribute__{self.attr_type}": attribute_type,
+                f"{self.type}attribute__value__icontains": attribute_value,
+            }
+        )
+
+    def filter_by_usage(self, queryset, entry):
+        attribute_has_usage = entry.get(f"{self.type}attribute__has_usage")
+        if attribute_has_usage is None or not int(attribute_has_usage):
+            return queryset
+
+        attribute_type = entry.get(f"{self.type}attribute__name")
+        attribute_usage = entry.get(f"{self.type}attribute__usage")
+        attribute_equality = entry.get(f"{self.type}attribute__equality")
+        if not (attribute_type and attribute_usage):
+            return queryset
+
+        queryset = queryset.filter(**{f"{self.type}attribute__{self.attr_type}": attribute_type})
+        attribute_usage_format = entry.get(f"{self.type}attribute__usage_format")
+        if attribute_usage_format == "whole":
+            if attribute_equality == "lt":
+                queryset = queryset.filter(
+                    **{f"{self.type}attribute__{self.type}attributeusage__value__lt": attribute_usage}
+                )
+            elif attribute_equality == "gt":
+                queryset = queryset.filter(
+                    **{f"{self.type}attribute__{self.type}attributeusage__value__gt": attribute_usage}
+                )
+        elif attribute_usage_format == "percent":
+            attribute_ids = queryset.values_list(f"{self.type}attribute__{self.type}attributeusage", flat=True)
+            attribute_ids = [attribute_id for attribute_id in attribute_ids if attribute_id is not None]
+            attribute_usages = self.get_attribute_usage_model().objects.filter(
+                **{f"{self.type}_attribute__id__in": attribute_ids}
+            )
+            remaining_entries = []
+            for attribute_usage_result in attribute_usages:
+                attribute_obj = getattr(attribute_has_usage, f"{self.type}_attribute")
+                attribute_value_with_usage = float(attribute_obj.value)
+                attribute_usage_value = attribute_usage_result.value
+
+                fraction = attribute_usage_value / attribute_value_with_usage * 100
+                if attribute_equality == "lt" and fraction < attribute_usage:
+                    remaining_entries.append(attribute_obj.id)
+                elif attribute_equality == "gt" and fraction > attribute_usage:
+                    remaining_entries.append(attribute_obj.id)
+
+            queryset = queryset.filter(**{f"{self.type}attribute__id__in": remaining_entries})
+
+        return queryset
+
+    def filter_by_attribute_parameters(self, queryset):
+        for entry in self.attribute_data:
+            queryset = self.filter_by_attribute(queryset, entry)
+            queryset = self.filter_by_usage(queryset, entry)
+
+        return queryset
 
 
 class ProjectTable(BaseSearchTable):
@@ -143,95 +207,36 @@ class ProjectTable(BaseSearchTable):
             .order_by("id")
         )
 
-        if data.get("project__title"):
-            projects = projects.filter(title__icontains=data.get("project__title"))
-        if data.get("project__description"):
-            projects = projects.filter(description__icontains=data.get("project__description"))
-        if data.get("project__pi__username"):
-            projects = projects.filter(pi__username__icontains=data.get("project__pi__username"))
-        if data.get("project__requestor__username"):
-            projects = projects.filter(requestor__username__icontains=data.get("project__requestor__username"))
-        if data.get("project__status__name"):
-            projects = projects.filter(status__in=data.get("project__status__name"))
-        if data.get("project__type__name"):
-            projects = projects.filter(type__in=data.get("project__type__name"))
-        if data.get("project__user_username"):
-            projects = projects.filter(
-                projectuser__user__username__icontains=data.get("project__user_username"),
-                projectuser__status__name="Active",
-            )
-        if data.get("projects_using_ai"):
-            projects = projects.filter(
-                allocation__allocationattribute__allocation_attribute_type__name="Has DL Workflow",
-                allocation__allocationattribute__value="Yes",
-                allocation__status__name="Active",
-            ).distinct()
-        if data.get("project__created_after_date"):
-            projects = projects.filter(created__gt=data.get("project__created_after_date"))
-        if data.get("project__created_before_date"):
-            projects = projects.filter(created__lt=data.get("project__created_before_date"))
-        if data.get("project__end_date"):
-            projects = projects.filter(end_date=data.get("project__end_date"))
+        filters = {
+            "project__title": {"title__icontains": data.get("project__title")},
+            "project__description": {"description__icontains": data.get("project__description")},
+            "project__pi__username": {"pi__username__icontains": data.get("project__pi__username")},
+            "project__requestor__username": {
+                "requestor__username__icontains": data.get("project__requestor__username")
+            },
+            "project__status__name": {"status__in": data.get("project__status__name")},
+            "project__type__name": {"type__in": data.get("project__type__name")},
+            "project__user_username": {
+                "projectuser__user__username__icontains": data.get("project__user_username"),
+                "projectuser__status__name": "Active",
+            },
+            "projects_using_ai": {
+                "allocation__allocationattribute__allocation_attribute_type__name": "Has DL Workflow",
+                "allocation__allocationattribute__value": "Yes",
+                "allocation__status__name": "Active",
+            },
+            "project__created_after_date": {"created__gt": data.get("project__created_after_date")},
+            "project__created_before_date": {"created__lt": data.get("project__created_before_date")},
+            "project__end_date": {"end_date": data.get("project__end_date")},
+        }
 
-        projects = self.filter_by_project_attribute_parameters(projects)
+        for field in data.keys():
+            if filters.get(field) and data.get(field):
+                projects = projects.filter(**filters.get(field))
+
+        projects = self.filter_by_attribute_parameters(projects)
 
         self.queryset = projects
-
-    def filter_by_project_attribute_parameters(self, project_queryset):
-        for entry in self.attribute_data:
-            project_attribute_type = entry.get("projectattribute__name")
-            project_attribute_value = entry.get("projectattribute__value")
-            project_attribute_has_usage = entry.get("projectattribute__has_usage")
-            if project_attribute_has_usage is not None:
-                project_attribute_has_usage = int(entry.get("projectattribute__has_usage"))
-            project_attribute_usage = entry.get("projectattribute__usage")
-            project_attribute_equality = entry.get("projectattribute__equality")
-            project_attribute_usage_format = entry.get("projectattribute__usage_format")
-
-            if project_attribute_type and project_attribute_value:
-                project_queryset = project_queryset.filter(
-                    projectattribute__proj_attr_type=project_attribute_type,
-                    projectattribute__value__icontains=project_attribute_value,
-                )
-
-            if project_attribute_type and project_attribute_has_usage and project_attribute_usage:
-                project_queryset = project_queryset.filter(projectattribute__proj_attr_type=project_attribute_type)
-                if project_attribute_usage_format == "whole":
-                    if project_attribute_equality == "lt":
-                        project_queryset = project_queryset.filter(
-                            projectattribute__projectattributeusage__value__lt=project_attribute_usage
-                        )
-                    elif project_attribute_equality == "gt":
-                        project_queryset = project_queryset.filter(
-                            projectattribute__projectattributeusage__value__gt=project_attribute_usage
-                        )
-                elif project_attribute_usage_format == "percent":
-                    project_attribute_ids = project_queryset.values_list(
-                        "projectattribute__projectattributeusage", flat=True
-                    )
-                    project_attribute_ids = [
-                        project_attribute_id
-                        for project_attribute_id in project_attribute_ids
-                        if project_attribute_id is not None
-                    ]
-                    project_attribute_usages = ProjectAttributeUsage.objects.filter(
-                        project_attribute__id__in=project_attribute_ids
-                    )
-                    remaining_entries = []
-                    for project_attribute_usage_result in project_attribute_usages:
-                        project_attribute_obj = project_attribute_usage_result.project_attribute
-                        project_attribute_value_with_usage = float(project_attribute_obj.value)
-                        project_attribute_usage_value = project_attribute_usage_result.value
-
-                        fraction = project_attribute_usage_value / project_attribute_value_with_usage * 100
-                        if project_attribute_equality == "lt" and fraction < project_attribute_usage:
-                            remaining_entries.append(project_attribute_obj.id)
-                        elif project_attribute_equality == "gt" and fraction > project_attribute_usage:
-                            remaining_entries.append(project_attribute_obj.id)
-
-                    project_queryset = project_queryset.filter(projectattribute__id__in=remaining_entries)
-
-        return project_queryset
 
     def build_row(self, project_obj, additional_data, additional_usage_data):
         row = []
@@ -334,7 +339,8 @@ class AllocationTable(BaseSearchTable):
         resource_queryset = self.get_resource_queryset()
         allocation_queryset = allocation_queryset.filter(resources__in=list(resource_queryset))
 
-        allocation_queryset = self.filter_by_allocation_attribute_parameters(allocation_queryset)
+        allocation_queryset = self.filter_by_attribute_parameters(allocation_queryset)
+
         self.queryset = allocation_queryset
 
     def get_allocation_queryset(self):
@@ -433,64 +439,6 @@ class AllocationTable(BaseSearchTable):
             resources = resources.filter(resource_type__in=data.get("resources__resource_type__name"))
 
         return resources
-
-    def filter_by_allocation_attribute_parameters(self, allocation_queryset):
-        for entry in self.attribute_data:
-            allocation_attribute_type = entry.get("allocationattribute__name")
-            allocation_attribute_value = entry.get("allocationattribute__value")
-            allocation_attribute_has_usage = entry.get("allocationattribute__has_usage")
-            if allocation_attribute_has_usage is not None:
-                allocation_attribute_has_usage = int(entry.get("allocationattribute__has_usage"))
-            allocation_attribute_usage = entry.get("allocationattribute__usage")
-            allocation_attribute_equality = entry.get("allocationattribute__equality")
-            allocation_attribute_usage_format = entry.get("allocationattribute__usage_format")
-
-            if allocation_attribute_type and allocation_attribute_value:
-                allocation_queryset = allocation_queryset.filter(
-                    allocationattribute__allocation_attribute_type=allocation_attribute_type,
-                    allocationattribute__value__icontains=allocation_attribute_value,
-                )
-
-            if allocation_attribute_type and allocation_attribute_has_usage and allocation_attribute_usage:
-                allocation_queryset = allocation_queryset.filter(
-                    allocationattribute__allocation_attribute_type=allocation_attribute_type
-                )
-                if allocation_attribute_usage_format == "whole":
-                    if allocation_attribute_equality == "lt":
-                        allocation_queryset = allocation_queryset.filter(
-                            allocationattribute__allocationattributeusage__value__lt=allocation_attribute_usage
-                        )
-                    elif allocation_attribute_equality == "gt":
-                        allocation_queryset = allocation_queryset.filter(
-                            allocationattribute__allocationattributeusage__value__gt=allocation_attribute_usage
-                        )
-                elif allocation_attribute_usage_format == "percent":
-                    allocation_attribute_ids = allocation_queryset.values_list(
-                        "allocationattribute__allocationattributeusage", flat=True
-                    )
-                    allocation_attribute_ids = [
-                        allocation_attribute_id
-                        for allocation_attribute_id in allocation_attribute_ids
-                        if allocation_attribute_id is not None
-                    ]
-                    allocation_attribute_usages = AllocationAttributeUsage.objects.filter(
-                        allocation_attribute__id__in=allocation_attribute_ids
-                    )
-                    remaining_entries = []
-                    for allocation_attribute_usage_result in allocation_attribute_usages:
-                        allocation_attribute_obj = allocation_attribute_usage_result.allocation_attribute
-                        allocation_attribute_value_with_usage = float(allocation_attribute_obj.value)
-                        allocation_attribute_usage_value = allocation_attribute_usage_result.value
-
-                        fraction = allocation_attribute_usage_value / allocation_attribute_value_with_usage * 100
-                        if allocation_attribute_equality == "lt" and fraction < allocation_attribute_usage:
-                            remaining_entries.append(allocation_attribute_obj.id)
-                        elif allocation_attribute_equality == "gt" and fraction > allocation_attribute_usage:
-                            remaining_entries.append(allocation_attribute_obj.id)
-
-                    allocation_queryset = allocation_queryset.filter(allocationattribute__id__in=remaining_entries)
-
-        return allocation_queryset
 
     def build_row(self, allocation_obj, additional_data, additional_usage_data):
         row = []
