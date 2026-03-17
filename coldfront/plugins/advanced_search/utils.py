@@ -1,5 +1,6 @@
 import datetime
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db.models.query import QuerySet
 from django.urls import reverse
@@ -18,9 +19,7 @@ from coldfront.core.project.models import (
 )
 from coldfront.core.resource.models import Resource
 from coldfront.core.user.models import UserProfile
-from coldfront.core.utils.common import import_from_settings
 
-CENTER_BASE_URL = import_from_settings("CENTER_BASE_URL", "")
 
 
 class BaseSearchTable:
@@ -286,7 +285,7 @@ class ProjectTable(BaseSearchTable):
                         current_attribute = ", ".join(resource_list)
                     elif "project__url" in column.get("field_name"):
                         current_attribute = (
-                            f"{CENTER_BASE_URL}{reverse('project-detail', kwargs={'pk': project_obj.pk})}"
+                            f"{settings.CENTER_BASE_URL}{reverse('project-detail', kwargs={'pk': project_obj.pk})}"
                         )
             else:
                 project_id = project_obj.id
@@ -475,7 +474,7 @@ class AllocationTable(BaseSearchTable):
                         break
 
                     if "project__url" in column.get("field_name"):
-                        current_attribute = f"{CENTER_BASE_URL}{reverse('project-detail', kwargs={'pk': model.pk})}"
+                        current_attribute = f"{settings.CENTER_BASE_URL}{reverse('project-detail', kwargs={'pk': model.pk})}"
                         break
 
                     if "allocation__total_users" == field_name:
@@ -498,7 +497,7 @@ class AllocationTable(BaseSearchTable):
 
                     if "allocation__url" in column.get("field_name"):
                         current_attribute = (
-                            f"{CENTER_BASE_URL}{reverse('allocation-detail', kwargs={'pk': allocation_obj.pk})}"
+                            f"{settings.CENTER_BASE_URL}{reverse('allocation-detail', kwargs={'pk': allocation_obj.pk})}"
                         )
             else:
                 allocation_id = allocation_obj.id
