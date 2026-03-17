@@ -21,7 +21,6 @@ from coldfront.core.resource.models import Resource
 from coldfront.core.user.models import UserProfile
 
 
-
 class BaseSearchTable:
     type = None
     attr_type = None
@@ -39,7 +38,7 @@ class BaseSearchTable:
 
     def get_attribute_model(self) -> None:
         raise NotImplementedError()
-        
+
     def get_attribute_usage_model(self) -> None:
         raise NotImplementedError()
 
@@ -187,6 +186,27 @@ class ProjectTable(BaseSearchTable):
     type = "project"
     attr_type = "proj_attr_type"
 
+    FILTER_MAP = {
+        "project__title": lambda data: {"title__icontains": data},
+        "project__description": lambda data: {"description__icontains": data},
+        "project__pi__username": lambda data: {"pi__username__icontains": data},
+        "project__requestor__username": lambda data: {"requestor__username__icontains": data},
+        "project__status__name": lambda data: {"status__in": data},
+        "project__type__name": lambda data: {"type__in": data},
+        "project__user_username": lambda data: {
+            "projectuser__user__username__icontains": data,
+            "projectuser__status__name": "Active",
+        },
+        "projects_using_ai": {
+            "allocation__allocationattribute__allocation_attribute_type__name": "Has DL Workflow",
+            "allocation__allocationattribute__value": "Yes",
+            "allocation__status__name": "Active",
+        },
+        "project__created_after_date": lambda data: {"created__gt": data},
+        "project__created_before_date": lambda data: {"created__lt": data},
+        "project__end_date": lambda data: {"end_date": data},
+    }
+
     def get_queryset(self):
         data = self.search_data
         projects = (
@@ -207,32 +227,14 @@ class ProjectTable(BaseSearchTable):
             .order_by("id")
         )
 
-        filters = {
-            "project__title": {"title__icontains": data.get("project__title")},
-            "project__description": {"description__icontains": data.get("project__description")},
-            "project__pi__username": {"pi__username__icontains": data.get("project__pi__username")},
-            "project__requestor__username": {
-                "requestor__username__icontains": data.get("project__requestor__username")
-            },
-            "project__status__name": {"status__in": data.get("project__status__name")},
-            "project__type__name": {"type__in": data.get("project__type__name")},
-            "project__user_username": {
-                "projectuser__user__username__icontains": data.get("project__user_username"),
-                "projectuser__status__name": "Active",
-            },
-            "projects_using_ai": {
-                "allocation__allocationattribute__allocation_attribute_type__name": "Has DL Workflow",
-                "allocation__allocationattribute__value": "Yes",
-                "allocation__status__name": "Active",
-            },
-            "project__created_after_date": {"created__gt": data.get("project__created_after_date")},
-            "project__created_before_date": {"created__lt": data.get("project__created_before_date")},
-            "project__end_date": {"end_date": data.get("project__end_date")},
-        }
+        filter_kwargs = {}
+        for param, builder in self.FILTER_MAP.items():
+            value = data.get(param)
+            if value:
+                filter_kwargs.update(builder(value))
 
-        for field in data.keys():
-            if filters.get(field) and data.get(field):
-                projects = projects.filter(**filters.get(field))
+        if filter_kwargs:
+            projects = projects.filter(**filter_kwargs)
 
         projects = self.filter_by_attribute_parameters(projects)
 
@@ -474,7 +476,9 @@ class AllocationTable(BaseSearchTable):
                         break
 
                     if "project__url" in column.get("field_name"):
-                        current_attribute = f"{settings.CENTER_BASE_URL}{reverse('project-detail', kwargs={'pk': model.pk})}"
+                        current_attribute = (
+                            f"{settings.CENTER_BASE_URL}{reverse('project-detail', kwargs={'pk': model.pk})}"
+                        )
                         break
 
                     if "allocation__total_users" == field_name:
@@ -496,9 +500,7 @@ class AllocationTable(BaseSearchTable):
                         break
 
                     if "allocation__url" in column.get("field_name"):
-                        current_attribute = (
-                            f"{settings.CENTER_BASE_URL}{reverse('allocation-detail', kwargs={'pk': allocation_obj.pk})}"
-                        )
+                        current_attribute = f"{settings.CENTER_BASE_URL}{reverse('allocation-detail', kwargs={'pk': allocation_obj.pk})}"
             else:
                 allocation_id = allocation_obj.id
                 value = ""
