@@ -252,7 +252,7 @@ a:hover {
 @media (max-width: 1025px) {
     nav.navbar {
         position: relative;
-        z-index: 1050;          /* > IU header’s z‑index (≈1000) */
-        margin-top: 60px;       /* adjust to the branding‑bar height */
+        z-index: 1050;
+        margin-top: 60px;
     }
 }
