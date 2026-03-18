@@ -120,16 +120,6 @@ body > main > div > div.card.border-primary > div.card-body > form > div.alert.a
   border-color: #01426A;
 }
 
-/* .btn-info {
-  background-color: #005c54;
-  border-color: #006161;
-}
-
-.btn-info:hover {
-  background-color: #005b6b;
-  border-color: #004d4d;
-} */
-
 .badge-success {
   background-color: #008216;
   border-color: #008216;
@@ -163,10 +153,6 @@ body > main > div > div.card.border-primary > div.card-body > form > div.alert.a
 .text-primary {
   color: #006298 !important;
 }
-
-/* .text-info {
-  color: #004d4d !important;
-} */
 
 .text-success {
   color: #008216 !important;
@@ -240,4 +226,21 @@ a:hover {
 
 .dropdown-submenu a::after{
     transform: rotate(-90deg);
+}
+
+.navbar-nav .nav-link {
+    position: relative;
+    color: white !important;
+}
+
+/* Can't use ::after because it clashes with bootstraps dropdown-toggle::after */
+.navbar-nav .nav-item.active .nav-link::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    height: 2px;
+    background-color: white;
 }
