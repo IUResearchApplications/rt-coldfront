@@ -20,9 +20,9 @@
 
     {% if project_list %}
       <hr>
-      <div class="table-responsive" aria-live="polite">
+      <div class="table-responsive" aria-live="polite" aria-describedby="user_project_list">
         <table id="project_table" class="table table-hover">
-          <caption class="sr-only">List of the user’s projects</caption>
+          <caption id="user_project_list" class="sr-only">List of the user’s projects</caption>
           <thead>
             <tr>
               <th scope="col" class="nosearch">Projects</th>
@@ -117,9 +117,9 @@
 
     {% if allocation_list %}
       <hr>
-      <div class="table-responsive" aria-live="polite">
+      <div class="table-responsive" aria-live="polite" aria-labelledby="user_allocation_list">
         <table id="allocation_table" class="table table-hover">
-          <caption class="sr-only">List of the user’s allocations</caption>
+          <caption id="user_allocation_list" class="sr-only">List of the user’s allocations</caption>
           <thead>
             <tr>
               <th scope="col" class="nosearch">Project</th>

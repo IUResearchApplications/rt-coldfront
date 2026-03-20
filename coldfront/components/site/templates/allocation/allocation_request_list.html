@@ -10,7 +10,7 @@ Allocation Review New and Pending Requests
 
 
 {% block content %}
-<h2>Allocation Requests</h2>
+<h1>Allocation Requests</h1>
 
 <hr>
 
@@ -18,9 +18,11 @@ Allocation Review New and Pending Requests
   For each allocation request below, there is the option to activate the allocation request and to view the allocation's detail page.
 </p>
 
+<h2>New Allocation Requests</h2>
 {% if allocation_list %}
-  <div class="table-responsive">
+  <div class="table-responsive" aria-labelledby="allocation_request_list">
     <table class="table table-sm">
+      <caption id="allocation_request_list" class="sr-only">List of allocation requests</caption>
       <thead>
         <tr>
           <th scope="col">#</th>
@@ -78,7 +80,7 @@ Allocation Review New and Pending Requests
                   {% csrf_token %}
                   <input type="hidden" name="status" value="{{ allocation_status_active.id }}" />
                   <button type="submit" name="action" value="auto-approve" class="btn btn-success mr-1{% if not allocation.get_allocation_attributes %} confirm-activate{% endif %}">Approve</button>
-                  <a href="{% url 'allocation-detail' allocation.pk %}" class="btn btn-primary mr-1">Details</a>
+                  <a href="{% url 'allocation-detail' allocation.pk %}" class="btn btn-primary mr-1" aria-label="View details for allocation {{ allocation.pk }}">Details</a>
                 </form>
               </td>
             {% endif %}
@@ -88,15 +90,16 @@ Allocation Review New and Pending Requests
     </table>
   </div>
 {% else %}
-  <div class="alert alert-info">
+  <div class="alert alert-info" role="alert">
     No new or pending allocation requests!
   </div>
 {% endif %}
 
 <h2>Allocation Renewal Requests</h2>
 {% if allocation_renewal_list %}
-  <div class="table-responsive">
+  <div class="table-responsive" aria-describedby="allocation_renewal_request_list">
     <table class="table table-sm">
+      <caption id="allocation_renewal_request_list" class="sr-only">List of allocation renewal requests</caption>
       <thead>
         <tr>
           <th scope="col">#</th>
@@ -154,7 +157,7 @@ Allocation Review New and Pending Requests
                   {% csrf_token %}
                   <input type="hidden" name="status" value="{{ allocation_status_active.id }}" />
                   <button type="submit" name="action" value="auto-approve" class="btn btn-success mr-1{% if not allocation.get_allocation_attributes %} confirm-activate{% endif %}">Approve</button>
-                  <a href="{% url 'allocation-detail' allocation.pk %}" class="btn btn-primary mr-1">Details</a>
+                  <a href="{% url 'allocation-detail' allocation.pk %}" class="btn btn-primary mr-1" aria-label="View details for allocation {{ allocation.pk }}">Details</a>
                 </form>
               </td>
             {% endif %}
@@ -164,7 +167,7 @@ Allocation Review New and Pending Requests
     </table>
   </div>
 {% else %}
-  <div class="alert alert-info">
+  <div class="alert alert-info" role="alert">
     No new or pending allocation renewal requests!
   </div>
 {% endif %}
