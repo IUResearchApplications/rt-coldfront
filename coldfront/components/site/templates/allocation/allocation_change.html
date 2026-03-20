@@ -29,8 +29,8 @@ Request Allocation Change
     <div class="card-body">
         {% csrf_token %}
         <div class="table-responsive">
-          <table class="table table-bordered table-sm" aria-describedby="allocation_details">
-            <caption id="allocation_details" class="sr-only">Allocation details</caption>
+          <table class="table table-bordered table-sm">
+            <caption class="sr-only">Allocation details</caption>
             <tr>
               <th scope="row" class="text-nowrap">Project:</th>
               <td><a href="{% url 'project-detail' allocation.project.pk %}">{{ allocation.project }}</a></td>

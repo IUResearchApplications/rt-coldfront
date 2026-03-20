@@ -22,12 +22,13 @@ Remove Users from Allocation
         <fieldset>
           <legend class="sr-only">Users in the allocation</legend>
           {% csrf_token %}
-          <div class="table-responsive" aria-describedby="allocation_user_list">
+          <div class="table-responsive">
             <table class="table table-sm table-hover">
-              <caption id="allocation_user_list" class="sr-only">Users in the allocation – check rows to remove them</caption>
+              <caption class="sr-only">Users in the allocation – check rows to remove them</caption>
               <thead>
                 <tr>
                   <th scope="col">
+                    <label for="selectAll" class="sr-only">Select all users</label>
                     <input type="checkbox" class="check" id="selectAll" aria-label="Select all users in the table">
                   </th>
                   <th scope="col">#</th>

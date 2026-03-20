@@ -34,7 +34,7 @@ Allocation Detail
 
 <div class="card mb-3 bg-light">
   <div class="card-header">
-    <h2 class="d-inline" id="manage-project"><i class="fas fa-cubes" aria-hidden="true"></i> Manage Allocation</h2>
+    <h2 class="d-inline" id="manage-allocation"><i class="fas fa-cubes" aria-hidden="true"></i> Manage Allocation</h2>
     <div class="float-right">
       {% if allocation.is_changeable and allocation.status.name == 'Active' and is_allowed_to_update_project %}
         <a class="btn btn-primary mr-1 float-right" href="{% url 'allocation-change' allocation.pk %}">
@@ -103,9 +103,9 @@ Allocation Detail
   <div class="card-body">
     <form method="post">
       {% csrf_token %}
-      <div class="table-responsive" aria-label="Scrollable table: Allocation information" aria-describedby="allocation_details">
+      <div class="table-responsive">
         <table class="table table-bordered table-sm">
-          <caption id="allocation_details" class="sr-only">Allocation information</caption>
+          <caption class="sr-only">Allocation details</caption>
           <tr>
             <th scope="row" class="text-nowrap">Project:</th>
             <td><a href="{% url 'project-detail' allocation.project.pk %}">{{ allocation.project }}</a></td>
@@ -249,9 +249,9 @@ Allocation Detail
     <h2 class="d-inline"><i class="fas fa-info-circle" aria-hidden="true"></i> EULA Agreements </h2>
   </div>
   <div class="card-body">
-      <div class="table-responsive" aria-label="Scrollable table: EULA agreements" aria-describedby="eula_agreements">
+      <div class="table-responsive">
         <table class="table table-bordered table-sm">
-          <caption id="eula_agreements" class="sr-only">EULA agreements</caption>
+          <caption class="sr-only">EULA agreements</caption>
           <thead>
             <tr>
               <th scope="col">Resource</th>
@@ -299,9 +299,9 @@ Allocation Detail
     </div>
     <div class="card-body">
       {% if attributes %}
-        <div class="table-responsive" aria-label="Scrollable table: Allocation attributes" aria-describedby="allocation_attributes">
+        <div class="table-responsive">
           <table class="table table-bordered table-sm">
-            <caption id="allocation_attributes" class="sr-only">List of attributes in this allocation</caption>
+            <caption class="sr-only">Allocation attributes</caption>
             <thead>
               <tr>
                 <th scope="col">Attribute</th>
@@ -352,9 +352,9 @@ Allocation Detail
 
     <div class="card-body">
       {% if allocation_changes %}
-        <div class="table-responsive" aria-label="Scrollable table: Allocation change requests" aria-describedby="allocation_change_requests">
-          <table id="allocation_change_table" class="table table-bordered table-sm">
-            <caption id="allocation_change_requests" class="sr-only">List of allocation change requests</caption>
+        <div class="table-responsive">
+          <table class="table table-bordered table-sm">
+            <caption class="sr-only">Allocation change requests</caption>
             <thead>
               <tr>
                 <th scope="col">Date Requested</th>
@@ -432,9 +432,9 @@ Allocation Detail
         If a user has an Active status and cannot access the storage space then they most likely need to log out (not disconnect) from all interactive login sessions and log back in for their newly added access to become active.
       </div>
     {% endif %}
-    <div class="table-responsive" aria-live="polite" aria-label="Scrollable table: Allocation users" aria-describedby="allocationuser_list">
+    <div class="table-responsive">
       <table id="allocationuser_table" class="table table-hover">
-        <caption id="allocationuser_list" class="sr-only">List of users in this allocation</caption>
+        <caption class="sr-only">Users in this allocation</caption>
         <thead>
           <tr>
             <th scope="col">Username</th>
@@ -471,7 +471,11 @@ Allocation Detail
               <td>{{ user.modified|date:"M. d, Y g:i a" }}</td>
               {% if is_allowed_to_update_project and allocation_user_roles_enabled %}
                 <td>
-                  <a class="btn btn-primary" href="{% url 'allocation-user-detail' allocation.pk user.pk %}">
+                  <a
+                    class="btn btn-primary"
+                    href="{% url 'allocation-user-detail' allocation.pk user.pk %}"
+                    aria-label="Edit {{ user.user.username }}'s"
+                  >
                     <i class="fas fa-user-edit" aria-hidden="true"></i> Edit
                   </a>
                 </td>
@@ -499,9 +503,9 @@ Allocation Detail
   </div>
   <div class="card-body">
     {% if notes %}
-      <div class="table-responsive" aria-describedby="notification_list">
+      <div class="table-responsive">
         <table class="table table-hover">
-          <caption id="notification_list" class="sr-only">List of notifications</caption>
+          <caption class="sr-only">Notifications</caption>
           <thead>
             <tr>
               <th scope="col">Note</th>
