@@ -2,10 +2,17 @@
 {% load crispy_forms_tags %}
 {% load common_tags %}
 
+{% block title %}
+User Search
+{% endblock %}
 
 {% block content %}
+<h1>User Search</h1>
+<hr>
+
 <div class="row">
   <div class="col">
+    <h2 class="sr-only">Search Form</h2>
     <form method="post" action="/search-ldap" id="post-form">
     {% csrf_token %}
     {{ user_search_form|crispy }}

@@ -9,7 +9,7 @@
     {% endfor %}
   </div>
 {% else %}
-  <p class="alert alert-info">There are no statistics to display!</p>
+  <p class="alert alert-info" role="alert">There are no statistics to display!</p>
 {% endif %}
 
 {{ allocated_slate_storage_chart_data|json_script:"allocated_slate_storage_chart_data" }}
