@@ -102,7 +102,7 @@ Publication List
     }
 </style>
 
-<h2>Publications</h2>
+<h1>Publications</h1>
 <p> 
     This is a partial representation of the research supported by RT resources. 
     This list of publications comes from PIs/managers who submitted their publications on
@@ -110,14 +110,25 @@ Publication List
      logging into RT Projects > click on your project name > Add Publication.
 </p>
 
+<label for="myInput" class="sr-only">Search publications</label>
 <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search by author, publication title, journal, and more..." title="Type in a name">
 
-<h5>Last Updated: August 25, 2025</h5>
+<p class="h5">Last Updated: August 25, 2025</p>
 
 <ul id="myUL">
 {% for k, v in data.items %}
-    <button class="button collapsible hold active">{{k}}</button>
-    <div class="content_step">
+    <button
+      class="button collapsible hold active"
+      id="button-{{ forloop.counter0 }}"
+      aria-expanded="true"
+      aria-controls="content-{{ forloop.counter0 }}"
+    >{{k}}</button>
+    <div
+      class="content_step"
+      id="content-{{ forloop.counter0 }}"
+      role="region"
+      aria-labelledby="button-{{ forloop.counter0 }}"
+    >
         {% for r in v %}
             <li class="inline-elements">
                 {% for k in r %}
@@ -134,6 +145,9 @@ Publication List
 </ul>
 
 <script>
+    $("#navbar-main > ul > li.active").removeClass("active");
+    $("#navbar-publications").addClass("active");
+
     var coll = document.getElementsByClassName("collapsible hold");
     var i;
 
@@ -143,6 +157,9 @@ Publication List
         content.style.maxHeight = content.scrollHeight + "px"; // Ensure content is fully expanded
         
         coll[i].addEventListener("click", function() {
+            var expanded = this.getAttribute("aria-expanded") === "true";
+            this.setAttribute("aria-expanded", String(!expanded));
+          
             this.classList.toggle("active");
             var content = this.nextElementSibling;
             if (content.style.maxHeight) {

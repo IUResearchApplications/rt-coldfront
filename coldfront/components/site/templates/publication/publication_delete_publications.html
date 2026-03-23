@@ -10,7 +10,7 @@ Delete Publications from Project
 
 
 {% block content %}
-<h2>Delete publications from project: {{project.title}}</h2>
+<h1>Delete publications from project: {{project.title}}</h1>
 <hr>
 
 {% if formset %}
@@ -18,40 +18,50 @@ Delete Publications from Project
     <div class="card-body">
       <form action="{% url 'publication-delete-publications' project.pk %}" method="post">
         {% csrf_token %}
-        <div class="table-responsive">
-          <table class="table table-sm table-hover">
-            <thead>
-              <tr>
-                <th>
-                  <input type="checkbox" class="check" id="selectAll">
-                </th>
-                <th scope="col">Title</th>
-                <th scope="col">Year</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for form in formset %}
-              <tr>
-                <td>{{ form.selected }}</td>
-                <td>{{ form.title.value }}</td>
-                <td>{{ form.year.value }}</td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+        <fieldset>
+          <legend class="sr-only">Select publications to delete</legend>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover">
+              <caption>Publications - select the ones to delete</caption>
+              <thead>
+                <tr>
+                  <th scope="col">
+                    <label for="selectAll" class="sr-only">Select all publications</label>
+                    <input type="checkbox" class="check" id="selectAll">
+                  </th>
+                  <th scope="col">Title</th>
+                  <th scope="col">Year</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for form in formset %}
+                <tr>
+                  <td>
+                    <label for="{{ form.selected.id_for_label }}" class="sr-only" aria-label="Select {{ form.title.value }}">
+                      {{ form.selected.label }}
+                    </label>
+                    {{ form.selected }}
+                  </td>
+                  <td>{{ form.title.value }}</td>
+                  <td>{{ form.year.value }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </fieldset>
         {{ formset.management_form }}
         <div>
           <button type="submit" class="btn btn-danger"><i class="fas fa-minus" aria-hidden="true"></i> Delete Selected Publications from Project</button>
-          <a class="btn btn-secondary" href="{% url 'project-detail' project.pk %}" role="button"><i class="fas fa-long-arrow-left" aria-hidden="true"></i> Back to Project</a>
+          <a class="btn btn-secondary" href="{% url 'project-detail' project.pk %}"><i class="fas fa-long-arrow-left" aria-hidden="true"></i> Back to Project</a>
           <br>
         </div>
       </form>
     </div>
   </div>
 {% else %}
-  <a class="btn btn-secondary mb-3" href="{% url 'project-detail' project.pk %}" role="button"><i class="fas fa-long-arrow-left" aria-hidden="true"></i> Back to project</a>
-  <div class="alert alert-info">
+  <a class="btn btn-secondary mb-3" href="{% url 'project-detail' project.pk %}"><i class="fas fa-long-arrow-left" aria-hidden="true"></i> Back to project</a>
+  <div class="alert alert-info" role="alert">
     No publications to delete!
   </div>
 {% endif %}
