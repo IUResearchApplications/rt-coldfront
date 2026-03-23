@@ -7,33 +7,35 @@ Choose a Resource for Your Allocation
 {% endblock %}
 
 {% block content %}
-  <h2>Available Resources <br><small>Project: {{ project_obj.title }}</small></h2>
+  <h1>Available Resources <br><small>Project: {{ project_obj.title }}</small></h1>
   <hr>
   {% for resource_type, resources in resource_types.items %}
     <div class="card mb-3">
       <div class="card-header">
-        <h3>{{ resource_type }}s</h3>
+        <h2 id="resource_type_{{ forloop.counter }}">{{ resource_type }}s</h2>
       </div>
       <div class="card-body">
         <div class="row">
           {% for resource in resources %}
             <div class="col-6">
-              <div class="card mb-3">
+              <div class="card mb-3" role="region" aria-labelledby="resource_type_{{ forloop.counter }}">
                 <div class="card-header">
-                  <h4 class="d-inline">{{ resource.resource.name }}</h4>
+                  <h3 class="d-inline">{{ resource.resource.name }}</h3>
                   <span
                     title="Total Allocations"
                     class="badge badge-secondary position-absolute"
-                    style="border-top-right-radius: 0px; border-bottom-left-radius: 0px; top: 0; left: 0; user-select: none;">
+                    style="border-top-right-radius: 0px; border-bottom-left-radius: 0px; top: 0; left: 0; user-select: none;"
+                    aria-label="Total allocations: {{ resource.resource_count|default_if_none:0 }}"
+                  >
                       {{ resource.resource_count|default_if_none:0 }}
                   </span>
                   {% if resource.info_url %}
-                    <a href="{{ resource.info_url }}" target="_blank" title="More information"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
+                    <a href="{{ resource.info_url }}" target="_blank" title="More information (external)" rel="noopener noreferrer"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
                   {% endif %}
                   <div class="float-right">
                     {% if not resource.rule_result.passed %}
                       {{ resource.rule_result.title|safe }}
-                      <a href="#" data-toggle="popover" data-trigger="hover" title="{{ resource.rule_result.title }}" data-content="{{ resource.rule_result.description }}">
+                      <a href="#" data-toggle="popover" data-trigger="focus hover" title="{{ resource.rule_result.title }}" data-content="{{ resource.rule_result.description }}">
                         <i class="fas fa-question-circle" aria-hidden="true"></i>
                       </a>
                     {% else %}
@@ -41,6 +43,7 @@ Choose a Resource for Your Allocation
                         class="btn btn-primary"
                         href="{% url 'resource-form-redirector' resource_pk=resource.resource.pk project_pk=project_obj.pk %}?after_project_creation={{after_project_creation}}"
                         role="button"
+                        aria-label="Request form for {{ resource.resource.name }}"
                       > Request Form</a>
                     {% endif %}
                   </div>
@@ -59,7 +62,7 @@ Choose a Resource for Your Allocation
     </div>
   {% endfor %}
   {% if after_project_creation != 'true' %}
-    <a class="btn btn-secondary" href="{% url 'project-detail' project_obj.pk %}" role="button">Back to Project</a><br>
+    <a class="btn btn-secondary" href="{% url 'project-detail' project_obj.pk %}">Back to Project</a><br>
   {% endif %}
 
   <script>
