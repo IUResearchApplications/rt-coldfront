@@ -100,6 +100,7 @@ Advanced Search
                       {% if CENTER_BASE_URL in data|truncatechars:length %}
                         <a href="{{ data }}" target="_blank">
                           <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                          <span class="sr-only">Link to project</span>
                         </a>
                       {% else %}
                         {{ data|truncatechars:30 }}
