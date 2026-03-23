@@ -10,8 +10,7 @@ Allocation Review Pending Removal Requests
 
 
 {% block content %}
-<h2>Allocation Removal Requests</h2>
-
+<h1>Allocation Removal Requests</h1>
 <hr>
 
 <p class="text-justify"> 
@@ -21,6 +20,7 @@ Allocation Review Pending Removal Requests
 {% if allocation_removal_list %}
   <div class="table-responsive">
     <table class="table table-sm">
+      <caption>Allocation removal requests</caption>
       <thead>
         <tr>
           <th scope="col">#</th>
@@ -60,7 +60,7 @@ Allocation Review Pending Removal Requests
     </table>
   </div>
 {% else %}
-  <div class="alert alert-info">
+  <div class="alert alert-info" role="alert">
     No new allocation removal requests!
   </div>
 {% endif %}
