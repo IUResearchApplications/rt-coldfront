@@ -10,14 +10,22 @@ Resource List
 
 
 {% block content %}
-<h2>Resources</h2>
+<h1>Resources</h1>
 <hr>
 
 {% if expand_accordion == "show" or resource_list %}
   <div class="mb-3" id="accordion">
     <div class="card">
       <div class="card-header">
-        <a id="expand_button" role="button" class="card-link " data-toggle="collapse" href="#collapseOne">
+        <a
+          id="expand_button"
+          role="button"
+          class="card-link "
+          data-toggle="collapse"
+          href="#collapseOne"
+          aria-expanded="{{ expand_accordion|yesno:'true,false' }}"
+          aria-controls="collapseOne"
+        >
           <i class="fas fa-filter" aria-hidden="true"></i> Filter
           <i id="plus_minus" class="fas {{expand_accordion|get_icon}} float-right"></i>
         </a>
@@ -27,7 +35,9 @@ Resource List
           <form id="filter_form" method="GET" action="{% url 'resource-list' %}" autocomplete="off">
             {{ resource_search_form|crispy }}
             <input type="submit" class="btn btn-primary" value="Search">
-            <button id="form_reset_button" type="button" class="btn btn-secondary">Reset</button>
+            <button id="form_reset_button" type="button" class="btn btn-secondary" aria-label="Clear all filter fields">
+              Reset
+            </button>
           </form>
         </div>
       </div>
@@ -37,9 +47,10 @@ Resource List
 {% endif %}
 
 {% if resource_list %}
-  <strong>Resource{{resources_count|pluralize}}: {{resources_count}}</strong>
+  <h2>Resource{{resources_count|pluralize}}: {{resources_count}}</h2>
   <div class="table-responsive">
     <table class="table table-sm">
+      <caption class="sr-only">Resource list</caption>
       <thead>
         <tr>
           <th scope="col" class="text-nowrap">
@@ -74,7 +85,7 @@ Resource List
             <td>{{ resource.parent_resource }}</td>
             <td>{{ resource.resource_type.name }}</td>
             <td>{{ resource.requires_payment|yesno:"Yes,No" }}</td>
-            <td><a class="btn btn-primary" href="{% url 'resource-detail' resource.id %}" type="button">Details</a></td>
+            <td><a class="btn btn-primary" href="{% url 'resource-detail' resource.id %}">Details</a></td>
           </tr>
         {% endfor %}
       </tbody>
@@ -95,11 +106,11 @@ Resource List
     {% endif %}
   </div>
 {% elif expand_accordion == "show"%}
-  <div class="alert alert-secondary">
+  <div class="alert alert-secondary" role="alert">
     No search results!
   </div>
 {% else %}
-  <div class="alert alert-secondary">
+  <div class="alert alert-secondary" role="alert">
     No resources to display!
   </div>
 {% endif %}

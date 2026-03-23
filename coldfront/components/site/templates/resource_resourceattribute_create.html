@@ -10,13 +10,14 @@ Add Resource Attribute
 
 
 {% block content %}
-<h2>Adding resource attribute to {{resource}}</h2>
+<h1>Adding resource attribute to {{resource}}</h1>
+<hr>
 
 <form method="post">
   {% csrf_token %}
   {{form |crispy}}
-  <input class="btn btn-success" type="submit" value="Add" />
-  <a class="btn btn-secondary" href="{% url 'resource-detail' resource.pk %}" role="button">Back to
+  <button class="btn btn-success" type="submit">Add</button>
+  <a class="btn btn-secondary" href="{% url 'resource-detail' resource.pk %}">Back to
     Resource</a><br>
 </form>
 
