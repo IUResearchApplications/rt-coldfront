@@ -10,14 +10,15 @@ Add Project Notification
 
 
 {% block content %}
-<h2>Adding notification to {{project.title}} for PI {{ project.pi.first_name }}
-  {{ project.pi.last_name }} ({{ project.pi.username }})</h2>
+<h1>
+  Adding notification to {{project.title}} for PI {{ project.pi.first_name }}
+  {{ project.pi.last_name }} ({{ project.pi.username }})
+</h1>
 
 <form method="post">
   {% csrf_token %}
   {{form |crispy}}
-  <input class="btn btn-success" type="submit" value="Add" />
-  <a class="btn btn-secondary" href="{% url 'project-detail' project.pk %}" role="button">Back to
-    Project</a><br>
+  <button class="btn btn-success" type="submit">Add</button>
+  <a class="btn btn-secondary" href="{% url 'project-detail' project.pk %}">Back to Project</a><br>
 </form>
 {% endblock %}

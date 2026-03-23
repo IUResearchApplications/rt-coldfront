@@ -9,9 +9,9 @@ Project User Detail
 
 
 {% block content %}
-<h2>Project User Detail</h2>
+<h1>Project User Detail</h1>
 
-<h3>Project: {{project_obj.title}}</h3>
+<h2>Project: {{project_obj.title}}</h2>
 <hr>
 
 <form action="{% url 'project-user-detail' project_obj.pk project_user_obj.pk %}" method="post">
@@ -23,6 +23,7 @@ Project User Detail
     <div class="card-body">
       <div class="table-responsive">
         <table class="table">
+          <caption class="sr-only">Project user details</caption>
           <tr>
             <th scope="row">Username:</th>
             <td>{{project_user_obj.user.username}}</td>
@@ -53,7 +54,12 @@ Project User Detail
           {% else %}
             <tr>
               <th scope="row">Role:</th>
-              <td>{{project_user_update_form.role}}</td>
+              <td>
+                <label for="{{ project_user_update_form.role.id_for_label }}" class="sr-only">
+                  {{ project_user_update_form.role.label }}
+                </label>
+                {{project_user_update_form.role}}
+              </td>
             </tr>
           {% endif %}
           {% if request.user.is_superuser %}
@@ -65,7 +71,12 @@ Project User Detail
             {% else %}
               <tr>
                 <th scope="row">Notifications Enabled:</th>
-                <td>{{project_user_update_form.enable_notifications}}</td>
+                <td>
+                  <label for="{{ project_user_update_form.enable_notifications.id_for_label }}" class="sr-only">
+                    {{ project_user_update_form.enable_notifications.label }}
+                  </label>
+                  {{project_user_update_form.enable_notifications}}
+                </td>
               </tr>
             {% endif %}
           {% endif %}
@@ -76,7 +87,7 @@ Project User Detail
       {% if project_user_obj.user != project_user_obj.project.pi %}
         <button type="submit" class="btn btn-primary">Update</button>
       {% endif %}
-      <a class="btn btn-secondary" href="{% url 'project-detail' project_obj.pk %}" role="button">Back to Project</a>
+      <a class="btn btn-secondary" href="{% url 'project-detail' project_obj.pk %}">Back to Project</a>
     </div>
   </div>
 </form>
@@ -85,7 +96,7 @@ Project User Detail
   $("#navbar-main > ul > li.active").removeClass("active");
   $("#navbar-project-menu").addClass("active");
 
-  $('document').ready(function() {
+  $(document).ready(function() {
     if ($("#id_role option:selected").text() == 'Group') {
       $("#id_role option:not(:selected)").prop('disabled', true);
     } else {

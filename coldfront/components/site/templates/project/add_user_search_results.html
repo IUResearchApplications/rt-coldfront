@@ -9,13 +9,13 @@
     {% elif matches %}
       <strong>Found {{matches|length}} match{{matches|length|pluralize}}.</strong>
     {% endif %}
-    <br>
     {% if usernames_not_found %}
+      <br>
       Username{{usernames_not_found|length|pluralize}} missing from database
       {{usernames_not_found|length|pluralize:"is, are"}}: {{ usernames_not_found|join:", " }}.
     {% endif %}
-    <br>
     {% if users_already_in_project %} The following
+      <br>
       user{{users_already_in_project|length|pluralize}}
       {{users_already_in_project|length|pluralize:"is, are"}} already in project:
       {{users_already_in_project|join:", "}}
@@ -24,13 +24,17 @@
 
   {% if matches %}
     <div class="card bg-light mb-3 {{div_allocation_class}}">
-      <div class="card-header">Available Allocations</div>
+      <h3 class="card-header">Available Allocations</h3>
       <div class="card-body">
         <div class="table-responsive">
           <table class="table table-sm table-hover">
+            <caption class="sr-only">Available allocations</caption>
             <thead>
               <tr>
-                <th><input type="checkbox" class="check" id="selectAllAllocations"></th>
+                <th>
+                  <label for="selectAllAllocations" class="sr-only">Select all allocations</label>
+                  <input type="checkbox" class="check" id="selectAllAllocations" aria-label="Select all allocations">
+                </th>
                 <th scope="col">#</th>
                 <th scope="col">Resource</th>
                 <th scope="col">Details</th>
@@ -42,7 +46,12 @@
             <tbody>
               {% for form in allocation_form %}
                 <tr id="{{ form.resource.value }}-{{ forloop.counter }}">
-                  <td>{{ form.selected }}</td>
+                  <td>
+                    <label for="{{ form.selected.id_for_label }}" class="sr-only" aria-label="Select {{ form.resource.value }}">
+                      {{ form.selected.label }}
+                    </label>
+                    {{ form.selected }}
+                  </td>
                   <td><a href="{% url 'allocation-detail' form.pk.value %}" target="_blank">{{ form.pk.value }}</a></td>
                   <td>{{ form.resource.value }}</td>
                   <td>{{ form.details.value }}</td>
@@ -63,11 +72,16 @@
       {{ allocation_form.management_form }}
     </div>
 
+    <h3>Users Found</h3>
     <div class="table-responsive">
       <table class="table table-sm table-hover">
+        <caption class="sr-only">Users found</caption>
         <thead>
           <tr>
-            <th><input type="checkbox" class="check" id="selectAll"></th>
+            <th>
+              <label for="selectAll" class="sr-only">Select all users</label>
+              <input type="checkbox" class="check" id="selectAll" aria-label="Select all users">
+            </th>
             <th scope="col">#</th>
             <th scope="col">
               <a href="#" class="notnavigable" data-toggle="popover" title="Info" data-trigger="hover" data-content="Hover over an icon to see a user's account status for each selected resource">
@@ -84,7 +98,12 @@
         <tbody>
           {% for form in formset %}
             <tr id="{{ form.username.value }}">
-              <td>{{ form.selected }}</td>
+              <td>
+                <label for="{{ form.selected.id_for_label }}" class="sr-only" aria-label="Select {{ form.username.value }}">
+                  {{ form.selected.label }}
+                </label>
+                {{ form.selected }}
+              </td>
               <td>{{ forloop.counter }}</td>
               <td>
                 <a id="status-{{ forloop.counter }}" class="notnavigable" href="#" data-toggle="popover" title="No Allocations Selected" data-trigger="hover" data-content="No allocations to check accounts on">
@@ -102,11 +121,13 @@
       </table>
     </div>
     <div>
-      <p id="id_manager_warning" class="alert alert-danger">You have too many managers selected. The max allowed managers on this project is {{ max_managers }}.</p>
+      <p id="id_manager_warning" class="alert alert-danger" role="alert">
+        You have too many managers selected. The max allowed managers on this project is {{ max_managers }}.
+      </p>
     </div>
     {{ formset.management_form }}
 
-    <div class="alert alert-info">
+    <div class="alert alert-info" role="alert">
       <i class="fas fa-question-circle" aria-hidden="true"></i>
       Hover over an icon to see a user's account status for each selected resource.
     </div>
@@ -124,13 +145,13 @@
       {% endif %}
     </div>
   {% else %}
-    <div class="alert alert-info text-center">
+    <div class="alert alert-info text-center" role="alert">
       No results!
     </div>
   {% endif %}
 </form>
 
-<div class="modal fade" id="warning" tabindex="-1" role="dialog" aria-labelledby="warningLabel" aria-hidden="true">
+<div class="modal fade" id="warning" tabindex="-1" role="dialog" aria-labelledby="warningLabel" aria-hidden="true" aria-modal="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -234,10 +255,10 @@
     }
 
     if (num_managers + current_num_managers > max_managers) {
-      $("#id_add_selected_users").prop('disabled', true);
+      $("#id_add_selected_users").prop('disabled', true).attr('aria-disabled', 'true');
       $("#id_manager_warning").show()
     } else {
-      $("#id_add_selected_users").prop('disabled', false);
+      $("#id_add_selected_users").prop('disabled', false).attr('aria-disabled', 'false');
       $("#id_manager_warning").hide()
     }
   }
