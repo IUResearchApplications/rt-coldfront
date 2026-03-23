@@ -541,7 +541,7 @@ Project Detail
       <h2 class="d-inline" id="publications"><i class="fas fa-newspaper" aria-hidden="true"></i> Publications</h2> <span class="badge badge-secondary">{{publications.count}}</span>
       <div class="float-right">
         {% if project.latest_publication.created %}
-          <span class="badge badge-info">Last Updated: {{project.latest_publication.created|date:"M. d, Y"}}</span>
+          <span class="badge badge-primary">Last Updated: {{project.latest_publication.created|date:"M. d, Y"}}</span>
         {% endif %}
         {% if not project.status.name in 'Archived, Denied, Expired, Renewal Denied' and is_allowed_to_update_project %}
           <a class="btn btn-success" href="{% url 'publication-search' project.pk %}"><i class="fas fa-plus" aria-hidden="true"></i> Add Publication</a>

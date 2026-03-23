@@ -125,6 +125,11 @@ body > main > div > div.card.border-primary > div.card-body > form > div.alert.a
   border-color: #008216;
 }
 
+.badge-primary {
+  background-color: #006298;
+  border-color: #006298;
+}
+
 .btn-success {
   background-color: #008216;
   border-color: #008216;
