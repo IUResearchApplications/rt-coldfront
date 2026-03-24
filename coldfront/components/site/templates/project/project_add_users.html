@@ -9,9 +9,10 @@ Add Users to Project
 
 
 {% block content %}
-<h2>Add users to project: {{project.title}}</h2>
+<h1>Add users to project: {{project.title}}</h1>
 <hr>
 
+<h2 class="sr-only">User Search Form</h2>
 <div class="row">
   <div class="col">
     <form method="post" action="/search-ldap" id="post-form">
@@ -31,23 +32,24 @@ Add Users to Project
     </form>
   </div>
 </div>
+<hr>
 
-<br>
-<div class="row">
+<h2 id="search_results_header">User Search Results</h2>
+<div class="row mt-3">
   <div class="col" id="search_results">
       <div class="card border-light">
         <div class="card-body pt-0 pb-0">
-          <div id="search_results_inner"></div>
+          <div id="search_results_inner" role="region" aria-live="polite" aria-atomic="false"></div>
         </div>
       </div>
   </div>
 </div>
 <div class="row">
   <div class="col" id="selected_users">
-      <div class="card border-light">
-        <div class="card-body">
-        </div>
+    <div class="card border-light">
+      <div class="card-body">
       </div>
+    </div>
   </div>
 </div>
 
@@ -94,6 +96,7 @@ Add Users to Project
         success : function(data) {
             $('#post-text').val(''); // remove the value from the input
             $('#search_results').show();
+            $('#search_results_header').show();
             $('#search_results_inner').html(data);
 
         },
@@ -101,9 +104,9 @@ Add Users to Project
         // handle a non-successful response
         error : function(xhr,errmsg,err) {
             if(xhr.status == 403 || xhr.status == 401) {
-                $('#search_results_inner').html("<div class='alert alert-danger'>Your session expired. Please login again. <a href='#' class='close'>&times;</a></div>");
+                $('#search_results_inner').html("<div class='alert alert-danger' role='alert'>Your session expired. Please login again. <a href='#' class='close'>&times;</a></div>");
             } else {
-                $('#search_results_inner').html("<div class='alert alert-danger'>Oops! We have encountered an error: "+errmsg+
+                $('#search_results_inner').html("<div class='alert alert-danger' role='alert'>Oops! We have encountered an error: "+errmsg+
                     " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
             }
             console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
@@ -112,6 +115,7 @@ Add Users to Project
   };
 
   $(document).ready(function(){
+    $('#search_results_header').hide();
     $('#search_results').hide();
     $('#selected_users').hide();
     $('#div_id_search_by').hide();

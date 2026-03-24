@@ -1,10 +1,22 @@
 {% load static %}
-<div class="row">
+<div class="row" aria-labelledby="user-summary-header">
   <div class="col">
-    <div id="userCount" style="min-height: 270px; max-width: 519px;"></div>
+    <div
+      id="userCount"
+      style="min-height: 270px; max-width: 519px;"
+      role="img"
+      aria-label="Bar chart showing unique user distribution"
+      tabindex="0"
+    ></div>
   </div>
   <div class="col">
-    <div id="userYearTimeline" style="min-height: 270px; max-width: 519px;"></div>
+    <div
+      id="userYearTimeline"
+      style="min-height: 270px; max-width: 519px;"
+      role="img"
+      aria-label="Bar chart showing monthly total unique users"
+      tabindex="0"
+    ></div>
     <!-- <div id="userMonthTimeline" style="min-height: 270px; max-width: 519px;"></div> -->
   </div>
 </div>
@@ -15,10 +27,10 @@
 {{ years_to_months_values|json_script:"years_to_months_values" }}
 
 <script>
-  var user_counts = JSON.parse(document.getElementById('user_counts').textContent);
-  var user_timeline = JSON.parse(document.getElementById('user_timeline').textContent);
-  var years_to_months_labels = JSON.parse(document.getElementById('years_to_months_labels').textContent);
-  var years_to_months_values = JSON.parse(document.getElementById('years_to_months_values').textContent);
+  const user_counts = JSON.parse(document.getElementById('user_counts').textContent);
+  const user_timeline = JSON.parse(document.getElementById('user_timeline').textContent);
+  const years_to_months_labels = JSON.parse(document.getElementById('years_to_months_labels').textContent);
+  const years_to_months_values = JSON.parse(document.getElementById('years_to_months_values').textContent);
 
   var userYearTimelineChart;
   var userMonthTimelineChart;

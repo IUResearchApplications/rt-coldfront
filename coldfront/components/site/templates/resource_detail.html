@@ -9,22 +9,19 @@ Resource Detail
 
 
 {% block content %}
-
-
-<div class="mb-3">
-  <h2>Resource Detail</h2>
-  <hr>
-</div>
+<h1>Resource Detail</h1>
+<hr>
 
 <div class="card mb-3">
   <div class="card-header">
-      <h3><i class="fas fa-list" aria-hidden="true"></i> Resource Information</h3>   
+    <h2><i class="fas fa-list" aria-hidden="true"></i> Resource Information</h2>   
   </div>
   
   <div class="card-body">
       {% csrf_token %}
       <div class="table-responsive">
         <table class="table table-bordered table-sm">
+          <caption class="sr-only">Resource details</caption>
           <tr>
             <th scope="row" class="text-nowrap">Name:</th>
             <td>{{ resource.name }}</td>
@@ -80,7 +77,7 @@ Resource Detail
 {% if attributes and request.user.is_superuser %}
   <div class="card mb-3">
     <div class="card-header">
-      <h3 class="d-inline"><i class="fas fa-info-circle" aria-hidden="true"></i> Resource Attributes</h3>
+      <h2 class="d-inline"><i class="fas fa-info-circle" aria-hidden="true"></i> Resource Attributes</h2>
       <div class="float-right">
         {% if request.user.is_superuser %}
           <a class="btn btn-success" href="{% url 'resource-attribute-add' resource.pk %}" role="button">
@@ -96,6 +93,7 @@ Resource Detail
       {% if attributes %}
         <div class="table-responsive">
           <table class="table table-bordered table-sm">
+            <caption class="sr-only">Resource attribute details</caption>
             <thead>
               <tr>
                 <th scope="col">Attribute</th>
@@ -120,13 +118,14 @@ Resource Detail
 <!-- Start Child Resources -->
 <div class="card mb-3">
   <div class="card-header">
-    <h3 class="d-inline"><i class="fas fa-info-circle" aria-hidden="true"></i> Child Resources</h3>
+    <h2 class="d-inline"><i class="fas fa-info-circle" aria-hidden="true"></i> Child Resources</h2>
   </div>
 
   <div class="card-body">
     {% if child_resources %}
       <div class="table-responsive">
         <table id="child_resource_table" class="table table-bordered table-sm">
+          <caption class="sr-only">Child resource details</caption>
           <thead>
             <tr>
               <th scope="col">Resource Name</th>

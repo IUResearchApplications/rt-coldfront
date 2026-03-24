@@ -10,14 +10,15 @@ Add Allocation Attribute
 
 
 {% block content %}
-<h2>Adding allocation attribute to {{allocation.get_parent_resource}} for PI {{ allocation.project.pi.first_name }}
-  {{ allocation.project.pi.last_name }} ({{ allocation.project.pi.username }})</h2>
+<h1 class="h2">
+  Adding allocation attribute to {{allocation.get_parent_resource}} for PI {{ allocation.project.pi.first_name }}
+  {{ allocation.project.pi.last_name }} ({{ allocation.project.pi.username }})
+</h1>
 
 <form method="post">
   {% csrf_token %}
   {{form |crispy}}
-  <input class="btn btn-success" type="submit" value="Add" />
-  <a class="btn btn-secondary" href="{% url 'allocation-detail' allocation.pk %}" role="button">Back to
-    Allocation</a><br>
+  <button type="submit" class="btn btn-success">Add</button>
+  <a class="btn btn-secondary" href="{% url 'allocation-detail' allocation.pk %}" role="button">Back to Allocation</a>
 </form>
 {% endblock %}

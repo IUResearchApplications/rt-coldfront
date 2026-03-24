@@ -10,11 +10,13 @@ Project Review List
 
 
 {% block content %}
+<h1>Pending Projects</h1>
+<hr>
 <h2>Pending Project Requests</h2>
-
 {% if project_request_list %}
   <div class="table-responsive">
     <table class="table table-sm">
+      <caption class="sr-only">Project requests</caption>
       <thead>
         <tr>
           <th scope="col">Project Title</th>
@@ -32,14 +34,20 @@ Project Review List
             <td><a target="_target" href="{% url 'project-detail' project_request.pk %}">{{ project_request.title|truncatechars:50 }}</a></td>
             <td>{{ project_request.created|date:"M. d, Y" }}</td>
             <td>
-              <a href="#" data-toggle="modal" data-target="#id_pi_projects_modal" data-pi="{{project_request.pi.username}}" data-pk="{{project_request.pk}}">
+              <a
+                href="#"
+                data-toggle="modal"
+                data-target="#id_pi_projects_modal"
+                data-pi="{{project_request.pi.username}}"
+                data-pk="{{project_request.pk}}"
+              >
                 {{ project_request.pi.first_name }} {{project_request.pi.last_name}} ({{ project_request.pi.username }})
               </a>
             </td>
             <td>{{ project_request.requestor.first_name }} {{ project_request.requestor.last_name }} ({{ project_request.requestor.username }})</td>
             <td>{{ project_request.type.name }}</td>
             {% if project_request.status.name == 'Contacted By Admin' %}
-              <td><span class="badge badge-success"><i class="fas fa-check-circle fa-lg"></i></i></span></td>
+              <td><span class="badge badge-success" aria-label="Contacted"><i class="fas fa-check-circle fa-lg" aria-hidden="true></i></span></td>
             {% else %}
               <td></td>
             {% endif %}
@@ -56,7 +64,7 @@ Project Review List
     </table>
   </div>
 {% else %}
-  <div class="alert alert-info">
+  <div class="alert alert-info" role="alert">
     No pending project requests!
   </div>
 {% endif %}
@@ -66,6 +74,7 @@ Project Review List
 {% if project_review_list %}
   <div class="table-responsive">
     <table class="table table-sm">
+      <caption class="sr-only">Project reviews</caption>
       <thead>
         <tr>
           <th scope="col">Project Title</th>
@@ -91,18 +100,27 @@ Project Review List
                 data-pi="{{project_review.project.pi.username}}"
                 data-pk="{{project_review.project.pk}}"
                 data-eligible="{{pi_eligibilities|get_value_from_dict:project_review.project.pi.username}}"
+                aria-labelledby="id_pi_projects_modal_label"
               \>
                 {{ project_review.project.pi.first_name }} {{ project_review.project.pi.last_name }} ({{ project_review.project.pi.username }})
               </a>
               {% if not pi_eligibilities|get_value_from_dict:project_review.project.pi.username %}
-                <a id="id_ineligible" href="#" class="notnavigable" data-toggle="popover" title="Not Eligible" data-trigger="hover" data-content="This user is not eligible to be a PI!">
+                <a
+                  id="id_ineligible"
+                  href="#"
+                  class="notnavigable"
+                  data-toggle="popover"
+                  title="Not Eligible"
+                  data-trigger="hover"
+                  data-content="This user is not eligible to be a PI!"
+                >
                   <span class="badge badge-danger"><i class="fas fa-exclamation-circle"></i></span><span class="sr-only">${new_content}</span>
                 </a>
               {% endif %}
             </td>
             <td>{{ project_review.project_updates|truncatechars:50 }}</td>
             {% if project_review.status.name == 'Contacted By Admin' %}
-              <td><span class="badge badge-success"><i class="fas fa-check-circle fa-lg"></i></i></span></td>
+              <td><span class="badge badge-success" aria-label="Contacted"><i class="fas fa-check-circle fa-lg" aria-hidden="true"></i></span></td>
             {% else %}
               <td></td>
             {% endif %}
@@ -117,7 +135,7 @@ Project Review List
     </table>
   </div>
 {% else %}
-  <div class="alert alert-info">
+  <div class="alert alert-info" role="alert">
     No pending project reviews!
   </div>
 {% endif %}
@@ -132,7 +150,7 @@ Project Review List
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h4 class="modal-title" id="id_pi_projects_label">PI Projects</h4>
+        <h3 class="modal-title" id="id_pi_projects_modal_label">PI Projects</h3>
         
         <a
           style="font-size: 1.4em;"
@@ -143,7 +161,7 @@ Project Review List
           title="Not Eligible"
           data-trigger="hover"
           data-content="This user is not eligible to be a PI!"
-        \>
+        >
           <span class="badge badge-danger"><i class="fas fa-exclamation-circle"></i></span><span class="sr-only">${new_content}</span>
         </a>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">

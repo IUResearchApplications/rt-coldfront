@@ -2,37 +2,46 @@
 {% if publication_formset %}
   <form id="academic_analytics_form" method="post">
     {% csrf_token %}
-    <div class="table-responsive">
-      <table class="table table-bordered table-sm">
-        <thead>
-          <tr>
-            <td scope="col"><strong>Add</strong></td>
-            <td scope="col"><strong>Title</strong></td>
-            <td scope="col"><strong>Authors</strong></td>
-            <td scope="col"><strong>Journal</strong></td>
-          </tr>
-        </thead>
-        <tbody>
-          {% for form in publication_formset %}
+    <fieldset>
+      <legend class="sr-only">Publications found</legend>
+      <div class="table-responsive">
+        <table class="table table-bordered table-sm">
+          <caption>Publications found - select the ones to add</caption>
+          <thead>
             <tr>
-              <td class="text-center">{{ form.add }}</td>
-              <td>{{ form.title.value }}</td>
-              <td>{{ form.author.value|truncatechars:100 }}</td>
-              <td>{{ form.journal.value }}</td>
+              <th scope="col"><strong>Add</strong></th>
+              <th scope="col"><strong>Title</strong></th>
+              <th scope="col"><strong>Authors</strong></th>
+              <th scope="col"><strong>Journal</strong></th>
             </tr>
-          {% endfor %}
-          <input value="{{ project_pk }}" type="number" name="project_pk" readonly hidden>
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {% for form in publication_formset %}
+              <tr>
+                <td class="text-center">
+                  <label for="{{ form.selected.id_for_label }}" class="sr-only" aria-label="Select {{ form.title.value }}">
+                    {{ form.selected.label }}
+                  </label>
+                  {{ form.add }}
+                </td>
+                <td>{{ form.title.value }}</td>
+                <td>{{ form.author.value|truncatechars:100 }}</td>
+                <td>{{ form.journal.value }}</td>
+              </tr>
+            {% endfor %}
+            <input value="{{ project_pk }}" type="hidden" name="project_pk">
+          </tbody>
+        </table>
+      </div>
+    </fieldset>
     {{ publication_formset.management_form }}
-    <button id="add_publications_btn" class="btn btn-primary" role="button" type="submit">
+    <button id="add_publications_btn" class="btn btn-primary" type="submit">
       Add Publications
     </button>
   </form>
   <div id="academics_analytics_form_info"></div>
 {% else %}
-  <div class="alert alert-info">
+  <div class="alert alert-info" role="alert">
     <i class="fas fa-info-circle" aria-hidden="true"></i>
     No publications found!
   </div>
@@ -50,6 +59,7 @@
       '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding Publications...'
     );
     add_pub_button.prop('disabled', true);
+    add_pub_button.attr('role', 'status');
     add_pub_button.blur();
     $.ajax({
       url: "{% url 'get-academic-analytics-publications' %}",
@@ -59,7 +69,7 @@
         $("#academics_analytics_form").html(data);
         $("#academics_analytics_form_info").html(
           '<br>\
-          <div class="alert alert-success">\
+          <div class="alert alert-success" role="alert">\
             <i class="fas fa-info-circle" aria-hidden="true"></i> \
             Added publications.\
           </div>'
@@ -71,7 +81,7 @@
         );
         $("#academics_analytics_form_info").html(
           '<br>\
-          <div class="alert alert-warning">\
+          <div class="alert alert-warning" role="alert">\
             <i class="fas fa-info-circle" aria-hidden="true"></i> \
             Error adding publications.\
           </div>'

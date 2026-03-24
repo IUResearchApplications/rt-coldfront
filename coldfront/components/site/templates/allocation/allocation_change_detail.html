@@ -9,16 +9,15 @@ Allocation Change Detail
 
 
 {% block content %}
-
-<h2>
+<h1 class="h2">
   Request change to {{ allocation_change.allocation.get_parent_resource }} for 
   project: {{ allocation_change.allocation.project.title }}
-</h2>
+</h1>
 <hr>
-
+S
   {% if allocation_change.status.name == "Approved" %}
     <div class="alert alert-success" role="alert">
-      <h4 class="alert-heading">{{allocation_change.status.name}}</h4>
+      <h2 class="alert-heading">{{allocation_change.status.name}}</h2>
       {% if allocation_change.notes %}
         <hr>
         <p class="mb-0">{{ allocation_change.notes }}</p>
@@ -26,7 +25,7 @@ Allocation Change Detail
   </div>
   {% elif allocation_change.status.name == "Denied"%}
     <div class="alert alert-danger" role="alert">
-      <h4 class="alert-heading">{{allocation_change.status.name}}</h4>
+      <h2 class="alert-heading">{{allocation_change.status.name}}</h2>
       {% if allocation_change.notes %}
         <hr>
         <p class="mb-0">{{ allocation_change.notes }}</p>
@@ -34,7 +33,7 @@ Allocation Change Detail
     </div>
   {% else %}
     <div class="alert alert-info" role="alert">
-      <h4 class="alert-heading">{{allocation_change.status.name}}</h4>
+      <h2 class="alert-heading">{{allocation_change.status.name}}</h2>
       {% if allocation_change.notes %}
         <hr>
         <p class="mb-0">{{ allocation_change.notes }}</p>
@@ -45,13 +44,14 @@ Allocation Change Detail
   <form method="post">
   <div class="card mb-3">
     <div class="card-header">
-        <h3 class="d-inline"><i class="fas fa-list" aria-hidden="true"></i> Allocation Information</h3>
+        <h2 class="d-inline"><i class="fas fa-list" aria-hidden="true"></i> Allocation Information</h2>
     </div>
 
     <div class="card-body">
         {% csrf_token %}
         <div class="table-responsive">
           <table class="table table-bordered table-sm">
+            <caption class="sr-only">Allocation details</caption>
             <tr>
               <th scope="row" class="text-nowrap">Project:</th>
               <td><a href="{% url 'project-detail' allocation_change.allocation.project.pk %}">{{ allocation_change.allocation.project }}</a></td>
@@ -77,7 +77,7 @@ Allocation Change Detail
                 <td>
                   {{ allocation_change.allocation.end_date }}
                   {% if allocation_change.allocation.is_locked and allocation_change.allocation.status.name == 'Approved' and allocation_change.allocation.expires_in <= 60 and allocation_change.allocation.expires_in >= 0 %}
-                  <span class="badge badge-warning"><i class="far fa-clock" aria-hidden="true"></i>
+                  <span class="badge badge-warning" aria-label="Expires soon"><i class="far fa-clock" aria-hidden="true"></i>
                     Expires in {{allocation_change.allocation.expires_in}} day{{allocation_change.allocation.expires_in|pluralize}} - Not renewable
                   </span>
                   {% endif %}
@@ -128,7 +128,7 @@ Allocation Change Detail
   
   <div class="card mb-3">
     <div class="card-header">
-      <h3 class="d-inline"><i class="fas fa-info-circle" aria-hidden="true"></i> Allocation Attributes</h3>
+      <h2 class="d-inline"><i class="fas fa-info-circle" aria-hidden="true"></i> Allocation Attributes</h2>
     </div>
     <div class="card-body">
       {% if attribute_changes %}
@@ -152,6 +152,9 @@ Allocation Change Detail
                   {% if allocation_change.status.name == 'Pending' %}
                     <td>{{form.value.value}}</td>
                     <td>
+                      <label for="{{ form.new_value.id_for_label }}" class="sr-only">
+                        {{ form.new_value.label }}
+                      </label>
                       {{form.new_value}}
                       {% if user_can_delete %}
                         <a href="{% url 'allocation-attribute-change-delete' form.change_pk.value %}" class="float-right confirm-delete">
@@ -159,13 +162,14 @@ Allocation Change Detail
                         </a>
                       {% endif %}
                     </td>
-                    {% else %}
+                  {% else %}
                     <td>{{form.old_value.value}}</td>
-                    {% if form.new_value.value == '' %}
-                      <td>None</td>
-                    {% else %}
-                      <td>{{form.new_value.value}}</td>
-                    {% endif %}
+                    <td>
+                      <label for="{{ form.new_value.id_for_label }}" class="sr-only">
+                        {{ form.new_value.label }}
+                      </label>
+                      {% if form.new_value.value == '' %}None{% else %}{{form.new_value.value}}{% endif %}
+                    </td>
                   {% endif %}
                 </tr>
               {% endfor %}
@@ -189,20 +193,23 @@ Allocation Change Detail
   {% if user_has_permissions %}
     <div class="card mb-3">
       <div class="card-header">
-        <h3 class="d-inline"><i class="fas fa-info-circle" aria-hidden="true"></i> Actions</h3>
+        <h2 class="d-inline"><i class="fas fa-info-circle" aria-hidden="true"></i> Actions</h2>
       </div>
       <div class="card-body">
         {% csrf_token %}
         {{note_form.notes | as_crispy_field}}
-        <div style="float: right;">
-          {% if allocation_change.status.name == 'Pending' %}
-            <button type="submit" name="action" value="approve" class="btn btn-success mr-1">Approve</button>
-            <button type="submit" name="action" value="deny" class="btn btn-danger mr-1">Deny</button>
-          {% endif %}
-          <button type="submit" name="action" value="update" class="btn btn-primary float-right">
-          <i class="fas fa-sync" aria-hidden="true"></i> Update
-          </button>
-        </div>   
+        <fieldset>
+          <legend class="sr-only">Allocation change actions</legend>
+          <div class="float-right">
+            {% if allocation_change.status.name == 'Pending' %}
+              <button type="submit" name="action" value="approve" class="btn btn-success">Approve</button>
+              <button type="submit" name="action" value="deny" class="btn btn-danger mr-1">Deny</button>
+            {% endif %}
+            <button type="submit" name="action" value="update" class="btn btn-primary float-right">
+            <i class="fas fa-sync" aria-hidden="true"></i> Update
+            </button>
+          </div>
+        </fieldset>   
       </div>
     </div>
   {% endif %}
@@ -229,4 +236,3 @@ Allocation Change Detail
   })
 </script>
 {% endblock %}
-
