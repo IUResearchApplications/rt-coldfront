@@ -9,11 +9,11 @@ Add Publication to Project
 
 
 {% block content %}
-<h2>Add publication to project: {{project.title}}</h2>
+<h1>Add publication to project: {{project.title}}</h1>
 <hr>
 
 <div class="col">
-  <a class="btn btn-primary" href="{% url 'add-publication-manually' project.pk %}" role="button"><i class="far fa-edit" aria-hidden="true"></i> Enter publication manually</a>
+  <a class="btn btn-primary mb-3" href="{% url 'add-publication-manually' project.pk %}"><i class="far fa-edit" aria-hidden="true"></i> Enter publication manually</a>
 
   {% if academics_analytics_enabled %}
     {% include "academic_analytics/academic_analytics_div.html" with project_pk=project.pk %}
@@ -31,7 +31,8 @@ Add Publication to Project
 <div class="col" id="search_results">
   <div class="card border-light">
     <div class="card-body">
-      <div id="search_results_inner"><a class="btn btn-secondary" href="{% url 'project-detail' project_pk %}" role="button">Back to Project</a></div>
+      <div id="search_results_inner" role="region" aria-live="polite" tabindex="-1">
+        <a class="btn btn-secondary" href="{% url 'project-detail' project_pk %}" role="button">Back to Project</a></div>
     </div>
   </div>
 </div>
@@ -47,7 +48,7 @@ Add Publication to Project
   $('#post-form').on('submit', function(event){
     event.preventDefault();
     $('#search_results').show();
-    $("#search_results_inner").html('<div class="alert alert-info text-center"><i class="fas fa-sync fa-spin fa-fw" aria-hidden="true"></i> Searching</div>')
+    $("#search_results_inner").attr('aria-busy', 'true').html('<div class="alert alert-info text-center"><i class="fas fa-sync fa-spin fa-fw" aria-hidden="true"></i> Searching</div>')
     create_post();
   });
 
@@ -66,11 +67,12 @@ Add Publication to Project
         success : function(data) {
             $('#post-text').val(''); // remove the value from the input
             $('#search_results').show();
-            $('#search_results_inner').html(data);
+            $('#search_results_inner').attr('aria-busy', 'false').html(data).focus();
         },
         // handle a non-successful response
         error : function(xhr,errmsg,err) {
-            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+            $('#search_results').show();
+            $('#search_results_inner').attr('aria-busy', 'false').html("<div class='alert-box alert radius' role='alert' data-alert>Oops! We have encountered an error: "+errmsg+
                 " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
             console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
         }

@@ -9,14 +9,14 @@ Allocation User Detail
 
 
 {% block content %}
-<h2>Allocation User Detail</h2>
+<h1 id="allocation_user_detail_heading">Allocation User Detail</h1>
 
-<h3>Allocation: {{allocation_obj.get_parent_resource.name}}</h3>
+<h2>Allocation: {{allocation_obj.get_parent_resource.name}}</h2>
 <hr>
 
 <form action="{% url 'allocation-user-detail' allocation_obj.pk allocation_user_obj.pk %}" method="post">
   {% csrf_token %}
-  <div class="card">
+  <div class="card" role="region" aria-labelledby="allocation_user_detail_heading">
     <div class="card-header">
       <i class="fas fa-user" aria-hidden="true"></i> User Detail
     </div>
@@ -48,6 +48,9 @@ Allocation User Detail
               <tr>
                 <th scope="row">Role:</th>
                 <td>
+                  <label for="{{ allocation_user_update_form.role.id_for_label }}" class="sr-only">
+                    {{ allocation_user_update_form.role.label }}
+                  </label>
                   {{allocation_user_update_form.role}}
                 </td>
               </tr>
@@ -62,10 +65,14 @@ Allocation User Detail
       </div>
     </div> 
     <div class="card-footer">
-      {% if can_update and allocation_user_roles_enabled%}
+      {% if can_update and allocation_user_roles_enabled %}
         <button type="submit" class="btn btn-primary">Update</button>
       {% endif %}
-      <a class="btn btn-secondary" href="{% url 'allocation-detail' allocation_obj.pk %}" role="button">Back to Allocation</a>
+      <a
+        class="btn btn-secondary"
+        href="{% url 'allocation-detail' allocation_obj.pk %}"
+        aria-label="Back to allocation {{ allocation_obj.get_parent_resource.name|default:'details' }}"
+      >Back to Allocation</a>
     </div>
   </div>
 </form>
@@ -74,18 +81,18 @@ Allocation User Detail
   $("#navbar-main > ul > li.active").removeClass("active");
   $("#navbar-project-menu").addClass("active");
 
-  $('document').ready(function() {
+  $(document).ready(function() {
     if ($("#id_role option:selected").text() == 'Group') {
       $("#id_role option:not(:selected)").prop('disabled', true);
     } else {
-      var options = $("#id_role option");
+      let options = $("#id_role option");
       for (let i = 0; i < options.length; i++) {
         if (options[i].text == 'Group') {
           options[i].disabled = true;
         }
       }
     }
-  })
+  });
 </script>
 
 {% endblock%}

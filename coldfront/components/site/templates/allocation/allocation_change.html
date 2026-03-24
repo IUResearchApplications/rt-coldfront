@@ -9,11 +9,10 @@ Request Allocation Change
 
 
 {% block content %}
-
-<h2>
+<h1 class="h2">
   Request change to {{ allocation.get_parent_resource }} for 
   {% if identifier %}{{ identifier }} attached to{% endif %} project: {{ allocation.project.title }}
-</h2>
+</h1>
 <hr>
 
 <p class="text-justify">
@@ -24,13 +23,14 @@ Request Allocation Change
 <form action="{% url 'allocation-change' allocation.pk %}" method="post">
   <div class="card mb-3">
     <div class="card-header">
-        <h3><i class="fas fa-list" aria-hidden="true"></i> Allocation Information</h3>   
+        <h2><i class="fas fa-list" aria-hidden="true"></i> Allocation Information</h2>   
     </div>
 
     <div class="card-body">
         {% csrf_token %}
         <div class="table-responsive">
           <table class="table table-bordered table-sm">
+            <caption class="sr-only">Allocation details</caption>
             <tr>
               <th scope="row" class="text-nowrap">Project:</th>
               <td><a href="{% url 'project-detail' allocation.project.pk %}">{{ allocation.project }}</a></td>
@@ -116,7 +116,12 @@ Request Allocation Change
                     <tr>
                       <td>{{form.name.value}}</td>
                       <td>{{form.value.value}}</td>
-                      <td>{{form.new_value}}</td>
+                      <td>
+                        <label for="{{ form.new_value.id_for_label }}" class="sr-only">
+                          {{ form.new_value.label }}
+                        </label>
+                        {{form.new_value}}
+                      </td>
                     </tr>
                 {% endfor %}
               </tbody>

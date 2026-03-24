@@ -1,7 +1,15 @@
 <li id="navbar-invoice" class="nav-item dropdown">
-  <a class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Invoice</a>
+  <a
+    class="nav-link dropdown-toggle"
+    href="#"
+    role="button"
+    data-toggle="dropdown"
+    aria-haspopup="true"
+    aria-expanded="false"
+    aria-controls="admin-submenu"
+  >Invoice</a>
   <div class="dropdown-menu">
-    <a id="navbar-allocation-invoice-list" class="dropdown-item" href="{% url 'allocation-invoice-list' %}">Allocations
+    <a id="navbar-allocation-invoice-list" class="dropdown-item" href="{% url 'allocation-invoice-list' %}" role="menuitem">Allocations
       Invoice List</a>
   </div>
 </li>

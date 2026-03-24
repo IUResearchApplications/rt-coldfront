@@ -58,7 +58,7 @@
 #footer {
   -webkit-font-smoothing: initial;
   -moz-font-smoothing: initial;
-  font-smoothing: initial;
+  font-smooth: initial;
 }
 
 #branding-bar *,

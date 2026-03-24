@@ -6,15 +6,17 @@ User Profile{% if not user == viewed_user %}: {{ viewed_user.username }}{% endif
 {% endblock %}
 
 {% block content %}
-<h2>User Profile</h2>
+<h1>User Profile</h1>
 <hr>
 
 <div class="card mb-3">
   <div class="card-header">
-    <i class="fas fa-user" aria-hidden="true"></i>
-    {{ viewed_user.username }}
+    <h2 class="d-inline">
+      <i class="fas fa-user" aria-hidden="true"></i>
+      {{ viewed_user.username }}
+    </h2>
     <div class="float-right">
-      <a class="btn btn-primary" href="{% url 'user-projects-managers' viewed_user %}" role="button"><i class="far fa-user-circle" aria-hidden="true"></i> View user projects and managers</a>
+      <a class="btn btn-primary" href="{% url 'user-projects-managers' viewed_user %}"><i class="far fa-user-circle" aria-hidden="true"></i> View user projects and managers</a>
     </div>
   </div>
   <div class="card-body">
@@ -23,17 +25,18 @@ User Profile{% if not user == viewed_user %}: {{ viewed_user.username }}{% endif
     </div>
     <div class="table-responsive">
       <table class="table">
+        <caption class="sr-only">User details</caption>
         <tbody>
           <tr>
-            <th scope="row" nowrap>University Role(s):</th>
+            <th scope="row" class="text-nowrap">University Role(s):</th>
             <td>{{group_list}}</td>
           </tr>
           <tr>
-            <th scope="row" nowrap>Department:</th>
+            <th scope="row" class="text-nowrap">Department:</th>
             <td>{{viewed_user.userprofile.department}}</td>
           </tr>
           <tr>
-            <th scope="row" nowrap>Title:</th>
+            <th scope="row" class="text-nowrap">Title:</th>
             <td>{{viewed_user.userprofile.title}}</td>
           </tr>
           <tr>

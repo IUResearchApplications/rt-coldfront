@@ -10,7 +10,7 @@ Review Project
 
 
 {% block content %}
-<h2>Reviewing Project: {{project.title}}</h2>
+<h1>Reviewing Project: {{project.title}}</h1>
 <hr>
 
 {% if ineligible_pi %}
@@ -32,16 +32,12 @@ Review Project
     {% if 'publication' not in project.get_env|get_value_from_dict:'forbidden_features' %}
       <li><a href="{% url 'publication-search' project.pk %}"><i class="fas fa-external-link-alt" aria-hidden="true"></i> Add</a> Publications</li>
     {% endif %}
-    <!-- <li><a href="{% url 'grant-create' project.pk %}"><i class="fas fa-external-link-alt" aria-hidden="true"></i> Add</a> Grants</li> -->
     <li><a href="{% url 'project-remove-users' project.pk %}"><i class="fas fa-external-link-alt" aria-hidden="true"></i> Verify</a> the user accounts in your group and remove any that should no longer have access to {% settings_value 'CENTER_NAME' %} resources</li>
   </ol>
 
   <div class="table-responsive">
     <table class="table table-bordered table-sm">
-      <!-- <tr>
-        <th scope="row" class="text-nowrap">Grants Last Updated:</th>
-        <td>{{project.latest_grant.modified|date:"M. d, Y"|default:"No grants"}}</td>
-      </tr> -->
+      <caption class="sr-only">Publication last updated date and username list</caption>
       <tr>
         <th scope="row" class="text-nowrap">Publications Last Updated:</th>
         <td>{{project.latest_publication.created|date:"M. d, Y"|default:"No publications"}}</td>
@@ -58,7 +54,7 @@ Review Project
   {% csrf_token %}
   <div class="card mb-3">
     <div class="card-header">
-      <h3 class="card-title">Allocations:</h3>
+      <h2 class="card-title">Allocations:</h2>
     </div>
     <div class="card-body">
       {% if formset %}
@@ -67,6 +63,7 @@ Review Project
       </div>
       <div class="table-responsive">
         <table class="table table-bordered table-sm">
+          <caption class="sr-only">Allocations</caption>
           <thead>
             <tr>
               <th scope="col">#</th>
@@ -84,7 +81,12 @@ Review Project
                 <td>
                   <a href="{% url 'allocation-detail' form.pk.value %}">{{ form.pk.value }}</a>
                 </td>
-                <td class="text-center">{{ form.renew }}</td>
+                <td class="text-center">
+                  <label for="{{ form.renew.id_for_label }}" class="sr-only" aria-label="Select {{ form.resource.value }}">
+                    {{ form.renew.label }}
+                  </label>
+                  {{ form.renew }}
+                </td>
                 <td>{{ form.resource.value }}</td>
                 <td>{{ form.users.value }}</td>
                 <td>{{ form.status.value }}</td>
@@ -97,13 +99,13 @@ Review Project
       </div>
       {{ formset.management_form }}
       {% else %}
-        <p class="alert alert-info">This project has no active or expired allocations!</p>
+        <p class="alert alert-info" role="alert">This project has no active or expired allocations!</p>
       {% endif %}
     </div>
   </div>
   {{project_review_form|crispy}}
-  <input class="btn btn-primary" type="submit" value="Submit" />
-  <a class="btn btn-secondary" href="{% url 'project-detail' project.pk %}" role="button">Back to Project</a>
+  <button class="btn btn-primary" type="submit">Submit</button>
+  <a class="btn btn-secondary" href="{% url 'project-detail' project.pk %}">Back to Project</a>
 </form>
 
 <script>
