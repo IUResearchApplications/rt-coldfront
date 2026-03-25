@@ -31,7 +31,7 @@
             <caption class="sr-only">Available allocations</caption>
             <thead>
               <tr>
-                <th>
+                <th scope="col">
                   <label for="selectAllAllocations" class="sr-only">Select all allocations</label>
                   <input type="checkbox" class="check" id="selectAllAllocations">
                 </th>
@@ -57,7 +57,12 @@
                   <td>{{ form.details.value }}</td>
                   <td>{{ form.resource_type.value }}</td>
                   <td>{{ form.status.value }}</td>
-                  <td>{{ form.role }}</td>
+                  <td>
+                    <label for="{{ form.role.id_for_label }}" class="sr-only">
+                      {{ form.role.label }}
+                    </label>
+                    {{ form.role }}
+                  </td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -78,7 +83,7 @@
         <caption class="sr-only">Users found</caption>
         <thead>
           <tr>
-            <th>
+            <th scope="col">
               <label for="selectAll" class="sr-only">Select all users</label>
               <input type="checkbox" class="check" id="selectAll">
             <th scope="col">#</th>
@@ -113,7 +118,12 @@
               <td>{{ form.first_name.value }}</td>
               <td>{{ form.last_name.value }}</td>
               <td>{{ form.email.value }}</td>
-              <td>{{ form.role }}</td>
+              <td>
+                <label for="{{ form.role.id_for_label }}" class="sr-only">
+                  {{ form.role.label }}
+                </label>
+                {{ form.role }}
+              </td>
             </tr>
           {% endfor %}
         </tbody>
@@ -154,11 +164,11 @@
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title col-12 text-center" id="warningLabel">
-          <span class="badge badge-warning"><i class="fas fa-exclamation-circle"></i></span>
+        <h3 class="modal-title col-12 text-center" id="warningLabel">
+          <span class="badge badge-warning"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span>
           Warning
-          <span class="badge badge-warning"><i class="fas fa-exclamation-circle"></i></span>
-        </h5>
+          <span class="badge badge-warning"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span>
+        </h3>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -189,23 +199,23 @@
     let icon = $($('#' + username)[0].childNodes[5].firstElementChild)
     let title = "Has Accounts"
     let content = "Can be added to all selected allocations"
-    let html = '<span class="badge badge-success"><i class="fas fa-check-circle"></i></span><span class="sr-only"></span>'
+    let html = '<span class="badge badge-success"><i class="fas fa-check-circle" aria-hidden="true"></i></span><span class="sr-only"></span>'
     if (reason == "not_selected") {
       title = "Not Selected"
       content = "Not selected to be added to the project"
-      html = '<span class="badge badge-secondary"><i class="fas fa-minus-circle"></i></span><span class="sr-only">Not selected to be added to the project</span>'
+      html = '<span class="badge badge-secondary"><i class="fas fa-minus-circle" aria-hidden="true"></i></span><span class="sr-only">Not selected to be added to the project</span>'
     } else if (reason == "no_selected_allocations") {
       title = "No Allocations Selected"
       content = "No allocations to check accounts on"
-      html = '<span class="badge badge-secondary"><i class="fas fa-minus-circle"></i></span><span class="sr-only">No allocations to check accounts on</span>'
+      html = '<span class="badge badge-secondary"><i class="fas fa-minus-circle" aria-hidden="true"></i></span><span class="sr-only">No allocations to check accounts on</span>'
     } else if (reason == "no_account") {
       title = "No IU Account"
       content = `Will not be added to these resources: ${Array.from(missing_accounts).join(', ')}`
-      html = `<span class="badge badge-warning"><i class="fas fa-exclamation-circle"></i></span><span class="sr-only">${content}</span>`
+      html = `<span class="badge badge-warning"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span><span class="sr-only">${content}</span>`
     } else if (reason == "no_resource_account") {
       title = "Missing Resource Accounts"
       content = `Will not be added to these resources: ${Array.from(missing_accounts).join(', ')}`
-      html = `<span class="badge badge-warning"><i class="fas fa-exclamation-circle"></i></span><span class="sr-only">${content}</span>`
+      html = `<span class="badge badge-warning"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span><span class="sr-only">${content}</span>`
     }
 
     icon.attr('data-original-title', title)
