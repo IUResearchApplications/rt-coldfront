@@ -1220,7 +1220,7 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
                                     if form.cleaned_data.get("selected")
                                 ],
                                 selected_users_accounts,
-                            ).get(username)
+                            ).get(username).values()
                             if not account_exists:
                                 # Make sure there are no duplicates for a user if there's more than one instance of a resource.
                                 if reason == "no_account":
