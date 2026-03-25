@@ -173,7 +173,7 @@ Project List
               <tr>
                 <td>{{ project.id }}</td>
                 <td>{{ project.pi.username }}</td>
-                <td style="text-align: justify; text-justify: inter-word;">{{ project.title|truncatechars:30 }}</td>
+                <td>{{ project.title|truncatechars:30 }}</td>
                 <td>{{ project.type.name }}</td>
                 {% if project.status.name == 'Active' %}
                   {% if project.needs_review %}
@@ -227,7 +227,7 @@ Project List
                 {% endif %}
                 <td>{{ project.end_date }}</td>
                 <td>
-                  <a class="btn btn-primary" href="{% url 'project-detail' project.pk %}" role="button">Details</a>
+                  <a class="btn btn-primary" href="{% url 'project-detail' project.pk %}" aria-label="{{ project.title }} project details">Details</a>
                 </td>
               </tr>
             {% endfor %}
