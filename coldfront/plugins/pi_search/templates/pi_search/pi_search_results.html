@@ -17,7 +17,7 @@
               <p class="text-success">You are already in this</p>
             {% else %}
               {% if EMAIL_ENABLED %}
-                <button id="{{project.pk}}" class="btn btn-primary" name="request_access">
+                <button id="{{project.pk}}" class="btn btn-primary" name="pi_request_access" type="button">
                   <i class="far fa-envelope" aria-hidden="true"></i> Request Access
                 </button>
                 <p id="warning_{{project.pk}}" class="invalid invalid-feedback" style="display: none;" role="alert">Failed to send email.</p>
@@ -31,7 +31,7 @@
 </div>
 
 <script>
-  $('[name="request_access"]').on('click', function(event) {
+  $('[name="pi_request_access"]').on('click', function(event) {
     var pk = event.target.id;
     $('#' + pk).html(
       '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...'
