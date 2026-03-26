@@ -15,7 +15,7 @@ Project Detail
 <div id="alert_div"></div>
 
 <div class="mb-3">
-  <h1 class="text-justify">{{ project.title }}</h1>
+  <h1>{{ project.title }}</h1>
   <hr>
 </div>
 
@@ -97,7 +97,7 @@ Project Detail
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="project_created_response_modal_label">We have received your project request.</h5>
+        <h2 class="modal-title" id="project_created_response_modal_label">We have received your project request.</h2>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -128,7 +128,7 @@ Project Detail
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="allocation_response_modal_label">We have received your allocation request.</h5>
+        <h2 class="modal-title" id="allocation_response_modal_label">We have received your allocation request.</h2>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -157,7 +157,7 @@ Project Detail
       <a href="mailto:{{ project.pi.email }} "><i class="far fa-envelope" aria-hidden="true"></i><span class="sr-only">Email PI</span></a>
     </h2>
     {% if project.pi.pk != project.requestor.pk %}
-      <p class="card-text text-justify">
+      <p class="card-text">
         <strong>Requestor: </strong>
         {{ project.requestor.first_name }}
         {{ project.requestor.last_name }}
@@ -167,10 +167,10 @@ Project Detail
         </a>
       </p>
     {% endif %}
-    <p class="card-text text-justify"><strong>Description: </strong>{{ project.description|linebreaksbr }}</p>
-    <p class="card-text text-justify"><strong>Project Type: </strong>{{ project.type.name }}</p>
-    <p class="card-text text-justify"><strong>Project ID: </strong>{{ project.pk }}</p>
-    <p class="card-text text-justify"><strong>Project Status: </strong>
+    <p class="card-text"><strong>Description: </strong>{{ project.description|linebreaksbr }}</p>
+    <p class="card-text"><strong>Project Type: </strong>{{ project.type.name }}</p>
+    <p class="card-text"><strong>Project ID: </strong>{{ project.pk }}</p>
+    <p class="card-text"><strong>Project Status: </strong>
     {% if project.status.name == 'Active' %}
       {% if project.needs_review %}
         <span class="text-warning"><strong>{{ project.status.name }}</strong></span>
@@ -183,10 +183,10 @@ Project Detail
       <span class="text-primary"><strong>{{ project.status.name }}</strong></span>
     {% endif %}
     </p>
-    <p class="card-text text-justify"><strong>Max Permitted Managers: </strong>{{ project.max_managers }}</p>
-    <p class="card-text text-justify"><strong>Created: </strong>{{ project.created|date:"M. d, Y" }}</p>
+    <p class="card-text"><strong>Max Permitted Managers: </strong>{{ project.max_managers }}</p>
+    <p class="card-text"><strong>Created: </strong>{{ project.created|date:"M. d, Y" }}</p>
     {% if project.requires_review %}
-      <p class="card-text text-justify"><strong>End Date: </strong>{{ project.end_date|date:"M. d, Y" }}</p>
+      <p class="card-text"><strong>End Date: </strong>{{ project.end_date|date:"M. d, Y" }}</p>
     {% endif %}
   </div>
 </div>
