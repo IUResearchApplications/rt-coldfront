@@ -14,7 +14,7 @@ Allocation List
 <hr>
 
 {% if expand_accordion == "show" or allocation_list %}
-  <div class="mb-3" id="accordion">
+  <div class="mb-3" id="accordion" role="region">
     <div class="card">
       <div class="card-header">
         <a
@@ -27,7 +27,7 @@ Allocation List
           href="#collapseOne"
         >
           <i class="fas fa-filter" aria-hidden="true"></i> Filter
-          <i id="plus_minus" class="fas {{expand_accordion|get_icon}} float-right"></i>
+          <i id="plus_minus" class="fas {{expand_accordion|get_icon}} float-right" aria-hidden="true"></i>
         </a>
       </div>
       <div id="collapseOne" class="collapse {{expand_accordion}}" data-parent="#accordion">
@@ -117,7 +117,7 @@ Allocation List
             >Previous</a>
           </li>
         {% else %}
-          <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a></li>
+          <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-disabled="true" aria-label="Previous page is unavailable">Previous</a></li>
         {% endif %}
         {% if page_obj.has_next %}
           <li class="page-item">
@@ -128,7 +128,7 @@ Allocation List
             >Next</a>
           </li>
         {% else %}
-          <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-disabled="true">Next</a></li>
+          <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-disabled="true" aria-label="Next page is unavailable">Next</a></li>
         {% endif %}
       </ul>
     {% endif %}

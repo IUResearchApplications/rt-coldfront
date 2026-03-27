@@ -10,6 +10,7 @@
     aria-haspopup="true"
     aria-expanded="false"
     aria-controls="admin-submenu"
+    title="Admin menu"
   >Admin</a>
   <ul
     id="admin-submenu"
@@ -29,6 +30,7 @@
         aria-haspopup="true"
         aria-controls="projects-submenu"
         aria-expanded="false"
+        title="Projects submenu"
       >Projects</a>
       <ul id="projects-submenu" class="dropdown-menu" role="menu" aria-labelledby="navbarProjectsToggle">
         <li><a class="dropdown-item" href="{% url 'project-list' %}?show_all_projects=on" role="menuitem">All Projects</a></li>
@@ -49,6 +51,7 @@
         aria-haspopup="true"
         aria-controls="allocations-submenu"
         aria-expanded="false"
+        title="Allocations submenu"
       >Allocations</a>
       <ul id="allocations-submenu" class="dropdown-menu" role="menu" aria-labelledby="navbarAllocationsToggle">
         <li><a class="dropdown-item" href="{% url 'allocation-list' %}?show_all_allocations=on" role="menuitem">All Allocations</a></li>
@@ -83,6 +86,7 @@
           aria-haspopup="true"
           aria-controls="forms-submenu"
           aria-expanded="false"
+          title="Additional Forms submenu"
         >Additional Forms</a>
         <ul id="forms-submenu" class="dropdown-menu" role="menu" aria-labelledby="navbarFormsToggle">
           <li>{% include 'request_forms/navbar_software_request.html' %}</li>

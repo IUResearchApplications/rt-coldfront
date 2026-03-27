@@ -65,7 +65,7 @@ Project List
         id="collapse_search_functions"
         class="collapse show"
         data-parent="#search_functions_accordion"
-        role="region"
+        role="search"
         aria-labelledby="expand_search_functions_button"
       >
         <div class="card-body">
@@ -98,7 +98,7 @@ Project List
   </div>
   <div class="card-body">
     {% if expand_accordion == "show" or project_list or user.is_superuser%}
-      <div class="mb-3" id="accordion">
+      <div class="mb-3" id="accordion" role="search">
         <div class="card">
           <div class="card-header">
             <a
@@ -123,10 +123,10 @@ Project List
             aria-labelledby="expand_button"
           >
             <div class="card-body">
-              <form id="filter_form" method="GET" action="{% url 'project-list' %}" autocomplete="off">
+              <form id="filter_form" method="GET" action="{% url 'project-list' %}" autocomplete="off" aria-label="Filter projects">
                 {{ project_search_form|crispy }}
                 <input type="submit" class="btn btn-primary" value="Search">
-                <button id="form_reset_button" type="button" class="btn btn-secondary">Reset</button>
+                <button id="form_reset_button" type="button" class="btn btn-secondary" aria-label="Clear all filter fields">Reset</button>
               </form>
             </div>
           </div>
@@ -243,7 +243,7 @@ Project List
                 >Previous</a>
               </li>
             {% else %}
-              <li class="page-item disabled"><a class="page-link" href="#" aria-disabled="true">Previous</a></li>
+              <li class="page-item disabled"><a class="page-link" href="#" aria-disabled="true" aria-label="Previous page is unavailable">Previous</a></li>
             {% endif %}
             {% if page_obj.has_next %}
               <li class="page-item">
@@ -253,7 +253,7 @@ Project List
                 >Next</a>
               </li>
             {% else %}
-              <li class="page-item disabled"><a class="page-link" href="#" aria-disabled="true">Next</a></li>
+              <li class="page-item disabled"><a class="page-link" href="#" aria-disabled="true" aria-label="Next page is unavailable">Next</a></li>
             {% endif %}
           </ul>
         {% endif %}
