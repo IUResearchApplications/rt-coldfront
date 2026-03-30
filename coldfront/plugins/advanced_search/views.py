@@ -16,10 +16,9 @@ from coldfront.core.allocation.models import AllocationAttributeType
 from coldfront.core.project.models import ProjectAttributeType
 from coldfront.core.utils.common import Echo
 from coldfront.plugins.advanced_search.forms import (
-    AllocationAttributeFormSetHelper,
     AllocationAttributeSearchForm,
     AllocationSearchForm,
-    ProjectAttributeFormSetHelper,
+    AttributeFormSetHelper,
     ProjectAttributeSearchForm,
     ProjectSearchForm,
     UserSearchForm,
@@ -151,8 +150,8 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                 "allocation_attribute_type_ids": list(self.usage_attribute_ids["allocation"]),
                 "project_attribute_type_ids": list(self.usage_attribute_ids["project"]),
                 "linked_allocation_attribute_types": self.linked_allocation_attribute_types(),
-                "allocationattribute_helper": AllocationAttributeFormSetHelper(),
-                "projectattribute_helper": ProjectAttributeFormSetHelper(),
+                "allocationattribute_helper": AttributeFormSetHelper("allocation"),
+                "projectattribute_helper": AttributeFormSetHelper("project"),
                 "CENTER_BASE_URL": settings.CENTER_BASE_URL,
                 "active_tab": context.get("active_tab", "project-search"),
             }

@@ -23,22 +23,22 @@ from coldfront.core.project.models import (
 from coldfront.core.resource.models import Resource, ResourceType
 
 
-class AllocationAttributeFormSetHelper(FormHelper):
-    def __init__(self, *args, **kwargs):
+class AttributeFormSetHelper(FormHelper):
+    def __init__(self, type, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.use_custom_control = False
         self.layout = Layout(
             Div(
                 Div(
                     Row(
-                        Column("allocationattribute__name"),
-                        Column("allocationattribute__value"),
+                        Column(f"{type}attribute__name"),
+                        Column(f"{type}attribute__value"),
                     ),
                     Row(
-                        Column("allocationattribute__has_usage"),
-                        Column("allocationattribute__equality"),
-                        Column("allocationattribute__usage"),
-                        Column("allocationattribute__usage_format"),
+                        Column(f"{type}attribute__has_usage"),
+                        Column(f"{type}attribute__equality"),
+                        Column(f"{type}attribute__usage"),
+                        Column(f"{type}attribute__usage_format"),
                     ),
                     css_class="card-body",
                 ),
@@ -80,30 +80,6 @@ class AllocationAttributeSearchForm(forms.Form):
             )
         else:
             self.fields["allocationattribute__name"].queryset = AllocationAttributeType.objects.none()
-
-
-class ProjectAttributeFormSetHelper(FormHelper):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.use_custom_control = False
-        self.layout = Layout(
-            Div(
-                Div(
-                    Row(
-                        Column("projectattribute__name"),
-                        Column("projectattribute__value"),
-                    ),
-                    Row(
-                        Column("projectattribute__has_usage"),
-                        Column("projectattribute__equality"),
-                        Column("projectattribute__usage"),
-                        Column("projectattribute__usage_format"),
-                    ),
-                    css_class="card-body",
-                ),
-                css_class="card mb-3",
-            )
-        )
 
 
 class ProjectAttributeSearchForm(forms.Form):
@@ -187,7 +163,7 @@ class ProjectSearchForm(forms.Form):
     display__project__resources = forms.BooleanField(required=False)
 
     projectattribute_form = ProjectAttributeSearchForm()
-    projectattribute_helper = ProjectAttributeFormSetHelper()
+    projectattribute_helper = AttributeFormSetHelper("project")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -431,7 +407,7 @@ class AllocationSearchForm(forms.Form):
     display__resources__resource_type__name = forms.BooleanField(required=False)
 
     allocationattribute_form = AllocationAttributeSearchForm()
-    allocationattribute_helper = AllocationAttributeFormSetHelper()
+    allocationattribute_helper = AttributeFormSetHelper("allocation")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
