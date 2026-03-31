@@ -179,7 +179,6 @@ class BaseSearchTable:
         return queryset
 
     def get_attribute_value(self, id, current_attribute, additional_data, additional_usage_data, column):
-        value = ""
         if current_attribute == "name":
             attributes = additional_data.get(id)
             if attributes is not None:
@@ -187,8 +186,7 @@ class BaseSearchTable:
                     # Assumes no duplicate project attribute types in list
                     attribute_type = getattr(attribute, self.attr_type)
                     if attribute_type.id == column.get("id"):
-                        value = attribute.value
-                        break
+                        return attribute.value
         elif current_attribute == "has_usage":
             attribute_usages = additional_usage_data.get(id)
             if attribute_usages is not None:
@@ -197,10 +195,9 @@ class BaseSearchTable:
                     attribute = getattr(attribute_usage, f"{self.type}_attribute")
                     attribute_type = getattr(attribute, self.attr_type)
                     if attribute_type.id == column.get("id"):
-                        value = attribute_usage.value
-                        break
+                        return attribute_usage.value
 
-        return value
+        return ""
 
 
 class ProjectTable(BaseSearchTable):
@@ -261,6 +258,35 @@ class ProjectTable(BaseSearchTable):
 
         self.queryset = projects
 
+    def get_special_value(self, obj, attribute):
+        if attribute == "total_users":
+            # Need to do all() or prefetch doesn't work and we end up running more queries
+            all_project_users = obj.projectuser_set.all()
+            filtered_project_users_count = 0
+            for project_user in all_project_users:
+                if project_user.status.name == "Active":
+                    filtered_project_users_count += 1
+            return filtered_project_users_count
+
+        if attribute == "users":
+            all_project_users = obj.projectuser_set.all()
+            filtered_project_users = []
+            for project_user in all_project_users:
+                if project_user.status.name == "Active":
+                    filtered_project_users.append(project_user.user.username)
+            return ", ".join(filtered_project_users)
+
+        if attribute == "resources":
+            all_project_allocations = obj.allocation_set.all()
+            resource_list = []
+            for project_allocation in all_project_allocations:
+                if project_allocation.status.name in ["Active", "Renewal Requested"]:
+                    resource_list.append(f"{project_allocation.get_parent_resource.name} ({project_allocation.pk})")
+        if attribute == "url":
+            return f"{settings.CENTER_BASE_URL}{reverse('project-detail', kwargs={'pk': obj.pk})}"
+
+        return None
+
     def build_row(self, project_obj, additional_data, additional_usage_data):
         row = []
         for column in self.columns:
@@ -280,36 +306,7 @@ class ProjectTable(BaseSearchTable):
                         current_attribute = getattr(current_attribute, attribute)
                         continue
 
-                    if "total_users" == column.get("field_name"):
-                        # Need to do all() or prefetch doesn't work and we end up running more queries
-                        all_project_users = project_obj.projectuser_set.all()
-                        filtered_project_users_count = 0
-                        for project_user in all_project_users:
-                            if project_user.status.name == "Active":
-                                filtered_project_users_count += 1
-                        current_attribute = filtered_project_users_count
-
-                    elif "users" in column.get("field_name"):
-                        all_project_users = project_obj.projectuser_set.all()
-                        filtered_project_users = []
-                        for project_user in all_project_users:
-                            if project_user.status.name == "Active":
-                                filtered_project_users.append(project_user.user.username)
-                        current_attribute = ", ".join(filtered_project_users)
-
-                    elif "resources" in column.get("field_name"):
-                        all_project_allocations = project_obj.allocation_set.all()
-                        resource_list = []
-                        for project_allocation in all_project_allocations:
-                            if project_allocation.status.name in ["Active", "Renewal Requested"]:
-                                resource_list.append(
-                                    f"{project_allocation.get_parent_resource.name} ({project_allocation.pk})"
-                                )
-                        current_attribute = ", ".join(resource_list)
-                    elif "url" in column.get("field_name"):
-                        current_attribute = (
-                            f"{settings.CENTER_BASE_URL}{reverse('project-detail', kwargs={'pk': project_obj.pk})}"
-                        )
+                    current_attribute = self.get_special_value(project_obj, attribute)
             else:
                 current_attribute = self.get_attribute_value(
                     project_obj.id, attributes[0], additional_data, additional_usage_data, column
@@ -445,6 +442,40 @@ class AllocationTable(BaseSearchTable):
 
         return resources
 
+    def get_special_value(obj, attribute):
+        if attribute == "project__total_users":
+            # Need to do all() or prefetch doesn't work and we end up running more queries
+            all_project_users = obj.projectuser_set.all()
+            filtered_project_users_count = 0
+            for project_user in all_project_users:
+                if project_user.status.name == "Active":
+                    filtered_project_users_count += 1
+            return filtered_project_users_count
+
+        if attribute == "project__url":
+            return f"{settings.CENTER_BASE_URL}{reverse('project-detail', kwargs={'pk': obj.pk})}"
+
+        if attribute == "allocation__total_users":
+            all_allocation_users = obj.allocationuser_set.all()
+            filtered_allocation_users_count = 0
+            for allocation_user in all_allocation_users:
+                if allocation_user.status.name in ["Active", "Invited", "Pending", "Disabled", "Retired"]:
+                    filtered_allocation_users_count += 1
+            return filtered_allocation_users_count
+
+        if attribute == "allocation__users":
+            all_allocation_users = obj.allocationuser_set.all()
+            filtered_allocation_users = []
+            for allocation_user in all_allocation_users:
+                if allocation_user.status.name in ["Active", "Invited", "Pending", "Disabled", "Retired"]:
+                    filtered_allocation_users.append(allocation_user.user.username)
+            return ", ".join(filtered_allocation_users)
+
+        if attribute == "allocation__url":
+            return f"{settings.CENTER_BASE_URL}{reverse('allocation-detail', kwargs={'pk': obj.pk})}"
+
+        return None
+
     def build_row(self, allocation_obj, additional_data, additional_usage_data):
         row = []
         for column in self.columns:
@@ -468,42 +499,7 @@ class AllocationTable(BaseSearchTable):
                         current_attribute = getattr(current_attribute, attribute)
                         continue
 
-                    if "project__total_users" == field_name:
-                        # Need to do all() or prefetch doesn't work and we end up running more queries
-                        all_project_users = model.projectuser_set.all()
-                        filtered_project_users_count = 0
-                        for project_user in all_project_users:
-                            if project_user.status.name == "Active":
-                                filtered_project_users_count += 1
-                        current_attribute = filtered_project_users_count
-                        break
-
-                    if "project__url" in column.get("field_name"):
-                        current_attribute = (
-                            f"{settings.CENTER_BASE_URL}{reverse('project-detail', kwargs={'pk': model.pk})}"
-                        )
-                        break
-
-                    if "allocation__total_users" == field_name:
-                        all_allocation_users = model.allocationuser_set.all()
-                        filtered_allocation_users_count = 0
-                        for allocation_user in all_allocation_users:
-                            if allocation_user.status.name in ["Active", "Invited", "Pending", "Disabled", "Retired"]:
-                                filtered_allocation_users_count += 1
-                        current_attribute = filtered_allocation_users_count
-                        break
-
-                    if "allocation__users" == field_name:
-                        all_allocation_users = model.allocationuser_set.all()
-                        filtered_allocation_users = []
-                        for allocation_user in all_allocation_users:
-                            if allocation_user.status.name in ["Active", "Invited", "Pending", "Disabled", "Retired"]:
-                                filtered_allocation_users.append(allocation_user.user.username)
-                        current_attribute = ", ".join(filtered_allocation_users)
-                        break
-
-                    if "allocation__url" in column.get("field_name"):
-                        current_attribute = f"{settings.CENTER_BASE_URL}{reverse('allocation-detail', kwargs={'pk': allocation_obj.pk})}"
+                    current_attribute = self.get_special_value(allocation_obj, attribute)
             else:
                 current_attribute = self.get_attribute_value(
                     allocation_obj.id, attributes[0], additional_data, additional_usage_data, column
@@ -579,6 +575,27 @@ class UserTable(BaseSearchTable):
 
         return user_profiles
 
+    def get_special_value(self, obj, attribute):
+        if attribute == "total_projects":
+            return ProjectUser.objects.filter(user=obj, status__name="Active", project__status__name="Active").count()
+        if attribute == "total_pi_projects":
+            return ProjectUser.objects.filter(
+                user=obj, project__pi=obj, status__name="Active", project__status__name="Active"
+            ).count()
+        if attribute == "total_manager_projects":
+            return ProjectUser.objects.filter(
+                user=obj, role__name="Manager", status__name="Active", project__status__name="Active"
+            ).count()
+        if attribute == "total_allocations":
+            return AllocationUser.objects.filter(
+                user=obj,
+                status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"],
+                allocation__status__name="Active",
+                allocation__project__status__name="Active",
+            ).count()
+
+        return None
+
     def build_row(self, user_obj):
         row = []
         for column in self.columns:
@@ -589,25 +606,7 @@ class UserTable(BaseSearchTable):
                     current_attribute = getattr(current_attribute, attribute)
                     continue
 
-                if attribute == "total_projects":
-                    current_attribute = ProjectUser.objects.filter(
-                        user=user_obj, status__name="Active", project__status__name="Active"
-                    ).count()
-                if attribute == "total_pi_projects":
-                    current_attribute = ProjectUser.objects.filter(
-                        user=user_obj, project__pi=user_obj, status__name="Active", project__status__name="Active"
-                    ).count()
-                if attribute == "total_manager_projects":
-                    current_attribute = ProjectUser.objects.filter(
-                        user=user_obj, role__name="Manager", status__name="Active", project__status__name="Active"
-                    ).count()
-                if attribute == "total_allocations":
-                    current_attribute = AllocationUser.objects.filter(
-                        user=user_obj,
-                        status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"],
-                        allocation__status__name="Active",
-                        allocation__project__status__name="Active",
-                    ).count()
+                current_attribute = self.get_special_value(user_obj, attribute)
 
             if current_attribute is None:
                 current_attribute = ""
