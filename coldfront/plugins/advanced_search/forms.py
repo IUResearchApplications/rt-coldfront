@@ -197,24 +197,24 @@ class ProjectSearchForm(SearchForm):
 class UserSearchForm(forms.Form):
     USER_TYPE_CHOICE = (("all", "All"), ("project", "Project"), ("allocation", "Allocation"))
 
-    display__user__username = forms.BooleanField(label="Display usernames", required=False)
-    display__user__first_name = forms.BooleanField(label="Display first names", required=False)
-    display__user__last_name = forms.BooleanField(label="Display last names", required=False)
-    display__user__userprofile__department = forms.BooleanField(label="Display departments", required=False)
-    display__user__userprofile__title = forms.BooleanField(label="Display titles", required=False)
-    display__user__total_projects = forms.BooleanField(label="Display total active projects", required=False)
-    display__user__total_pi_projects = forms.BooleanField(label="Display total active PI projects", required=False)
-    display__user__total_manager_projects = forms.BooleanField(
+    display__username = forms.BooleanField(label="Display usernames", required=False)
+    display__first_name = forms.BooleanField(label="Display first names", required=False)
+    display__last_name = forms.BooleanField(label="Display last names", required=False)
+    display__userprofile__department = forms.BooleanField(label="Display departments", required=False)
+    display__userprofile__title = forms.BooleanField(label="Display titles", required=False)
+    display__total_projects = forms.BooleanField(label="Display total active projects", required=False)
+    display__total_pi_projects = forms.BooleanField(label="Display total active PI projects", required=False)
+    display__total_manager_projects = forms.BooleanField(
         label="Display total active Manager projects", required=False
     )
-    display__user__total_allocations = forms.BooleanField(label="Display total active allocations", required=False)
+    display__total_allocations = forms.BooleanField(label="Display total active allocations", required=False)
 
-    user__usernames = forms.CharField(label="Usernames", required=False, help_text="username1,username2,...")
-    user__first_name = forms.CharField(label="First Name", max_length=100, required=False)
-    user__last_name = forms.CharField(label="Last Name", max_length=100, required=False)
-    user__userprofile__department = forms.CharField(label="Department Contains", max_length=100, required=False)
-    user__userprofile__title = forms.CharField(label="Title Contains", max_length=30, required=False)
-    user__type = forms.ChoiceField(initial="all", choices=USER_TYPE_CHOICE, widget=forms.RadioSelect)
+    usernames = forms.CharField(label="Usernames", required=False, help_text="username1,username2,...")
+    first_name = forms.CharField(label="First Name", max_length=100, required=False)
+    last_name = forms.CharField(label="Last Name", max_length=100, required=False)
+    userprofile__department = forms.CharField(label="Department Contains", max_length=100, required=False)
+    userprofile__title = forms.CharField(label="Title Contains", max_length=30, required=False)
+    type = forms.ChoiceField(initial="all", choices=USER_TYPE_CHOICE, widget=forms.RadioSelect)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -225,33 +225,33 @@ class UserSearchForm(forms.Form):
             Accordion(
                 AccordionGroup(
                     "Users",
-                    "user__usernames",
-                    "user__first_name",
-                    "user__last_name",
-                    "display__user__username",
-                    "display__user__first_name",
-                    "display__user__last_name",
-                    InlineRadios("user__type"),
+                    "usernames",
+                    "first_name",
+                    "last_name",
+                    "display__username",
+                    "display__first_name",
+                    "display__last_name",
+                    InlineRadios("type"),
                     active=False,
                 ),
                 AccordionGroup(
                     "User Profiles",
-                    "user__userprofile__department",
-                    "user__userprofile__title",
-                    "display__user__userprofile__department",
-                    "display__user__userprofile__title",
+                    "userprofile__department",
+                    "userprofile__title",
+                    "display__userprofile__department",
+                    "display__userprofile__title",
                     active=False,
                 ),
                 AccordionGroup(
                     "Projects",
-                    "display__user__total_projects",
-                    "display__user__total_pi_projects",
-                    "display__user__total_manager_projects",
+                    "display__total_projects",
+                    "display__total_pi_projects",
+                    "display__total_manager_projects",
                     active=False,
                 ),
                 AccordionGroup(
                     "Allocations",
-                    "display__user__total_allocations",
+                    "display__total_allocations",
                     active=False,
                 ),
             ),

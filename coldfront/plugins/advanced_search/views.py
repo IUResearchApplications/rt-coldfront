@@ -109,6 +109,7 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     def handle_user_search(self, context):
         context["active_tab"] = "user-search"
         user_search_form = UserSearchForm(self.request.GET, prefix="user_search")
+        context["user_form"] = user_search_form
         if user_search_form.is_valid():
             table = UserTable(user_search_form.cleaned_data)
             context["rows"], context["columns"] = table.build_table()

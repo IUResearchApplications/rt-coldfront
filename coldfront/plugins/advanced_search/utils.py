@@ -562,14 +562,14 @@ class UserTable(BaseSearchTable):
     def get_user_queryset(self):
         data = self.search_data
         users = User.objects.select_related("userprofile")
-        if data.get("user__type") == "project":
+        if data.get("type") == "project":
             project_usernames = set(
                 ProjectUser.objects.filter(status__name="Active", project__status__name="Active").values_list(
                     "user__username", flat=True
                 )
             )
             users = users.filter(username__in=project_usernames)
-        elif data.get("user__type") == "allocation":
+        elif data.get("type") == "allocation":
             allocation_usernames = set(
                 AllocationUser.objects.filter(
                     status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"],
@@ -579,14 +579,14 @@ class UserTable(BaseSearchTable):
             )
             users = users.filter(username__in=allocation_usernames)
 
-        if data.get("user__usernames"):
-            usernames = data.get("user__usernames").split(",")
+        if data.get("usernames"):
+            usernames = data.get("usernames").split(",")
             usernames = [username.strip() for username in usernames]
             users = users.filter(username__in=usernames)
-        if data.get("user__first_name"):
-            users = users.filter(first_name=data.get("user__first_name"))
-        if data.get("user__last_name"):
-            users = users.filter(last_name=data.get("user__last_name"))
+        if data.get("first_name"):
+            users = users.filter(first_name=data.get("first_name"))
+        if data.get("last_name"):
+            users = users.filter(last_name=data.get("last_name"))
 
         return users
 
@@ -594,9 +594,9 @@ class UserTable(BaseSearchTable):
         data = self.search_data
         user_profiles = UserProfile.objects.all()
 
-        if data.get("user__userprofile__title"):
+        if data.get("userprofile__title"):
             user_profiles = user_profiles.filter(title__icontains=data.get("user__userprofile__title"))
-        if data.get("user__userprofile__department"):
+        if data.get("userprofile__department"):
             user_profiles = user_profiles.filter(department__icontains=data.get("user__userprofile__department"))
 
         return user_profiles
@@ -604,7 +604,7 @@ class UserTable(BaseSearchTable):
     def build_row(self, user_obj):
         row = []
         for column in self.columns:
-            attributes = column.get("field_name").split("__")[1:]
+            attributes = column.get("field_name").split("__")
             current_attribute = user_obj
             for attribute in attributes:
                 if hasattr(current_attribute, attribute):
