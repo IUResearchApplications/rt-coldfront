@@ -146,13 +146,9 @@ class BaseSearchTable:
         attribute_usage_format = entry.get("attribute__usage_format")
         if attribute_usage_format == "whole":
             if attribute_equality == "lt":
-                queryset = queryset.filter(
-                    **{f"attribute__{self.type}attributeusage__value__lt": attribute_usage}
-                )
+                queryset = queryset.filter(**{f"attribute__{self.type}attributeusage__value__lt": attribute_usage})
             elif attribute_equality == "gt":
-                queryset = queryset.filter(
-                    **{f"attribute__{self.type}attributeusage__value__gt": attribute_usage}
-                )
+                queryset = queryset.filter(**{f"attribute__{self.type}attributeusage__value__gt": attribute_usage})
         elif attribute_usage_format == "percent":
             attribute_ids = queryset.values_list(f"attribute__{self.type}attributeusage", flat=True)
             attribute_ids = [attribute_id for attribute_id in attribute_ids if attribute_id is not None]
@@ -181,6 +177,30 @@ class BaseSearchTable:
             queryset = self.filter_by_usage(queryset, entry)
 
         return queryset
+
+    def get_attribute_value(self, id, current_attribute, additional_data, additional_usage_data, column):
+        value = ""
+        if current_attribute == "name":
+            attributes = additional_data.get(id)
+            if attributes is not None:
+                for attribute in attributes:
+                    # Assumes no duplicate project attribute types in list
+                    attribute_type = getattr(attribute, self.attr_type)
+                    if attribute_type.id == column.get("id"):
+                        value = attribute.value
+                        break
+        elif current_attribute == "has_usage":
+            attribute_usages = additional_usage_data.get(id)
+            if attribute_usages is not None:
+                for attribute_usage in attribute_usages:
+                    # Assumes no duplicate project attribute types in list
+                    attribute = getattr(attribute_usage, f"{self.type}_attribute")
+                    attribute_type = getattr(attribute, self.attr_type)
+                    if attribute_type.id == column.get("id"):
+                        value = attribute_usage.value
+                        break
+
+        return value
 
 
 class ProjectTable(BaseSearchTable):
@@ -252,9 +272,8 @@ class ProjectTable(BaseSearchTable):
                 attributes = split[1:]
                 model = None
 
+            current_attribute = None
             if model is not None:
-                if model == "attribute":
-                    model = "projectattribute"
                 current_attribute = model
                 for attribute in attributes:
                     if hasattr(current_attribute, attribute):
@@ -292,27 +311,9 @@ class ProjectTable(BaseSearchTable):
                             f"{settings.CENTER_BASE_URL}{reverse('project-detail', kwargs={'pk': project_obj.pk})}"
                         )
             else:
-                project_id = project_obj.id
-                value = ""
-                attribute = attributes[0]
-                if attribute == "name":
-                    project_attributes = additional_data.get(project_id)
-                    if project_attributes is not None:
-                        for project_attribute in project_attributes:
-                            # Assumes no duplicate project attribute types in list
-                            if project_attribute.proj_attr_type.id == column.get("id"):
-                                value = project_attribute.value
-                                break
-                elif attribute == "has_usage":
-                    project_attribute_usages = additional_usage_data.get(project_id)
-                    if project_attribute_usages is not None:
-                        for project_attribute_usage in project_attribute_usages:
-                            # Assumes no duplicate project attribute types in list
-                            if project_attribute_usage.project_attribute.proj_attr_type.id == column.get("id"):
-                                value = project_attribute_usage.value
-                                break
-
-                current_attribute = value
+                current_attribute = self.get_attribute_value(
+                    project_obj.id, attributes[0], additional_data, additional_usage_data, column
+                )
 
             if current_attribute is None:
                 current_attribute = ""
@@ -461,8 +462,6 @@ class AllocationTable(BaseSearchTable):
                 model = None
 
             if model is not None:
-                if model == "attribute":
-                    model = "allocationattribute"
                 current_attribute = model
                 for attribute in attributes:
                     if hasattr(current_attribute, attribute):
@@ -506,30 +505,9 @@ class AllocationTable(BaseSearchTable):
                     if "allocation__url" in column.get("field_name"):
                         current_attribute = f"{settings.CENTER_BASE_URL}{reverse('allocation-detail', kwargs={'pk': allocation_obj.pk})}"
             else:
-                allocation_id = allocation_obj.id
-                value = ""
-                attribute = attributes[0]
-                if attribute == "name":
-                    allocation_attributes = additional_data.get(allocation_id)
-                    if allocation_attributes is not None:
-                        for allocation_attribute in allocation_attributes:
-                            # Assumes no duplicate allocation attribute types in list
-                            if allocation_attribute.allocation_attribute_type.id == column.get("id"):
-                                value = allocation_attribute.value
-                                break
-                elif attribute == "has_usage":
-                    allocation_attribute_usages = additional_usage_data.get(allocation_id)
-                    if allocation_attribute_usages is not None:
-                        for allocation_attribute_usage in allocation_attribute_usages:
-                            # Assumes no duplicate allocation attribute types in list
-                            if (
-                                allocation_attribute_usage.allocation_attribute.allocation_attribute_type.id
-                                == column.get("id")
-                            ):
-                                value = allocation_attribute_usage.value
-                                break
-
-                current_attribute = value
+                current_attribute = self.get_attribute_value(
+                    allocation_obj.id, attributes[0], additional_data, additional_usage_data, column
+                )
 
             if current_attribute is None:
                 current_attribute = ""
