@@ -188,13 +188,13 @@ class ProjectTable(BaseSearchTable):
     attr_type = "proj_attr_type"
 
     FILTER_MAP = {
-        "project__title": lambda data: {"title__icontains": data},
-        "project__description": lambda data: {"description__icontains": data},
-        "project__pi__username": lambda data: {"pi__username__icontains": data},
-        "project__requestor__username": lambda data: {"requestor__username__icontains": data},
-        "project__status__name": lambda data: {"status__in": data},
-        "project__type__name": lambda data: {"type__in": data},
-        "project__user_username": lambda data: {
+        "title": lambda data: {"title__icontains": data},
+        "description": lambda data: {"description__icontains": data},
+        "pi__username": lambda data: {"pi__username__icontains": data},
+        "requestor__username": lambda data: {"requestor__username__icontains": data},
+        "status__name": lambda data: {"status__in": data},
+        "type__name": lambda data: {"type__in": data},
+        "user_username": lambda data: {
             "projectuser__user__username__icontains": data,
             "projectuser__status__name": "Active",
         },
@@ -203,9 +203,9 @@ class ProjectTable(BaseSearchTable):
             "allocation__allocationattribute__value": "Yes",
             "allocation__status__name": "Active",
         },
-        "project__created_after_date": lambda data: {"created__gt": data},
-        "project__created_before_date": lambda data: {"created__lt": data},
-        "project__end_date": lambda data: {"end_date": data},
+        "created_after_date": lambda data: {"created__gt": data},
+        "created_before_date": lambda data: {"created__lt": data},
+        "end_date": lambda data: {"end_date": data},
     }
 
     def get_queryset(self):
@@ -246,11 +246,10 @@ class ProjectTable(BaseSearchTable):
         for column in self.columns:
             field_name = column.get("field_name")
             split = field_name.split("__")
-            model = split[0]
-            attributes = split[1:]
-            if model == "project":
-                model = project_obj
-            elif model == "attribute":
+            model = project_obj
+            attributes = split
+            if split[0] == "attribute":
+                attributes = split[1:]
                 model = None
 
             if model is not None:
@@ -262,7 +261,7 @@ class ProjectTable(BaseSearchTable):
                         current_attribute = getattr(current_attribute, attribute)
                         continue
 
-                    if "project__total_users" == column.get("field_name"):
+                    if "total_users" == column.get("field_name"):
                         # Need to do all() or prefetch doesn't work and we end up running more queries
                         all_project_users = project_obj.projectuser_set.all()
                         filtered_project_users_count = 0
@@ -271,7 +270,7 @@ class ProjectTable(BaseSearchTable):
                                 filtered_project_users_count += 1
                         current_attribute = filtered_project_users_count
 
-                    elif "project__users" in column.get("field_name"):
+                    elif "users" in column.get("field_name"):
                         all_project_users = project_obj.projectuser_set.all()
                         filtered_project_users = []
                         for project_user in all_project_users:
@@ -279,7 +278,7 @@ class ProjectTable(BaseSearchTable):
                                 filtered_project_users.append(project_user.user.username)
                         current_attribute = ", ".join(filtered_project_users)
 
-                    elif "project__resources" in column.get("field_name"):
+                    elif "resources" in column.get("field_name"):
                         all_project_allocations = project_obj.allocation_set.all()
                         resource_list = []
                         for project_allocation in all_project_allocations:
@@ -288,7 +287,7 @@ class ProjectTable(BaseSearchTable):
                                     f"{project_allocation.get_parent_resource.name} ({project_allocation.pk})"
                                 )
                         current_attribute = ", ".join(resource_list)
-                    elif "project__url" in column.get("field_name"):
+                    elif "url" in column.get("field_name"):
                         current_attribute = (
                             f"{settings.CENTER_BASE_URL}{reverse('project-detail', kwargs={'pk': project_obj.pk})}"
                         )

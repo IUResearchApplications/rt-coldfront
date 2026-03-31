@@ -75,69 +75,59 @@ class ProjectAttributeSearchForm(AttributeSearchForm):
         self.fields["attribute__name"].queryset = ProjectAttributeType.objects.all()
 
 
-class ProjectSearchForm(forms.Form):
-    display__project__id = forms.BooleanField(required=False)
+class SearchForm(forms.Form):
+    display__id = forms.BooleanField(required=False)
+    display__url = forms.BooleanField(required=False)
+    display__status__name = forms.BooleanField(required=False)
+    display__created = forms.BooleanField(required=False)
+    display__end_date = forms.BooleanField(required=False)
+    display__users = forms.BooleanField(required=False, help_text="Active users")
+    display__total_users = forms.BooleanField(required=False, help_text="Active users")
+    display__status__name = forms.BooleanField(required=False)
+    display__type__name = forms.BooleanField(required=False)
 
-    display__project__url = forms.BooleanField(required=False)
-
-    project__title = forms.CharField(label="Project Title Contains", max_length=100, required=False)
-    display__project__title = forms.BooleanField(required=False)
-
-    project__description = forms.CharField(label="Project Description Contains", max_length=100, required=False)
-    display__project__description = forms.BooleanField(required=False)
-
-    project__pi__username = forms.CharField(label="PI Username Contains", max_length=25, required=False)
-    display__project__pi__username = forms.BooleanField(required=False)
-
-    project__requestor__username = forms.CharField(label="Requestor Username Contains", max_length=25, required=False)
-    display__project__requestor__username = forms.BooleanField(required=False)
-
-    project__user_username = forms.CharField(
-        label="Username Contains", max_length=25, required=False, help_text="Active user"
-    )
-
-    display__project__project_code = forms.BooleanField(required=False)
-
-    project__status__name = forms.ModelMultipleChoiceField(
-        label="Project Status", queryset=ProjectStatusChoice.objects.all().order_by("name"), required=False
-    )
-    display__project__status__name = forms.BooleanField(required=False)
-
-    project__type__name = forms.ModelMultipleChoiceField(
-        label="Project Type", queryset=ProjectTypeChoice.objects.all().order_by("name"), required=False
-    )
-    display__project__type__name = forms.BooleanField(required=False)
-
-    display__project__users = forms.BooleanField(required=False, help_text="Active users")
-
-    display__project__total_users = forms.BooleanField(required=False, help_text="Active users")
-
-    project__created_after_date = forms.DateField(
+    user_username = forms.CharField(label="Username Contains", max_length=25, required=False, help_text="Active user")
+    status__name = forms.ModelMultipleChoiceField(queryset=None, required=False)
+    type__name = forms.ModelMultipleChoiceField(queryset=None, required=False)
+    created_after_date = forms.DateField(
         widget=forms.TextInput(attrs={"class": "datepicker"}), label="After", required=False, help_text="Includes date"
     )
-    project__created_before_date = forms.DateField(
+    created_before_date = forms.DateField(
         widget=forms.TextInput(attrs={"class": "datepicker"}),
         label="Before",
         required=False,
         help_text="Does not include date",
     )
-    display__project__created = forms.BooleanField(required=False)
+    end_date = forms.DateField(widget=forms.TextInput(attrs={"class": "datepicker"}), label="End Date", required=False)
 
-    project__end_date = forms.DateField(
-        widget=forms.TextInput(attrs={"class": "datepicker"}),
-        label="Project End Date",
-        required=False,
-    )
-    display__project__end_date = forms.BooleanField(required=False)
+
+class ProjectSearchForm(SearchForm):
+    display__title = forms.BooleanField(required=False)
+    display__description = forms.BooleanField(required=False)
+    display__pi__username = forms.BooleanField(required=False)
+    display__requestor__username = forms.BooleanField(required=False)
+    display__project_code = forms.BooleanField(required=False)
+    display__resources = forms.BooleanField(required=False)
+
+    title = forms.CharField(label="Project Title Contains", max_length=100, required=False)
+    description = forms.CharField(label="Project Description Contains", max_length=100, required=False)
+    pi__username = forms.CharField(label="PI Username Contains", max_length=25, required=False)
+    requestor__username = forms.CharField(label="Requestor Username Contains", max_length=25, required=False)
 
     projects_using_ai = forms.BooleanField(label="Only AI", required=False)
-    display__project__resources = forms.BooleanField(required=False)
 
-    projectattribute_form = ProjectAttributeSearchForm()
-    projectattribute_helper = AttributeFormSetHelper("project")
+    attribute_form = ProjectAttributeSearchForm()
+    attribute_helper = AttributeFormSetHelper("project")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        self.fields["status__name"].queryset = (
+            ProjectStatusChoice.objects.all().order_by("name")
+        )
+        self.fields["type__name"].queryset = (
+            ProjectTypeChoice.objects.all().order_by("name")
+        )
 
         self.helper = FormHelper(self)
         self.helper.use_custom_control = False
@@ -145,23 +135,23 @@ class ProjectSearchForm(forms.Form):
             Accordion(
                 AccordionGroup(
                     "Filters",
-                    "project__title",
-                    "project__description",
-                    "project__pi__username",
-                    "project__requestor__username",
-                    "project__user_username",
-                    "project__status__name",
-                    "project__type__name",
+                    "title",
+                    "description",
+                    "pi__username",
+                    "requestor__username",
+                    "user_username",
+                    "status__name",
+                    "type__name",
                     "projects_using_ai",
                     Fieldset(
                         "Created Date Range",
                         Div(
-                            Div("project__created_after_date", css_class="col"),
-                            Div("project__created_before_date", css_class="col"),
+                            Div("created_after_date", css_class="col"),
+                            Div("created_before_date", css_class="col"),
                             css_class="row",
                         ),
                     ),
-                    "project__end_date",
+                    "end_date",
                     active=False,
                 ),
             ),
@@ -176,20 +166,20 @@ class ProjectSearchForm(forms.Form):
                         "<strong>Select All</strong>"
                         "</label> </div> </div>"
                     ),
-                    "display__project__id",
-                    "display__project__url",
-                    "display__project__title",
-                    "display__project__description",
-                    "display__project__pi__username",
-                    "display__project__requestor__username",
-                    "display__project__project_code",
-                    "display__project__status__name",
-                    "display__project__type__name",
-                    "display__project__users",
-                    "display__project__total_users",
-                    "display__project__created",
-                    "display__project__end_date",
-                    "display__project__resources",
+                    "display__id",
+                    "display__url",
+                    "display__title",
+                    "display__description",
+                    "display__pi__username",
+                    "display__requestor__username",
+                    "display__project_code",
+                    "display__status__name",
+                    "display__type__name",
+                    "display__users",
+                    "display__total_users",
+                    "display__created",
+                    "display__end_date",
+                    "display__resources",
                     active=False,
                     css_id="project_search_displays",
                 ),
