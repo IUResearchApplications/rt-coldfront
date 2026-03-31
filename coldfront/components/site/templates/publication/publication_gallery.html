@@ -56,8 +56,12 @@ img {
 }
 </style>
 <div class="masonry">
-    {% for img, url, item in data %}
-        <div class="{{item}}"><a href="{{url}}"><img src={{img}} aria-hidden="true"></a></div>
+    {% for img, url, title, item in data %}
+    <div class="{{item}}">
+        <a href="{{url}}">
+            <img src="{{ img }}" alt="{{ title }}" aria-hidden="true">
+        </a>
+    </div>
     {% endfor %}
 </div>
 <script>

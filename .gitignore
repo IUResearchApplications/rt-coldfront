@@ -20,8 +20,10 @@ db.json
 .env
 .devcontainer/*
 .bin/*
-cert.pem
+cert.*
 kep.pem
 coldfront.log
 apa.txt
 pyrightconfig.json
+run_coldfront.sh
+run_python_smtpd_server.sh
