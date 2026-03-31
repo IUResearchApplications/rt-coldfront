@@ -121,13 +121,9 @@ class ProjectSearchForm(SearchForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
-        self.fields["status__name"].queryset = (
-            ProjectStatusChoice.objects.all().order_by("name")
-        )
-        self.fields["type__name"].queryset = (
-            ProjectTypeChoice.objects.all().order_by("name")
-        )
+
+        self.fields["status__name"].queryset = ProjectStatusChoice.objects.all().order_by("name")
+        self.fields["type__name"].queryset = ProjectTypeChoice.objects.all().order_by("name")
 
         self.helper = FormHelper(self)
         self.helper.use_custom_control = False
@@ -201,31 +197,23 @@ class ProjectSearchForm(SearchForm):
 class UserSearchForm(forms.Form):
     USER_TYPE_CHOICE = (("all", "All"), ("project", "Project"), ("allocation", "Allocation"))
 
-    user__usernames = forms.CharField(label="Usernames", required=False, help_text="username1,username2,...")
     display__user__username = forms.BooleanField(label="Display usernames", required=False)
-
-    user__first_name = forms.CharField(label="First Name", max_length=100, required=False)
     display__user__first_name = forms.BooleanField(label="Display first names", required=False)
-
-    user__last_name = forms.CharField(label="Last Name", max_length=100, required=False)
     display__user__last_name = forms.BooleanField(label="Display last names", required=False)
-
-    user__userprofile__department = forms.CharField(label="Department Contains", max_length=100, required=False)
     display__user__userprofile__department = forms.BooleanField(label="Display departments", required=False)
-
-    user__userprofile__title = forms.CharField(label="Title Contains", max_length=30, required=False)
     display__user__userprofile__title = forms.BooleanField(label="Display titles", required=False)
-
     display__user__total_projects = forms.BooleanField(label="Display total active projects", required=False)
-
     display__user__total_pi_projects = forms.BooleanField(label="Display total active PI projects", required=False)
-
     display__user__total_manager_projects = forms.BooleanField(
         label="Display total active Manager projects", required=False
     )
-
     display__user__total_allocations = forms.BooleanField(label="Display total active allocations", required=False)
 
+    user__usernames = forms.CharField(label="Usernames", required=False, help_text="username1,username2,...")
+    user__first_name = forms.CharField(label="First Name", max_length=100, required=False)
+    user__last_name = forms.CharField(label="Last Name", max_length=100, required=False)
+    user__userprofile__department = forms.CharField(label="Department Contains", max_length=100, required=False)
+    user__userprofile__title = forms.CharField(label="Title Contains", max_length=30, required=False)
     user__type = forms.ChoiceField(initial="all", choices=USER_TYPE_CHOICE, widget=forms.RadioSelect)
 
     def __init__(self, *args, **kwargs):
@@ -273,35 +261,46 @@ class UserSearchForm(forms.Form):
 
 class AllocationSearchForm(forms.Form):
     display__project__id = forms.BooleanField(required=False)
-
     display__project__url = forms.BooleanField(required=False)
+    display__project__title = forms.BooleanField(required=False)
+    display__project__description = forms.BooleanField(required=False)
+    display__project__pi__username = forms.BooleanField(required=False)
+    display__project__requestor__username = forms.BooleanField(required=False)
+    display__project__status__name = forms.BooleanField(required=False)
+    display__project__type__name = forms.BooleanField(required=False)
+    display__project__created = forms.BooleanField(required=False)
+    display__project__end_date = forms.BooleanField(required=False)
+    display__project__users = forms.BooleanField(
+        required=False,
+        help_text='Active users. Enable by selecting "only search projects". Enables the user profiles section.',
+    )
+    display__project__total_users = forms.BooleanField(required=False, help_text="Active users")
+
+    display__allocation__id = forms.BooleanField(required=False)
+    display__allocation__url = forms.BooleanField(required=False)
+    display__allocation__status__name = forms.BooleanField(required=False)
+    display__allocation__users = forms.BooleanField(
+        required=False, help_text="Active users. Enables the user profiles section."
+    )
+    display__allocation__total_users = forms.BooleanField(required=False, help_text="Active users")
+    display__allocation__created = forms.BooleanField(required=False)
+
+    display__resources__name = forms.BooleanField(required=False)
+    display__resources__resource_type__name = forms.BooleanField(required=False)
 
     project__title = forms.CharField(label="Project Title Contains", max_length=100, required=False)
-    display__project__title = forms.BooleanField(required=False)
-
     project__description = forms.CharField(label="Project Description Contains", max_length=100, required=False)
-    display__project__description = forms.BooleanField(required=False)
-
     project__pi__username = forms.CharField(label="PI Username Contains", max_length=25, required=False)
-    display__project__pi__username = forms.BooleanField(required=False)
-
     project__requestor__username = forms.CharField(label="Requestor Username Contains", max_length=25, required=False)
-    display__project__requestor__username = forms.BooleanField(required=False)
-
     project__user_username = forms.CharField(
         label="Username Contains", max_length=25, required=False, help_text="Active user"
     )
-
     project__status__name = forms.ModelMultipleChoiceField(
         label="Project Status", queryset=ProjectStatusChoice.objects.all().order_by("name"), required=False
     )
-    display__project__status__name = forms.BooleanField(required=False)
-
     project__type__name = forms.ModelMultipleChoiceField(
         label="Project Type", queryset=ProjectTypeChoice.objects.all().order_by("name"), required=False
     )
-    display__project__type__name = forms.BooleanField(required=False)
-
     project__created_after_date = forms.DateField(
         widget=forms.TextInput(attrs={"class": "datepicker"}), label="After", required=False, help_text="Includes date"
     )
@@ -311,41 +310,16 @@ class AllocationSearchForm(forms.Form):
         required=False,
         help_text="Does not include date",
     )
-    display__project__created = forms.BooleanField(required=False)
-
     project__end_date = forms.DateField(
-        widget=forms.TextInput(attrs={"class": "datepicker"}),
-        label="Project End Date",
-        required=False,
+        widget=forms.TextInput(attrs={"class": "datepicker"}), label="Project End Date", required=False
     )
-    display__project__end_date = forms.BooleanField(required=False)
-
-    display__project__users = forms.BooleanField(
-        required=False,
-        help_text='Active users. Enable by selecting "only search projects". Enables the user profiles section.',
-    )
-
-    display__project__total_users = forms.BooleanField(required=False, help_text="Active users")
-
-    display__allocation__id = forms.BooleanField(required=False)
-
-    display__allocation__url = forms.BooleanField(required=False)
 
     allocation__user_username = forms.CharField(
         label="Username Contains", max_length=25, required=False, help_text="Active user"
     )
-
     allocation__status__name = forms.ModelMultipleChoiceField(
         label="Allocation Status", queryset=AllocationStatusChoice.objects.all().order_by("name"), required=False
     )
-    display__allocation__status__name = forms.BooleanField(required=False)
-
-    display__allocation__users = forms.BooleanField(
-        required=False, help_text="Active users. Enables the user profiles section."
-    )
-
-    display__allocation__total_users = forms.BooleanField(required=False, help_text="Active users")
-
     allocation__created_after_date = forms.DateField(
         widget=forms.TextInput(attrs={"class": "datepicker"}), label="After", required=False, help_text="Includes date"
     )
@@ -355,17 +329,13 @@ class AllocationSearchForm(forms.Form):
         required=False,
         help_text="Does not include date",
     )
-    display__allocation__created = forms.BooleanField(required=False)
 
     resources__name = forms.ModelMultipleChoiceField(
         label="Resource Name", queryset=Resource.objects.filter(is_allocatable=True).order_by("name"), required=False
     )
-    display__resources__name = forms.BooleanField(required=False)
-
     resources__resource_type__name = forms.ModelMultipleChoiceField(
         label="Resource Type", queryset=ResourceType.objects.all().order_by("name"), required=False
     )
-    display__resources__resource_type__name = forms.BooleanField(required=False)
 
     allocationattribute_form = AllocationAttributeSearchForm()
     allocationattribute_helper = AttributeFormSetHelper("allocation")
