@@ -198,7 +198,7 @@ class ProjectTable(BaseSearchTable):
             "projectuser__user__username__icontains": data,
             "projectuser__status__name": "Active",
         },
-        "projects_using_ai": {
+        "projects_using_ai": lambda data: {
             "allocation__allocationattribute__allocation_attribute_type__name": "Has DL Workflow",
             "allocation__allocationattribute__value": "Yes",
             "allocation__status__name": "Active",
