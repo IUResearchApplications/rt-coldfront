@@ -1,25 +1,11 @@
 from crispy_forms.bootstrap import Accordion, AccordionGroup, FormActions, InlineRadios
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import (
-    HTML,
-    Column,
-    Div,
-    Fieldset,
-    Layout,
-    LayoutObject,
-    Reset,
-    Row,
-    Submit,
-)
+from crispy_forms.layout import HTML, Column, Div, Fieldset, Layout, LayoutObject, Reset, Row, Submit
 from django import forms
 from django.template.loader import render_to_string
 
 from coldfront.core.allocation.models import AllocationAttributeType, AllocationStatusChoice
-from coldfront.core.project.models import (
-    ProjectAttributeType,
-    ProjectStatusChoice,
-    ProjectTypeChoice,
-)
+from coldfront.core.project.models import ProjectAttributeType, ProjectStatusChoice, ProjectTypeChoice
 from coldfront.core.resource.models import Resource, ResourceType
 
 
@@ -31,77 +17,62 @@ class AttributeFormSetHelper(FormHelper):
             Div(
                 Div(
                     Row(
-                        Column(f"{type}attribute__name"),
-                        Column(f"{type}attribute__value"),
+                        Column("attribute__name"),
+                        Column("attribute__value"),
                     ),
                     Row(
-                        Column(f"{type}attribute__has_usage"),
-                        Column(f"{type}attribute__equality"),
-                        Column(f"{type}attribute__usage"),
-                        Column(f"{type}attribute__usage_format"),
+                        Column("attribute__has_usage"),
+                        Column("attribute__equality"),
+                        Column("attribute__usage"),
+                        Column("attribute__usage_format"),
+                        css_id=f"{type}-usage-row",
+                        css_class="d-none",
                     ),
                     css_class="card-body",
+                    css_id=f"{type}-attribute-row",
                 ),
                 css_class="card mb-3",
             )
         )
 
 
-class AllocationAttributeSearchForm(forms.Form):
+class AttributeSearchForm(forms.Form):
+    prefix = ""
+
     EQUALITY_CHOICES = (("lt", "<"), ("gt", ">"))
     FORMAT_CHOICES = (("whole", ".00"), ("percent", "%"))
     YES_NO_CHOICES = ((1, "Yes"), (0, "No"))
 
-    allocationattribute__name = forms.ModelChoiceField(
-        label="Allocation Attribute Name",
-        queryset=AllocationAttributeType.objects.none(),
-        help_text=("To display the list of allocation attributes at least one resource must be selected."),
-        required=False,
-    )
-    allocationattribute__value = forms.CharField(label="Allocation Attribute Value", max_length=50, required=False)
-    allocationattribute__has_usage = forms.ChoiceField(
-        initial=0,
-        label="Has usage",
-        choices=YES_NO_CHOICES,
-        required=False,
-    )
-    allocationattribute__equality = forms.ChoiceField(label="Equality", choices=EQUALITY_CHOICES, required=False)
-    allocationattribute__usage = forms.FloatField(label="Usage", required=False)
-    allocationattribute__usage_format = forms.ChoiceField(label="Format", choices=FORMAT_CHOICES, required=False)
+    attribute__name = forms.ModelChoiceField(queryset=None, required=False)
+    attribute__value = forms.CharField(max_length=50, required=False)
+    attribute__has_usage = forms.ChoiceField(initial=0, choices=YES_NO_CHOICES, required=False)
+    attribute__equality = forms.ChoiceField(label="Equality", choices=EQUALITY_CHOICES, required=False)
+    attribute__usage = forms.FloatField(label="Usage", required=False)
+    attribute__usage_format = forms.ChoiceField(label="Format", choices=FORMAT_CHOICES, required=False)
 
+
+class AllocationAttributeSearchForm(AttributeSearchForm):
     def __init__(self, *args, resources=None, **kwargs):
         super().__init__(*args, **kwargs)
         if resources:
-            self.fields["allocationattribute__name"].queryset = (
+            self.fields["attribute__name"].queryset = (
                 AllocationAttributeType.objects.prefetch_related("attribute_type")
                 .filter(linked_resources__in=resources)
                 .distinct()
                 .order_by("name")
             )
         else:
-            self.fields["allocationattribute__name"].queryset = AllocationAttributeType.objects.none()
+            self.fields["attribute__name"].queryset = AllocationAttributeType.objects.none()
+
+        self.fields[
+            "attribute__name"
+        ].help_text = "To display the list of allocation attributes at least one resource must be selected."
 
 
-class ProjectAttributeSearchForm(forms.Form):
-    EQUALITY_CHOICES = (("lt", "<"), ("gt", ">"))
-    FORMAT_CHOICES = (("whole", ".00"), ("percent", "%"))
-    YES_NO_CHOICES = ((1, "Yes"), (0, "No"))
-
-    projectattribute__name = forms.ModelChoiceField(
-        label="Project Attribute Name",
-        queryset=ProjectAttributeType.objects.all(),
-        required=False,
-    )
-    projectattribute__value = forms.CharField(label="Project Attribute Value", max_length=50, required=False)
-    projectattribute__has_usage = forms.ChoiceField(
-        initial=0,
-        label="Has usage",
-        choices=YES_NO_CHOICES,
-        required=False,
-    )
-    projectattribute__equality = forms.ChoiceField(label="Equality", choices=EQUALITY_CHOICES, required=False)
-    projectattribute__usage = forms.FloatField(label="Usage", required=False)
-    projectattribute__usage_format = forms.ChoiceField(label="Format", choices=FORMAT_CHOICES, required=False)
+class ProjectAttributeSearchForm(AttributeSearchForm):
+    def __init__(self, *args, resources=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["attribute__name"].queryset = ProjectAttributeType.objects.all()
 
 
 class ProjectSearchForm(forms.Form):

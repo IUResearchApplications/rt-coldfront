@@ -46,7 +46,7 @@ class BaseSearchTable:
         all_attributes = {}
         attribute_types = []
         for entry in self.attribute_data:
-            attribute_type = entry.get(f"{self.type}attribute__name")
+            attribute_type = entry.get("attribute__name")
             if attribute_type:
                 attribute_types.append(attribute_type)
 
@@ -85,16 +85,17 @@ class BaseSearchTable:
                 columns.append({"display_name": display_name.title(), "field_name": field_name})
 
         for entry in self.attribute_data:
-            attribute_type = entry.get(f"{self.type}attribute__name")
+            print(entry)
+            attribute_type = entry.get("attribute__name")
             if attribute_type:
                 display_name = attribute_type.name
-                field_name = f"{self.type}attribute__name"
+                field_name = "attribute__name"
                 columns.append({"display_name": display_name, "field_name": field_name, "id": attribute_type.id})
 
-                has_usage = int(entry.get(f"{self.type}attribute__has_usage"))
+                has_usage = int(entry.get("attribute__has_usage"))
                 if has_usage and int(has_usage):
                     display_name += " Usage"
-                    field_name = f"{self.type}attribute__has_usage"
+                    field_name = "attribute__has_usage"
                     columns.append({"display_name": display_name, "field_name": field_name, "id": attribute_type.id})
 
         self.columns = columns
@@ -118,42 +119,42 @@ class BaseSearchTable:
         return self.rows, self.columns
 
     def filter_by_attribute(self, queryset: QuerySet, entry: dict) -> QuerySet:
-        attribute_type = entry.get(f"{self.type}attribute__name")
-        attribute_value = entry.get(f"{self.type}attribute__value")
+        attribute_type = entry.get("attribute__name")
+        attribute_value = entry.get("attribute__value")
         if not (attribute_type and attribute_value):
             return queryset
 
         return queryset.filter(
             **{
-                f"{self.type}attribute__{self.attr_type}": attribute_type,
-                f"{self.type}attribute__value__icontains": attribute_value,
+                "attribute__{self.attr_type}": attribute_type,
+                "attribute__value__icontains": attribute_value,
             }
         )
 
     def filter_by_usage(self, queryset: QuerySet, entry: dict) -> QuerySet:
-        attribute_has_usage = entry.get(f"{self.type}attribute__has_usage")
+        attribute_has_usage = entry.get("attribute__has_usage")
         if attribute_has_usage is None or not int(attribute_has_usage):
             return queryset
 
-        attribute_type = entry.get(f"{self.type}attribute__name")
-        attribute_usage = entry.get(f"{self.type}attribute__usage")
-        attribute_equality = entry.get(f"{self.type}attribute__equality")
+        attribute_type = entry.get("attribute__name")
+        attribute_usage = entry.get("attribute__usage")
+        attribute_equality = entry.get("attribute__equality")
         if not (attribute_type and attribute_usage):
             return queryset
 
-        queryset = queryset.filter(**{f"{self.type}attribute__{self.attr_type}": attribute_type})
-        attribute_usage_format = entry.get(f"{self.type}attribute__usage_format")
+        queryset = queryset.filter(**{f"attribute__{self.attr_type}": attribute_type})
+        attribute_usage_format = entry.get("attribute__usage_format")
         if attribute_usage_format == "whole":
             if attribute_equality == "lt":
                 queryset = queryset.filter(
-                    **{f"{self.type}attribute__{self.type}attributeusage__value__lt": attribute_usage}
+                    **{f"attribute__{self.type}attributeusage__value__lt": attribute_usage}
                 )
             elif attribute_equality == "gt":
                 queryset = queryset.filter(
-                    **{f"{self.type}attribute__{self.type}attributeusage__value__gt": attribute_usage}
+                    **{f"attribute__{self.type}attributeusage__value__gt": attribute_usage}
                 )
         elif attribute_usage_format == "percent":
-            attribute_ids = queryset.values_list(f"{self.type}attribute__{self.type}attributeusage", flat=True)
+            attribute_ids = queryset.values_list(f"attribute__{self.type}attributeusage", flat=True)
             attribute_ids = [attribute_id for attribute_id in attribute_ids if attribute_id is not None]
             attribute_usages = self.get_attribute_usage_model().objects.filter(
                 **{f"{self.type}_attribute__id__in": attribute_ids}
@@ -249,10 +250,12 @@ class ProjectTable(BaseSearchTable):
             attributes = split[1:]
             if model == "project":
                 model = project_obj
-            elif model == "projectattribute":
+            elif model == "attribute":
                 model = None
 
             if model is not None:
+                if model == "attribute":
+                    model = "projectattribute"
                 current_attribute = model
                 for attribute in attributes:
                     if hasattr(current_attribute, attribute):
@@ -455,10 +458,12 @@ class AllocationTable(BaseSearchTable):
                 model = getattr(allocation_obj, model)
             elif model == "resources":
                 model = allocation_obj.get_parent_resource
-            elif model == "allocationattribute":
+            elif model == "attribute":
                 model = None
 
             if model is not None:
+                if model == "attribute":
+                    model = "allocationattribute"
                 current_attribute = model
                 for attribute in attributes:
                     if hasattr(current_attribute, attribute):

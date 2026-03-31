@@ -125,20 +125,23 @@ Project and Allocation Export List
   var linked_allocation_attribute_types = JSON.parse(document.getElementById("linked_allocation_attribute_types").textContent)
   var active_tab = JSON.parse(document.getElementById("active_tab").textContent)
 
-  function toggleUsageFields(value, base_div_id, type) {
+  function toggleUsageFields(value, ele, type) {
     const attribute_type_ids = type === 'allocation' ? allocation_attribute_type_ids : project_attribute_type_ids;
-    const show = attribute_type_ids.includes(value);
-    const suffixes = ['has_usage', 'equality', 'usage', 'usage_format'];
-    suffixes.forEach(suffix => $(`${base_div_id}${type}attribute__${suffix}`).toggle(show));
+    element = $(ele).parents('[id*="-attribute-row"]').children('[id*="-usage-row"]');
+    attribute_type_ids.includes(value) ? element.removeClass("d-none") : element.addClass("d-none");
+  }
+
+  function resetAttributeUsageFieldsToDefaults(base_div_id, type) {
+    $(`${base_div_id}attribute__has_usage`).val('0');
+    $(`${base_div_id}attribute__equality`).val('lt');
+    $(`${base_div_id}attribute__usage`).val('');
+    $(`${base_div_id}attribute__usage_format`).val('whole');
   }
 
   function resetAttributeFieldsToDefaults(base_div_id, type) {
-    $(`${base_div_id}${type}attribute__name`).val(null);
-    $(`${base_div_id}${type}attribute__value`).val('');
-    $(`${base_div_id}${type}attribute__has_usage`).val('0');
-    $(`${base_div_id}${type}attribute__equality`).val('lt');
-    $(`${base_div_id}${type}attribute__usage`).val('');
-    $(`${base_div_id}${type}attribute__usage_format`).val('whole');
+    $(`${base_div_id}attribute__name`).val(null);
+    $(`${base_div_id}attribute__value`).val('');
+    resetAttributeUsageFieldsToDefaults(base_div_id, type)
   }
 
   function displayOptionIsSelected(form) {
@@ -165,22 +168,16 @@ Project and Allocation Export List
       $(`#${id}`).prop('checked', true);
     }
   }
-  
+
   function bindAddFormButton(group_prefix) {
-    $(`[id*='${group_prefix}attribute__name']`).each(function (data) {
-      let id = $(this)[0].id;
-      if (id.includes('div')) {
-        return;
-      }
-
-      $(this).on('change', function (evt) {
+    $(`[id^="id_${group_prefix}attribute-"][id$="-attribute__name"]`).each(function () {
+      const ele = $(this)
+      ele.on('change', function (evt) {
+        toggleUsageFields(parseInt(evt.target.value), this, group_prefix);
         const id = evt.target.id
-        let base_div_id = '#div_' + id.slice(0, id.indexOf('-', id.indexOf('-') + 1) + 1);
-        toggleUsageFields(parseInt(evt.target.value), base_div_id, group_prefix);
+        resetAttributeUsageFieldsToDefaults('#' + id.substr(0, id.lastIndexOf('-')) + '-', group_prefix)
       })
-
-      base_div_id = '#div_' + id.slice(0, id.indexOf('-', id.indexOf('-') + 1) + 1);
-      toggleUsageFields(parseInt(id = $(this)[0].value), base_div_id, group_prefix);
+      toggleUsageFields(parseInt(ele[0].value), this, group_prefix);
     })
 
     $(`#id_formset_add_${group_prefix}_attribute_button`).on('click', function() {
@@ -190,19 +187,13 @@ Project and Allocation Export List
       row.innerHTML = row.innerHTML.replaceAll('-0-', '-' + form_count + '-');
       $(`#id_${group_prefix}attribute_formset`).append(row);
   
-      const name_field = $(`#id_${group_prefix}attribute-${form_count}-${group_prefix}attribute__name`);
-  
+      const name_field = $(`#id_${group_prefix}attribute-${form_count}-attribute__name`);
       name_field.on('change', function (evt) {
-        id = evt.target.id;
-        let base_div_id = '#div_' + id.slice(0, id.indexOf('-', id.indexOf('-') + 1) + 1);
-        toggleUsageFields(parseInt(evt.target.value), base_div_id, group_prefix);
+        toggleUsageFields(parseInt(evt.target.value), this, group_prefix);
       })
-  
-  
-      base_div_id = `#div_id_${group_prefix}attribute-${form_count}-`;
+
       const base_id = `#id_${group_prefix}attribute-${form_count}-`;
       resetAttributeFieldsToDefaults(base_id, group_prefix);
-      toggleUsageFields(parseInt(id = name_field.val()), base_div_id, group_prefix);
   
       form_count++;
       $(`#id_${group_prefix}attribute-TOTAL_FORMS`).val(form_count);
@@ -253,7 +244,7 @@ Project and Allocation Export List
 
     $("#id_allocation_search-resources__name").on('click', function(evt) {
       let options = [];
-      const selected_resources = $("#id_allocation_search-resources__name").val();
+      const selected_resources = $(this).val();
       for (let i = 0; i < selected_resources.length; i++) {
         options.push(linked_allocation_attribute_types[selected_resources[i]]);
       }
@@ -262,10 +253,12 @@ Project and Allocation Export List
       options.flat().forEach(element => {
         options_set.add(element);
       });
-
-      let matches = $("[id*=allocationattribute__name]");
+      let matches = $("[id*=attribute__name]");
       for (let i = 0; i < matches.length; i++) {
         const id = matches[i].id;
+        if (id.includes('project')) {
+          continue;
+        }
         
         if (!id.includes('div') && !id.includes('hint')) {
           let value = $("#" + id + " option:selected").val();
