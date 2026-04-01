@@ -10,35 +10,43 @@ from coldfront.core.resource.models import Resource, ResourceType
 
 
 class AttributeFormSetHelper(FormHelper):
-    def __init__(self, type, *args, **kwargs):
+    """Helper for rendering attribute formsets."""
+
+    def __init__(self, attribute_type, include_usage=True, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.use_custom_control = False
+        layout_elements = [
+            Row(Column("attribute__name"), Column("attribute__value")),
+        ]
+
+        if include_usage:
+            layout_elements.append(
+                Row(
+                    Column("attribute__has_usage"),
+                    Column("attribute__equality"),
+                    Column("attribute__usage"),
+                    Column("attribute__usage_format"),
+                    css_id=f"{attribute_type}-usage-row",
+                    css_class="d-none",
+                )
+            )
+
         self.layout = Layout(
             Div(
                 Div(
-                    Row(
-                        Column("attribute__name"),
-                        Column("attribute__value"),
-                    ),
-                    Row(
-                        Column("attribute__has_usage"),
-                        Column("attribute__equality"),
-                        Column("attribute__usage"),
-                        Column("attribute__usage_format"),
-                        css_id=f"{type}-usage-row",
-                        css_class="d-none",
-                    ),
+                    *layout_elements,
                     css_class="card-body",
-                    css_id=f"{type}-attribute-row",
+                    css_id=f"{attribute_type}-attribute-row",
                 ),
                 css_class="card mb-3",
             )
         )
 
 
-class AttributeSearchForm(forms.Form):
-    prefix = ""
+class BaseAttributeSearchForm(forms.Form):
+    """Base form for attribute search."""
 
+    prefix = ""
     EQUALITY_CHOICES = (("lt", "<"), ("gt", ">"))
     FORMAT_CHOICES = (("whole", ".00"), ("percent", "%"))
     YES_NO_CHOICES = ((1, "Yes"), (0, "No"))
@@ -50,32 +58,63 @@ class AttributeSearchForm(forms.Form):
     attribute__usage = forms.FloatField(label="Usage", required=False)
     attribute__usage_format = forms.ChoiceField(label="Format", choices=FORMAT_CHOICES, required=False)
 
-
-class AllocationAttributeSearchForm(AttributeSearchForm):
-    def __init__(self, *args, resources=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if resources:
-            self.fields["attribute__name"].queryset = (
+        self.setup_attribute_field_help_text()
+
+    def setup_attribute_field_help_text(self):
+        """Set help text for attribute field."""
+        if "attribute__name" in self.fields:
+            self.fields["attribute__name"].help_text = "Select an attribute to search by."
+
+
+class AllocationAttributeSearchForm(BaseAttributeSearchForm):
+    """Search form for allocation attributes with resource-based filtering."""
+
+    def __init__(self, *args, resources=None, attribute_type_queryset=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setup_queryset(resources, attribute_type_queryset)
+
+    def setup_queryset(self, resources, attribute_type_queryset):
+        """Setup the attribute name queryset."""
+        if attribute_type_queryset is not None:
+            queryset = attribute_type_queryset
+        elif resources:
+            queryset = (
                 AllocationAttributeType.objects.prefetch_related("attribute_type")
                 .filter(linked_resources__in=resources)
                 .distinct()
                 .order_by("name")
             )
         else:
-            self.fields["attribute__name"].queryset = AllocationAttributeType.objects.none()
+            queryset = AllocationAttributeType.objects.none()
 
+        self.fields["attribute__name"].queryset = queryset
         self.fields[
             "attribute__name"
         ].help_text = "To display the list of allocation attributes at least one resource must be selected."
 
 
-class ProjectAttributeSearchForm(AttributeSearchForm):
-    def __init__(self, *args, resources=None, **kwargs):
+class ProjectAttributeSearchForm(BaseAttributeSearchForm):
+    """Search form for project attributes."""
+
+    def __init__(self, *args, attribute_type_queryset=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["attribute__name"].queryset = ProjectAttributeType.objects.all()
+        self.setup_queryset(attribute_type_queryset)
+
+    def setup_queryset(self, attribute_type_queryset):
+        """Setup the attribute name queryset."""
+        if attribute_type_queryset is not None:
+            queryset = attribute_type_queryset
+        else:
+            queryset = ProjectAttributeType.objects.all()
+
+        self.fields["attribute__name"].queryset = queryset
 
 
 class SearchForm(forms.Form):
+    """Base search form with common display and filter fields."""
+
     display__id = forms.BooleanField(required=False)
     display__url = forms.BooleanField(required=False)
     display__status__name = forms.BooleanField(required=False)
@@ -83,7 +122,6 @@ class SearchForm(forms.Form):
     display__end_date = forms.BooleanField(required=False)
     display__users = forms.BooleanField(required=False, help_text="Active users")
     display__total_users = forms.BooleanField(required=False, help_text="Active users")
-    display__status__name = forms.BooleanField(required=False)
     display__type__name = forms.BooleanField(required=False)
 
     user_username = forms.CharField(label="Username Contains", max_length=25, required=False, help_text="Active user")
@@ -100,8 +138,17 @@ class SearchForm(forms.Form):
     )
     end_date = forms.DateField(widget=forms.TextInput(attrs={"class": "datepicker"}), label="End Date", required=False)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def get_ordered_queryset(self, model, field_name="name"):
+        """Get an ordered queryset for a model."""
+        return model.objects.all().order_by(field_name)
+
 
 class ProjectSearchForm(SearchForm):
+    """Form for searching projects with filters, displays, and attributes."""
+
     display__title = forms.BooleanField(required=False)
     display__description = forms.BooleanField(required=False)
     display__pi__username = forms.BooleanField(required=False)
@@ -121,10 +168,16 @@ class ProjectSearchForm(SearchForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.setup_querysets()
+        self.setup_layout()
 
-        self.fields["status__name"].queryset = ProjectStatusChoice.objects.all().order_by("name")
-        self.fields["type__name"].queryset = ProjectTypeChoice.objects.all().order_by("name")
+    def setup_querysets(self):
+        """Setup querysets for status and type fields."""
+        self.fields["status__name"].queryset = self.get_ordered_queryset(ProjectStatusChoice)
+        self.fields["type__name"].queryset = self.get_ordered_queryset(ProjectTypeChoice)
 
+    def setup_layout(self):
+        """Setup the form layout with accordions."""
         self.helper = FormHelper(self)
         self.helper.use_custom_control = False
         self.helper.layout = Layout(
@@ -195,6 +248,8 @@ class ProjectSearchForm(SearchForm):
 
 
 class UserSearchForm(forms.Form):
+    """Form for searching users with filters and display options."""
+
     USER_TYPE_CHOICE = (("all", "All"), ("project", "Project"), ("allocation", "Allocation"))
 
     display__username = forms.BooleanField(label="Display usernames", required=False)
@@ -204,9 +259,7 @@ class UserSearchForm(forms.Form):
     display__userprofile__title = forms.BooleanField(label="Display titles", required=False)
     display__total_projects = forms.BooleanField(label="Display total active projects", required=False)
     display__total_pi_projects = forms.BooleanField(label="Display total active PI projects", required=False)
-    display__total_manager_projects = forms.BooleanField(
-        label="Display total active Manager projects", required=False
-    )
+    display__total_manager_projects = forms.BooleanField(label="Display total active Manager projects", required=False)
     display__total_allocations = forms.BooleanField(label="Display total active allocations", required=False)
 
     usernames = forms.CharField(label="Usernames", required=False, help_text="username1,username2,...")
@@ -218,7 +271,10 @@ class UserSearchForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.setup_layout()
 
+    def setup_layout(self):
+        """Setup the form layout with accordions."""
         self.helper = FormHelper(self)
         self.helper.use_custom_control = False
         self.helper.layout = Layout(
@@ -260,6 +316,8 @@ class UserSearchForm(forms.Form):
 
 
 class AllocationSearchForm(forms.Form):
+    """Form for searching allocations with project, allocation, and resource filters."""
+
     display__project__id = forms.BooleanField(required=False)
     display__project__url = forms.BooleanField(required=False)
     display__project__title = forms.BooleanField(required=False)
@@ -295,12 +353,8 @@ class AllocationSearchForm(forms.Form):
     project__user_username = forms.CharField(
         label="Username Contains", max_length=25, required=False, help_text="Active user"
     )
-    project__status__name = forms.ModelMultipleChoiceField(
-        label="Project Status", queryset=ProjectStatusChoice.objects.all().order_by("name"), required=False
-    )
-    project__type__name = forms.ModelMultipleChoiceField(
-        label="Project Type", queryset=ProjectTypeChoice.objects.all().order_by("name"), required=False
-    )
+    project__status__name = forms.ModelMultipleChoiceField(label="Project Status", queryset=None, required=False)
+    project__type__name = forms.ModelMultipleChoiceField(label="Project Type", queryset=None, required=False)
     project__created_after_date = forms.DateField(
         widget=forms.TextInput(attrs={"class": "datepicker"}), label="After", required=False, help_text="Includes date"
     )
@@ -317,9 +371,7 @@ class AllocationSearchForm(forms.Form):
     allocation__user_username = forms.CharField(
         label="Username Contains", max_length=25, required=False, help_text="Active user"
     )
-    allocation__status__name = forms.ModelMultipleChoiceField(
-        label="Allocation Status", queryset=AllocationStatusChoice.objects.all().order_by("name"), required=False
-    )
+    allocation__status__name = forms.ModelMultipleChoiceField(label="Allocation Status", queryset=None, required=False)
     allocation__created_after_date = forms.DateField(
         widget=forms.TextInput(attrs={"class": "datepicker"}), label="After", required=False, help_text="Includes date"
     )
@@ -330,11 +382,9 @@ class AllocationSearchForm(forms.Form):
         help_text="Does not include date",
     )
 
-    resources__name = forms.ModelMultipleChoiceField(
-        label="Resource Name", queryset=Resource.objects.filter(is_allocatable=True).order_by("name"), required=False
-    )
+    resources__name = forms.ModelMultipleChoiceField(label="Resource Name", queryset=None, required=False)
     resources__resource_type__name = forms.ModelMultipleChoiceField(
-        label="Resource Type", queryset=ResourceType.objects.all().order_by("name"), required=False
+        label="Resource Type", queryset=None, required=False
     )
 
     allocationattribute_form = AllocationAttributeSearchForm()
@@ -342,7 +392,19 @@ class AllocationSearchForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.setup_querysets()
+        self.setup_layout()
 
+    def setup_querysets(self):
+        """Setup all querysets for the form."""
+        self.fields["project__status__name"].queryset = ProjectStatusChoice.objects.all().order_by("name")
+        self.fields["project__type__name"].queryset = ProjectTypeChoice.objects.all().order_by("name")
+        self.fields["allocation__status__name"].queryset = AllocationStatusChoice.objects.all().order_by("name")
+        self.fields["resources__name"].queryset = Resource.objects.filter(is_allocatable=True).order_by("name")
+        self.fields["resources__resource_type__name"].queryset = ResourceType.objects.all().order_by("name")
+
+    def setup_layout(self):
+        """Setup the form layout with accordions."""
         self.helper = FormHelper(self)
         self.helper.use_custom_control = False
         self.helper.layout = Layout(
@@ -447,6 +509,8 @@ class AllocationSearchForm(forms.Form):
 
 
 class Formset(LayoutObject):
+    """Custom layout object for rendering formsets in crispy forms."""
+
     template = "advanced_search/formset.html"
 
     def __init__(self, formset_context_name, helper_context_name=None, template=None, label=None):
