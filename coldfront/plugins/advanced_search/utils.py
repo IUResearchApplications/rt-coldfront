@@ -2,7 +2,7 @@ import datetime
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db.models.query import Prefetch, QuerySet
+from django.db.models.query import QuerySet
 from django.urls import reverse
 
 from coldfront.core.allocation.models import (
@@ -105,16 +105,14 @@ class BaseSearchTable:
             rows[idx] = self.build_row(obj, *args)
         self.rows = rows
 
-    def build_row(self, model_obj, additional_data, additional_usage_data):
+    def build_row(self, model_obj, *args):
         row = []
         for column in self.columns:
             attributes = column.get("field_name").split("__")
 
             if attributes[0] == "attribute":
                 attributes = attributes[1:]
-                current_attribute = self.get_attribute_value(
-                    model_obj.id, attributes[0], additional_data, additional_usage_data, column
-                )
+                current_attribute = self.get_attribute_value(model_obj.id, attributes[0], column, *args)
             else:
                 current_attribute = model_obj
                 for attribute in attributes:
@@ -206,7 +204,7 @@ class BaseSearchTable:
 
         return queryset
 
-    def get_attribute_value(self, id, current_attribute, additional_data, additional_usage_data, column):
+    def get_attribute_value(self, id, current_attribute, column, additional_data, additional_usage_data):
         if current_attribute == "name":
             attributes = additional_data.get(id)
             if attributes is not None:
