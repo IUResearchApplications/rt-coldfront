@@ -46,7 +46,7 @@ def publication_gallery(request):
     with open(os.path.join(static_dir, "links.txt"), "r") as f:
         contents = f.read()
         entries = contents.strip().split("\n")
-        link_data = {} # Create dictionary with key: (url, title) mapping
+        link_data = {}  # Create dictionary with key: (url, title) mapping
         for entry in entries:
             parts = entry.split("\t")
             if len(parts) >= 3:  # Ensure we have all three columns
@@ -55,11 +55,11 @@ def publication_gallery(request):
                 title = "\t".join(parts[2:])  # Handle titles with internal tabs
                 link_data[key] = (url, title)
 
-    image_dir = os.path.join(static_dir, "images") # Process images
+    image_dir = os.path.join(static_dir, "images")  # Process images
     for image_name in sorted(os.listdir(image_dir)):
         img_key = image_name.split("_")[0]
         imgs.append("/static/images/" + image_name)
-        
+
         # Get link and title if available
         if img_key in link_data:
             url, title = link_data[img_key]
@@ -68,7 +68,7 @@ def publication_gallery(request):
         else:
             lnks.append("")
             titles.append("")  # Empty title if not found
-    
+
     items = ["item item" + str((i % 3) + 1) for i in range(len(imgs))]
     context["data"] = list(zip(imgs, lnks, titles, items))
     return render(request, "publication/publication_gallery.html", context)
@@ -80,14 +80,14 @@ def publication_catalogue(request):
     context = {}
     with open(os.path.join(static_dir, "apa.txt"), "r+") as f:
         temp = {}
-        for l in f.readlines():
-            test = l.split("(")
+        for line in f.readlines():
+            test = line.split("(")
             for i in test:
                 if ("20" in i and i[:4].isdigit()) or "n.d." in i:
                     t = i[:4]
                     if t not in temp:
                         temp[t] = []
-                    temp[t].append(l)
+                    temp[t].append(line)
     cnt = 0
     temp = dict(sorted(temp.items(), reverse=True))
     for t in temp:
