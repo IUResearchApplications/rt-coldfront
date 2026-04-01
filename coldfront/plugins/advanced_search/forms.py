@@ -475,7 +475,6 @@ class AllocationSearchForm(forms.Form):
             Accordion(
                 AccordionGroup(
                     "Allocations",
-                    self.create_select_all_checkbox("allocation"),
                     "allocation__user_username",
                     "allocation__status__name",
                     Fieldset(
@@ -486,6 +485,7 @@ class AllocationSearchForm(forms.Form):
                             css_class="row",
                         ),
                     ),
+                    self.create_select_all_checkbox("allocation"),
                     "display__allocation__id",
                     "display__allocation__url",
                     "display__allocation__status__name",
