@@ -287,16 +287,19 @@ class ProjectTable(BaseSearchTable):
 
         return None
 
+    def get_model_obj(self, base_obj, model_name):
+        model = base_obj
+        if model_name == "attribute":
+            return None
+ 
+        return model
+
     def build_row(self, project_obj, additional_data, additional_usage_data):
         row = []
         for column in self.columns:
-            field_name = column.get("field_name")
-            split = field_name.split("__")
-            model = project_obj
+            split = column.get("field_name").split("__")
             attributes = split
-            if split[0] == "attribute":
-                attributes = split[1:]
-                model = None
+            model = self.get_model_obj(project_obj, split[0])
 
             current_attribute = None
             if model is not None:
@@ -308,6 +311,7 @@ class ProjectTable(BaseSearchTable):
 
                     current_attribute = self.get_special_value(project_obj, attribute)
             else:
+                attributes = split[1:]
                 current_attribute = self.get_attribute_value(
                     project_obj.id, attributes[0], additional_data, additional_usage_data, column
                 )
@@ -442,7 +446,7 @@ class AllocationTable(BaseSearchTable):
 
         return resources
 
-    def get_special_value(obj, attribute):
+    def get_special_value(self, obj, attribute):
         if attribute == "project__total_users":
             # Need to do all() or prefetch doesn't work and we end up running more queries
             all_project_users = obj.projectuser_set.all()
@@ -476,21 +480,23 @@ class AllocationTable(BaseSearchTable):
 
         return None
 
+    def get_model_obj(self, base_obj, model_name):
+        if model_name == "allocation":
+            return base_obj
+        if model_name == "project":
+            return getattr(base_obj, model_name)
+        if model_name == "resources":
+            return base_obj.get_parent_resource
+
+        return None
+
     def build_row(self, allocation_obj, additional_data, additional_usage_data):
         row = []
         for column in self.columns:
             field_name = column.get("field_name")
             split = field_name.split("__")
-            model = split[0]
             attributes = split[1:]
-            if model == "allocation":
-                model = allocation_obj
-            elif model == "project":
-                model = getattr(allocation_obj, model)
-            elif model == "resources":
-                model = allocation_obj.get_parent_resource
-            elif model == "attribute":
-                model = None
+            model = self.get_model_obj(allocation_obj, split[0])
 
             if model is not None:
                 current_attribute = model
@@ -596,11 +602,15 @@ class UserTable(BaseSearchTable):
 
         return None
 
+    def get_model_obj(self, base_obj, model_name):
+        return base_obj
+
     def build_row(self, user_obj):
         row = []
         for column in self.columns:
-            attributes = column.get("field_name").split("__")
-            current_attribute = user_obj
+            split = column.get("field_name").split("__")
+            attributes = split
+            current_attribute = self.get_model_obj(user_obj, split[0])
             for attribute in attributes:
                 if hasattr(current_attribute, attribute):
                     current_attribute = getattr(current_attribute, attribute)
