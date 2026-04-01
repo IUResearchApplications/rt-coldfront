@@ -81,7 +81,8 @@ class AllocationAttributeSearchForm(BaseAttributeSearchForm):
             queryset = attribute_type_queryset
         elif resources:
             queryset = (
-                AllocationAttributeType.objects.prefetch_related("attribute_type")
+                AllocationAttributeType.objects.select_related("attribute_type")
+                .prefetch_related("linked_resources")
                 .filter(linked_resources__in=resources)
                 .distinct()
                 .order_by("name")
@@ -115,6 +116,8 @@ class ProjectAttributeSearchForm(BaseAttributeSearchForm):
 class SearchForm(forms.Form):
     """Base search form with common display and filter fields."""
 
+    prefix = "search"
+
     display__id = forms.BooleanField(required=False)
     display__url = forms.BooleanField(required=False)
     display__status__name = forms.BooleanField(required=False)
@@ -141,9 +144,27 @@ class SearchForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def get_ordered_queryset(self, model, field_name="name"):
-        """Get an ordered queryset for a model."""
-        return model.objects.all().order_by(field_name)
+    def get_ordered_queryset(self, model, field_name="name", filter_kwargs=None):
+        """Get an ordered queryset for a model, with optional filtering."""
+        queryset = model.objects.all()
+        if filter_kwargs:
+            queryset = queryset.filter(**filter_kwargs)
+        return queryset.order_by(field_name)
+
+    def create_select_all_checkbox(self, field_prefix):
+        """Creates a reusable select all checkbox HTML component."""
+        css_id = f"div_id_{self.prefix}-select_all_{field_prefix}_displays"
+        css_name = f"{self.prefix}-select_all_{field_prefix}_displays"
+        return HTML(f'''
+            <div class="form-group">
+                <div id="{css_id}" class="form-check">
+                    <input type="checkbox" name="{css_name}" class="form-check-input" id="{css_name}">
+                    <label for="{css_name}" class="form-check-label">
+                        <strong>Select All</strong>
+                    </label>
+                </div>
+            </div>
+        ''')
 
 
 class ProjectSearchForm(SearchForm):
@@ -207,14 +228,7 @@ class ProjectSearchForm(SearchForm):
             Accordion(
                 AccordionGroup(
                     "Displays",
-                    HTML(
-                        '<div class="form-group">'
-                        '<div id="div_id_select_all_project_displays" class="form-check"> '
-                        '<input type="checkbox" name="select_all_project_displays" class="checkboxinput form-check-input" id="select_all_project_displays"> '
-                        '<label for="select_all_project_displays" class="form-check-label">'
-                        "<strong>Select All</strong>"
-                        "</label> </div> </div>"
-                    ),
+                    self.create_select_all_checkbox("project"),
                     "display__id",
                     "display__url",
                     "display__title",
@@ -230,7 +244,7 @@ class ProjectSearchForm(SearchForm):
                     "display__end_date",
                     "display__resources",
                     active=False,
-                    css_id="project_search_displays",
+                    css_id=f"{self.prefix}-project_displays",
                 ),
             ),
             Accordion(
@@ -318,6 +332,8 @@ class UserSearchForm(forms.Form):
 class AllocationSearchForm(forms.Form):
     """Form for searching allocations with project, allocation, and resource filters."""
 
+    prefix = "search"
+
     display__project__id = forms.BooleanField(required=False)
     display__project__url = forms.BooleanField(required=False)
     display__project__title = forms.BooleanField(required=False)
@@ -400,7 +416,9 @@ class AllocationSearchForm(forms.Form):
         self.fields["project__status__name"].queryset = ProjectStatusChoice.objects.all().order_by("name")
         self.fields["project__type__name"].queryset = ProjectTypeChoice.objects.all().order_by("name")
         self.fields["allocation__status__name"].queryset = AllocationStatusChoice.objects.all().order_by("name")
-        self.fields["resources__name"].queryset = Resource.objects.filter(is_allocatable=True).order_by("name")
+        self.fields["resources__name"].queryset = (
+            Resource.objects.filter(is_allocatable=True).select_related("resource_type").order_by("name")
+        )
         self.fields["resources__resource_type__name"].queryset = ResourceType.objects.all().order_by("name")
 
     def setup_layout(self):
@@ -436,14 +454,7 @@ class AllocationSearchForm(forms.Form):
                     Accordion(
                         AccordionGroup(
                             "Displays",
-                            HTML(
-                                '<div class="form-group">'
-                                '<div id="div_id_select_all_displays" class="form-check"> '
-                                '<input type="checkbox" name="select_all_displays" class="checkboxinput form-check-input" id="select_all_displays"> '
-                                '<label for="select_all_displays" class="form-check-label">'
-                                "<strong>Select All</strong>"
-                                "</label> </div> </div>"
-                            ),
+                            self.create_select_all_checkbox("project"),
                             "display__project__id",
                             "display__project__url",
                             "display__project__title",
@@ -455,6 +466,7 @@ class AllocationSearchForm(forms.Form):
                             "display__project__created",
                             "display__project__end_date",
                             active=False,
+                            css_id=f"{self.prefix}-project_displays",
                         ),
                     ),
                     active=False,
@@ -463,6 +475,7 @@ class AllocationSearchForm(forms.Form):
             Accordion(
                 AccordionGroup(
                     "Allocations",
+                    self.create_select_all_checkbox("allocation"),
                     "allocation__user_username",
                     "allocation__status__name",
                     Fieldset(
@@ -480,6 +493,7 @@ class AllocationSearchForm(forms.Form):
                     "display__allocation__total_users",
                     "display__allocation__created",
                     active=False,
+                    css_id=f"{self.prefix}-allocation_displays",
                 )
             ),
             Accordion(
@@ -506,6 +520,21 @@ class AllocationSearchForm(forms.Form):
             ),
             FormActions(Submit("submit", "Allocation Search"), Reset("reset", "Reset")),
         )
+
+    def create_select_all_checkbox(self, field_prefix):
+        """Create a reusable select all checkbox HTML component."""
+        css_id = f"div_id_{self.prefix}-select_all_{field_prefix}_displays"
+        css_name = f"{self.prefix}-select_all_{field_prefix}_displays"
+        return HTML(f'''
+            <div class="form-group">
+                <div id="{css_id}" class="form-check">
+                    <input type="checkbox" name="{css_name}" class="form-check-input" id="{css_name}">
+                    <label for="{css_name}" class="form-check-label">
+                        <strong>Select All</strong>
+                    </label>
+                </div>
+            </div>
+        ''')
 
 
 class Formset(LayoutObject):

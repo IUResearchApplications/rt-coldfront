@@ -151,21 +151,21 @@ Project and Allocation Export List
   function toggleNoDisplayAlert(tab) {
     $('#no_display_alert').toggle(!displayOptionIsSelected(tab));
   }
-  
+
   function bindSelectAll(group_prefix, id) {
-    $(`#${id}`).click(function () {
-      $(`input[name*='${group_prefix}']`).prop('checked', $(this).prop('checked'));
+    const select_all_id = `${group_prefix}-select_all_${id}`
+    $(`#${select_all_id}`).on('change', function () {
+      $(`#${group_prefix}-${id}`).find(`input[name*='${group_prefix}']`).prop('checked', $(this).prop('checked'));
     });
 
-    $(`input[name*='${group_prefix}']`).click(function (ele) {
-      var select_id = $(this).attr('id');
-      if (select_id != id) {
-        $(`#${id}`).prop('checked', false);
+    $(`#${group_prefix}-${id}`).find(`input[name*='${group_prefix}']`).on('change', function (ele) {
+      if ($(this).attr('id') !== select_all_id) {
+        $(`#${select_all_id}`).prop('checked', false);
       }
     });
 
     if ($(`input[name*='${group_prefix}']:checked`).length === $(`input[name*='${group_prefix}']`).length) {
-      $(`#${id}`).prop('checked', true);
+      $(`#${select_all_id}`).prop('checked', true);
     }
   }
 
@@ -205,8 +205,9 @@ Project and Allocation Export List
       $('#results_table').DataTable({bFilter: false});
     }
 
-    bindSelectAll('project_search', 'select_all_project_displays');
-    bindSelectAll('allocation_search', 'select_all_displays');
+    bindSelectAll('project_search', 'project_displays');
+    bindSelectAll('allocation_search', 'project_displays');
+    bindSelectAll('allocation_search', 'allocation_displays');
 
     $(".datepicker").flatpickr({dateFormat: "m/d/Y"});
 
