@@ -373,18 +373,18 @@ class AllocationTable(BaseSearchTable):
             .order_by("project__id")
         )
 
-        if data.get("allocation__user_username"):
+        if data.get("user_username"):
             allocations = allocations.filter(
                 allocationuser__user__username__icontains=data.get("allocation__user_username"),
                 allocationuser__status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"],
             )
 
-        if data.get("allocation__status__name"):
+        if data.get("status__name"):
             allocations = allocations.filter(status__in=data.get("allocation__status__name"))
 
-        if data.get("allocation__created_after_date"):
+        if data.get("created_after_date"):
             allocations = allocations.filter(created__gt=data.get("allocation__created_after_date"))
-        if data.get("allocation__created_before_date"):
+        if data.get("created_before_date"):
             allocations = allocations.filter(created__lt=data.get("allocation__created_before_date"))
 
         return allocations
@@ -459,7 +459,7 @@ class AllocationTable(BaseSearchTable):
         if attribute == "project__url":
             return f"{settings.CENTER_BASE_URL}{reverse('project-detail', kwargs={'pk': obj.pk})}"
 
-        if attribute == "allocation__total_users":
+        if attribute == "total_users":
             all_allocation_users = obj.allocationuser_set.all()
             filtered_allocation_users_count = 0
             for allocation_user in all_allocation_users:
@@ -467,7 +467,7 @@ class AllocationTable(BaseSearchTable):
                     filtered_allocation_users_count += 1
             return filtered_allocation_users_count
 
-        if attribute == "allocation__users":
+        if attribute == "users":
             all_allocation_users = obj.allocationuser_set.all()
             filtered_allocation_users = []
             for allocation_user in all_allocation_users:
@@ -475,27 +475,26 @@ class AllocationTable(BaseSearchTable):
                     filtered_allocation_users.append(allocation_user.user.username)
             return ", ".join(filtered_allocation_users)
 
-        if attribute == "allocation__url":
+        if attribute == "url":
             return f"{settings.CENTER_BASE_URL}{reverse('allocation-detail', kwargs={'pk': obj.pk})}"
 
         return None
 
     def get_model_obj(self, base_obj, model_name):
-        if model_name == "allocation":
-            return base_obj
-        if model_name == "project":
-            return getattr(base_obj, model_name)
+        if model_name == "attribute":
+            return None
         if model_name == "resources":
             return base_obj.get_parent_resource
 
-        return None
+        return base_obj
 
     def build_row(self, allocation_obj, additional_data, additional_usage_data):
         row = []
         for column in self.columns:
             field_name = column.get("field_name")
+            print(field_name)
             split = field_name.split("__")
-            attributes = split[1:]
+            attributes = split
             model = self.get_model_obj(allocation_obj, split[0])
 
             if model is not None:

@@ -125,11 +125,9 @@ class SearchForm(forms.Form):
     display__end_date = forms.BooleanField(required=False)
     display__users = forms.BooleanField(required=False, help_text="Active users")
     display__total_users = forms.BooleanField(required=False, help_text="Active users")
-    display__type__name = forms.BooleanField(required=False)
 
     user_username = forms.CharField(label="Username Contains", max_length=25, required=False, help_text="Active user")
     status__name = forms.ModelMultipleChoiceField(queryset=None, required=False)
-    type__name = forms.ModelMultipleChoiceField(queryset=None, required=False)
     created_after_date = forms.DateField(
         widget=forms.TextInput(attrs={"class": "datepicker"}), label="After", required=False, help_text="Includes date"
     )
@@ -176,11 +174,13 @@ class ProjectSearchForm(SearchForm):
     display__requestor__username = forms.BooleanField(required=False)
     display__project_code = forms.BooleanField(required=False)
     display__resources = forms.BooleanField(required=False)
+    display__type__name = forms.BooleanField(required=False)
 
     title = forms.CharField(label="Project Title Contains", max_length=100, required=False)
     description = forms.CharField(label="Project Description Contains", max_length=100, required=False)
     pi__username = forms.CharField(label="PI Username Contains", max_length=25, required=False)
     requestor__username = forms.CharField(label="Requestor Username Contains", max_length=25, required=False)
+    type__name = forms.ModelMultipleChoiceField(queryset=None, required=False)
 
     projects_using_ai = forms.BooleanField(label="Only AI", required=False)
 
@@ -329,10 +329,8 @@ class UserSearchForm(forms.Form):
         )
 
 
-class AllocationSearchForm(forms.Form):
+class AllocationSearchForm(SearchForm):
     """Form for searching allocations with project, allocation, and resource filters."""
-
-    prefix = "search"
 
     display__project__id = forms.BooleanField(required=False)
     display__project__url = forms.BooleanField(required=False)
@@ -349,15 +347,6 @@ class AllocationSearchForm(forms.Form):
         help_text='Active users. Enable by selecting "only search projects". Enables the user profiles section.',
     )
     display__project__total_users = forms.BooleanField(required=False, help_text="Active users")
-
-    display__allocation__id = forms.BooleanField(required=False)
-    display__allocation__url = forms.BooleanField(required=False)
-    display__allocation__status__name = forms.BooleanField(required=False)
-    display__allocation__users = forms.BooleanField(
-        required=False, help_text="Active users. Enables the user profiles section."
-    )
-    display__allocation__total_users = forms.BooleanField(required=False, help_text="Active users")
-    display__allocation__created = forms.BooleanField(required=False)
 
     display__resources__name = forms.BooleanField(required=False)
     display__resources__resource_type__name = forms.BooleanField(required=False)
@@ -384,20 +373,6 @@ class AllocationSearchForm(forms.Form):
         widget=forms.TextInput(attrs={"class": "datepicker"}), label="Project End Date", required=False
     )
 
-    allocation__user_username = forms.CharField(
-        label="Username Contains", max_length=25, required=False, help_text="Active user"
-    )
-    allocation__status__name = forms.ModelMultipleChoiceField(label="Allocation Status", queryset=None, required=False)
-    allocation__created_after_date = forms.DateField(
-        widget=forms.TextInput(attrs={"class": "datepicker"}), label="After", required=False, help_text="Includes date"
-    )
-    allocation__created_before_date = forms.DateField(
-        widget=forms.TextInput(attrs={"class": "datepicker"}),
-        label="Before",
-        required=False,
-        help_text="Does not include date",
-    )
-
     resources__name = forms.ModelMultipleChoiceField(label="Resource Name", queryset=None, required=False)
     resources__resource_type__name = forms.ModelMultipleChoiceField(
         label="Resource Type", queryset=None, required=False
@@ -411,11 +386,13 @@ class AllocationSearchForm(forms.Form):
         self.setup_querysets()
         self.setup_layout()
 
+        self.fields["display__users"].help_text = "Active users. Enables the user profiles section."
+
     def setup_querysets(self):
         """Setup all querysets for the form."""
         self.fields["project__status__name"].queryset = ProjectStatusChoice.objects.all().order_by("name")
         self.fields["project__type__name"].queryset = ProjectTypeChoice.objects.all().order_by("name")
-        self.fields["allocation__status__name"].queryset = AllocationStatusChoice.objects.all().order_by("name")
+        self.fields["status__name"].queryset = AllocationStatusChoice.objects.all().order_by("name")
         self.fields["resources__name"].queryset = (
             Resource.objects.filter(is_allocatable=True).select_related("resource_type").order_by("name")
         )
@@ -475,23 +452,23 @@ class AllocationSearchForm(forms.Form):
             Accordion(
                 AccordionGroup(
                     "Allocations",
-                    "allocation__user_username",
-                    "allocation__status__name",
+                    "user_username",
+                    "status__name",
                     Fieldset(
                         "Created Date Range",
                         Div(
-                            Div("allocation__created_after_date", css_class="col"),
-                            Div("allocation__created_before_date", css_class="col"),
+                            Div("created_after_date", css_class="col"),
+                            Div("created_before_date", css_class="col"),
                             css_class="row",
                         ),
                     ),
                     self.create_select_all_checkbox("allocation"),
-                    "display__allocation__id",
-                    "display__allocation__url",
-                    "display__allocation__status__name",
-                    "display__allocation__users",
-                    "display__allocation__total_users",
-                    "display__allocation__created",
+                    "display__id",
+                    "display__url",
+                    "display__status__name",
+                    "display__users",
+                    "display__total_users",
+                    "display__created",
                     active=False,
                     css_id=f"{self.prefix}-allocation_displays",
                 )
@@ -520,21 +497,6 @@ class AllocationSearchForm(forms.Form):
             ),
             FormActions(Submit("submit", "Allocation Search"), Reset("reset", "Reset")),
         )
-
-    def create_select_all_checkbox(self, field_prefix):
-        """Create a reusable select all checkbox HTML component."""
-        css_id = f"div_id_{self.prefix}-select_all_{field_prefix}_displays"
-        css_name = f"{self.prefix}-select_all_{field_prefix}_displays"
-        return HTML(f'''
-            <div class="form-group">
-                <div id="{css_id}" class="form-check">
-                    <input type="checkbox" name="{css_name}" class="form-check-input" id="{css_name}">
-                    <label for="{css_name}" class="form-check-label">
-                        <strong>Select All</strong>
-                    </label>
-                </div>
-            </div>
-        ''')
 
 
 class Formset(LayoutObject):
