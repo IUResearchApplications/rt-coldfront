@@ -348,8 +348,8 @@ class AllocationSearchForm(SearchForm):
     )
     display__project__total_users = forms.BooleanField(required=False, help_text="Active users")
 
-    display__resources__name = forms.BooleanField(required=False)
-    display__resources__resource_type__name = forms.BooleanField(required=False)
+    display__get_parent_resource__name = forms.BooleanField(required=False, label="Resource name")
+    display__get_parent_resource__resource_type__name = forms.BooleanField(required=False, label="Resource type name")
 
     project__title = forms.CharField(label="Project Title Contains", max_length=100, required=False)
     project__description = forms.CharField(label="Project Description Contains", max_length=100, required=False)
@@ -478,8 +478,8 @@ class AllocationSearchForm(SearchForm):
                     "Resources",
                     "resources__name",
                     "resources__resource_type__name",
-                    "display__resources__name",
-                    "display__resources__resource_type__name",
+                    "display__get_parent_resource__name",
+                    "display__get_parent_resource__resource_type__name",
                     active=False,
                 )
             ),

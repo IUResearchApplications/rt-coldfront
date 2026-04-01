@@ -2,7 +2,7 @@ import datetime
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db.models.query import QuerySet
+from django.db.models.query import Prefetch, QuerySet
 from django.urls import reverse
 
 from coldfront.core.allocation.models import (
@@ -85,7 +85,6 @@ class BaseSearchTable:
                 columns.append({"display_name": display_name.title(), "field_name": field_name})
 
         for entry in self.attribute_data:
-            print(entry)
             attribute_type = entry.get("attribute__name")
             if attribute_type:
                 display_name = attribute_type.name
@@ -105,6 +104,35 @@ class BaseSearchTable:
         for idx, obj in enumerate(self.queryset):
             rows[idx] = self.build_row(obj, *args)
         self.rows = rows
+
+    def build_row(self, model_obj, additional_data, additional_usage_data):
+        row = []
+        for column in self.columns:
+            attributes = column.get("field_name").split("__")
+
+            if attributes[0] == "attribute":
+                attributes = attributes[1:]
+                current_attribute = self.get_attribute_value(
+                    model_obj.id, attributes[0], additional_data, additional_usage_data, column
+                )
+            else:
+                current_attribute = model_obj
+                for attribute in attributes:
+                    if hasattr(current_attribute, attribute):
+                        current_attribute = getattr(current_attribute, attribute)
+                        continue
+
+                    current_attribute = self.get_special_value(model_obj, attribute)
+
+            if current_attribute is None:
+                current_attribute = ""
+
+            if type(current_attribute) in [datetime.datetime, datetime.date]:
+                current_attribute = current_attribute.isoformat()
+
+            row.append(current_attribute)
+
+        return row
 
     def build_table(self) -> tuple:
         self.get_queryset()
@@ -287,44 +315,6 @@ class ProjectTable(BaseSearchTable):
 
         return None
 
-    def get_model_obj(self, base_obj, model_name):
-        model = base_obj
-        if model_name == "attribute":
-            return None
- 
-        return model
-
-    def build_row(self, project_obj, additional_data, additional_usage_data):
-        row = []
-        for column in self.columns:
-            split = column.get("field_name").split("__")
-            attributes = split
-            model = self.get_model_obj(project_obj, split[0])
-
-            current_attribute = None
-            if model is not None:
-                current_attribute = model
-                for attribute in attributes:
-                    if hasattr(current_attribute, attribute):
-                        current_attribute = getattr(current_attribute, attribute)
-                        continue
-
-                    current_attribute = self.get_special_value(project_obj, attribute)
-            else:
-                attributes = split[1:]
-                current_attribute = self.get_attribute_value(
-                    project_obj.id, attributes[0], additional_data, additional_usage_data, column
-                )
-
-            if current_attribute is None:
-                current_attribute = ""
-
-            if type(current_attribute) in [datetime.datetime, datetime.date]:
-                current_attribute = current_attribute.isoformat()
-
-            row.append(current_attribute)
-        return row
-
     def get_attribute_model(self):
         return ProjectAttribute
 
@@ -480,46 +470,6 @@ class AllocationTable(BaseSearchTable):
 
         return None
 
-    def get_model_obj(self, base_obj, model_name):
-        if model_name == "attribute":
-            return None
-        if model_name == "resources":
-            return base_obj.get_parent_resource
-
-        return base_obj
-
-    def build_row(self, allocation_obj, additional_data, additional_usage_data):
-        row = []
-        for column in self.columns:
-            field_name = column.get("field_name")
-            print(field_name)
-            split = field_name.split("__")
-            attributes = split
-            model = self.get_model_obj(allocation_obj, split[0])
-
-            if model is not None:
-                current_attribute = model
-                for attribute in attributes:
-                    if hasattr(current_attribute, attribute):
-                        current_attribute = getattr(current_attribute, attribute)
-                        continue
-
-                    current_attribute = self.get_special_value(allocation_obj, attribute)
-            else:
-                current_attribute = self.get_attribute_value(
-                    allocation_obj.id, attributes[0], additional_data, additional_usage_data, column
-                )
-
-            if current_attribute is None:
-                current_attribute = ""
-
-            if type(current_attribute) in [datetime.datetime, datetime.date]:
-                current_attribute = current_attribute.isoformat()
-
-            row.append(current_attribute)
-
-        return row
-
     def get_attribute_model(self):
         return AllocationAttribute
 
@@ -600,24 +550,3 @@ class UserTable(BaseSearchTable):
             ).count()
 
         return None
-
-    def get_model_obj(self, base_obj, model_name):
-        return base_obj
-
-    def build_row(self, user_obj):
-        row = []
-        for column in self.columns:
-            split = column.get("field_name").split("__")
-            attributes = split
-            current_attribute = self.get_model_obj(user_obj, split[0])
-            for attribute in attributes:
-                if hasattr(current_attribute, attribute):
-                    current_attribute = getattr(current_attribute, attribute)
-                    continue
-
-                current_attribute = self.get_special_value(user_obj, attribute)
-
-            if current_attribute is None:
-                current_attribute = ""
-            row.append(current_attribute)
-        return row
