@@ -440,13 +440,17 @@ class BaseSearchTable:
         if not (attribute_type and attribute_usage):
             return queryset
 
-        queryset = queryset.filter(**{f"attribute__{self.attr_type}": attribute_type})
-        attribute_usage_format = entry.get("attribute__usage_format")
+        queryset = queryset.filter(**{f"{self.type}attribute__{self.attr_type}": attribute_type})
+        attribute_usage_format = entry.get(f"{self.type}attribute__usage_format")
         if attribute_usage_format == "whole":
             if attribute_equality == "lt":
-                queryset = queryset.filter(**{f"attribute__{self.type}attributeusage__value__lt": attribute_usage})
+                queryset = queryset.filter(
+                    **{f"{self.type}attribute__{self.type}attributeusage__value__lt": attribute_usage}
+                )
             elif attribute_equality == "gt":
-                queryset = queryset.filter(**{f"attribute__{self.type}attributeusage__value__gt": attribute_usage})
+                queryset = queryset.filter(
+                    **{f"{self.type}attribute__{self.type}attributeusage__value__gt": attribute_usage}
+                )
         elif attribute_usage_format == "percent":
             queryset = self.filter_by_usage_percent(queryset, attribute_equality, attribute_usage)
 
@@ -464,26 +468,22 @@ class BaseSearchTable:
         Returns:
             The filtered queryset with usage percentage applied
         """
-        if not self.type or self.type not in self.ATTRIBUTE_FIELD_MAP_FOR_USAGE:
-            return queryset
-
-        attribute_field = self.ATTRIBUTE_FIELD_MAP_FOR_USAGE[self.type]
-        usage_field = f"{attribute_field}usage"
+        usage_field = f"{self.type}attributeusage"
 
         annotated_queryset = queryset.annotate(
             usage_fraction=ExpressionWrapper(
-                F(f"{attribute_field}__{usage_field}__value") / F(f"{attribute_field}__value") * 100,
+                F(f"{self.type}attribute__{usage_field}__value") / F(f"{self.type}attribute__value") * 100,
                 output_field=FloatField(),
             )
         )
 
         if attribute_equality == "lt":
             annotated_queryset = annotated_queryset.filter(usage_fraction__lt=attribute_usage).exclude(
-                **{f"{attribute_field}__value": 0}
+                **{f"{self.type}attribute__value": 0}
             )
         elif attribute_equality == "gt":
             annotated_queryset = annotated_queryset.filter(usage_fraction__gt=attribute_usage).exclude(
-                **{f"{attribute_field}__value": 0}
+                **{f"{self.type}attribute__value": 0}
             )
 
         return annotated_queryset
@@ -504,7 +504,12 @@ class BaseSearchTable:
         return queryset
 
     def get_attribute_value(
-        self, parent_id: int, current_attribute: str, column: Dict[str, Any], additional_data: Dict[int, List[Any]], additional_usage_data: Dict[int, List[Any]]
+        self,
+        parent_id: int,
+        current_attribute: str,
+        column: Dict[str, Any],
+        additional_data: Dict[int, List[Any]],
+        additional_usage_data: Dict[int, List[Any]],
     ) -> Any:
         """
         Get the value of an attribute for a specific parent object.
@@ -952,9 +957,7 @@ class UserTable(BaseSearchTable):
 
         return user_profiles
 
-
     def get_special_value(self, obj: Model, attribute: str) -> Optional[Any]:
-
         """
         Get computed special values for user objects.
 
