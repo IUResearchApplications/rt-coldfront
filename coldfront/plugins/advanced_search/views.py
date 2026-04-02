@@ -48,7 +48,8 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
 
     def create_formset(self, form, prefix, **kwargs):
         formset = formset_factory(form, extra=1)
-        return formset(self.request.GET if self.request.GET else None, prefix=prefix, **kwargs)
+        filter_data = self.request.session.get("filter_data")
+        return formset(filter_data if filter_data else None, prefix=prefix, **kwargs)
 
     def clean_formset_data(self, formset, usage_attribute_ids, attribute_type):
         cleaned = []
@@ -64,8 +65,7 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
 
     def handle_project_search(self, context):
         context["active_tab"] = "project-search"
-        project_search_form = ProjectSearchForm(self.request.GET, prefix="project_search")
-        context["project_form"] = project_search_form
+        project_search_form = context["project_form"]
         project_search_formset = self.create_formset(ProjectAttributeSearchForm, "projectattribute")
         project_attribute_data = self.clean_formset_data(
             project_search_formset,
@@ -82,17 +82,8 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
 
     def handle_allocation_search(self, context):
         context["active_tab"] = "allocation-search"
-        allocation_search_form = AllocationSearchForm(self.request.GET, prefix="allocation_search")
-        context["allocation_form"] = allocation_search_form
-        selected_resources = None
-        if allocation_search_form.is_valid():
-            selected_resources = allocation_search_form.cleaned_data.get("resources__name")
-
-        allocation_search_formset = self.create_formset(
-            AllocationAttributeSearchForm,
-            "allocationattribute",
-            form_kwargs={"resources": selected_resources},
-        )
+        allocation_search_form = context["allocation_form"]
+        allocation_search_formset = context["allocationattribute_form"]
         allocation_attribute_data = self.clean_formset_data(
             allocation_search_formset,
             self.usage_attribute_ids["allocation"],
@@ -108,8 +99,7 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
 
     def handle_user_search(self, context):
         context["active_tab"] = "user-search"
-        user_search_form = UserSearchForm(self.request.GET, prefix="user_search")
-        context["user_form"] = user_search_form
+        user_search_form = context["user_form"]
         if user_search_form.is_valid():
             table = UserTable(user_search_form.cleaned_data)
             context["rows"], context["columns"] = table.build_table()
@@ -126,19 +116,62 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                 )
         return linked
 
+    def post(self, request, *args, **kwargs):
+        session = request.session
+        session["filter_data"] = request.POST.dict()
+
+        return HttpResponseRedirect(f"{reverse('advanced-search')}?submit={request.POST.get('submit')}")
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context["project_form"] = ProjectSearchForm(prefix="project_search")
-        context["allocation_form"] = AllocationSearchForm(prefix="allocation_search")
-        context["user_form"] = UserSearchForm(prefix="user_search")
+        filter_data = self.request.session.get("filter_data")
+        if filter_data:
+            project_search_form_data = {k: v for k, v in filter_data.items() if k.startswith("project_search-")}
+            allocation_search_form_data = {k: v for k, v in filter_data.items() if k.startswith("allocation_search-")}
+            user_search_form_data = {k: v for k, v in filter_data.items() if k.startswith("user_search-")}
+            project_search_form = ProjectSearchForm(project_search_form_data, prefix="project_search")
+            allocation_search_form = AllocationSearchForm(allocation_search_form_data, prefix="allocation_search")
+            user_search_form = UserSearchForm(user_search_form_data, prefix="user_search")
+        else:
+            project_search_form = ProjectSearchForm(prefix="project_search")
+            allocation_search_form = AllocationSearchForm(prefix="allocation_search")
+            user_search_form = UserSearchForm(prefix="user_search")
+
         allocation_search_formset = formset_factory(AllocationAttributeSearchForm, extra=1)
         context["allocationattribute_form"] = allocation_search_formset(prefix="allocationattribute")
+
         project_search_formset = formset_factory(ProjectAttributeSearchForm, extra=1)
         context["projectattribute_form"] = project_search_formset(prefix="projectattribute")
-        context["rows"], context["columns"] = [], []
 
-        submit = self.request.GET.get("submit")
+        project_formset_data = {}
+        allocation_formset_data = {}
+        formset_data = {}
+        if filter_data:
+            for key, value in filter_data.items():
+                if key.startswith("projectattribute-"):
+                    project_formset_data[key] = value
+                elif key.startswith("allocationattribute-"):
+                    allocation_formset_data[key] = value
+                elif not key.startswith("csrfmiddlewaretoken"):
+                    formset_data[key] = value
+
+        project_search_formset = formset_factory(ProjectAttributeSearchForm, extra=1)
+        context["projectattribute_form"] = project_search_formset(
+            project_formset_data if project_formset_data else None, prefix="projectattribute"
+        )
+
+        allocation_search_formset = formset_factory(AllocationAttributeSearchForm, extra=1)
+        context["allocationattribute_form"] = allocation_search_formset(
+            allocation_formset_data if allocation_formset_data else None, prefix="allocationattribute"
+        )
+
+        context["rows"], context["columns"] = [], []
+        context["project_form"] = project_search_form
+        context["allocation_form"] = allocation_search_form
+        context["user_form"] = user_search_form
+
+        submit = filter_data.get("submit") if filter_data else None
         if submit == "Project Search":
             self.handle_project_search(context)
         elif submit == "Allocation Search":
