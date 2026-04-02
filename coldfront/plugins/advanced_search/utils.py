@@ -1,8 +1,10 @@
 import datetime
+from typing import Any, Dict, List, Optional, Tuple
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db.models.query import QuerySet
+from django.db.models import F, FloatField, QuerySet
+from django.db.models.expressions import ExpressionWrapper
 from django.urls import reverse
 
 from coldfront.core.allocation.models import (
@@ -22,8 +24,42 @@ from coldfront.core.user.models import UserProfile
 
 
 class BaseSearchTable:
-    type = None
-    attr_type = None
+    """
+    Abstract base class for building search tables.
+
+    This class provides the foundational structure for querying and filtering
+    data across different entity types with support for custom attributes and
+    usage tracking.
+
+    Subclasses must implement:
+        - get_queryset(): Define the base queryset for the entity type
+        - get_attribute_model(): Return the attribute model class
+        - get_attribute_usage_model(): Return the usage model class
+        - get_special_value(): Handle computed fields specific to the entity
+
+    Key Features:
+        - Dynamic column building based on search parameters
+        - Attribute filtering with support for value and usage thresholds
+        - Prefetched querysets to minimize database queries
+
+    Example:
+        class ProjectTable(BaseSearchTable):
+            type = "project"
+            attr_type = "proj_attr_type"
+
+            def get_queryset(self):
+                # ... implementation
+    """
+
+    # Class attributes to be overridden by subclasses
+    type: Optional[str] = None
+    attr_type: Optional[str] = None
+
+    ATTRIBUTE_FIELD_MAP_FOR_USAGE: Dict[str, str] = {
+        "project": "projectattribute",
+        "allocation": "allocationattribute",
+        "user": "userattribute",
+    }
 
     def __init__(self, search_data: dict, attribute_data: list | None = None) -> None:
         self.search_data = search_data
@@ -50,6 +86,9 @@ class BaseSearchTable:
             if attribute_type:
                 attribute_types.append(attribute_type)
 
+        if not attribute_types:
+            return all_attributes
+
         attributes = (
             self.get_attribute_model()
             .objects.select_related(self.type, self.attr_type)
@@ -63,6 +102,9 @@ class BaseSearchTable:
     def get_attribute_usage(self, additional_data: dict) -> dict:
         all_attribute_usages = {}
         attributes = [attribute for attributes in additional_data.values() for attribute in attributes]
+        if not attributes:
+            return all_attribute_usages
+
         attribute_usages = (
             self.get_attribute_usage_model()
             .objects.prefetch_related(f"{self.type}_attribute")
@@ -114,25 +156,29 @@ class BaseSearchTable:
                 attributes = attributes[1:]
                 current_attribute = self.get_attribute_value(model_obj.id, attributes[0], column, *args)
             else:
-                current_attribute = model_obj
-                for attribute in attributes:
-                    if hasattr(current_attribute, attribute):
-                        current_attribute = getattr(current_attribute, attribute)
-                        continue
-
-                    current_attribute = self.get_special_value(model_obj, attribute)
+                current_attribute = self.get_nested_attribute_value(model_obj, attributes)
 
             if current_attribute is None:
                 current_attribute = ""
 
-            if type(current_attribute) in [datetime.datetime, datetime.date]:
+            if isinstance(current_attribute, (datetime.datetime, datetime.date)):
                 current_attribute = current_attribute.isoformat()
 
             row.append(current_attribute)
 
         return row
 
-    def build_table(self) -> tuple:
+    def get_nested_attribute_value(self, model_obj, attributes):
+        """Navigate through object attributes, falling back to special values."""
+        current_attribute = model_obj
+        for attribute in attributes:
+            if hasattr(current_attribute, attribute):
+                current_attribute = getattr(current_attribute, attribute)
+                continue
+            return self.get_special_value(model_obj, attribute)
+        return current_attribute
+
+    def build_table(self) -> Tuple[Dict[int, List[Any]], List[Dict[str, Any]]]:
         self.get_queryset()
         self.build_columns()
         if self.attribute_data:
@@ -152,7 +198,7 @@ class BaseSearchTable:
 
         return queryset.filter(
             **{
-                "attribute__{self.attr_type}": attribute_type,
+                f"attribute__{self.attr_type}": attribute_type,
                 "attribute__value__icontains": attribute_value,
             }
         )
@@ -176,48 +222,88 @@ class BaseSearchTable:
             elif attribute_equality == "gt":
                 queryset = queryset.filter(**{f"attribute__{self.type}attributeusage__value__gt": attribute_usage})
         elif attribute_usage_format == "percent":
-            attribute_ids = queryset.values_list(f"attribute__{self.type}attributeusage", flat=True)
-            attribute_ids = [attribute_id for attribute_id in attribute_ids if attribute_id is not None]
-            attribute_usages = self.get_attribute_usage_model().objects.filter(
-                **{f"{self.type}_attribute__id__in": attribute_ids}
-            )
-            remaining_entries = []
-            for attribute_usage_result in attribute_usages:
-                attribute_obj = getattr(attribute_has_usage, f"{self.type}_attribute")
-                attribute_value_with_usage = float(attribute_obj.value)
-                attribute_usage_value = attribute_usage_result.value
-
-                fraction = attribute_usage_value / attribute_value_with_usage * 100
-                if attribute_equality == "lt" and fraction < attribute_usage:
-                    remaining_entries.append(attribute_obj.id)
-                elif attribute_equality == "gt" and fraction > attribute_usage:
-                    remaining_entries.append(attribute_obj.id)
-
-            queryset = queryset.filter(**{f"{self.type}attribute__id__in": remaining_entries})
+            queryset = self.filter_by_usage_percent(queryset, attribute_equality, attribute_usage)
 
         return queryset
 
+    def filter_by_usage_percent(self, queryset: QuerySet, attribute_equality: str, attribute_usage: float) -> QuerySet:
+        """
+        Filter by usage percentage for an attribute.
+
+        Args:
+            queryset: The base queryset to filter
+            attribute_equality: The comparison operator ('lt' or 'gt')
+            attribute_usage: The usage threshold value as a percentage
+
+        Returns:
+            The filtered queryset with usage percentage applied
+        """
+        if not self.type or self.type not in self.ATTRIBUTE_FIELD_MAP_FOR_USAGE:
+            return queryset
+
+        attribute_field = self.ATTRIBUTE_FIELD_MAP_FOR_USAGE[self.type]
+        usage_field = f"{attribute_field}usage"
+
+        annotated_queryset = queryset.annotate(
+            usage_fraction=ExpressionWrapper(
+                F(f"{attribute_field}__{usage_field}__value") / F(f"{attribute_field}__value") * 100,
+                output_field=FloatField(),
+            )
+        )
+
+        if attribute_equality == "lt":
+            annotated_queryset = annotated_queryset.filter(usage_fraction__lt=attribute_usage).exclude(
+                **{f"{attribute_field}__value": 0}
+            )
+        elif attribute_equality == "gt":
+            annotated_queryset = annotated_queryset.filter(usage_fraction__gt=attribute_usage).exclude(
+                **{f"{attribute_field}__value": 0}
+            )
+
+        return annotated_queryset
+
     def filter_by_attribute_parameters(self, queryset: QuerySet) -> QuerySet:
+        """
+        Apply all attribute filters from search data to the queryset.
+
+        Args:
+            queryset: The base queryset to filter
+
+        Returns:
+            The queryset filtered by all attribute parameters
+        """
         for entry in self.attribute_data:
             queryset = self.filter_by_attribute(queryset, entry)
             queryset = self.filter_by_usage(queryset, entry)
-
         return queryset
 
-    def get_attribute_value(self, id, current_attribute, column, additional_data, additional_usage_data):
+    def get_attribute_value(
+        self, parent_id: int, current_attribute: str, column: dict, additional_data: dict, additional_usage_data: dict
+    ) -> Any:
+        """
+        Get the value of an attribute for a specific parent object.
+
+        Args:
+            parent_id: The ID of the parent object
+            current_attribute: The attribute type to retrieve
+            column: The column definition containing attribute metadata
+            additional_data: Dictionary of attribute data keyed by parent ID
+            additional_usage_data: Dictionary of usage data keyed by parent ID
+
+        Returns:
+            The attribute value as a string, or empty string if not found
+        """
         if current_attribute == "name":
-            attributes = additional_data.get(id)
+            attributes = additional_data.get(parent_id)
             if attributes is not None:
                 for attribute in attributes:
-                    # Assumes no duplicate project attribute types in list
                     attribute_type = getattr(attribute, self.attr_type)
                     if attribute_type.id == column.get("id"):
                         return attribute.value
         elif current_attribute == "has_usage":
-            attribute_usages = additional_usage_data.get(id)
+            attribute_usages = additional_usage_data.get(parent_id)
             if attribute_usages is not None:
                 for attribute_usage in attribute_usages:
-                    # Assumes no duplicate project attribute types in list
                     attribute = getattr(attribute_usage, f"{self.type}_attribute")
                     attribute_type = getattr(attribute, self.attr_type)
                     if attribute_type.id == column.get("id"):
@@ -225,8 +311,77 @@ class BaseSearchTable:
 
         return ""
 
+    def get_total_users(self, users: QuerySet, statuses: List[str]) -> int:
+        """
+        Count users with status in the provided list.
+
+        Args:
+            users: Prefetched queryset of users
+            statuses: List of status names to include
+
+        Returns:
+            Count of users with matching status
+
+        Note:
+            A filter isn't used because the queryset is prefetched earlier.
+        """
+        filtered_users_count = 0
+        for user in users:
+            if user.status.name in statuses:
+                filtered_users_count += 1
+        return filtered_users_count
+
+    def get_user_list(self, users: QuerySet, statuses: List[str]) -> str:
+        """
+        Get comma-separated list of usernames with status in the provided list.
+
+        Args:
+            users: Prefetched queryset of users
+            statuses: List of status names to include
+
+        Returns:
+            Comma-separated string of usernames with matching status
+
+        Note:
+            A filter isn't used because the queryset is prefetched earlier.
+        """
+        filtered_users = []
+        for user in users:
+            if user.status.name in statuses:
+                filtered_users.append(user.user.username)
+        return ", ".join(filtered_users)
+
+    def get_model_list(self, allocations: QuerySet) -> List[str]:
+        """
+        Get list of resource strings for allocations.
+
+        Args:
+            allocations: Prefetched queryset of allocations
+
+        Returns:
+            List of resource strings in format "Resource Name (ID)"
+
+        Note:
+            A filter isn't used because the queryset is prefetched earlier.
+        """
+        resource_list = []
+        for allocation in allocations:
+            if allocation.status.name in ["Active", "Renewal Requested"]:
+                resource_list.append(f"{allocation.get_parent_resource.name} ({allocation.pk})")
+        return resource_list
+
 
 class ProjectTable(BaseSearchTable):
+    """
+    Search table implementation for Project entities.
+
+    Provides project-specific search capabilities including:
+        - Standard project attributes (title, description, PI, status, etc.)
+        - User membership filtering
+        - AI project detection
+        - Date range filtering
+    """
+
     type = "project"
     attr_type = "proj_attr_type"
 
@@ -251,7 +406,15 @@ class ProjectTable(BaseSearchTable):
         "end_date": lambda data: {"end_date": data},
     }
 
-    def get_queryset(self):
+    def get_queryset(self) -> None:
+        """
+        Build the project queryset based on search parameters.
+
+        Applies:
+            - Standard filters via FILTER_MAP
+            - Attribute-based filters via filter_by_attribute_parameters
+            - Project-specific filters
+        """
         data = self.search_data
         projects = (
             Project.objects.select_related(
@@ -284,60 +447,72 @@ class ProjectTable(BaseSearchTable):
 
         self.queryset = projects
 
-    def get_special_value(self, obj, attribute):
+    def get_special_value(self, obj, attribute: str) -> Optional[Any]:
+        """
+        Get computed special values for project objects.
+
+        Args:
+            obj: The project object
+            attribute: The special attribute to compute
+
+        Returns:
+            The computed value, or None if not a special attribute
+        """
         if attribute == "total_users":
-            # Need to do all() or prefetch doesn't work and we end up running more queries
-            all_project_users = obj.projectuser_set.all()
-            filtered_project_users_count = 0
-            for project_user in all_project_users:
-                if project_user.status.name == "Active":
-                    filtered_project_users_count += 1
-            return filtered_project_users_count
+            return self.get_total_users(obj.projectuser_set.all(), ["Active"])
 
         if attribute == "users":
-            all_project_users = obj.projectuser_set.all()
-            filtered_project_users = []
-            for project_user in all_project_users:
-                if project_user.status.name == "Active":
-                    filtered_project_users.append(project_user.user.username)
-            return ", ".join(filtered_project_users)
+            return self.get_user_list(obj.projectuser_set.all(), ["Active"])
 
         if attribute == "resources":
-            all_project_allocations = obj.allocation_set.all()
-            resource_list = []
-            for project_allocation in all_project_allocations:
-                if project_allocation.status.name in ["Active", "Renewal Requested"]:
-                    resource_list.append(f"{project_allocation.get_parent_resource.name} ({project_allocation.pk})")
+            return self.get_model_list(obj.allocation_set.all())
+
         if attribute == "url":
             return f"{settings.CENTER_BASE_URL}{reverse('project-detail', kwargs={'pk': obj.pk})}"
 
         return None
 
-    def get_attribute_model(self):
+    def get_attribute_model(self) -> type:
         return ProjectAttribute
 
-    def get_attribute_usage_model(self):
+    def get_attribute_usage_model(self) -> type:
         return ProjectAttributeUsage
 
 
 class AllocationTable(BaseSearchTable):
+    """
+    Search table implementation for Allocation entities.
+
+    Provides allocation-specific search capabilities including:
+        - Project-based filtering
+        - Resource-based filtering
+        - User membership filtering
+        - Date range filtering
+    """
+
     type = "allocation"
     attr_type = "allocation_attribute_type"
 
-    def get_queryset(self):
+    def get_queryset(self) -> None:
         allocation_queryset = self.get_allocation_queryset()
 
         project_queryset = self.get_project_queryset()
-        allocation_queryset = allocation_queryset.filter(project__in=list(project_queryset))
+        allocation_queryset = allocation_queryset.filter(project__in=project_queryset)
 
         resource_queryset = self.get_resource_queryset()
-        allocation_queryset = allocation_queryset.filter(resources__in=list(resource_queryset))
+        allocation_queryset = allocation_queryset.filter(resources__in=resource_queryset)
 
         allocation_queryset = self.filter_by_attribute_parameters(allocation_queryset)
 
         self.queryset = allocation_queryset
 
-    def get_allocation_queryset(self):
+    def get_allocation_queryset(self) -> QuerySet:
+        """
+        Build the allocation queryset based on search parameters.
+
+        Returns:
+            Filtered allocation queryset with prefetch-related relationships
+        """
         data = self.search_data
         allocations = (
             Allocation.objects.select_related(
@@ -377,7 +552,13 @@ class AllocationTable(BaseSearchTable):
 
         return allocations
 
-    def get_project_queryset(self):
+    def get_project_queryset(self) -> QuerySet:
+        """
+        Build the project queryset for allocation filtering.
+
+        Returns:
+            Filtered project queryset with prefetch-related relationships
+        """
         data = self.search_data
         projects = (
             Project.objects.select_related(
@@ -421,7 +602,13 @@ class AllocationTable(BaseSearchTable):
 
         return projects
 
-    def get_resource_queryset(self):
+    def get_resource_queryset(self) -> QuerySet:
+        """
+        Build the resource queryset for allocation filtering.
+
+        Returns:
+            Filtered resource queryset for allocatable resources
+        """
         data = self.search_data
         resources = Resource.objects.select_related(
             "resource_type",
@@ -434,51 +621,59 @@ class AllocationTable(BaseSearchTable):
 
         return resources
 
-    def get_special_value(self, obj, attribute):
+    def get_special_value(self, obj, attribute: str) -> Optional[Any]:
+        """
+        Get computed special values for allocation objects.
+
+        Args:
+            obj: The allocation object
+            attribute: The special attribute to compute
+
+        Returns:
+            The computed value, or None if not a special attribute
+        """
         if attribute == "project__total_users":
             # Need to do all() or prefetch doesn't work and we end up running more queries
-            all_project_users = obj.projectuser_set.all()
-            filtered_project_users_count = 0
-            for project_user in all_project_users:
-                if project_user.status.name == "Active":
-                    filtered_project_users_count += 1
-            return filtered_project_users_count
+            return self.get_total_users(obj.projectuser_set.all(), ["Active"])
 
         if attribute == "project__url":
             return f"{settings.CENTER_BASE_URL}{reverse('project-detail', kwargs={'pk': obj.pk})}"
 
         if attribute == "total_users":
-            all_allocation_users = obj.allocationuser_set.all()
-            filtered_allocation_users_count = 0
-            for allocation_user in all_allocation_users:
-                if allocation_user.status.name in ["Active", "Invited", "Pending", "Disabled", "Retired"]:
-                    filtered_allocation_users_count += 1
-            return filtered_allocation_users_count
+            status_names = ["Active", "Invited", "Pending", "Disabled", "Retired"]
+            return self.get_total_users(obj.allocationuser_set.all(), status_names)
 
         if attribute == "users":
-            all_allocation_users = obj.allocationuser_set.all()
-            filtered_allocation_users = []
-            for allocation_user in all_allocation_users:
-                if allocation_user.status.name in ["Active", "Invited", "Pending", "Disabled", "Retired"]:
-                    filtered_allocation_users.append(allocation_user.user.username)
-            return ", ".join(filtered_allocation_users)
+            status_names = ["Active", "Invited", "Pending", "Disabled", "Retired"]
+            return self.get_user_list(obj.allocationuser_set.all(), status_names)
 
         if attribute == "url":
             return f"{settings.CENTER_BASE_URL}{reverse('allocation-detail', kwargs={'pk': obj.pk})}"
 
         return None
 
-    def get_attribute_model(self):
+    def get_attribute_model(self) -> type:
         return AllocationAttribute
 
-    def get_attribute_usage_model(self):
+    def get_attribute_usage_model(self) -> type:
         return AllocationAttributeUsage
 
 
 class UserTable(BaseSearchTable):
-    type = "user"
+    """
+    Search table implementation for User entities.
 
-    def get_queryset(self):
+    Provides user-specific search capabilities including:
+        - Username-based filtering
+        - Profile attribute filtering
+        - Project/allocation type filtering
+        - User statistics computation
+    """
+
+    type = "user"
+    attr_type = "user_attr_type"
+
+    def get_queryset(self) -> None:
         user_queryset = self.get_user_queryset()
 
         user_profile_queryset = self.get_user_profile_queryset()
@@ -486,7 +681,13 @@ class UserTable(BaseSearchTable):
 
         self.queryset = user_queryset
 
-    def get_user_queryset(self):
+    def get_user_queryset(self) -> QuerySet:
+        """
+        Build the user queryset based on search parameters.
+
+        Returns:
+            Filtered user queryset with prefetch-related user profile
+        """
         data = self.search_data
         users = User.objects.select_related("userprofile")
         if data.get("type") == "project":
@@ -517,7 +718,13 @@ class UserTable(BaseSearchTable):
 
         return users
 
-    def get_user_profile_queryset(self):
+    def get_user_profile_queryset(self) -> QuerySet:
+        """
+        Build the user profile queryset for user filtering.
+
+        Returns:
+            Filtered user profile queryset
+        """
         data = self.search_data
         user_profiles = UserProfile.objects.all()
 
@@ -528,7 +735,17 @@ class UserTable(BaseSearchTable):
 
         return user_profiles
 
-    def get_special_value(self, obj, attribute):
+    def get_special_value(self, obj, attribute: str) -> Optional[Any]:
+        """
+        Get computed special values for user objects.
+
+        Args:
+            obj: The user object
+            attribute: The special attribute to compute
+
+        Returns:
+            The computed value, or None if not a special attribute
+        """
         if attribute == "total_projects":
             return ProjectUser.objects.filter(user=obj, status__name="Active", project__status__name="Active").count()
         if attribute == "total_pi_projects":
