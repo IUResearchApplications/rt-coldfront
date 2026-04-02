@@ -142,7 +142,7 @@ class BaseSearchTable:
         "user": "userattribute",
     }
 
-    def __init__(self, search_data: Dict[str, Any], attribute_data: List[Dict[str, Any]] | None = None) -> None:
+    def __init__(self, search_data: Dict[str, Any], attribute_data: Optional[List[Dict[str, Any]]] = None) -> None:
         """
         Initialize the BaseSearchTable with search parameters.
 
@@ -193,7 +193,7 @@ class BaseSearchTable:
         """
         raise NotImplementedError()
 
-    def get_attribute_data(self) -> dict:
+    def get_attribute_data(self) -> Dict[int, List[Any]]:
         """
         Retrieve attribute data for the entity type.
 
@@ -223,7 +223,7 @@ class BaseSearchTable:
 
         return all_attributes
 
-    def get_attribute_usage(self, additional_data: dict) -> dict:
+    def get_attribute_usage(self, additional_data: Dict[int, List[Any]]) -> Dict[int, List[Any]]:
         """
         Retrieve attribute usage data for the entity type.
 
@@ -308,7 +308,7 @@ class BaseSearchTable:
             rows[idx] = self.build_row(obj, *args)
         self.rows = rows
 
-    def build_row(self, model_obj: Model, *args) -> List[Any]:
+    def build_row(self, model_obj: Model, *args: Any) -> List[Any]:
         """
         Build a single row for the table based on the model object and columns.
 
@@ -388,7 +388,7 @@ class BaseSearchTable:
 
         return self.rows, self.columns
 
-    def filter_by_attribute(self, queryset: QuerySet, entry: dict) -> QuerySet:
+    def filter_by_attribute(self, queryset: QuerySet, entry: Dict[str, Any]) -> QuerySet:
         """
         Apply attribute value filtering to the queryset.
 
@@ -415,7 +415,7 @@ class BaseSearchTable:
             }
         )
 
-    def filter_by_usage(self, queryset: QuerySet, entry: dict) -> QuerySet:
+    def filter_by_usage(self, queryset: QuerySet, entry: Dict[str, Any]) -> QuerySet:
         """
         Apply attribute usage filtering to the queryset.
 
@@ -648,7 +648,7 @@ class ProjectTable(BaseSearchTable):
 
         self.queryset = projects
 
-    def get_special_value(self, obj, attribute: str) -> Optional[Any]:
+    def get_special_value(self, obj: Model, attribute: str) -> Optional[Any]:
         """
         Get computed special values for project objects.
 
@@ -818,7 +818,7 @@ class AllocationTable(BaseSearchTable):
 
         return resources
 
-    def get_special_value(self, obj, attribute: str) -> Optional[Any]:
+    def get_special_value(self, obj: Model, attribute: str) -> Optional[Any]:
         """
         Get computed special values for allocation objects.
 
@@ -953,7 +953,7 @@ class UserTable(BaseSearchTable):
         return user_profiles
 
 
-    def get_special_value(self, obj: User, attribute: str) -> Optional[Any]:
+    def get_special_value(self, obj: Model, attribute: str) -> Optional[Any]:
 
         """
         Get computed special values for user objects.
