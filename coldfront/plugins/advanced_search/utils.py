@@ -1,5 +1,6 @@
 import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -104,7 +105,7 @@ class SearchFilterBuilder:
         return filter_kwargs
 
 
-class BaseSearchTable:
+class BaseSearchTable(ABC):
     """
     Abstract base class for building search tables.
 
@@ -136,12 +137,6 @@ class BaseSearchTable:
     type: Optional[str] = None
     attr_type: Optional[str] = None
 
-    ATTRIBUTE_FIELD_MAP_FOR_USAGE: Dict[str, str] = {
-        "project": "projectattribute",
-        "allocation": "allocationattribute",
-        "user": "userattribute",
-    }
-
     def __init__(self, search_data: Dict[str, Any], attribute_data: Optional[List[Dict[str, Any]]] = None) -> None:
         """
         Initialize the BaseSearchTable with search parameters.
@@ -157,6 +152,7 @@ class BaseSearchTable:
         self.columns = []
         self.rows = {}
 
+    @abstractmethod
     def get_queryset(self) -> None:
         """
         Build and set the queryset for the entity type.
@@ -169,7 +165,8 @@ class BaseSearchTable:
         """
         raise NotImplementedError()
 
-    def get_attribute_model(self) -> None:
+    @abstractmethod
+    def get_attribute_model(self) -> Type[Model]:
         """
         Return the attribute model class for the entity type.
 
@@ -181,7 +178,8 @@ class BaseSearchTable:
         """
         raise NotImplementedError()
 
-    def get_attribute_usage_model(self) -> None:
+    @abstractmethod
+    def get_attribute_usage_model(self) -> Type[Model]:
         """
         Return the attribute usage model class for the entity type.
 
