@@ -23,6 +23,87 @@ from coldfront.core.resource.models import Resource
 from coldfront.core.user.models import UserProfile
 
 
+class SearchFilterBuilder:
+    """
+    Centralized filter logic builder for different entity types.
+
+    This class encapsulates the filter mapping logic to avoid duplication
+    across table classes and make it easier to extend with new filter types.
+
+    Example:
+        filter_kwargs = SearchFilterBuilder.build_filters(
+            search_data,
+            table_type='project'
+        )
+    """
+
+    FILTER_MAPS: Dict[str, Dict[str, callable]] = {
+        "project": {
+            "title": lambda data: {"title__icontains": data},
+            "description": lambda data: {"description__icontains": data},
+            "pi__username": lambda data: {"pi__username__icontains": data},
+            "requestor__username": lambda data: {"requestor__username__icontains": data},
+            "status__name": lambda data: {"status__in": data},
+            "type__name": lambda data: {"type__in": data},
+            "user_username": lambda data: {
+                "projectuser__user__username__icontains": data,
+                "projectuser__status__name": "Active",
+            },
+            "projects_using_ai": lambda data: {
+                "allocation__allocationattribute__allocation_attribute_type__name": "Has DL Workflow",
+                "allocation__allocationattribute__value": "Yes",
+                "allocation__status__name": "Active",
+            },
+            "created_after_date": lambda data: {"created__gt": data},
+            "created_before_date": lambda data: {"created__lt": data},
+            "end_date": lambda data: {"end_date": data},
+        },
+        "allocation": {
+            "user_username": lambda data: {
+                "allocationuser__user__username__icontains": data,
+                "allocationuser__status__name__in": ["Active", "Invited", "Pending", "Disabled", "Retired"],
+            },
+            "status__name": lambda data: {"status__in": data},
+            "created_after_date": lambda data: {"created__gt": data},
+            "created_before_date": lambda data: {"created__lt": data},
+        },
+        "resources": {
+            "resources__name": lambda data: {"id__in": data},
+            "resources__resource_type__name": lambda data: {"resource_type__in": data},
+        },
+        "user": {
+            "first_name": lambda data: {"first_name": data},
+            "last_name": lambda data: {"last_name": data},
+        },
+        "userprofile": {
+            "department": lambda data: {"title__icontains": data},
+            "title": lambda data: {"department__icontains": data},
+        },
+    }
+
+    @classmethod
+    def build_filters(cls, search_data: Dict[str, Any], table_type: str) -> Dict[str, Any]:
+        """
+        Build filter kwargs dictionary from search data.
+
+        Args:
+            search_data: Dictionary containing search parameters
+            table_type: The type of table
+
+        Returns:
+            Dictionary of filter kwargs suitable for queryset.filter(**kwargs)
+        """
+        filter_kwargs: Dict[str, Any] = {}
+        filter_map = cls.FILTER_MAPS.get(table_type, {})
+
+        for param, builder in filter_map.items():
+            value = search_data.get(param)
+            if value:
+                filter_kwargs.update(builder(value))
+
+        return filter_kwargs
+
+
 class BaseSearchTable:
     """
     Abstract base class for building search tables.
@@ -415,7 +496,6 @@ class ProjectTable(BaseSearchTable):
             - Attribute-based filters via filter_by_attribute_parameters
             - Project-specific filters
         """
-        data = self.search_data
         projects = (
             Project.objects.select_related(
                 "pi",
@@ -434,12 +514,7 @@ class ProjectTable(BaseSearchTable):
             .order_by("id")
         )
 
-        filter_kwargs = {}
-        for param, builder in self.FILTER_MAP.items():
-            value = data.get(param)
-            if value:
-                filter_kwargs.update(builder(value))
-
+        filter_kwargs = SearchFilterBuilder.build_filters(self.search_data, "project")
         if filter_kwargs:
             projects = projects.filter(**filter_kwargs)
 
@@ -513,7 +588,6 @@ class AllocationTable(BaseSearchTable):
         Returns:
             Filtered allocation queryset with prefetch-related relationships
         """
-        data = self.search_data
         allocations = (
             Allocation.objects.select_related(
                 "project",
@@ -535,20 +609,10 @@ class AllocationTable(BaseSearchTable):
             .all()
             .order_by("project__id")
         )
-
-        if data.get("user_username"):
-            allocations = allocations.filter(
-                allocationuser__user__username__icontains=data.get("allocation__user_username"),
-                allocationuser__status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"],
-            )
-
-        if data.get("status__name"):
-            allocations = allocations.filter(status__in=data.get("allocation__status__name"))
-
-        if data.get("created_after_date"):
-            allocations = allocations.filter(created__gt=data.get("allocation__created_after_date"))
-        if data.get("created_before_date"):
-            allocations = allocations.filter(created__lt=data.get("allocation__created_before_date"))
+            
+        filter_kwargs = SearchFilterBuilder.build_filters(self.search_data, "allocation")
+        if filter_kwargs:
+            allocations = allocations.filter(**filter_kwargs)
 
         return allocations
 
@@ -559,7 +623,6 @@ class AllocationTable(BaseSearchTable):
         Returns:
             Filtered project queryset with prefetch-related relationships
         """
-        data = self.search_data
         projects = (
             Project.objects.select_related(
                 "pi",
@@ -576,29 +639,13 @@ class AllocationTable(BaseSearchTable):
             .order_by("id")
         )
 
-        if data.get("project__title"):
-            projects = projects.filter(title__icontains=data.get("project__title"))
-        if data.get("project__description"):
-            projects = projects.filter(description__icontains=data.get("project__description"))
-        if data.get("project__pi__username"):
-            projects = projects.filter(pi__username__icontains=data.get("project__pi__username"))
-        if data.get("project__requestor__username"):
-            projects = projects.filter(requestor__username__icontains=data.get("project__requestor__username"))
-        if data.get("project__status__name"):
-            projects = projects.filter(status__in=data.get("project__status__name"))
-        if data.get("project__type__name"):
-            projects = projects.filter(type__in=data.get("project__type__name"))
-        if data.get("project__user_username"):
-            projects = projects.filter(
-                projectuser__user__username__icontains=data.get("project__user_username"),
-                projectuser__status__name="Active",
-            )
-        if data.get("project__created_after_date"):
-            projects = projects.filter(created__gt=data.get("project__created_after_date"))
-        if data.get("project__created_before_date"):
-            projects = projects.filter(created__lt=data.get("project__created_before_date"))
-        if data.get("project__end_date"):
-            projects = projects.filter(end_date=data.get("project__end_date"))
+        project_filters = {}
+        for filter, value in self.search_data.items():
+            if filter.startswith("project__"):
+                project_filters[filter[len("project__") :]] = value
+        filter_kwargs = SearchFilterBuilder.build_filters(project_filters, "project")
+        if filter_kwargs:
+            projects = projects.filter(**filter_kwargs)
 
         return projects
 
@@ -609,15 +656,17 @@ class AllocationTable(BaseSearchTable):
         Returns:
             Filtered resource queryset for allocatable resources
         """
-        data = self.search_data
         resources = Resource.objects.select_related(
             "resource_type",
         ).filter(is_allocatable=True)
 
-        if data.get("resources__name"):
-            resources = resources.filter(id__in=data.get("resources__name").values_list("id"))
-        if data.get("resources__resource_type__name"):
-            resources = resources.filter(resource_type__in=data.get("resources__resource_type__name"))
+        resource_filters = {}
+        for filter, value in self.search_data.items():
+            if filter.startswith("resources__"):
+                resource_filters[filter[len("resources__") :]] = value
+        filter_kwargs = SearchFilterBuilder.build_filters(resource_filters, "resources")
+        if filter_kwargs:
+            resources = resources.filter(**filter_kwargs)
 
         return resources
 
@@ -711,10 +760,10 @@ class UserTable(BaseSearchTable):
             usernames = data.get("usernames").split(",")
             usernames = [username.strip() for username in usernames]
             users = users.filter(username__in=usernames)
-        if data.get("first_name"):
-            users = users.filter(first_name=data.get("first_name"))
-        if data.get("last_name"):
-            users = users.filter(last_name=data.get("last_name"))
+            
+        filter_kwargs = SearchFilterBuilder.build_filters(self.search_data, "user")
+        if filter_kwargs:
+            users = users.filter(**filter_kwargs)
 
         return users
 
@@ -725,13 +774,15 @@ class UserTable(BaseSearchTable):
         Returns:
             Filtered user profile queryset
         """
-        data = self.search_data
         user_profiles = UserProfile.objects.all()
-
-        if data.get("userprofile__title"):
-            user_profiles = user_profiles.filter(title__icontains=data.get("user__userprofile__title"))
-        if data.get("userprofile__department"):
-            user_profiles = user_profiles.filter(department__icontains=data.get("user__userprofile__department"))
+            
+        user_profile_filters = {}
+        for filter, value in self.search_data.items():
+            if filter.startswith("userprofile__"):
+                user_profile_filters[filter[len("userprofile__") :]] = value
+        filter_kwargs = SearchFilterBuilder.build_filters(user_profile_filters, "userprofile")
+        if filter_kwargs:
+            user_profiles = user_profiles.filter(**filter_kwargs)
 
         return user_profiles
 
