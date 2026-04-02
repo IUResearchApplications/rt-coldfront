@@ -68,8 +68,8 @@ class SearchFilterBuilder:
             "created_before_date": lambda data: {"created__lt": data},
         },
         "resources": {
-            "resources__name": lambda data: {"id__in": data},
-            "resources__resource_type__name": lambda data: {"resource_type__in": data},
+            "name": lambda data: {"id__in": data},
+            "resource_type__name": lambda data: {"resource_type__in": data},
         },
         "user": {
             "first_name": lambda data: {"first_name": data},
