@@ -410,8 +410,8 @@ class BaseSearchTable:
 
         return queryset.filter(
             **{
-                f"attribute__{self.attr_type}": attribute_type,
-                "attribute__value__icontains": attribute_value,
+                f"{self.type}attribute__{self.attr_type}": attribute_type,
+                f"{self.type}attribute__value__icontains": attribute_value,
             }
         )
 
