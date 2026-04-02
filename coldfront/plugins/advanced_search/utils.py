@@ -577,7 +577,7 @@ class BaseSearchTable:
                 filtered_users.append(user.user.username)
         return ", ".join(filtered_users)
 
-    def get_model_list(self, allocations: QuerySet) -> List[str]:
+    def get_model_list(self, allocations: QuerySet) -> str:
         """
         Get list of resource strings for allocations.
 
@@ -585,7 +585,7 @@ class BaseSearchTable:
             allocations: Prefetched queryset of allocations
 
         Returns:
-            List of resource strings in format "Resource Name (ID)"
+            A string in format "Resource Name (ID), Resource Name (ID), ..."
 
         Note:
             A filter isn't used because the queryset is prefetched earlier.
@@ -594,7 +594,7 @@ class BaseSearchTable:
         for allocation in allocations:
             if allocation.status.name in ["Active", "Renewal Requested"]:
                 resource_list.append(f"{allocation.get_parent_resource.name} ({allocation.pk})")
-        return resource_list
+        return ", ".join(resource_list)
 
 
 class ProjectTable(BaseSearchTable):
