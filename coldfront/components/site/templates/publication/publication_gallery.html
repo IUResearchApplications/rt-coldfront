@@ -59,7 +59,7 @@ img {
     {% for img, url, title, item in data %}
     <div class="{{item}}">
         <a href="{{url}}">
-            <img src="{{ img }}" alt="{{ title }}" aria-hidden="true">
+            <img src="{{ img }}" alt="{{ title }}" aria-hidden="false">
         </a>
     </div>
     {% endfor %}
