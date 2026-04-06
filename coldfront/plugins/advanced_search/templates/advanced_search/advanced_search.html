@@ -68,8 +68,10 @@ Project and Allocation Export List
       <div class="col text-right">
         <form id="export_form" method="POST" action="{% url 'export' %}">
           {% csrf_token %}
-          <input id="export_data" type="hidden" name="data" value="{{ data }}">
-          <button id="export_button" type="submit" class="btn btn-success" value="Export">Export to CSV</button>
+          {% if columns %}
+            <input id="export_data" type="hidden" name="data" value="{{ data }}">
+            <button id="export_button" type="submit" class="btn btn-success" value="Export">Export to CSV</button>
+          {% endif %}
         </form>
       </div>
     </div>
