@@ -61,3 +61,93 @@
     <i class="fas fa-info-circle" aria-disabled="true"></i> No shared searches.
   </div>
 {% endif %}
+
+<div class="modal fade" id="modifySearchModal" tabindex="-1" role="dialog" aria-labelledby="modifySearchModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modifySearchModalLabel">Modify Search</h2>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="modifySearchForm" method="post" action="">
+        <div class="px-3 pt-2">
+          <p class="text-muted small mb-0">
+            <i class="fas fa-info-circle" aria-hidden="true"></i>
+            To modify search parameters, you override this search via the save search form.
+          </p>
+        </div>
+        <div class="modal-body"></div>
+        <div class="modal-footer d-flex align-items-center">
+          <div id="modify-search-message" class="alert d-none mb-0 flex-grow-1 mr-2" role="alert" style="width: auto;"></div>
+          <div class="d-flex justify-content-end">
+            <button type="button" class="btn btn-secondary mr-2" data-dismiss="modal">Cancel</button>
+            <button type="submit" id="btn-submit-modify-search mr-2" class="btn btn-primary">Save</button>
+            <button type="button" id="btn-delete-search" class="btn btn-danger">Delete</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(document).ready(function() {
+    $(document).on('click', '#btn-modify-search', function() {
+      const searchId = $(this).data('search-id');
+      const $modal = $('#modifySearchModal');
+      const $form = $('#modifySearchForm');
+      const $msg = $('#modify-search-message');
+
+      $msg.addClass('d-none').removeClass('alert-success alert-danger');
+      $modal.modal('show');
+
+      $.ajax({
+        url: `/advanced_search/modify-search/${searchId}/`,
+        type: 'GET',
+        success: function(data) {
+          $form.attr('action', `/advanced_search/modify-search/${searchId}/`);
+          $form.find('.modal-body').html(data.form_html);
+          $modal.modal('show');
+        },
+          error: function() {
+          $msg.removeClass('d-none').addClass('alert-danger').text('Failed to load search details.');
+        }
+      });
+    });
+
+    $('#modifySearchForm').on('submit', function(e) {
+      e.preventDefault();
+      const $form = $(this);
+      const $msg = $('#modify-search-message');
+      const $btn = $('#btn-submit-modify-search');
+
+      $msg.addClass('d-none').removeClass('alert-success alert-danger');
+      $btn.prop('disabled', true).text('Saving...');
+
+      $.ajax({
+        url: $form.attr('action'),
+        type: 'POST',
+        data: $form.serialize(),
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        success: function(data) {
+          $msg.removeClass('d-none').addClass('alert-success').text(data.message);
+          $btn.prop('disabled', false).text('Save');
+        },
+        error: function(xhr) {
+          $msg.removeClass('d-none').addClass('alert-danger');
+          let errorMessage = "Error updating search.";
+          if (xhr.responseJSON && xhr.responseJSON.errors) {
+            const firstField = Object.keys(xhr.responseJSON.errors)[0];
+            errorMessage = xhr.responseJSON.errors[firstField][0];
+          } else if (xhr.responseJSON && xhr.responseJSON.message) {
+            errorMessage = xhr.responseJSON.message;
+          }
+          $msg.text(errorMessage);
+          $btn.prop('disabled', false).text('Save');
+        }
+      });
+    });
+  });
+</script>
