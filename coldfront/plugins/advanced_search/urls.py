@@ -5,6 +5,7 @@ from coldfront.plugins.advanced_search.views import (
     AdvancedSearchView,
     ApplySavedSearchView,
     SavedSearchCreateView,
+    SavedSearchDeleteView,
     SavedSearchListView,
     SavedSearchModifyView,
 )
@@ -16,4 +17,5 @@ urlpatterns = [
     path("saved-searches/", SavedSearchListView.as_view(), name="saved-searches"),
     path("apply-saved-search/<int:pk>/", ApplySavedSearchView.as_view(), name="apply-saved-search"),
     path("modify-search/<int:pk>/", SavedSearchModifyView.as_view(), name="modify-search"),
+    path("delete-search/<int:pk>/", SavedSearchDeleteView.as_view(), name="delete-search"),
 ]

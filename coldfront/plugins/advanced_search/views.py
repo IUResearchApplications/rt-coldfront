@@ -321,7 +321,10 @@ class SavedSearchDetailView(LoginRequiredMixin, View):
 
 
 class SavedSearchDeleteView(LoginRequiredMixin, View):
-    pass
+    def post(self, request, pk):
+        saved_search = get_object_or_404(SavedSearch, pk=pk)
+        saved_search.delete()
+        return JsonResponse({"success": True, "message": "Search deleted successfully."})
 
 
 class AdvancedExportView(LoginRequiredMixin, UserPassesTestMixin, View):

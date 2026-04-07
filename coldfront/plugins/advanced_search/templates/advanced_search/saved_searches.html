@@ -36,7 +36,7 @@
                     <div class="d-flex justify-content-end">
                       <button type="button" id="btn-load-search" class="btn btn-success mr-2">Load</button>
                       <button type="button" id="btn-modify-search" class="btn btn-primary mr-2" data-search-id="{{ user_search.pk }}">Modify</button>
-                      <button type="button" class="btn btn-danger">Delete</button>
+                      <button type="button" id="btn-delete-search" class="btn btn-danger">Delete</button>
                     </div>
                   </div>
                 </div>
@@ -113,6 +113,22 @@
         },
           error: function() {
           $msg.removeClass('d-none').addClass('alert-danger').text('Failed to load search details.');
+        }
+      });
+    });
+
+    $(document).on('click', '#btn-delete-search', function() {
+      if (!confirm('Are you sure you want to delete this saved search?')) {
+        return;
+      }
+      $.ajax({
+        url: `/advanced_search/delete-search/${searchId}/`,
+        type: 'GET',
+        success: function(data) {
+          $modal.modal('hide');
+        },
+          error: function() {
+          $msg.removeClass('d-none').addClass('alert-danger').text('Failed to delete saved search.');
         }
       });
     });
