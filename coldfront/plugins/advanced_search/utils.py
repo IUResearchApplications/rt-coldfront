@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Tuple, Type
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db.models import F, FloatField, Model, QuerySet
+from django.db.models import F, FloatField, Model, Q, QuerySet
 from django.db.models.expressions import ExpressionWrapper
 from django.urls import reverse
 
@@ -22,6 +22,7 @@ from coldfront.core.project.models import (
 )
 from coldfront.core.resource.models import Resource
 from coldfront.core.user.models import UserProfile
+from coldfront.plugins.advanced_search.models import SavedSearch
 
 
 class SearchFilterBuilder:
@@ -989,3 +990,13 @@ class UserTable(BaseSearchTable):
             ).count()
 
         return None
+
+
+def get_saved_searches(user):
+    return SavedSearch.objects.filter(owner=user)
+
+
+def get_shared_searches(user):
+    return SavedSearch.objects.filter(
+        Q(shared_with_users=user) | Q(shared_with_groups__in=user.groups.all())
+    ).distinct()

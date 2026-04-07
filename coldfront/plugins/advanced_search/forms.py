@@ -2,11 +2,15 @@ from crispy_forms.bootstrap import Accordion, AccordionGroup, FormActions, Inlin
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Column, Div, Fieldset, Layout, LayoutObject, Reset, Row, Submit
 from django import forms
+from django.contrib.auth import get_user_model
 from django.template.loader import render_to_string
 
 from coldfront.core.allocation.models import AllocationAttributeType, AllocationStatusChoice
 from coldfront.core.project.models import ProjectAttributeType, ProjectStatusChoice, ProjectTypeChoice
 from coldfront.core.resource.models import Resource, ResourceType
+from coldfront.plugins.advanced_search.models import SavedSearch
+
+User = get_user_model()
 
 
 class AttributeFormSetHelper(FormHelper):
@@ -257,7 +261,7 @@ class ProjectSearchForm(SearchForm):
                     active=False,
                 )
             ),
-            FormActions(Submit("submit", "Project Search"), Reset("reset", "Reset")),
+            FormActions(Submit("submit", "Project Search"), Reset("reset", "Reset"), css_class="mb-0"),
         )
 
 
@@ -325,7 +329,7 @@ class UserSearchForm(forms.Form):
                     active=False,
                 ),
             ),
-            FormActions(Submit("submit", "User Search"), Reset("reset", "Reset")),
+            FormActions(Submit("submit", "User Search"), Reset("reset", "Reset"), css_class="mb-0"),
         )
 
 
@@ -495,7 +499,7 @@ class AllocationSearchForm(SearchForm):
                     active=False,
                 )
             ),
-            FormActions(Submit("submit", "Allocation Search"), Reset("reset", "Reset")),
+            FormActions(Submit("submit", "Allocation Search"), Reset("reset", "Reset"), css_class="mb-0"),
         )
 
 
@@ -525,3 +529,29 @@ class Formset(LayoutObject):
 
         context.update({"formset": formset, "helper": helper, "label": self.label})
         return render_to_string(self.template, context.flatten())
+
+
+class SavedSearchCreateForm(forms.ModelForm):
+    class Meta:
+        model = SavedSearch
+        fields = ["name", "description", "shared_with_users", "shared_with_groups"]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+
+        if user:
+            self.fields["shared_with_users"].queryset = User.objects.filter(is_staff=True)
+            self.fields["shared_with_groups"].queryset = user.groups.all()
+
+
+class SavedSearchModifyForm(forms.ModelForm):
+    class Meta:
+        model = SavedSearch
+        fields = ["name", "description", "shared_with_users", "shared_with_groups"]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 3}),
+        }

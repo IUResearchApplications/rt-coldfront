@@ -7,10 +7,11 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.utils import cached_property
 from django.forms import formset_factory
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.http.response import StreamingHttpResponse
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from django.views.generic import TemplateView, View
+from django.views.generic import RedirectView, TemplateView, View
 
 from coldfront.core.allocation.models import AllocationAttributeType
 from coldfront.core.project.models import ProjectAttributeType
@@ -21,9 +22,18 @@ from coldfront.plugins.advanced_search.forms import (
     AttributeFormSetHelper,
     ProjectAttributeSearchForm,
     ProjectSearchForm,
+    SavedSearchCreateForm,
+    SavedSearchModifyForm,
     UserSearchForm,
 )
-from coldfront.plugins.advanced_search.utils import AllocationTable, ProjectTable, UserTable
+from coldfront.plugins.advanced_search.models import SavedSearch
+from coldfront.plugins.advanced_search.utils import (
+    AllocationTable,
+    ProjectTable,
+    UserTable,
+    get_saved_searches,
+    get_shared_searches,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -170,6 +180,7 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         context["project_form"] = project_search_form
         context["allocation_form"] = allocation_search_form
         context["user_form"] = user_search_form
+        context["save_search_form"] = SavedSearchCreateForm(user=self.request.user)
 
         submit = filter_data.get("submit") if filter_data else None
         if submit == "Project Search":
@@ -191,6 +202,142 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
             }
         )
         return context
+
+
+class SavedSearchCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        user = self.request.user
+        if user.is_superuser:
+            return True
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        filter_data = self.request.session.get("filter_data", {})
+        search_type = self.request.GET.get("search_type", "project")
+
+        initial_query = {}
+        if search_type == "project":
+            initial_query.update(
+                {
+                    "project_search": {k: v for k, v in filter_data.items() if k.startswith("project_search-")},
+                    "project_attributes": {k: v for k, v in filter_data.items() if k.startswith("projectattribute-")},
+                }
+            )
+        elif search_type == "allocation":
+            initial_query.update(
+                {
+                    "allocation_search": {k: v for k, v in filter_data.items() if k.startswith("allocation_search-")},
+                    "allocation_attributes": {
+                        k: v for k, v in filter_data.items() if k.startswith("allocationattribute-")
+                    },
+                }
+            )
+        elif search_type == "user":
+            initial_query.update(
+                {
+                    "user_search": {k: v for k, v in filter_data.items() if k.startswith("user_search-")},
+                }
+            )
+
+        context["query_data"] = json.dumps(initial_query)
+        context["search_type"] = search_type
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = SavedSearchCreateForm(request.POST, user=request.user)
+        query_data_raw = request.POST.get("query_data")
+
+        if form.is_valid():
+            try:
+                query_data = json.loads(query_data_raw) if query_data_raw else {}
+                saved_search = form.save(commit=False)
+                saved_search.owner = request.user
+                saved_search.query_data = query_data
+                saved_search.save()
+
+                return JsonResponse({"success": True, "message": "Search saved successfully."})
+            except json.JSONDecodeError:
+                return JsonResponse({"success": False, "message": "Invalid search data format."}, status=400)
+            except Exception as e:
+                logger.error(f"Error saving search: {str(e)}")
+                return JsonResponse({"success": False, "message": "An unexpected error occurred."}, status=500)
+        else:
+            return JsonResponse(
+                {"success": False, "message": "There was an issue saving your search.", "errors": form.errors},
+                status=400,
+            )
+
+
+class SavedSearchListView(LoginRequiredMixin, TemplateView):
+    template_name = "advanced_search/saved_searches.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["user_saved_searches"] = get_saved_searches(self.request.user)
+        context["shared_searches"] = get_shared_searches(self.request.user)
+        return context
+
+
+class SavedSearchModifyView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        user = self.request.user
+        if user.is_superuser:
+            return True
+            
+        # if not (
+        #     saved_search.owner == request.user
+        #     or saved_search.shared_with_users.filter(pk=request.user.pk).exists()
+        #     or saved_search.shared_with_groups.filter(groups__in=request.user.groups.all()).exists()
+        # ):
+        #     return False
+
+    def get(self, request, pk):
+        saved_search = get_object_or_404(SavedSearch, pk=pk)
+
+        # Check permissions
+        if not (
+            saved_search.owner == request.user
+            or saved_search.shared_with_users.filter(pk=request.user.pk).exists()
+            or saved_search.shared_with_groups.filter(groups__in=request.user.groups.all()).exists()
+        ):
+            return JsonResponse({"error": "Unauthorized"}, status=403)
+
+        form = SavedSearchModifyForm(instance=saved_search)
+
+        return JsonResponse(
+            {
+                "name": saved_search.name,
+                "description": saved_search.description,
+                "form_html": form.as_p(),
+                "pk": saved_search.pk,
+            }
+        )
+
+    def post(self, request, pk):
+        saved_search = get_object_or_404(SavedSearch, pk=pk)
+
+        # Check permissions
+        if not (
+            saved_search.owner == request.user
+            or saved_search.shared_with_users.filter(pk=request.user.pk).exists()
+            or saved_search.shared_with_groups.filter(groups__in=request.user.groups.all()).exists()
+        ):
+            return JsonResponse({"error": "Unauthorized"}, status=403)
+
+        form = SavedSearchModifyForm(request.POST, instance=saved_search)
+
+        if form.is_valid():
+            form.save()
+            return JsonResponse({"success": True, "message": "Search updated successfully."})
+        else:
+            return JsonResponse(
+                {"success": False, "message": "There was an issue updating your search.", "errors": form.errors},
+                status=400,
+            )
+
+
+class SavedSearchDeleteView(LoginRequiredMixin, View):
+    pass
 
 
 class AdvancedExportView(LoginRequiredMixin, UserPassesTestMixin, View):
@@ -222,3 +369,25 @@ class AdvancedExportView(LoginRequiredMixin, UserPassesTestMixin, View):
         logger.info(f"Admin {request.user.username} exported the advanced search list")
 
         return response
+
+
+class ApplySavedSearchView(LoginRequiredMixin, RedirectView):
+    pattern_name = "advanced-search"
+
+    def get_redirect_url(self, *args, **kwargs):
+        saved_search = get_object_or_404(SavedSearch, pk=self.kwargs.get("pk"))
+
+        if not (
+            saved_search.owner == self.request.user
+            or saved_search.shared_with_users.filter(pk=self.request.user.pk).exists()
+            or saved_search.shared_with_groups.filter(groups__in=self.request.user.groups.all()).exists()
+        ):
+            messages.error(self.request, "You do not have access to this saved search.")
+            return reverse("saved-searches")
+
+        query_data = saved_search.query_data
+        session = self.request.session
+        session["filter_data"] = query_data
+        session.save()
+        messages.success(self.request, f"Applied saved search: {saved_search.name}")
+        return super().get_redirect_url(*args, **kwargs)

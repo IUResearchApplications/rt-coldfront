@@ -1,8 +1,19 @@
 from django.urls import path
 
-from coldfront.plugins.advanced_search.views import AdvancedExportView, AdvancedSearchView
+from coldfront.plugins.advanced_search.views import (
+    AdvancedExportView,
+    AdvancedSearchView,
+    ApplySavedSearchView,
+    SavedSearchCreateView,
+    SavedSearchListView,
+    SavedSearchModifyView,
+)
 
 urlpatterns = [
     path("advanced-search/", AdvancedSearchView.as_view(), name="advanced-search"),
     path("export/", AdvancedExportView.as_view(), name="export"),
+    path("save-search/", SavedSearchCreateView.as_view(), name="save-search"),
+    path("saved-searches/", SavedSearchListView.as_view(), name="saved-searches"),
+    path("apply-saved-search/<int:pk>/", ApplySavedSearchView.as_view(), name="apply-saved-search"),
+    path("modify-search/<int:pk>/", SavedSearchModifyView.as_view(), name="modify-search"),
 ]
