@@ -31,15 +31,12 @@
                   <div class="card-body">
                     {{ user_search.description }}
                   </div>
-                  <div class="card-body">
-                    Search Type: {{ user_search.search_type }}
-                  </div>
                   <div class="card-footer d-flex align-items-center">
                     <div id="load-search-message" class="alert d-none mb-0 flex-grow-1 mr-2" role="alert" style="width: auto;"></div>
                     <div class="d-flex justify-content-end">
-                      <button type="button" id="btn-load-search" class="btn btn-primary mr-2">Load</button>
-                      <button type="button" class="btn btn-secondary mr-2 btn-modify-search" data-search-id="{{ user_search.pk }}">Modify</button>
-                      <button type="button" id="btn-delete-search" class="btn btn-danger">Delete</button>
+                      <button type="button" id="btn-load-search" class="btn btn-success mr-2">Load</button>
+                      <button type="button" id="btn-modify-search" class="btn btn-primary mr-2" data-search-id="{{ user_search.pk }}">Modify</button>
+                      <button type="button" class="btn btn-danger">Delete</button>
                     </div>
                   </div>
                 </div>
@@ -52,7 +49,7 @@
   </div>
 {% else %}
   <div class="alert alert-info" role="alert">
-    <i class="fas fa-info-circle" aria-disabled="true"></i> No saved searches.
+    <i class="fas fa-info-circle" aria-disabled="true"> No saved searches.
   </div>
 {% endif %}
 {% if shared_searches %}
@@ -75,21 +72,19 @@
         </button>
       </div>
       <form id="modifySearchForm" method="post" action="">
-        <div class="modal-body">
-          {% csrf_token %}
-          {% for field in modify_search_form %}
-            {{ field|as_crispy_field }}
-          {% endfor %}
-          <p>
-            <i class="fas fa-info-circle" aria-disabled="true"></i>
-            To modify to search parameters you override this search via the save search form.
+        <div class="px-3 pt-2">
+          <p class="text-muted small mb-0">
+            <i class="fas fa-info-circle" aria-hidden="true"></i>
+            To modify search parameters, you override this search via the save search form.
           </p>
         </div>
+        <div class="modal-body"></div>
         <div class="modal-footer d-flex align-items-center">
           <div id="modify-search-message" class="alert d-none mb-0 flex-grow-1 mr-2" role="alert" style="width: auto;"></div>
           <div class="d-flex justify-content-end">
             <button type="button" class="btn btn-secondary mr-2" data-dismiss="modal">Cancel</button>
-            <button type="submit" id="btn-submit-modify-search" class="btn btn-primary">Save</button>
+            <button type="submit" id="btn-submit-modify-search mr-2" class="btn btn-primary">Save</button>
+            <button type="button" id="btn-delete-search" class="btn btn-danger">Delete</button>
           </div>
         </div>
       </form>
@@ -98,73 +93,61 @@
 </div>
 
 <script>
-$(document).ready(function() {
-    // 1. Open Modal and Load Data
-    $(document).on('click', '.btn-modify-search', function() {
-        const searchId = $(this).data('search-id');
-        const $modal = $('#modifySearchModal');
-        const $form = $('#modifySearchForm');
-        const $msg = $('#modify-search-message');
+  $(document).ready(function() {
+    $(document).on('click', '#btn-modify-search', function() {
+      const searchId = $(this).data('search-id');
+      const $modal = $('#modifySearchModal');
+      const $form = $('#modifySearchForm');
+      const $msg = $('#modify-search-message');
 
-        $msg.addClass('d-none').removeClass('alert-success alert-danger');
-        $modal.modal('show');
+      $msg.addClass('d-none').removeClass('alert-success alert-danger');
+      $modal.modal('show');
 
-        $.ajax({
-            url: `/advanced_search/modify-search/${searchId}/`,
-            type: 'GET',
-            success: function(data) {
-                $form.attr('action', `/advanced_search/modify-search/${searchId}/`);
-                
-                // If using the form_html approach from the view
-                if (data.form_html) {
-                    $form.find('.modal-body').html(data.form_html);
-                } else {
-                    // Fallback to manual population if fields are static
-                    $form.find('input[name="name"]').val(data.name);
-                    $form.find('textarea[name="description"]').val(data.description);
-                }
-            },
-            error: function() {
-                $msg.removeClass('d-none').addClass('alert-danger').text('Failed to load search details.');
-            }
-        });
+      $.ajax({
+        url: `/advanced_search/modify-search/${searchId}/`,
+        type: 'GET',
+        success: function(data) {
+          $form.attr('action', `/advanced_search/modify-search/${searchId}/`);
+          $form.find('.modal-body').html(data.form_html);
+          $modal.modal('show');
+        },
+          error: function() {
+          $msg.removeClass('d-none').addClass('alert-danger').text('Failed to load search details.');
+        }
+      });
     });
 
-    // 2. Handle Form Submission
     $('#modifySearchForm').on('submit', function(e) {
-        e.preventDefault();
-        const $form = $(this);
-        const $msg = $('#modify-search-message');
-        const $btn = $('#btn-submit-modify-search');
+      e.preventDefault();
+      const $form = $(this);
+      const $msg = $('#modify-search-message');
+      const $btn = $('#btn-submit-modify-search');
 
-        $msg.addClass('d-none').removeClass('alert-success alert-danger');
-        $btn.prop('disabled', true).text('Saving...');
+      $msg.addClass('d-none').removeClass('alert-success alert-danger');
+      $btn.prop('disabled', true).text('Saving...');
 
-        $.ajax({
-            url: $form.attr('action'),
-            type: 'POST',
-            data: $form.serialize(),
-            headers: { 'X-CSRFToken': getCookie('csrftoken') },
-            success: function(data) {
-                $msg.removeClass('d-none').addClass('alert-success').text(data.message);
-                $btn.prop('disabled', false).text('Save');
-                setTimeout(() => {
-                    location.reload();
-                }, 1500);
-            },
-            error: function(xhr) {
-                $msg.removeClass('d-none').addClass('alert-danger');
-                let errorMessage = "Error updating search.";
-                if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    const firstField = Object.keys(xhr.responseJSON.errors)[0];
-                    errorMessage = xhr.responseJSON.errors[firstField][0];
-                } else if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
-                }
-                $msg.text(errorMessage);
-                $btn.prop('disabled', false).text('Save');
-            }
-        });
+      $.ajax({
+        url: $form.attr('action'),
+        type: 'POST',
+        data: $form.serialize(),
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        success: function(data) {
+          $msg.removeClass('d-none').addClass('alert-success').text(data.message);
+          $btn.prop('disabled', false).text('Save');
+        },
+        error: function(xhr) {
+          $msg.removeClass('d-none').addClass('alert-danger');
+          let errorMessage = "Error updating search.";
+          if (xhr.responseJSON && xhr.responseJSON.errors) {
+            const firstField = Object.keys(xhr.responseJSON.errors)[0];
+            errorMessage = xhr.responseJSON.errors[firstField][0];
+          } else if (xhr.responseJSON && xhr.responseJSON.message) {
+            errorMessage = xhr.responseJSON.message;
+          }
+          $msg.text(errorMessage);
+          $btn.prop('disabled', false).text('Save');
+        }
+      });
     });
-});
+  });
 </script>

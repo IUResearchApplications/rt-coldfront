@@ -2,6 +2,7 @@ import csv
 import json
 import logging
 
+from crispy_forms.utils import render_crispy_form
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -22,8 +23,7 @@ from coldfront.plugins.advanced_search.forms import (
     AttributeFormSetHelper,
     ProjectAttributeSearchForm,
     ProjectSearchForm,
-    SavedSearchCreateForm,
-    SavedSearchModifyForm,
+    SearchCreateForm,
     UserSearchForm,
 )
 from coldfront.plugins.advanced_search.models import SavedSearch
@@ -180,7 +180,7 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         context["project_form"] = project_search_form
         context["allocation_form"] = allocation_search_form
         context["user_form"] = user_search_form
-        context["save_search_form"] = SavedSearchCreateForm(user=self.request.user)
+        context["save_search_form"] = SearchCreateForm(user=self.request.user)
 
         submit = filter_data.get("submit") if filter_data else None
         if submit == "Project Search":
@@ -244,7 +244,7 @@ class SavedSearchCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
         return context
 
     def post(self, request, *args, **kwargs):
-        form = SavedSearchCreateForm(request.POST, user=request.user)
+        form = SearchCreateForm(request.POST, user=request.user)
         query_data_raw = request.POST.get("query_data")
 
         if form.is_valid():
@@ -278,19 +278,7 @@ class SavedSearchListView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class SavedSearchModifyView(LoginRequiredMixin, UserPassesTestMixin, View):
-    def test_func(self):
-        user = self.request.user
-        if user.is_superuser:
-            return True
-            
-        # if not (
-        #     saved_search.owner == request.user
-        #     or saved_search.shared_with_users.filter(pk=request.user.pk).exists()
-        #     or saved_search.shared_with_groups.filter(groups__in=request.user.groups.all()).exists()
-        # ):
-        #     return False
-
+class SavedSearchModifyView(LoginRequiredMixin, View):
     def get(self, request, pk):
         saved_search = get_object_or_404(SavedSearch, pk=pk)
 
@@ -302,21 +290,13 @@ class SavedSearchModifyView(LoginRequiredMixin, UserPassesTestMixin, View):
         ):
             return JsonResponse({"error": "Unauthorized"}, status=403)
 
-        form = SavedSearchModifyForm(instance=saved_search)
+        form = SearchCreateForm(instance=saved_search, user=request.user)
 
-        return JsonResponse(
-            {
-                "name": saved_search.name,
-                "description": saved_search.description,
-                "form_html": form.as_p(),
-                "pk": saved_search.pk,
-            }
-        )
+        return JsonResponse({"form_html": render_crispy_form(form)})
 
     def post(self, request, pk):
         saved_search = get_object_or_404(SavedSearch, pk=pk)
 
-        # Check permissions
         if not (
             saved_search.owner == request.user
             or saved_search.shared_with_users.filter(pk=request.user.pk).exists()
@@ -324,7 +304,7 @@ class SavedSearchModifyView(LoginRequiredMixin, UserPassesTestMixin, View):
         ):
             return JsonResponse({"error": "Unauthorized"}, status=403)
 
-        form = SavedSearchModifyForm(request.POST, instance=saved_search)
+        form = SearchCreateForm(request.POST, instance=saved_search, user=request.user)
 
         if form.is_valid():
             form.save()
@@ -336,6 +316,10 @@ class SavedSearchModifyView(LoginRequiredMixin, UserPassesTestMixin, View):
             )
 
 
+class SavedSearchDetailView(LoginRequiredMixin, View):
+    pass
+
+
 class SavedSearchDeleteView(LoginRequiredMixin, View):
     pass
 
@@ -345,9 +329,9 @@ class AdvancedExportView(LoginRequiredMixin, UserPassesTestMixin, View):
         user = self.request.user
         if user.is_superuser:
             return True
-
         if user.has_perms(["project.can_view_all_projects", "allocation.can_view_all_allocations"]):
             return True
+        return False
 
     def post(self, request):
         data = json.loads(request.POST.get("data"))

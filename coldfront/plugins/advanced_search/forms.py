@@ -531,7 +531,7 @@ class Formset(LayoutObject):
         return render_to_string(self.template, context.flatten())
 
 
-class SavedSearchCreateForm(forms.ModelForm):
+class SearchCreateForm(forms.ModelForm):
     class Meta:
         model = SavedSearch
         fields = ["name", "description", "shared_with_users", "shared_with_groups"]
@@ -546,12 +546,3 @@ class SavedSearchCreateForm(forms.ModelForm):
         if user:
             self.fields["shared_with_users"].queryset = User.objects.filter(is_staff=True)
             self.fields["shared_with_groups"].queryset = user.groups.all()
-
-
-class SavedSearchModifyForm(forms.ModelForm):
-    class Meta:
-        model = SavedSearch
-        fields = ["name", "description", "shared_with_users", "shared_with_groups"]
-        widgets = {
-            "description": forms.Textarea(attrs={"rows": 3}),
-        }
