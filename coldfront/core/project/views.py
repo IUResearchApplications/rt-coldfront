@@ -76,6 +76,7 @@ from coldfront.core.project.signals import (
     project_archive,
     project_new,
     project_remove_user,
+    project_review_approved,
     project_update,
     project_user_role_changed,
 )
@@ -2754,6 +2755,9 @@ class ProjectReviewApproveView(LoginRequiredMixin, UserPassesTestMixin, View):
             )
 
         logger.info(f"Admin {request.user.username} approved a project renewal request (project pk={project_obj.pk})")
+
+        project_review_approved.send(sender=self.__class__, project_review_pk=project_review_obj.pk)
+
         return HttpResponseRedirect(reverse("project-review-list"))
 
 
