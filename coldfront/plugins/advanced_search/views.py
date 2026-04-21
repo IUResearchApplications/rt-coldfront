@@ -316,8 +316,23 @@ class SavedSearchModifyView(LoginRequiredMixin, View):
             )
 
 
-class SavedSearchDetailView(LoginRequiredMixin, View):
-    pass
+class SavedSearchDetailView(LoginRequiredMixin, TemplateView):
+    template_name = "advanced_search/saved_search_details_modal_content.html"
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        saved_search = get_object_or_404(SavedSearch, pk=kwargs.get("pk"))
+        context.update({
+            "name": saved_search.name,
+            "description": saved_search.description,
+            "created": saved_search.created,
+            "modified": saved_search.modified,
+            "raw_query_data": saved_search.query_data,
+            "owner": saved_search.owner.username,
+            "shared_with_users": list(saved_search.shared_with_users.all().values_list("username", flat=True)),
+            "shared_with_groups": list(saved_search.shared_with_groups.all().values_list("name", flat=True)),
+        })
+        return context
 
 
 class SavedSearchDeleteView(LoginRequiredMixin, View):

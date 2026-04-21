@@ -1,0 +1,62 @@
+<style>
+  .scrollable-box {
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+  }
+</style>
+
+<div class="modal-header">
+  <h2 class="modal-title" id="searchDetailsModalLabel">Search Details</h2>
+  <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="modal-body">
+  <p><strong class="text-nowrap">Name:</strong> {{ name }}</p>
+  <p><strong class="text-nowrap">Owner:</strong> {{ owner }}</p>
+  <p><strong class="text-nowrap">Description:</strong> {{ description }}</p>
+  <div class="row mb-3">
+    <div class="col">
+      <span class="font-weight-bold">Shared with Users:</span>
+      <div class="scrollable-box">
+        <ul>
+          {% for user in share_with_users %}
+            <li>{{ user }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    <div class="col">
+      <span class="font-weight-bold">Shared with Groups:<span/>
+      <div class="scrollable-box">
+        <ul>
+          {% for group in shared_with_groups %}
+            <li>{{ group }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+  <span class="font-weight-bold">Contents:</span>
+  <div class="scrollable-box">
+    {{ raw_query_data }}
+  </div>
+</div>
+<div class="modal-footer">
+  <div class="row w-100 justify-content-between align-items-center">
+    <div class="col-auto">
+      <small class="text-muted">
+        Created: {{ created }}
+        {% if not created == modified %}
+          <br>Last Updated: {{ modified }}
+        {% endif %}
+      </small>
+    </div>
+    <div class="col-auto">
+      <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+    </div>
+  </div>
+</div>
