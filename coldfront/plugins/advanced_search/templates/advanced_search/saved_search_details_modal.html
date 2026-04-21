@@ -1,31 +1,38 @@
-<div class="modal fade" id="searchDetailsModal" tabindex="-1" role="dialog" aria-labelledby="searchDetailsModalLabel" aria-hidden="true">
+<div
+  class="modal fade"
+  id="searchDetailsModal"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="searchDetailsModalLabel"
+  aria-hidden="true"
+>
   <div class="modal-dialog" role="document">
     <div class="modal-content"></div>
   </div>
 </div>
 
 <script>
-  $(document).ready(function() {
-    $(document).on('click', '#btn-details-search', function() {
-      const searchId = $(this).data('search-id');
-      const $modal = $('#searchDetailsModal');
-      const $modalBody = $('#searchDetailsModal .modal-content');
+  $(document).ready(function () {
+    $(document).on("click", "#btn-details-search", function () {
+      const searchId = $(this).data("search-id");
+      const $modal = $("#searchDetailsModal");
+      const $modalBody = $("#searchDetailsModal .modal-content");
 
-      $modal.modal('show');
+      $modal.modal("show");
 
       $.ajax({
         url: `/advanced_search/search-details/${searchId}/`,
-        type: 'GET',
-        success: function(data) {
+        type: "GET",
+        success: function (data) {
           $modalBody.html(data);
         },
-        error: function() {
+        error: function () {
           $modalBody.html(
             '<div class="modal-body"> \
               <div class="alert alert-danger">Failed to load search details. Please try again.</div> \
-            </div>'
+            </div>',
           );
-        }
+        },
       });
     });
   });
