@@ -50,10 +50,6 @@
   }
 
   $(document).ready(function () {
-    $("#saveSearchModal").on("show.bs.modal", function () {
-      initSelect2();
-    });
-
     $(document).on("click", "#btn-modify-search", function () {
       const searchId = $(this).data("search-id");
       const $modal = $("#modifySearchModal");
@@ -68,8 +64,9 @@
         type: "GET",
         success: function (data) {
           $form.attr("action", `/advanced_search/modify-search/${searchId}/`);
-          $form.find(".modal-body").html(data.form_html);
+          $form.find(".modal-body").html(data);
           $modal.modal("show");
+          initSelect2();
         },
         error: function () {
           $msg

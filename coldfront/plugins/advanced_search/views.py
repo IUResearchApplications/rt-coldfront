@@ -2,7 +2,6 @@ import csv
 import json
 import logging
 
-from crispy_forms.utils import render_crispy_form
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -280,21 +279,28 @@ class SavedSearchListView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class SavedSearchModifyView(LoginRequiredMixin, View):
-    def get(self, request, pk):
-        saved_search = get_object_or_404(SavedSearch, pk=pk)
+class SavedSearchModifyView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    template_name = "advanced_search/save_search_form_body.html"
 
-        # Check permissions
+    def test_func(self):
+        user = self.request.user
+        if user.is_superuser:
+            return True
+
+        saved_search = get_object_or_404(SavedSearch, pk=self.kwargs.get("pk"))
         if not (
-            saved_search.owner == request.user
-            or saved_search.shared_with_users.filter(pk=request.user.pk).exists()
-            or saved_search.shared_with_groups.filter(groups__in=request.user.groups.all()).exists()
+            saved_search.owner == user
+            or saved_search.shared_with_users.filter(pk=user.pk).exists()
+            or saved_search.shared_with_groups.filter(groups__in=user.groups.all()).exists()
         ):
-            return JsonResponse({"error": "Unauthorized"}, status=403)
+            return
 
-        form = SearchCreateForm(instance=saved_search, user=request.user)
+    def get_context_data(self, **kwargs):
+        saved_search = get_object_or_404(SavedSearch, pk=kwargs.get("pk"))
 
-        return JsonResponse({"form_html": render_crispy_form(form)})
+        context = super().get_context_data(**kwargs)
+        context["save_search_form"] = SearchCreateForm(instance=saved_search, user=self.request.user)
+        return context
 
     def post(self, request, pk):
         saved_search = get_object_or_404(SavedSearch, pk=pk)
