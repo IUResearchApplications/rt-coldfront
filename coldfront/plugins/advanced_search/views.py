@@ -203,7 +203,9 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
         return context
 
 
-class SavedSearchCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
+class SavedSearchCreateView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    template_name = "advanced_search/save_search_form_body.html"
+
     def test_func(self):
         user = self.request.user
         if user.is_superuser:
@@ -238,6 +240,7 @@ class SavedSearchCreateView(LoginRequiredMixin, UserPassesTestMixin, View):
                 }
             )
 
+        context["save_search_form"] = SearchCreateForm(user=self.request.user)
         context["query_data"] = json.dumps(initial_query)
         context["search_type"] = search_type
         return context

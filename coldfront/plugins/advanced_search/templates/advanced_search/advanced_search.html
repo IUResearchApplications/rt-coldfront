@@ -76,8 +76,6 @@ Project and Allocation Export List
         type="button"
         id="btn-save-search"
         class="btn btn-primary"
-        data-toggle="modal"
-        data-target="#saveSearchModal"
       >
         Save Search
       </button>
@@ -85,9 +83,7 @@ Project and Allocation Export List
   </div>
 </div>
 
-{% include "advanced_search/save_search.html" %}
-{% include "advanced_search/modify_saved_search.html" %}
-{% include "advanced_search/saved_search_details_modal.html" %}
+{% include "advanced_search/saved_search_modal.html" %}
 
 <div id="no_display_alert" class="alert alert-warning" role="alert" aria-live="polite">
   <i class="fas fa-info-circle" aria-hidden="true"></i> No display option selected so no results will appear
@@ -371,6 +367,7 @@ Project and Allocation Export List
       success: function (data) {
         const $savedSearchesDiv = $("#saved-searches");
         $savedSearchesDiv.html(data);
+        attachSavedSearchHandlers();
       },
       error: function (xhr) {
         const $savedSearchesDiv = $("#saved-searches");
@@ -382,6 +379,22 @@ Project and Allocation Export List
         $savedSearchesDiv.html(errorMessage);
       },
     });
+
+    $("#btn-save-search").on("click", function () {
+      window.showSavedSearchModal("save");
+    });
+
+    function attachSavedSearchHandlers() {
+      $(document).on("click", "#btn-modify-search", function () {
+        const searchId = $(this).data("search-id");
+        window.showSavedSearchModal("modify", searchId);
+      });
+
+      $(document).on("click", "#btn-details-search", function () {
+        const searchId = $(this).data("search-id");
+        window.showSavedSearchModal("details", searchId);
+      });
+    }
   });
 </script>
 {% endblock %}
