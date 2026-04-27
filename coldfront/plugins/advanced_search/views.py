@@ -37,6 +37,12 @@ from coldfront.plugins.advanced_search.utils import (
 logger = logging.getLogger(__name__)
 
 
+# TODO
+# Update the saved search list when a new search is created/updated/modified
+# Auto load a newly created saved search
+# Add a way to modify the search params in a saved search
+
+
 class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     template_name = "advanced_search/advanced_search.html"
 
@@ -215,6 +221,8 @@ class SavedSearchCreateView(LoginRequiredMixin, UserPassesTestMixin, TemplateVie
         context = super().get_context_data(**kwargs)
         filter_data = self.request.session.get("filter_data", {})
         search_type = self.request.GET.get("search_type", "project")
+        
+        print(filter_data)
 
         initial_query = {}
         if search_type == "project":
@@ -239,6 +247,8 @@ class SavedSearchCreateView(LoginRequiredMixin, UserPassesTestMixin, TemplateVie
                     "user_search": {k: v for k, v in filter_data.items() if k.startswith("user_search-")},
                 }
             )
+            
+        print(initial_query)
 
         context["save_search_form"] = SearchCreateForm(user=self.request.user)
         context["query_data"] = json.dumps(initial_query)
@@ -252,6 +262,7 @@ class SavedSearchCreateView(LoginRequiredMixin, UserPassesTestMixin, TemplateVie
         if form.is_valid():
             try:
                 query_data = json.loads(query_data_raw) if query_data_raw else {}
+                print(query_data)
                 saved_search = form.save(commit=False)
                 saved_search.owner = request.user
                 saved_search.query_data = query_data
@@ -386,8 +397,21 @@ class AdvancedExportView(LoginRequiredMixin, UserPassesTestMixin, View):
         return response
 
 
-class ApplySavedSearchView(LoginRequiredMixin, RedirectView):
+class ApplySavedSearchView(LoginRequiredMixin, UserPassesTestMixin, RedirectView):
     pattern_name = "advanced-search"
+    
+    def test_func(self):
+        user = self.request.user
+        if user.is_superuser:
+            return True
+        
+        saved_search = get_object_or_404(SavedSearch, pk=self.kwargs.get("pk"))
+        if (
+            saved_search.owner == self.request.user
+            or saved_search.shared_with_users.filter(pk=self.request.user.pk).exists()
+            or saved_search.shared_with_groups.filter(groups__in=self.request.user.groups.all()).exists()
+        ):
+            return True
 
     def get_redirect_url(self, *args, **kwargs):
         saved_search = get_object_or_404(SavedSearch, pk=self.kwargs.get("pk"))
@@ -404,5 +428,28 @@ class ApplySavedSearchView(LoginRequiredMixin, RedirectView):
         session = self.request.session
         session["filter_data"] = query_data
         session.save()
-        messages.success(self.request, f"Applied saved search: {saved_search.name}")
+        messages.success(self.request, f"Loaded saved search: {saved_search.name}")
         return super().get_redirect_url(*args, **kwargs)
+
+
+class LoadSavedSearchView(LoginRequiredMixin, UserPassesTestMixin, View):
+    """AJAX view to load saved search data and return as JSON for dynamic form population."""
+
+    def test_func(self):
+        user = self.request.user
+        if user.is_superuser:
+            return True
+
+        saved_search = get_object_or_404(SavedSearch, pk=self.kwargs.get("pk"))
+        if (
+            saved_search.owner == self.request.user
+            or saved_search.shared_with_users.filter(pk=self.request.user.pk).exists()
+            or saved_search.shared_with_groups.filter(groups__in=self.request.user.groups.all()).exists()
+        ):
+            return True
+
+    def get(self, request, *args, **kwargs):
+        saved_search = get_object_or_404(SavedSearch, pk=self.kwargs.get("pk"))
+        print(saved_search.query_data)
+        query_data = saved_search.query_data
+        return JsonResponse({"query_data": query_data})

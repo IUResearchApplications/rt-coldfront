@@ -36,21 +36,6 @@
       </div>
       <div class="modal-body"></div>
       <div class="modal-footer">
-        {% if created %}
-          <div class="row w-100 justify-content-between align-items-center">
-            <div class="col-auto">
-              <small class="text-muted">
-                Created: {{ created }}
-                {% if not created == modified %}
-                  <br>Last Updated: {{ modified }}
-                {% endif %}
-              </small>
-            </div>
-            <div class="col-auto">
-              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-            </div>
-          </div>
-        {% endif %}
         <div id="modal-message" class="alert d-none mb-0 flex-grow-1 mr-2" role="alert" style="width: auto"></div>
         <div class="d-flex justify-content-end" id="modal-buttons"></div>
       </div>
@@ -99,7 +84,6 @@
       const $modalTitle = $("savedSearchModalLabel");
       const $modalContent = $modal.find(".modal-content");
       const $modalBody = $modalContent.find(".modal-body");
-      const $modalFooter = $modalContent.find(".modal-footer");
       const $messageContainer = $("#modal-message");
       const $buttonContainer = $("#modal-buttons");
 
@@ -123,7 +107,44 @@
 
     function loadSaveForm($modalBody, $modalContent) {     
       const $form = $(`<form id="saveSearchForm" method="post" action="/advanced_search/save-search/"></form>`);
-      $modalContent.wrap($form);
+      $modalContent.wrapInner($form);
+      
+      $(document).on("submit", "#saveSearchForm", function (e) {
+        e.preventDefault();
+        const $submitBtn = $("#btn-submit-save-search");
+        const url = $(this).attr("action");
+        const formData = $(this).serialize();
+  
+        $submitBtn.prop("disabled", true).text("Saving...");
+  
+        $.ajax({
+          headers: { "X-CSRFToken": getCookie("csrftoken") },
+          type: "POST",
+          url: url,
+          data: formData,
+          success: function (data) {
+            $("#savedSearchModal").modal("hide");
+          },
+          error: function (xhr) {
+            console.log(xhr)
+            // let errorMessage = "There was an issue saving your search.";
+            
+            // if (xhr.responseJSON && xhr.responseJSON.form_html) {
+            //   $form.html(xhr.responseJSON.form_html);
+            //   $msg.text(xhr.responseJSON.message || errorMessage);
+            // } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+            //   const firstField = Object.keys(xhr.responseJSON.errors)[0];
+            //   errorMessage = xhr.responseJSON.errors[firstField][0];
+            //   $msg.text(errorMessage);
+            // } else if (xhr.responseJSON && xhr.responseJSON.message) {
+            //   errorMessage = xhr.responseJSON.message;
+            // } else {
+            //   $msg.text(errorMessage);
+            // }
+            // $submitBtn.prop("disabled", false).text("Save");
+          },
+        });
+      });
 
       $.ajax({
         url: "/advanced_search/save-search/",
@@ -133,51 +154,6 @@
           initSelect2();
 
           $("#hidden-query-data").val(JSON.stringify(window.filter_data));
-
-          $form.on("submit", function (e) {
-            const $submitBtn = $("#btn-submit-save-search");
-            const url = $form.attr("action");
-            const formData = $form.serialize();
-            const $msg = $("#modal-message");
-
-            $msg.addClass("d-none").removeClass("alert-success alert-danger");
-            $msg.text("");
-            $submitBtn.prop("disabled", true).text("Saving...");
-
-            $.ajax({
-              headers: { "X-CSRFToken": getCookie("csrftoken") },
-              type: "POST",
-              url: url,
-              data: formData,
-              success: function (data) {
-                $msg.removeClass("d-none").addClass("alert-success");
-                $msg.text(data.message);
-                $submitBtn.prop("disabled", false).text("Save");
-
-                setTimeout(function () {
-                  $("#savedSearchModal").modal("hide");
-                }, 1500);
-              },
-              error: function (xhr) {
-                $msg.removeClass("d-none").addClass("alert-danger");
-                let errorMessage = "There was an issue saving your search.";
-                
-                if (xhr.responseJSON && xhr.responseJSON.form_html) {
-                  $form.html(xhr.responseJSON.form_html);
-                  $msg.text(xhr.responseJSON.message || errorMessage);
-                } else if (xhr.responseJSON && xhr.responseJSON.errors) {
-                  const firstField = Object.keys(xhr.responseJSON.errors)[0];
-                  errorMessage = xhr.responseJSON.errors[firstField][0];
-                  $msg.text(errorMessage);
-                } else if (xhr.responseJSON && xhr.responseJSON.message) {
-                  errorMessage = xhr.responseJSON.message;
-                } else {
-                  $msg.text(errorMessage);
-                }
-                $submitBtn.prop("disabled", false).text("Save");
-              },
-            });
-          });
         },
         error: function () {
           $modalBody.html(
@@ -189,7 +165,45 @@
 
     function loadModifyForm($modalBody, $modalContent, searchId) {
       const $form = $(`<form id="modifySearchForm" method="post" action="/advanced_search/modify-search/${searchId}/"></form>`);
-      $modalContent.wrap($form);
+      $modalContent.wrapInner($form);
+
+      $(document).on("submit", "#modifySearchForm", function (e) {
+        e.preventDefault();
+        const $form = $(this);
+        const $btn = $("#btn-submit-modify-search");
+        const $msg = $("#modal-message");
+  
+        $msg.addClass("d-none").removeClass("alert-success alert-danger");
+        $msg.text("");
+        $btn.prop("disabled", true).text("Saving...");
+  
+        $.ajax({
+          url: $form.attr("action"),
+          type: "POST",
+          data: $form.serialize(),
+          headers: { "X-CSRFToken": getCookie("csrftoken") },
+          success: function (data) {
+            $msg.removeClass("d-none").addClass("alert-success").text(data.message);
+            $btn.prop("disabled", false).text("Save");
+  
+            setTimeout(function () {
+              $("#savedSearchModal").modal("hide");
+            }, 1500);
+          },
+          error: function (xhr) {
+            $msg.removeClass("d-none").addClass("alert-danger");
+            let errorMessage = "Error updating search.";
+            if (xhr.responseJSON && xhr.responseJSON.errors) {
+              const firstField = Object.keys(xhr.responseJSON.errors)[0];
+              errorMessage = xhr.responseJSON.errors[firstField][0];
+            } else if (xhr.responseJSON && xhr.responseJSON.message) {
+              errorMessage = xhr.responseJSON.message;
+            }
+            $msg.text(errorMessage);
+            $btn.prop("disabled", false).text("Save");
+          },
+        });
+      });
 
       $.ajax({
         url: `/advanced_search/modify-search/${searchId}/`,
@@ -206,7 +220,7 @@
       });
     }
 
-    function loadDetailsContent($modalBody, $modalContent, searchId) {
+    function loadDetailsContent($modalBody, searchId) {
       $.ajax({
         url: `/advanced_search/search-details/${searchId}/`,
         type: "GET",
@@ -248,44 +262,6 @@
         error: function () {
           $msg.removeClass("d-none").addClass("alert-danger");
           $msg.text("Failed to delete saved search.");
-        },
-      });
-    });
-
-    $(document).on("submit", "#modifySearchForm", function (e) {
-      e.preventDefault();
-      const $form = $(this);
-      const $btn = $("#btn-submit-modify-search");
-      const $msg = $("#modal-message");
-
-      $msg.addClass("d-none").removeClass("alert-success alert-danger");
-      $msg.text("");
-      $btn.prop("disabled", true).text("Saving...");
-
-      $.ajax({
-        url: $form.attr("action"),
-        type: "POST",
-        data: $form.serialize(),
-        headers: { "X-CSRFToken": getCookie("csrftoken") },
-        success: function (data) {
-          $msg.removeClass("d-none").addClass("alert-success").text(data.message);
-          $btn.prop("disabled", false).text("Save");
-
-          setTimeout(function () {
-            $("#savedSearchModal").modal("hide");
-          }, 1500);
-        },
-        error: function (xhr) {
-          $msg.removeClass("d-none").addClass("alert-danger");
-          let errorMessage = "Error updating search.";
-          if (xhr.responseJSON && xhr.responseJSON.errors) {
-            const firstField = Object.keys(xhr.responseJSON.errors)[0];
-            errorMessage = xhr.responseJSON.errors[firstField][0];
-          } else if (xhr.responseJSON && xhr.responseJSON.message) {
-            errorMessage = xhr.responseJSON.message;
-          }
-          $msg.text(errorMessage);
-          $btn.prop("disabled", false).text("Save");
         },
       });
     });

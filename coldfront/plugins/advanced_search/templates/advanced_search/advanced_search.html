@@ -10,6 +10,7 @@ Project and Allocation Export List
 {% block content %}
 <h1>Advanced Search</h1>
 <hr />
+<div id="loaded_search"></div>
 <div class="mb-3" id="accordion">
   <div class="card">
     <div class="card-header">
@@ -253,6 +254,62 @@ Project and Allocation Export List
     return cookieValue;
   }
 
+  function populateSearchForm(queryData) {
+    // Find the form that matches the search type
+    var $form = null;
+    var activeTab = null;
+    
+    console.log(queryData);
+    return;
+
+    if (queryData["project_search-submit"]) {
+      $form = $('#project-search form');
+      activeTab = '#project-search';
+    } else if (queryData["allocation_search-submit"]) {
+      $form = $('#allocation-search form');
+      activeTab = '#allocation-search';
+    } else if (queryData["user_search-submit"]) {
+      $form = $('#user-search form');
+      activeTab = '#user-search';
+    }
+
+    if (!$form || !$form.length) return;
+
+    // Switch to the appropriate tab
+    if (activeTab) {
+      $(activeTab + ' a[data-toggle="tab"]').tab("show");
+    }
+
+    // Reset the form to clear all fields
+    $form[0].reset();
+
+    // Populate all fields from query data
+    for (var key in queryData) {
+      if (queryData.hasOwnProperty(key)) {
+        var $field = $("#" + key);
+        if ($field.length && $field.closest('form').is($form)) {
+          var value = queryData[key];
+          if ($field.is(":checkbox") || $field.is(":radio")) {
+            $field.prop("checked", value === true || value === "true" || value === "on");
+          } else if ($field.is("select")) {
+            $field.val(value);
+            $field.trigger("change");
+          } else {
+            $field.val(value);
+          }
+        }
+      }
+    }
+
+    // Trigger change events to update dependent fields
+    $form.find("input, select").trigger("change");
+
+    // Auto-submit the form after a brief delay
+    setTimeout(function() {
+      $form.submit();
+    }, 100);
+  }
+
   $(document).ready(function () {
     if (columns.length) {
       $("#results_table").DataTable({ bFilter: false });
@@ -382,6 +439,27 @@ Project and Allocation Export List
 
     $("#btn-save-search").on("click", function () {
       window.showSavedSearchModal("save");
+    });
+
+    $(document).on("click", "#btn-load-search", function () {
+      const searchId = $(this).data("search-id");
+      const $msgContainer = $(`#load-search-message-${searchId}`);
+      $msgContainer.html("");
+      $.ajax({
+        url: `/advanced_search/load-saved-search/${searchId}/`,
+        type: "GET",
+        success: function (data) {
+          populateSearchForm(data.query_data);
+          $msgContainer.html('<div class="alert alert-success" role="alert">Search loaded successfully.</div>')
+        },
+        error: function (xhr) {
+          if (xhr.responseJSON && xhr.responseJSON.error) {
+            $msgContainer.html(`<div class="alert alert-danger" role="alert">${xhr.responseJSON.error}</div>`)
+          } else {
+            $msgContainer.html('<div class="alert alert-danger" role="alert">Failed to load search.</div>')
+          }
+        }
+      });
     });
 
     function attachSavedSearchHandlers() {
