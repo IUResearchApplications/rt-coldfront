@@ -38,7 +38,6 @@ logger = logging.getLogger(__name__)
 
 
 # TODO
-# Update the saved search list when a new search is created/updated/modified
 # Auto load a newly created saved search
 # Add a way to modify the search params in a saved search
 

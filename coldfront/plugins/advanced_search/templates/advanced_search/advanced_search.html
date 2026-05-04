@@ -255,42 +255,61 @@ Project and Allocation Export List
   }
 
   function populateSearchForm(queryData) {
-    // Find the form that matches the search type
-    var $form = null;
-    var activeTab = null;
-    
-    console.log(queryData);
-    return;
+    var searchType = null;
+    var mainFormPrefix = null;
+    var attributeFormPrefix = null;
 
-    if (queryData["project_search-submit"]) {
-      $form = $('#project-search form');
-      activeTab = '#project-search';
-    } else if (queryData["allocation_search-submit"]) {
-      $form = $('#allocation-search form');
-      activeTab = '#allocation-search';
-    } else if (queryData["user_search-submit"]) {
-      $form = $('#user-search form');
-      activeTab = '#user-search';
+    if (queryData.project_search || (queryData.project_search && queryData.project_attributes)) {
+      searchType = 'project';
+      mainFormPrefix = 'project_search';
+      attributeFormPrefix = 'projectattribute';
+    }
+    else if (queryData.allocation_search || (queryData.allocation_search && queryData.allocation_attributes)) {
+      searchType = 'allocation';
+      mainFormPrefix = 'allocation_search';
+      attributeFormPrefix = 'allocationattribute';
+    }
+    else if (queryData.user_search) {
+      searchType = 'user';
+      mainFormPrefix = 'user_search';
+      attributeFormPrefix = null;
     }
 
-    if (!$form || !$form.length) return;
-
-    // Switch to the appropriate tab
-    if (activeTab) {
-      $(activeTab + ' a[data-toggle="tab"]').tab("show");
+    if (!searchType) {
+      console.log('No valid search type found in queryData');
+      return;
     }
 
-    // Reset the form to clear all fields
-    $form[0].reset();
+    var activeTabSelector = null;
+    if (searchType === 'project') {
+      activeTabSelector = '#project-search';
+    } else if (searchType === 'allocation') {
+      activeTabSelector = '#allocation-search';
+    } else if (searchType === 'user') {
+      activeTabSelector = '#user-search';
+    }
 
-    // Populate all fields from query data
-    for (var key in queryData) {
-      if (queryData.hasOwnProperty(key)) {
-        var $field = $("#" + key);
-        if ($field.length && $field.closest('form').is($form)) {
-          var value = queryData[key];
+    $(activeTabSelector + ' a[data-toggle="tab"]').tab("show");
+
+    setTimeout(function() {
+      populateFormFields(searchType, mainFormPrefix, attributeFormPrefix, queryData);
+    }, 100);
+  }
+
+  function populateFormFields(searchType, mainFormPrefix, attributeFormPrefix, queryData) {
+    var mainFormData = queryData[mainFormPrefix] || {};
+    var attributeFormData = queryData[attributeFormPrefix + '_attributes'] || {};
+
+    for (var key in mainFormData) {
+      if (mainFormData.hasOwnProperty(key)) {
+        // Convert key like "project_search-resources__name" to ID "id_project_search-resources__name"
+        var fieldId = "id_" + key;
+        var $field = $("#" + fieldId);
+        if ($field.length) {
+          var value = mainFormData[key];
+          console.log('Setting field', fieldId, 'to value:', value);
           if ($field.is(":checkbox") || $field.is(":radio")) {
-            $field.prop("checked", value === true || value === "true" || value === "on");
+            $field.prop("checked", value === true || value === "true" || value === "on" || value === "1");
           } else if ($field.is("select")) {
             $field.val(value);
             $field.trigger("change");
@@ -301,13 +320,81 @@ Project and Allocation Export List
       }
     }
 
-    // Trigger change events to update dependent fields
-    $form.find("input, select").trigger("change");
+    if (attributeFormPrefix && Object.keys(attributeFormData).length > 0) {
+      var totalForms = 0;
+      var attributeDataByForm = {};
 
-    // Auto-submit the form after a brief delay
+      for (var key in attributeFormData) {
+        if (attributeFormData.hasOwnProperty(key)) {
+          // Parse key like "projectattribute-0-attribute__name"
+          var parts = key.split('-');
+          if (parts.length >= 3) {
+            var formIndex = parseInt(parts[1]);
+            var fieldPart = key.substring(key.indexOf('-', key.indexOf('-') + 1) + 1);
+
+            if (!attributeDataByForm[formIndex]) {
+              attributeDataByForm[formIndex] = {};
+            }
+            attributeDataByForm[formIndex][fieldPart] = attributeFormData[key];
+
+            if (formIndex >= totalForms) {
+              totalForms = formIndex + 1;
+            }
+          }
+        }
+      }
+
+      var totalFormsField = $("#id_" + attributeFormPrefix + "-TOTAL_FORMS");
+      if (totalFormsField.length) {
+        totalFormsField.val(totalForms);
+      }
+
+      var formsToRemove = $('div[id*="-attribute-row"]').length - totalForms;
+      for (var i = 0; i < formsToRemove; i++) {
+        $('div[id*="-attribute-row"]:last').remove();
+      }
+
+      for (var formIndex = 0; formIndex < totalForms; formIndex++) {
+        var formData = attributeDataByForm[formIndex] || {};
+        
+        for (var attrKey in formData) {
+          if (formData.hasOwnProperty(attrKey)) {
+            // Convert key like "attribute__name" to field ID
+            var selector = "#id_" + attributeFormPrefix + "-" + formIndex + "-" + attrKey;
+            var $attrField = $(selector);
+
+            if ($attrField.length) {
+              var value = formData[attrKey];
+              console.log('Setting attribute field', selector, 'to value:', value);
+
+              if ($attrField.is(":checkbox") || $attrField.is(":radio")) {
+                $attrField.prop("checked", value === true || value === "true" || value === "on" || value === "1");
+              } else if ($attrField.is("select")) {
+                $attrField.val(value);
+                $attrField.trigger("change");
+              } else {
+                $attrField.val(value);
+              }
+            }
+          }
+        }
+      }
+
+      updateAttributeFormCount(attributeFormPrefix, totalForms);
+    }
+
+    $(activeTabSelector + ' form input, ' + activeTabSelector + ' form select').trigger("change");
+
     setTimeout(function() {
-      $form.submit();
-    }, 100);
+      $(activeTabSelector + ' form').submit();
+    }, 200);
+  }
+
+  function updateAttributeFormCount(prefix, count) {
+    var totalFormsField = $("#id_" + prefix + "-TOTAL_FORMS");
+    if (totalFormsField.length) {
+      totalFormsField.val(count);
+    }
   }
 
   $(document).ready(function () {
