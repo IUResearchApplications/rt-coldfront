@@ -298,7 +298,7 @@
     function loadDetailsContent($modalBody, $modalContent, searchId) {
       $form = $("#saveSearchForm");
       if ($form.length) {
-        $form.unwrap();
+        $modalBody.unwrap();
       }
 
       $.ajax({
