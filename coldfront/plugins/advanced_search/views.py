@@ -220,8 +220,6 @@ class SavedSearchCreateView(LoginRequiredMixin, UserPassesTestMixin, TemplateVie
         context = super().get_context_data(**kwargs)
         filter_data = self.request.session.get("filter_data", {})
         search_type = self.request.GET.get("search_type", "project")
-        
-        print(filter_data)
 
         initial_query = {}
         if search_type == "project":
@@ -246,8 +244,6 @@ class SavedSearchCreateView(LoginRequiredMixin, UserPassesTestMixin, TemplateVie
                     "user_search": {k: v for k, v in filter_data.items() if k.startswith("user_search-")},
                 }
             )
-            
-        print(initial_query)
 
         context["save_search_form"] = SearchCreateForm(user=self.request.user)
         context["query_data"] = json.dumps(initial_query)
@@ -261,7 +257,6 @@ class SavedSearchCreateView(LoginRequiredMixin, UserPassesTestMixin, TemplateVie
         if form.is_valid():
             try:
                 query_data = json.loads(query_data_raw) if query_data_raw else {}
-                print(query_data)
                 saved_search = form.save(commit=False)
                 saved_search.owner = request.user
                 saved_search.query_data = query_data
@@ -398,12 +393,12 @@ class AdvancedExportView(LoginRequiredMixin, UserPassesTestMixin, View):
 
 class ApplySavedSearchView(LoginRequiredMixin, UserPassesTestMixin, RedirectView):
     pattern_name = "advanced-search"
-    
+
     def test_func(self):
         user = self.request.user
         if user.is_superuser:
             return True
-        
+
         saved_search = get_object_or_404(SavedSearch, pk=self.kwargs.get("pk"))
         if (
             saved_search.owner == self.request.user
