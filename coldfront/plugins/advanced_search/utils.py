@@ -1,4 +1,5 @@
 import datetime
+import json
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Tuple, Type
 
@@ -1000,3 +1001,18 @@ def get_shared_searches(user):
     return SavedSearch.objects.filter(
         Q(shared_with_users=user) | Q(shared_with_groups__in=user.groups.all())
     ).distinct()
+
+
+def format_json_query_data(value):
+    """Format JSON query data for display in templates."""
+    if value is None:
+        return "{}"
+    if isinstance(value, dict):
+        return json.dumps(value, indent=2, sort_keys=True)
+    if isinstance(value, str):
+        try:
+            data = json.loads(value)
+            return json.dumps(data, indent=2, sort_keys=True)
+        except json.JSONDecodeError:
+            return value
+    return str(value)

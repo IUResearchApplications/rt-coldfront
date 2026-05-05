@@ -1,4 +1,6 @@
 
+{% load json_filters %}
+
 <p><strong class="text-nowrap">Name:</strong> {{ name }}</p>
 <p><strong class="text-nowrap">Owner:</strong> {{ owner }}</p>
 <p><strong class="text-nowrap">Description:</strong> {{ description }}</p>
@@ -26,5 +28,5 @@
 </div>
 <span class="font-weight-bold">Contents:</span>
 <div class="scrollable-box">
-  {{ raw_query_data }}
+  <pre class="mb-0"><code>{{ raw_query_data|format_json }}</code></pre>
 </div>
