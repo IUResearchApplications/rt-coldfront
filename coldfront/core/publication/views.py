@@ -37,23 +37,40 @@ MANUAL_SOURCE = "manual"
 
 def publication_gallery(request):
     static_dir = settings.SITE_STATIC
+    context = {}
+    imgs = []
+    lnks = []
+    titles = []  # New list for titles
 
-    context = dict()
-    imgs = list()
-    lnks = list()
-    with open(os.path.join(static_dir, "links.txt"), "r+") as f:
+    # Read links.txt with three columns: key, url, title
+    with open(os.path.join(static_dir, "links.txt"), "r") as f:
         contents = f.read()
-    pairs = contents.strip().split("\n")
-    links = {pair.split(" ")[0]: pair.split(" ")[1] for pair in pairs}
-    for images in sorted(os.listdir(os.path.join(static_dir, "images"))):
-        img = images.split("_")[0]
-        imgs.append("/static/images/" + images)
-        if img in list(links.keys()):
-            lnks.append(links[img])
+        entries = contents.strip().split("\n")
+        link_data = {}  # Create dictionary with key: (url, title) mapping
+        for entry in entries:
+            parts = entry.split("\t")
+            if len(parts) >= 3:  # Ensure we have all three columns
+                key = parts[0]
+                url = parts[1]
+                title = "\t".join(parts[2:])  # Handle titles with internal tabs
+                link_data[key] = (url, title)
+
+    image_dir = os.path.join(static_dir, "images")  # Process images
+    for image_name in sorted(os.listdir(image_dir)):
+        img_key = image_name.split("_")[0]
+        imgs.append("/static/images/" + image_name)
+
+        # Get link and title if available
+        if img_key in link_data:
+            url, title = link_data[img_key]
+            lnks.append(url)
+            titles.append(title)
         else:
             lnks.append("")
+            titles.append("")  # Empty title if not found
+
     items = ["item item" + str((i % 3) + 1) for i in range(len(imgs))]
-    context["data"] = list(zip(imgs, lnks, items))
+    context["data"] = list(zip(imgs, lnks, titles, items))
     return render(request, "publication/publication_gallery.html", context)
 
 
@@ -62,15 +79,15 @@ def publication_catalogue(request):
 
     context = {}
     with open(os.path.join(static_dir, "apa.txt"), "r+") as f:
-        temp = dict()
-        for l in f.readlines():
-            test = l.split("(")
+        temp = {}
+        for line in f.readlines():
+            test = line.split("(")
             for i in test:
                 if ("20" in i and i[:4].isdigit()) or "n.d." in i:
                     t = i[:4]
                     if t not in temp:
-                        temp[t] = list()
-                    temp[t].append(l)
+                        temp[t] = []
+                    temp[t].append(line)
     cnt = 0
     temp = dict(sorted(temp.items(), reverse=True))
     for t in temp:
