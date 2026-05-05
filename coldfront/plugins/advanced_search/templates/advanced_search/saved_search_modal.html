@@ -229,7 +229,7 @@
         $submitBtn.prop("disabled", true).text("Saving...");
 
         $.ajax({
-          headers: { "X-CSRFToken": getCookie("csrftoken") },
+          headers: { "X-CSRFToken": "{{ csrf_token }}" },
           type: "POST",
           url: url,
           data: $(this).serialize(),
@@ -318,12 +318,10 @@
     window.showSavedSearchModal = showModal;
 
     $(document).on("click", "#btn-delete-search", function () {
-      const $form = $("#modifySearchForm");
+      const $form = $("#saveSearchForm");
       const actionUrl = $form.attr("action");
       if (!actionUrl) return;
-
-      const searchId = actionUrl.split("/").filter(Boolean).pop();
-
+      const searchId = actionUrl.split("/").at(-2);
       if (!confirm("Are you sure you want to delete this saved search?")) {
         return;
       }
@@ -332,12 +330,26 @@
 
       $.ajax({
         url: `/advanced_search/delete-search/${searchId}/`,
-        type: "DELETE",
-        headers: { "X-CSRFToken": getCookie("csrftoken") },
+        type: "POST",
+        headers: { "X-CSRFToken": "{{ csrf_token }}" },
         success: function (data) {
           $("#savedSearchModal").modal("hide");
           $msg.removeClass("d-none").addClass("alert-success");
           $msg.text("Search deleted successfully.");
+          setTimeout(function() {
+            $msg.removeClass("alert-success").text("");
+            $("#savedSearchModal").modal("hide");
+            $.ajax({
+              type: "GET",
+              url: "/advanced_search/saved-searches/",
+              success: function (data) {
+                $("#saved-searches").html(data);
+              },
+              error: function (xhr) {
+                console.error('Failed to reload saved searches:', xhr);
+              }
+            });
+          }, 1000);
         },
         error: function () {
           $msg.removeClass("d-none").addClass("alert-danger");
