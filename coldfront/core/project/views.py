@@ -1937,29 +1937,47 @@ class ProjectReviewListView(LoginRequiredMixin, UserPassesTestMixin, TemplateVie
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        project_reviews = ProjectReview.objects.filter(
-            status__name__in=[
-                "Pending",
-                "Contacted By Admin",
-            ]
-        ).order_by("created")
+        project_review_objs = (
+            ProjectReview.objects.filter(status__name__in=["Pending", "Contacted By Admin"])
+            .select_related("status", "project", "project__pi")
+            .order_by("created")
+        )
+        project_review_list = []
+        contacted_pis = {}
+        for project_request in project_review_objs:
+            contacted_pis.setdefault(project_request.project.pi.username, False)
+            project_request_dict = {"info": project_request, "contacted_by": ""}
+            if project_request.status.name == "Contacted By Admin":
+                project_request_history = project_request.history.first()
+                project_request_dict["contacted_by"] = project_request_history.history_user
+                contacted_pis[project_request.project.pi.username] = True
+            project_review_list.append(project_request_dict)
+        context["project_reviews"] = project_review_list
 
         pi_eligibilities = check_if_pis_eligible(
-            set([project_review.project.pi.username for project_review in project_reviews])
+            set([project_review.project.pi.username for project_review in project_review_objs])
         )
-        context["project_review_list"] = project_reviews
         context["pi_eligibilities"] = pi_eligibilities
 
-        projects = Project.objects.filter(
-            status__name__in=[
-                "Waiting For Admin Approval",
-                "Contacted By Admin",
-            ]
-        ).order_by("created")
-        context["project_request_list"] = projects
+        project_requests = (
+            Project.objects.filter(status__name__in=["Waiting For Admin Approval", "Contacted By Admin"])
+            .select_related("status", "requestor", "pi", "type")
+            .order_by("created")
+        )
+        project_request_list = []
+        for project_request in project_requests:
+            contacted_pis.setdefault(project_request.pi.username, False)
+            project_request_dict = {"info": project_request, "contacted_by": ""}
+            if project_request.status.name == "Contacted By Admin":
+                project_request_history = project_request.history.first()
+                project_request_dict["contacted_by"] = project_request_history.history_user
+                contacted_pis[project_request.pi.username] = True
+            project_request_list.append(project_request_dict)
+        context["project_requests"] = project_request_list
+        context["contacted_pis"] = contacted_pis
 
-        pis = set([project.pi for project in projects])
-        pis = pis.union(set([project_review.project.pi for project_review in project_reviews]))
+        pis = set([project.pi for project in project_requests])
+        pis = pis.union(set([project_review.project.pi for project_review in project_review_objs]))
         pi_project_objs = Project.objects.filter(
             Q(
                 pi__in=pis,
