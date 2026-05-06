@@ -15,7 +15,7 @@ Project Review List
 <h2>Pending Project Requests</h2>
 {% if project_requests %}
   <div class="table-responsive">
-    <table class="table table-sm">
+    <table id="project_request_table" class="table table-sm">
       <caption class="sr-only">Project requests</caption>
       <thead>
         <tr>
@@ -25,7 +25,7 @@ Project Review List
           <th scope="col">Requestor</th>
           <th scope="col">Type</th>
           <th scope="col">Contacted</th>
-          <th scope="col">Project Review Actions</th>
+          <th scope="col" class="nosort">Project Review Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -83,7 +83,7 @@ Project Review List
 <h2>Pending Project Renewals</h2>
 {% if project_reviews %}
   <div class="table-responsive">
-    <table class="table table-sm">
+    <table id="project_review_table" class="table table-sm">
       <caption class="sr-only">Project reviews</caption>
       <thead>
         <tr>
@@ -93,7 +93,7 @@ Project Review List
           <th scope="col">PI</th>
           <th scope="col">Contacted</th>
           <th scope="col">Contacted By</th>
-          <th scope="col">Project Review Actions</th>
+          <th scope="col" class="nosort">Project Review Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -264,6 +264,24 @@ Project Review List
       }
     }
     $('#id_project_count').text(project_count)
+  })
+
+  $(document).ready(function() {
+    $("#project_request_table").DataTable({
+      iDisplayLength: 15,
+      'aoColumnDefs': [{
+        'bSortable': false,
+        'aTargets': ['nosort']
+      }]
+    });
+
+    $("#project_review_table").DataTable({
+      iDisplayLength: 15,
+      'aoColumnDefs': [{
+        'bSortable': false,
+        'aTargets': ['nosort']
+      }]
+    });
   })
 </script>
 {% endblock %}
