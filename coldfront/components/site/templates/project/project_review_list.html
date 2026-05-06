@@ -114,7 +114,7 @@ Project Review List
               >
                 {{ project_review.info.project.pi.first_name }} {{ project_review.info.project.pi.last_name }} ({{ project_review.info.project.pi.username }})
               </a>
-              {% if pi_eligibilities|get_value_from_dict:project_review.info.project.pi.username %}
+              {% if not pi_eligibilities|get_value_from_dict:project_review.info.project.pi.username %}
                 <span
                   data-toggle="popover"
                   title="Not Eligible"
