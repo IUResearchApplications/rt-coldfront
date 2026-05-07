@@ -238,27 +238,22 @@ Project Review List
       $('#id_ineligible_modal').hide();
     }
     var modal = $(this);
+    $.ajax({
+      url: '{% url "pi-projects-modal-content" %}',
+      data: { pi: pi },
+      success: function(data) {
+        $('#id_pi_projects_modal .modal-body').html(data);
+      },
+      error: function() {
+        $('#id_pi_projects_modal .modal-body').html('<p class="text-danger">Error loading projects.</p>');
+      }
+    });
+
     let project_count = 0;
     for (let i = 0; i < pi_projects.length; i++) {
       project = pi_projects[i]
       if (project.pi === pi) {
         project_count++;
-        $('#id_pi_projects_modal .modal-body').append(
-        `<div class="card mb-3">\
-          <div class="card-header">\
-            <strong>${project.title}</strong>\
-            <a title="Details" href="/project/${project.pk}" target="_blank">\
-              <i class="far fa-folder-open" aria-hidden="true"></i><span class="sr-only">Details</span>\
-            </a>\
-          </div>\
-          <div class="card-body">\
-            ${project.description}\
-          </div>\
-          <div class="card-footer">
-            <strong>Status:</strong> ${project.status}
-          </div>
-        </div>`
-      );
       }
     }
     $('#id_project_count').text(project_count)

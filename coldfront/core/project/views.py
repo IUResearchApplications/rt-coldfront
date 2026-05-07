@@ -3007,3 +3007,35 @@ class ProjectRequestAccessEmailView(LoginRequiredMixin, View):
             return HttpResponseForbidden(reverse("project-list"))
 
         return HttpResponseRedirect(reverse("project-list"))
+
+
+class PiProjectsPartialView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    template_name = "project/project_review_modal_content.html"
+
+    def test_func(self):
+        """UserPassesTestMixin Tests"""
+
+        if self.request.user.is_superuser:
+            return True
+
+        if self.request.user.has_perm("project.can_review_pending_projects"):
+            return True
+
+        messages.error(self.request, "You do not have permission to review pending project reviews/requests.")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        pi_username = self.request.GET.get("pi")
+        pi_project_objs = Project.objects.filter(
+            Q(
+                pi__username=pi_username,
+                status__name__in=["Active", "Waiting For Admin Approval", "Contacted By Admin", "Review Pending"],
+            )
+            | Q(
+                pi__username=pi_username,
+                status__name="Expired",
+                end_date__gt=datetime.datetime.now() - datetime.timedelta(days=PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING),
+            )
+        ).order_by("status__name")
+        context["projects"] = pi_project_objs
+        return context

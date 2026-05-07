@@ -74,4 +74,5 @@ urlpatterns = [
     path("project-review-deny/<int:pk>/", project_views.ProjectReviewDenyView.as_view(), name="project-review-deny"),
     path("project-review-info/<int:pk>/", project_views.ProjectReviewInfoView.as_view(), name="project-review-info"),
     path("denied/", project_views.ProjectDeniedListView.as_view(), name="project-denied-list"),
+    path('pi-projects-modal-content/', project_views.PiProjectsPartialView.as_view(), name='pi-projects-modal-content'),
 ]
