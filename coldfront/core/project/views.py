@@ -5,6 +5,7 @@
 import datetime
 import logging
 import urllib
+from collections import Counter
 
 from django import forms
 from django.conf import settings
@@ -3038,4 +3039,48 @@ class PiProjectsPartialView(LoginRequiredMixin, UserPassesTestMixin, TemplateVie
             )
         ).order_by("status__name")
         context["projects"] = pi_project_objs
+        return context
+
+
+class ProjectReviewStatsView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    template_name = "project/project_review_stats.html"
+
+    def test_func(self):
+        """UserPassesTestMixin Tests"""
+
+        if self.request.user.is_superuser:
+            return True
+
+        if self.request.user.has_perm("project.can_review_pending_projects"):
+            return True
+
+        messages.error(self.request, "You do not have permission to view project review/request stats.")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        current_date = datetime.date.today()
+        days_prior = current_date - datetime.timedelta(days=PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING)
+        days_after = current_date + datetime.timedelta(days=PROJECT_DAYS_TO_REVIEW_BEFORE_EXPIRING)
+        project_status_counts = Counter(
+            Project.objects.filter(requires_review=True, end_date__range=(days_prior, days_after))
+            .exclude(status__name__in=["Archived", "Denied"])
+            .select_related("status")
+            .values_list("status__name", flat=True)
+        )
+
+        color_mapping = {
+            "Active": "6da04b",
+            "Review Pending": "2f9fd0",
+            "Renewal Denied": "e56a54",
+            "Expired": "ffc72c",
+        }
+        columns = []
+        colors = {}
+        for status_name, count in project_status_counts.items():
+            label = f"{status_name}: {count}"
+            columns.append([label, count])
+            colors[label] = color_mapping.get(status_name, "6c757d")
+
+        context["project_review_stats"] = {"columns": columns, "type": "donut", "colors": colors}
+
         return context

@@ -80,7 +80,17 @@ Project Review List
   </div>
 {% endif %}
 
-<h2>Pending Project Renewals</h2>
+<h2>
+  Pending Project Renewals
+  <a
+    href="#"
+    data-toggle="modal"
+    data-target="#id_project_review_stats_modal"
+    aria-labelledby="id_project_review_stats_modal_label"
+  >
+    <i class="fas fa-chart-pie" aria-hidden="true" style="font-size: 0.7em;"></i>
+  </a>
+</h2>
 {% if project_reviews %}
   <div class="table-responsive">
     <table id="project_review_table" class="table table-sm">
@@ -202,7 +212,7 @@ Project Review List
             data-trigger="hover"
             data-content="This user is not eligible to be a PI!"
           >
-            <i class="fas fa-exclamation-circle"></i>
+            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
           </span>
         </h3>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -210,6 +220,26 @@ Project Review List
         </button>
       </div>
       <div class="modal-body"></div>
+    </div>
+  </div>
+</div>
+
+<div id="id_project_review_stats_modal"
+  class="modal fade bd-example-modal-lg"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="id_project_review_stats_modal_label"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="id_project_review_stats_modal_label">Project Review Stats</h3>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body" style="max-width: 400px; margin: 0 auto;"></div>
     </div>
   </div>
 </div>
@@ -257,6 +287,20 @@ Project Review List
       }
     }
     $('#id_project_count').text(project_count)
+  })
+
+  $('#id_project_review_stats_modal').on('show.bs.modal', function (event) {
+    $('#id_project_review_stats_modal .modal-body').empty();
+    $.ajax({
+      url: '{% url "projects-review-stats" %}',
+      success: function(data) {
+        $('#id_project_review_stats_modal .modal-body').html(data);
+        drawStats();
+      },
+      error: function() {
+        $('#id_project_review_stats_modal .modal-body').html('<p class="text-danger">Error loading stats.</p>');
+      }
+    });
   })
 
   $(document).ready(function() {
