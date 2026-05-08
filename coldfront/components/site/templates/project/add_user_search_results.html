@@ -23,61 +23,6 @@
   </div>
 
   {% if matches %}
-    <div class="card bg-light mb-3 {{div_allocation_class}}">
-      <h3 class="card-header">Available Allocations</h3>
-      <div class="card-body">
-        <div class="table-responsive">
-          <table class="table table-sm table-hover">
-            <caption class="sr-only">Available allocations</caption>
-            <thead>
-              <tr>
-                <th scope="col">
-                  <label for="selectAllAllocations" class="sr-only">Select all allocations</label>
-                  <input type="checkbox" class="check" id="selectAllAllocations">
-                </th>
-                <th scope="col">#</th>
-                <th scope="col">Resource</th>
-                <th scope="col">Details</th>
-                <th scope="col">Resource Type</th>
-                <th scope="col">Status</th>
-                <th scope="col">Role</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for form in allocation_form %}
-                <tr id="{{ form.resource.value }}-{{ forloop.counter }}">
-                  <td>
-                    <label for="{{ form.selected.id_for_label }}" class="sr-only" aria-label="Select {{ form.resource.value }}">
-                      {{ form.selected.label }}
-                    </label>
-                    {{ form.selected }}
-                  </td>
-                  <td><a href="{% url 'allocation-detail' form.pk.value %}" target="_blank">{{ form.pk.value }}</a></td>
-                  <td>{{ form.resource.value }}</td>
-                  <td>{{ form.details.value }}</td>
-                  <td>{{ form.resource_type.value }}</td>
-                  <td>{{ form.status.value }}</td>
-                  <td>
-                    <label for="{{ form.role.id_for_label }}" class="sr-only">
-                      {{ form.role.label }}
-                    </label>
-                    {{ form.role }}
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>      
-      </div>
-      <div class="card-footer">
-        <i class="fa fa-info-circle" aria-hidden="true"></i>
-        Select allocations to add selected users to. If a user does not have an account on a resource in an allocation they will not be added.
-        Allocations with their checkbox disabled must have their users added from the allocation's add user page.
-      </div>
-      {{ allocation_form.management_form }}
-    </div>
-
-    <h3>Users Found</h3>
     <div class="table-responsive">
       <table class="table table-sm table-hover">
         <caption class="sr-only">Users found</caption>
@@ -144,6 +89,61 @@
     <input id="q" type="hidden" name="q" value="{{user_search_string}}">
     <input id="search_by" type="hidden" name="search_by" value="{{search_by}}">
     <input id="after_project_creation_field" type="hidden" name="after_project_creation_field" value="{{after_project_creation}}">
+
+    <div class="card bg-light mb-3 {{div_allocation_class}}">
+      <h3 class="card-header">Available Allocations</h3>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover">
+            <caption class="sr-only">Available allocations</caption>
+            <thead>
+              <tr>
+                <th scope="col">
+                  <label for="selectAllAllocations" class="sr-only">Select all allocations</label>
+                  <input type="checkbox" class="check" id="selectAllAllocations">
+                </th>
+                <th scope="col">#</th>
+                <th scope="col">Resource</th>
+                <th scope="col">Details</th>
+                <th scope="col">Resource Type</th>
+                <th scope="col">Status</th>
+                <th scope="col">Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for form in allocation_form %}
+                <tr id="{{ form.resource.value }}-{{ forloop.counter }}">
+                  <td>
+                    <label for="{{ form.selected.id_for_label }}" class="sr-only" aria-label="Select {{ form.resource.value }}">
+                      {{ form.selected.label }}
+                    </label>
+                    {{ form.selected }}
+                  </td>
+                  <td><a href="{% url 'allocation-detail' form.pk.value %}" target="_blank">{{ form.pk.value }}</a></td>
+                  <td>{{ form.resource.value }}</td>
+                  <td>{{ form.details.value }}</td>
+                  <td>{{ form.resource_type.value }}</td>
+                  <td>{{ form.status.value }}</td>
+                  <td>
+                    <label for="{{ form.role.id_for_label }}" class="sr-only">
+                      {{ form.role.label }}
+                    </label>
+                    {{ form.role }}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>      
+      </div>
+      <div class="card-footer">
+        <i class="fa fa-info-circle" aria-hidden="true"></i>
+        Select allocations to add selected users to. If a user does not have an account on a resource in an allocation they will not be added.
+        Allocations with their checkbox disabled must have their users added from the allocation's add user page.
+      </div>
+      {{ allocation_form.management_form }}
+    </div>
+
     <div class="mb-3">
       {% if matches %}
         {% if after_project_creation == 'true' %}
