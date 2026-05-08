@@ -3069,17 +3069,17 @@ class ProjectReviewStatsView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
         )
 
         color_mapping = {
-            "Active": "6da04b",
-            "Review Pending": "2f9fd0",
-            "Renewal Denied": "e56a54",
-            "Expired": "ffc72c",
+            "Active": "#6da04b",
+            "Review Pending": "#2f9fd0",
+            "Renewal Denied": "#e56a54",
+            "Expired": "#ffc72c",
         }
         columns = []
         colors = {}
         for status_name, count in project_status_counts.items():
             label = f"{status_name}: {count}"
             columns.append([label, count])
-            colors[label] = color_mapping.get(status_name, "6c757d")
+            colors[label] = color_mapping.get(status_name, "#6c757d")
 
         context["project_review_stats"] = {"columns": columns, "type": "donut", "colors": colors}
 
