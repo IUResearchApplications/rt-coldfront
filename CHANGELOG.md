@@ -1,6 +1,6 @@
 # ColdFront Changelog
 
-## [1.1.8] - 2026-03-26
+## [1.1.8] - 2026-05-11
 
 - Add podman support [#733](https://github.com/coldfront/coldfront/pull/733)
 - Remediated mark_safe calls to prevent XSS attacks [#734](https://github.com/coldfront/coldfront/pull/734)
@@ -26,6 +26,7 @@
 - Upgrade to Bootstrap 5 [#919](https://github.com/coldfront/coldfront/pull/919)
 - Fix filter for allocations in ProjectDetailView [#923](https://github.com/coldfront/coldfront/pull/923)
 - Add support for slurm parent accounts [#782](https://github.com/coldfront/coldfront/pull/782)
+- Add support for serving ColdFront from a base path
 
 ## [1.1.7] - 2025-07-22
 

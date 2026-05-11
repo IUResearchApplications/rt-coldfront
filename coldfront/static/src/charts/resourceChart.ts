@@ -7,11 +7,7 @@ import { renderChart, ColorPalette } from './data';
 import type { ChartData, ChartDataItem } from './data';
 
 export function initResourceChart(): void {
-  renderChart(
-    'resource-summary-chart',
-    '/portal/data/resource-by-type',
-    createResourceChart
-  );
+  renderChart('resource-summary-chart', createResourceChart);
 }
 
 function createResourceChart(
