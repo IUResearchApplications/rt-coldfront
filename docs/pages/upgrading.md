@@ -3,6 +3,20 @@
 This document describes upgrading ColdFront. New releases of ColdFront may
 introduce breaking changes so please refer to this document before upgrading.
 
+## [v1.1.8](https://github.com/coldfront/coldfront/releases/tag/v1.1.8)
+
+This release includes an upgrade to Bootstrap 5 which may require updating any
+customized/overridden templates. Before upgrading, be sure to backup your
+database and test.
+
+After upgrading run database migrations and collectstatic to update the
+frontend assets:
+
+```
+$ uv run coldfront migrate
+$ uv run coldfront collectstatic
+```
+
 ## [v1.1.7](https://github.com/coldfront/coldfront/releases/tag/v1.1.7)
 
 This release upgrades to [django-q2](https://github.com/django-q2/django-q2)
