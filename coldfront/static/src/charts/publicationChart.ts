@@ -7,11 +7,7 @@ import { renderChart } from './data';
 import type { ChartData, ChartDataItem } from './data';
 
 export function initPubChart(): void {
-  renderChart(
-    'pubs-by-year-chart',
-    '/publication/data/by-year',
-    createPubChart
-  );
+  renderChart('pubs-by-year-chart', createPubChart);
 }
 
 function createPubChart(canvas: HTMLCanvasElement, chartData: ChartData): void {

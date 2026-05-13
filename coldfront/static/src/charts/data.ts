@@ -32,11 +32,14 @@ export class ColorPalette {
 
 export function renderChart(
   id: string,
-  url: string,
   chartFunc: (canvas: HTMLCanvasElement, data: ChartData) => void
 ): void {
   const canvas = document.getElementById(id) as HTMLCanvasElement;
   if (canvas !== null) {
+    const url = canvas.getAttribute('data-url');
+    if (url == null) {
+      return;
+    }
     fetchChartData(url)
       .then((data) => {
         chartFunc(canvas, data);

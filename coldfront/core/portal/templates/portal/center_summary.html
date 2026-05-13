@@ -21,7 +21,7 @@ Center Summary
   </div>
   <div class="card-body">
     <div class="chart-container" style="position: relative; width:90%">
-        <canvas id="pubs-by-year-chart"></canvas>
+        <canvas id="pubs-by-year-chart" data-url="{% url 'publications-by-year' %}"></canvas>
     </div>
     <strong>Total Publications:</strong> <span id="pubs-total">0</span>
   </div>
@@ -50,7 +50,7 @@ Center Summary
   </div>
   <div class="card-body">
     <div class="chart-container mx-auto" style="text-align: center; position: relative; width:60%">
-        <canvas id="grant-summary-chart"></canvas>
+        <canvas id="grant-summary-chart" data-url="{% url 'grant-summary-data' %}"></canvas>
     </div>
     <hr>
     <strong> Grants Total:</strong> ${{grant_total}} <br>
@@ -67,7 +67,7 @@ Center Summary
   <div class="card-header">
     <i class="fas fa-flask" aria-hidden="true"></i> Active Allocations and Users by Field of Science
   </div>
-  <div id="allocation-by-fos" class="card-body" hx-get="/allocation-by-fos" hx-trigger="load">
+  <div id="allocation-by-fos" class="card-body" hx-get="{% url 'allocation-by-fos' %}" hx-trigger="load">
     <div class="text-center">
       <button type="button" class="btn btn-primary"><i class="fas fa-sync fa-spin fa-fw" aria-hidden="true"></i> Getting Data <span
           class="visually-hidden">...</span></button>
@@ -85,13 +85,13 @@ Center Summary
       <div class="row">
         <div class="col">
             <div class="chart-container mx-auto" style="text-align: center; position: relative; width:60%">
-                <canvas id="allocation-summary-chart"></canvas>
+                <canvas id="allocation-summary-chart" data-url="{% url 'portal-allocation-status' %}"></canvas>
             </div>
             <div class="chart-container mx-auto" style="text-align: center; position: relative; width:60%">
-                <canvas id="resource-summary-chart"></canvas>
+                <canvas id="resource-summary-chart" data-url="{% url 'portal-resource-type' %}"></canvas>
             </div>
         </div>
-        <div id="allocation-summary" class="col" hx-get="/allocation-summary" hx-trigger="load">
+        <div id="allocation-summary" class="col" hx-get="{% url 'allocation-summary' %}" hx-trigger="load">
             <div class="text-center">
               <button type="button" class="btn btn-primary"><i class="fas fa-sync fa-spin fa-fw" aria-hidden="true"></i> Getting Data <span
                   class="visually-hidden">...</span></button>

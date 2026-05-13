@@ -21,7 +21,7 @@ from coldfront.config.env import ENV, PROJECT_ROOT
 admin.site.site_header = "ColdFront Administration"
 admin.site.site_title = "ColdFront Administration"
 
-urlpatterns = [
+_patterns = [
     path("admin/", admin.site.urls),
     path("robots.txt", TemplateView.as_view(template_name="robots.txt", content_type="text/plain"), name="robots"),
     path("", portal_views.home, name="home"),
@@ -36,28 +36,30 @@ urlpatterns = [
 ]
 
 if settings.GRANT_ENABLE:
-    urlpatterns.append(path("grant/", include("coldfront.core.grant.urls")))
+    _patterns.append(path("grant/", include("coldfront.core.grant.urls")))
 
 if settings.PUBLICATION_ENABLE:
-    urlpatterns.append(path("publication/", include("coldfront.core.publication.urls")))
+    _patterns.append(path("publication/", include("coldfront.core.publication.urls")))
 
 if settings.RESEARCH_OUTPUT_ENABLE:
-    urlpatterns.append(path("research-output/", include("coldfront.core.research_output.urls")))
+    _patterns.append(path("research-output/", include("coldfront.core.research_output.urls")))
 
 if "coldfront.plugins.api" in settings.INSTALLED_APPS:
-    urlpatterns.append(path("api/", include("coldfront.plugins.api.urls")))
+    _patterns.append(path("api/", include("coldfront.plugins.api.urls")))
 
 if "coldfront.plugins.iquota" in settings.INSTALLED_APPS:
-    urlpatterns.append(path("iquota/", include("coldfront.plugins.iquota.urls")))
+    _patterns.append(path("iquota/", include("coldfront.plugins.iquota.urls")))
 
 if "mozilla_django_oidc" in settings.INSTALLED_APPS:
-    urlpatterns.append(path("oidc/", include("mozilla_django_oidc.urls")))
+    _patterns.append(path("oidc/", include("mozilla_django_oidc.urls")))
 
 if "coldfront.plugins.slurm" in settings.INSTALLED_APPS:
-    urlpatterns.append(path("slurm/", include("coldfront.plugins.slurm.urls")))
+    _patterns.append(path("slurm/", include("coldfront.plugins.slurm.urls")))
 
 if "django_su.backends.SuBackend" in settings.AUTHENTICATION_BACKENDS:
-    urlpatterns.append(path("su/", include("django_su.urls")))
+    _patterns.append(path("su/", include("django_su.urls")))
+
+urlpatterns = [path(settings.BASE_PATH, include(_patterns))]
 
 
 def export_as_json(modeladmin, request, queryset):

@@ -7,11 +7,7 @@ import { renderChart, ColorPalette } from './data';
 import type { ChartData, ChartDataItem } from './data';
 
 export function initAllocationChart(): void {
-  renderChart(
-    'allocation-summary-chart',
-    '/portal/data/allocation-by-status',
-    createAllocationChart
-  );
+  renderChart('allocation-summary-chart', createAllocationChart);
 }
 
 function createAllocationChart(

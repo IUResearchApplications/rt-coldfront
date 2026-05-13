@@ -19,6 +19,11 @@ from coldfront.config.env import ENV, PROJECT_ROOT
 # Base Django config for ColdFront
 # ------------------------------------------------------------------------------
 VERSION = coldfront.VERSION
+
+BASE_PATH = ENV.str("BASE_PATH", default="")
+if len(BASE_PATH) > 0:
+    BASE_PATH = f"{BASE_PATH.strip('/')}/"
+
 BASE_DIR = PROJECT_ROOT()
 ALLOWED_HOSTS = ENV.list("ALLOWED_HOSTS", default=["*"])
 DEBUG = ENV.bool("DEBUG", default=False)
@@ -149,7 +154,7 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 SETTINGS_EXPORT = []
 
-STATIC_URL = "/static/"
+STATIC_URL = f"/{BASE_PATH}static/"
 
 DJANGO_VITE = {
     "default": {
