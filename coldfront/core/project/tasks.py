@@ -56,7 +56,7 @@ def send_expiry_emails():
             projects = []
             expiring_in_days = (datetime.datetime.today() + datetime.timedelta(days=days_remaining)).date()
 
-            for project_user in user.projectuser_set.filter(status__name="Active"):
+            for project_user in user.projectuser_set.filter(status__name="Active", role__name="Manager"):
                 if not project_user.enable_notifications:
                     continue
 
@@ -69,13 +69,6 @@ def send_expiry_emails():
 
                     allocations = []
                     for allocation in project.allocation_set.filter(status__name="Active"):
-                        if not project_user.role.name == "Manager":
-                            allocation_user = allocation.allocationuser_set.filter(
-                                status__name__in=["Active", "Invited", "Disabled"], user=user
-                            )
-                            if not allocation_user.exists():
-                                continue
-
                         allocations.append(allocation)
 
                     projects.append(

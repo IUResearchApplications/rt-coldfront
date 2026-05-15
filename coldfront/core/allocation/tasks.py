@@ -145,7 +145,9 @@ def send_expiry_emails():
                     if cloud_usage_notification and cloud_usage_notification.value == "No":
                         continue
 
-                    for projectuser in allocation.project.projectuser_set.filter(user=user, status__name="Active"):
+                    for projectuser in allocation.project.projectuser_set.filter(
+                        user=user, status__name="Active", role__name="Manager"
+                    ):
                         if (projectuser.enable_notifications) and (
                             allocationuser.user == user
                             and allocationuser.status.name in ["Active", "Invited", "Disabled"]
