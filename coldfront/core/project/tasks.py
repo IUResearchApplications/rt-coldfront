@@ -102,9 +102,8 @@ def send_expiry_emails():
     # Expired projects
     for user in User.objects.all():
         expiring_in_days = (datetime.datetime.today() + datetime.timedelta(days=-1)).date()
-
+        projects = []
         for project_user in user.projectuser_set.filter(status__name="Active"):
-            projects = []
             project = project_user.project
 
             if project.status.name == "Active" and (project.end_date == expiring_in_days):
