@@ -138,7 +138,7 @@ def send_allocation_customer_email(
     ctx["project_url"] = project_url
     ctx["project_pi"] = f"{project_obj.pi.first_name} {project_obj.pi.last_name}"
     ctx["action_user"] = (f"{request.user.first_name} {request.user.last_name}",)
-    ctx["allocation_identifiers"] = allocation_obj.get_identifiers().items()
+    ctx["allocation_identifiers"] = allocation_obj.get_identifiers.items()
 
     if addtl_context:
         ctx.update(addtl_context)

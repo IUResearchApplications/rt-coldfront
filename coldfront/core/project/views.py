@@ -1475,7 +1475,7 @@ class ProjectRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                             if not removed_users_breakdown.get(allocation_user_obj.user.username):
                                 removed_users_breakdown[allocation_user_obj.user.username] = []
                             removed_users_breakdown[allocation_user_obj.user.username].append(
-                                (allocation.get_parent_resource.name, allocation.get_identifiers().values())
+                                (allocation.get_parent_resource.name, allocation.get_identifiers.values())
                             )
 
                             allocation_user_obj.status = allocation_user_removed_status_choice
