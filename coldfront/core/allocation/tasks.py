@@ -158,11 +158,11 @@ def send_expiry_emails():
                             if days_remaining not in expirationdict:
                                 expirationdict[days_remaining] = []
                                 expirationdict[days_remaining].append(
-                                    (project_url, allocation_renew_url, resource_name)
+                                    (project_url, allocation_renew_url, resource_name, ", ".join(allocation.get_identifiers.values()))
                                 )
                             else:
                                 expirationdict[days_remaining].append(
-                                    (project_url, allocation_renew_url, resource_name)
+                                    (project_url, allocation_renew_url, resource_name, ", ".join(allocation.get_identifiers.values()))
                                 )
 
                             if allocation.project.title not in projectdict:
@@ -170,12 +170,12 @@ def send_expiry_emails():
                                     project_url,
                                     allocation.project.pi.username,
                                     allocation.project.get_env.get("renewable"),
-                                    allocation.project.type.name,
+                                    allocation.project.type.name
                                 )
 
         if email_receiver_list:
             send_email_template(
-                f"Your access to {CENTER_NAME} allocations is expiring soon",
+                f"Your access to {CENTER_NAME} resources is expiring soon",
                 "email/allocation_expiring.txt",
                 template_context,
                 EMAIL_TICKET_SYSTEM_ADDRESS,
@@ -268,14 +268,6 @@ def send_expiry_emails():
                                 )
 
         if email_receiver_list:
-            send_email_template(
-                "Your access to resource(s) have expired",
-                "email/allocation_expired.txt",
-                template_context,
-                EMAIL_SENDER,
-                email_receiver_list,
-            )
-
             send_email_template(
                 f"Access to your {CENTER_NAME} allocations has expired",
                 "email/allocation_expired.txt",
