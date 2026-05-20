@@ -12,7 +12,7 @@ Project PI: {{ project_url.1 }}
 Project Type: {{ project_url.3 }}
 {% spaceless %}{% for days_key, days_value in expiration_dict.items %}
 Allocations expiring in {{days_key}} days:{% for allocations in days_value %}{% if allocations.0 == project_url.0 %}
-    {% spaceless %}{{ allocations.2 }} {{ allocations.4 }}{% endspaceless %}{% endif %}{% endfor %}
+    {% spaceless %}{{ allocations.1 }} {{ allocations.2 }}{% endspaceless %}{% endif %}{% endfor %}
     {% endfor %}{% endspaceless %}
 {% endfor %}
 {% endspaceless %}
