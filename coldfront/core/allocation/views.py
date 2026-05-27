@@ -70,6 +70,7 @@ from coldfront.core.allocation.signals import (
     allocation_disable,
     allocation_new,
     allocation_remove_user,
+    allocation_renew,
     visit_allocation_detail,
 )
 from coldfront.core.allocation.utils import (
@@ -1824,6 +1825,9 @@ class AllocationRenewView(LoginRequiredMixin, UserPassesTestMixin, TemplateView)
             if not formset.is_valid():
                 for error in formset.errors:
                     messages.error(request, error)
+
+        allocation_renew.send(sender=self.__class__, allocation_user_pk=allocation_obj.pk)
+
         return HttpResponseRedirect(reverse("project-detail", kwargs={"pk": allocation_obj.project.pk}))
 
 
