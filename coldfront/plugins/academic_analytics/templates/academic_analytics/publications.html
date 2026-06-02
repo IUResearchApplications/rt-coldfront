@@ -47,10 +47,8 @@
   </div>
 {% endif %}
 
-{{ academic_analytics_form|json_script:"academic_analytics_form" }}
-
 <script>
-  var academic_analytics_form = JSON.parse(document.getElementById('academic_analytics_form').textContent);
+  var academic_analytics_form = $('#academic_analytics_form');
 
   academic_analytics_form.submit(function () {
     var add_pub_button = $('#add_publications_btn')
