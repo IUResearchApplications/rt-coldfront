@@ -75,8 +75,8 @@ class AcademicAnalyticsPublications(LoginRequiredMixin, UserPassesTestMixin, Tem
                         num_added_pubs += 1
             else:
                 logger.error(
-                    f"Error adding publications to project (project pk={project_obj.pk}, "
-                    f"user={request.user.username}). Errors: {publication_formset.errors}"
+                    f"Error adding publications to project (project pk={project_obj.pk})."
+                    f"Errors: {publication_formset.errors}"
                 )
                 raise Exception("Error adding publications")
 
