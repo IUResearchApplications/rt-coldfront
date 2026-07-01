@@ -190,11 +190,6 @@
 {{ account_statuses|json_script:"account_statuses" }}
 
 <script>
-  const current_num_managers = JSON.parse(document.getElementById('current_num_managers').textContent);
-  const max_managers = JSON.parse(document.getElementById('max_managers').textContent);
-  const num_matches = JSON.parse(document.getElementById('num_matches').textContent);
-  const account_statuses = JSON.parse(document.getElementById('account_statuses').textContent);
-
   function updateIcon(username, reason, missing_accounts) {
     let icon = $($('#' + username)[0].childNodes[5].firstElementChild)
     let title = "Has Accounts"
@@ -246,6 +241,7 @@
     }
     let missing_accounts = []
     let reason = ""
+    const account_statuses = JSON.parse(document.getElementById('account_statuses').textContent);
     for (const selected_resource_name of selected_resource_names) {
       const resource_account_statuses = account_statuses[selected_resource_name]
       const user_account_status = resource_account_statuses[username]
@@ -267,7 +263,9 @@
         num_managers += 1;
       }
     }
-
+    
+    const current_num_managers = JSON.parse(document.getElementById('current_num_managers').textContent)
+    const max_managers = JSON.parse(document.getElementById('max_managers').textContent);
     if (num_managers + current_num_managers > max_managers) {
       $("#id_add_selected_users").prop('disabled', true).attr('aria-disabled', 'true');
       $("#id_manager_warning").show()
@@ -283,6 +281,7 @@
     $('#warning').modal({ show: false});
     $('#id_manager_warning').hide();
 
+    const num_matches = JSON.parse(document.getElementById('num_matches').textContent);
     for (let i = 0; i < num_matches; i++) {
       if ($("#id_userform-" + i + "-role option:selected").text() == 'Group') {
         $("#id_userform-" + i + "-role option:not(:selected)").prop('disabled', true);
