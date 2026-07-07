@@ -23,3 +23,5 @@ db.json
 .devcontainer/*
 .bin/*
 node_modules
+coldfront.log
+pyrightconfig.json

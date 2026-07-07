@@ -27,9 +27,29 @@ GRANT_ENABLE = ENV.bool("GRANT_ENABLE", default=True)
 PUBLICATION_ENABLE = ENV.bool("PUBLICATION_ENABLE", default=True)
 
 # ------------------------------------------------------------------------------
-# Enable Project Review
+# Project related
 # ------------------------------------------------------------------------------
 PROJECT_ENABLE_PROJECT_REVIEW = ENV.bool("PROJECT_ENABLE_PROJECT_REVIEW", default=True)
+PROJECT_DEFAULT_PROJECT_LENGTH = ENV.int("PROJECT_DEFAULT_PROJECT_LENGTH", default=365)
+PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING = ENV.int("PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING", default=60)
+PROJECT_DAYS_TO_REVIEW_BEFORE_EXPIRING = ENV.int("PROJECT_DAYS_TO_REVIEW_BEFORE_EXPIRING", default=30)
+PROJECT_END_DATE_CARRYOVER_DAYS = ENV.int("PROJECT_END_DATE_CARRYOVER_DAYS", default=90)
+PROJECT_ENABLE_PERMISSIONS_PER_TYPE = ENV.bool("PROJECT_ENABLE_PERMISSIONS_PER_TYPE", default=False)
+PROJECT_PERMISSIONS_PER_TYPE = ENV.dict(
+    "PROJECT_PERMISSIONS_PER_TYPE",
+    default={
+        "Default": {
+            "renewable": True,
+            "expiry_dates": [
+                (6, 30),
+            ],
+            "forbidden_resources": [],
+            "allowed_per_pi": -1,
+            "addtl_fields": [],
+            "forbidden_features": [],
+        },
+    },
+)
 
 # ------------------------------------------------------------------------------
 # Enable EULA force agreement
@@ -47,7 +67,9 @@ ALLOCATION_ENABLE_ALLOCATION_RENEWAL = ENV.bool("ALLOCATION_ENABLE_ALLOCATION_RE
 ALLOCATION_FUNCS_ON_EXPIRE = [
     "coldfront.core.allocation.utils.test_allocation_function",
 ]
-
+ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING = ENV.int("ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING", default=60)
+ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING = ENV.int("ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING", default=30)
+ALLOCATION_ATTRIBUTE_IDENTIFIERS = ENV.list("ALLOCATION_ATTRIBUTE_IDENTIFIERS", default=[])
 # This is in days
 ALLOCATION_DEFAULT_ALLOCATION_LENGTH = ENV.int("ALLOCATION_DEFAULT_ALLOCATION_LENGTH", default=365)
 
@@ -98,6 +120,12 @@ INVOICE_ENABLED = ENV.bool("INVOICE_ENABLED", default=True)
 INVOICE_DEFAULT_STATUS = ENV.str("INVOICE_DEFAULT_STATUS", default="New")
 
 # ------------------------------------------------------------------------------
+# Slack messaging integration
+# ------------------------------------------------------------------------------
+SLACK_MESSAGING_ENABLED = ENV.bool("SLACK_MESSAGING_ENABLED", default=False)
+SLACK_WEBHOOK_URL = ENV.str("SLACK_WEBHOOK_URL", default="")
+
+# ------------------------------------------------------------------------------
 # Enable Open OnDemand integration
 # ------------------------------------------------------------------------------
 ONDEMAND_URL = ENV.str("ONDEMAND_URL", default=None)
@@ -108,7 +136,9 @@ ONDEMAND_URL = ENV.str("ONDEMAND_URL", default=None)
 # FIXME: This is using mark_safe for now but settings should not contain HTML in the future
 LOGIN_FAIL_MESSAGE = mark_safe(ENV.str("LOGIN_FAIL_MESSAGE", ""))  # noqa: S308
 
-EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL = """
+EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL = ENV.str(
+    "EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL",
+    """
 You recently applied for renewal of your account, however, to date you have not entered any publication nor grant info in the ColdFront system. I am reluctant to approve your renewal without understanding why. If there are no relevant publications or grants yet, then please let me know. If there are, then I would appreciate it if you would take the time to enter the data (I have done it myself and it took about 15 minutes). We use this information to help make the case to the university for continued investment in our department and it is therefore important that faculty enter the data when appropriate. Please email xxx-helpexample.com if you need technical assistance.
 
 As always, I am available to discuss any of this.
@@ -119,7 +149,9 @@ Director
 
 xxx@example.edu
 Phone: (xxx) xxx-xxx
-"""
+""",
+    multiline=True,
+)
 
 # noqa: S308
 ACCOUNT_CREATION_TEXT = mark_safe("""University faculty can submit a help ticket to request an account.

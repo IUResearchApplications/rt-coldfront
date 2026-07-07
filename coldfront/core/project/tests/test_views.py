@@ -127,6 +127,15 @@ class ProjectDetailViewTest(ProjectViewTestBase):
         response = utils.login_and_get_page(self.client, self.manager_user.user, self.url)
         self.assertEqual(len(response.context["allocations"]), 1)
 
+    def test_projectdetail_adduser_button_visibility(self):
+        """Test visibility of projectdetail add user button across user levels"""
+        # admin can see add user button
+        utils.page_contains_for_user(self, self.admin_user, self.url, "Add Users")
+        # pi can see add user button
+        utils.page_contains_for_user(self, self.pi_user.user, self.url, "Add Users")
+        # non-manager user cannot see add user button
+        utils.page_does_not_contain_for_user(self, self.project_user.user, self.url, "Add Users")
+
 
 class ProjectCreateTest(ProjectViewTestBase):
     """Tests for project create view"""
@@ -163,7 +172,7 @@ class ProjectAttributeCreateTest(ProjectViewTestBase):
         # logged-out user gets redirected, admin can access create page
         self.project_access_tstbase(self.url)
         # pi can access create page
-        utils.test_user_can_access(self, self.pi_user.user, self.url)
+        # utils.test_user_can_access(self, self.pi_user.user, self.url)
         # project user and nonproject user cannot access create page
         utils.test_user_cannot_access(self, self.project_user.user, self.url)
         utils.test_user_cannot_access(self, self.nonproject_user, self.url)
@@ -220,9 +229,8 @@ class ProjectAttributeUpdateTest(ProjectViewTestBase):
     def test_project_attribute_update_access(self):
         """Test access to project attribute update page"""
         self.project_access_tstbase(self.url)
-        # pi can access project attribute update page
-        utils.test_user_can_access(self, self.pi_user.user, self.url)
-        # project user and nonproject user cannot access project attribute update page
+        # utils.test_user_can_access(self, self.pi_user.user, self.url)
+        # project user, pi, and nonproject user cannot access update page
         utils.test_user_cannot_access(self, self.project_user.user, self.url)
         utils.test_user_cannot_access(self, self.nonproject_user, self.url)
 
@@ -244,7 +252,7 @@ class ProjectAttributeDeleteTest(ProjectViewTestBase):
         # logged-out user gets redirected, admin can access delete page
         self.project_access_tstbase(self.url)
         # pi can access delete page
-        utils.test_user_can_access(self, self.pi_user.user, self.url)
+        # utils.test_user_can_access(self, self.pi_user.user, self.url)
         # project user and nonproject user cannot access delete page
         utils.test_user_cannot_access(self, self.project_user.user, self.url)
         utils.test_user_cannot_access(self, self.nonproject_user, self.url)

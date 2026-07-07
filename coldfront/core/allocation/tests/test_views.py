@@ -29,6 +29,7 @@ from coldfront.core.test_helpers.factories import (
     AllocationAttributeFactory,
     AllocationAttributeTypeFactory,
     AllocationChangeRequestFactory,
+    AllocationChangeStatusChoiceFactory,
     AllocationFactory,
     AllocationStatusChoiceFactory,
     AllocationUserFactory,
@@ -157,6 +158,7 @@ class AllocationChangeDetailViewTest(AllocationViewBaseTest):
     def setUp(self):
         """create an AllocationChangeRequest to test"""
         self.client.force_login(self.admin_user, backend=BACKEND)
+        AllocationChangeStatusChoiceFactory(name="Denied")
         AllocationChangeRequestFactory(id=2, allocation=self.allocation)  # view, deny
         AllocationChangeRequestFactory(
             id=3, allocation=self.allocation, end_date_extension=ALLOCATION_CHANGE_REQUEST_EXTENSION_DAYS[0]

@@ -2,8 +2,10 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+import logging
 from datetime import datetime
 
+from django.conf import settings
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -11,6 +13,15 @@ from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
 import coldfront.core.attribute_expansion as attribute_expansion
+from coldfront.core.resource.utils import get_user_account_statuses
+from coldfront.core.utils.common import import_from_settings
+
+if "coldfront.plugins.ldap_misc" in settings.INSTALLED_APPS:
+    from coldfront.plugins.ldap_misc.utils.resource import get_user_account_statuses
+
+logger = logging.getLogger(__name__)
+
+ADDITIONAL_USER_SEARCH_CLASSES = import_from_settings("ADDITIONAL_USER_SEARCH_CLASSES", [])
 
 
 class AttributeType(TimeStampedModel):
@@ -92,6 +103,7 @@ class ResourceAttributeType(TimeStampedModel):
 
     attribute_type = models.ForeignKey(AttributeType, on_delete=models.CASCADE)
     name = models.CharField(max_length=128)
+    description = models.TextField(blank=True, null=True)
     is_required = models.BooleanField(default=False)
     is_unique_per_resource = models.BooleanField(default=False)
     is_value_unique = models.BooleanField(default=False)
@@ -138,6 +150,8 @@ class Resource(TimeStampedModel):
     is_public = models.BooleanField(default=True)
     is_allocatable = models.BooleanField(default=True)
     requires_payment = models.BooleanField(default=False)
+    requires_user_roles = models.BooleanField(default=False)
+    review_groups = models.ManyToManyField(Group, blank=True, related_name="review_groups_resource_set")
     allowed_groups = models.ManyToManyField(Group, blank=True)
     allowed_users = models.ManyToManyField(User, blank=True)
     linked_resources = models.ManyToManyField("self", blank=True)
@@ -229,6 +243,9 @@ class Resource(TimeStampedModel):
             return ondemand.value
         return None
 
+    def get_user_account_statuses(self, usernames, accounts=None):
+        return get_user_account_statuses(usernames, self.get_attribute("check_user_account"), accounts)
+
     def __str__(self):
         return "%s (%s)" % (self.name, self.resource_type.name)
 
@@ -247,7 +264,10 @@ class ResourceAttribute(TimeStampedModel):
 
     resource_attribute_type = models.ForeignKey(ResourceAttributeType, on_delete=models.CASCADE)
     resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
-    value = models.TextField()
+    value = models.TextField(blank=True)
+    is_required = models.BooleanField(default=False)
+    check_if_username_exists = models.BooleanField(default=False)
+    resource_account_is_required = models.BooleanField(default=False)
     history = HistoricalRecords()
 
     def clean(self):
@@ -260,7 +280,11 @@ class ResourceAttribute(TimeStampedModel):
             raise ValidationError('Invalid Value "%s". Allowed inputs are "Active" or "Inactive".' % (self.value))
         elif expected_value_type == "Public/Private" and self.value not in ["Public", "Private"]:
             raise ValidationError('Invalid Value "%s". Allowed inputs are "Public" or "Private".' % (self.value))
-        elif expected_value_type == "Date":
+        elif expected_value_type == "Yes/No" and self.value not in ["Yes", "No", ""]:
+            raise ValidationError('Invalid Value "%s". Allowed inputs are "Yes" or "No".' % (self.value))
+        elif expected_value_type == "True/False" and self.value not in ["True", "False", ""]:
+            raise ValidationError('Invalid Value "%s". Allowed inputs are "True" or "False".' % (self.value))
+        elif expected_value_type == "Date" and not self.value == "":
             try:
                 datetime.strptime(self.value.strip(), "%m/%d/%Y")
             except ValueError:

@@ -9,6 +9,7 @@ from coldfront.core.project.models import (
     ProjectAttributeType,
     ProjectReviewStatusChoice,
     ProjectStatusChoice,
+    ProjectTypeChoice,
     ProjectUserRoleChoice,
     ProjectUserStatusChoice,
 )
@@ -18,29 +19,40 @@ class Command(BaseCommand):
     help = "Add default project related choices"
 
     def handle(self, *args, **options):
+        ProjectStatusChoice.objects.all().delete()
         for choice in [
             "New",
             "Active",
             "Archived",
+            "Denied",
+            "Expired",
+            "Renewal Denied",
+            "Review Pending",
+            "Waiting For Admin Approval",
+            "Contacted By Admin",
         ]:
             ProjectStatusChoice.objects.get_or_create(name=choice)
 
+        ProjectReviewStatusChoice.objects.all().delete()
         for choice in [
-            "Completed",
+            "Approved",
             "Pending",
+            "Denied",
+            "Completed",
+            "Contacted By Admin",
         ]:
             ProjectReviewStatusChoice.objects.get_or_create(name=choice)
 
+        ProjectUserRoleChoice.objects.all().delete()
         for choice in [
             "User",
             "Manager",
+            "Group",
         ]:
             ProjectUserRoleChoice.objects.get_or_create(name=choice)
 
         for choice in [
             "Active",
-            "Pending - Add",
-            "Pending - Remove",
             "Denied",
             "Removed",
         ]:
@@ -52,6 +64,7 @@ class Command(BaseCommand):
         for name, attribute_type, has_usage, is_private in (
             ("Project ID", "Text", False, False),
             ("Account Number", "Int", False, True),
+            ("Auto Disable User Notifications", "Yes/No", False, True),
         ):
             ProjectAttributeType.objects.get_or_create(
                 name=name,
@@ -59,3 +72,10 @@ class Command(BaseCommand):
                 has_usage=has_usage,
                 is_private=is_private,
             )
+
+        ProjectTypeChoice.objects.all().delete()
+        for choice in [
+            "Research",
+            "Class",
+        ]:
+            ProjectTypeChoice.objects.get_or_create(name=choice)

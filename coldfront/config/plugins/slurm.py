@@ -24,3 +24,4 @@ SLURM_SHORT_OPTION_NAMES = ENV.dict(
         "partition": "p",
     },
 )
+SLURM_DUMP_TASK_BASE_DIR = ENV.str("SLURM_DUMP_TASK_BASE_DIR", default="")

@@ -8,6 +8,8 @@ from coldfront.core.allocation.models import (
     AllocationAttributeType,
     AllocationChangeStatusChoice,
     AllocationStatusChoice,
+    AllocationUserRequestStatusChoice,
+    AllocationUserRoleChoice,
     AllocationUserStatusChoice,
     AttributeType,
 )
@@ -17,7 +19,7 @@ class Command(BaseCommand):
     help = "Add default allocation related choices"
 
     def handle(self, *args, **options):
-        for attribute_type in ("Date", "Float", "Int", "Text", "Yes/No", "No", "Attribute Expanded Text"):
+        for attribute_type in ("Date", "Float", "Int", "Text", "Yes/No", "No", "Attribute Expanded Text", "True/False"):
             AttributeType.objects.get_or_create(name=attribute_type)
 
         for choice in (
@@ -44,8 +46,30 @@ class Command(BaseCommand):
         ):
             AllocationChangeStatusChoice.objects.get_or_create(name=choice)
 
-        for choice in ("Active", "Error", "Removed", "PendingEULA", "DeclinedEULA"):
+        for choice in (
+            "Active",
+            "Error",
+            "Removed",
+            "PendingEULA",
+            "DeclinedEULA",
+            "Invited",
+            "Pending",
+            "Disabled",
+            "Retired",
+        ):
             AllocationUserStatusChoice.objects.get_or_create(name=choice)
+
+        for choice in (
+            "Approved",
+            "Pending",
+            "Denied",
+        ):
+            AllocationUserRequestStatusChoice.objects.get_or_create(name=choice)
+
+        for choice, is_user_default, is_manager_default in (("read/write", True, True), ("read only", False, False)):
+            AllocationUserRoleChoice.objects.get_or_create(
+                name=choice, is_user_default=is_user_default, is_manager_default=is_manager_default
+            )
 
         for name, attribute_type, has_usage, is_private, is_required, is_changeable in (
             ("Cloud Account Name", "Text", False, False, False, False),
@@ -72,6 +96,15 @@ class Command(BaseCommand):
             ("Storage_Group_Name", "Text", False, False, False, False),
             ("SupportersQOS", "Yes/No", False, False, False, False),
             ("SupportersQOSExpireDate", "Date", False, False, False, False),
+            ("Account Number", "Text", False, False, False, False),
+            ("Use Type", "Text", False, True, False, False),
+            ("Will Exceed Limits", "Yes/No", False, True, False, False),
+            ("Allocated Quantity", "Int", False, False, False, False),
+            ("Center Identifier", "Text", False, True, False, False),
+            ("GID", "Int", False, True, False, False),
+            ("LDAP Group", "Text", False, True, False, False),
+            ("SMB Enabled", "Yes/No", False, False, False, False),
+            ("Slate-Project Directory", "Text", False, False, False, False),
         ):
             AllocationAttributeType.objects.get_or_create(
                 name=name,

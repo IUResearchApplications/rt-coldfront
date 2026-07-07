@@ -2,11 +2,13 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+import django_cas_ng.views
 from django.conf import settings
-from django.contrib.auth.views import LoginView
-from django.urls import path
+from django.contrib.auth.views import LoginView, LogoutView
+from django.urls import path, reverse_lazy
 
 import coldfront.core.user.views as user_views
+from coldfront.config.env import ENV
 
 EXTRA_APPS = settings.INSTALLED_APPS
 
@@ -33,3 +35,23 @@ urlpatterns = [
     path("user-search-results/", user_views.UserSearchResults.as_view(), name="user-search-results"),
     path("user-list-allocations/", user_views.UserListAllocations.as_view(), name="user-list-allocations"),
 ]
+
+
+if ENV.bool("PLUGIN_CAS", default=True):
+    urlpatterns += [
+        path("login", django_cas_ng.views.LoginView.as_view(), name="login"),
+        path("logout", django_cas_ng.views.LogoutView.as_view(), name="logout"),
+    ]
+else:
+    urlpatterns += [
+        path(
+            "login",
+            LoginView.as_view(
+                template_name="user/login.html",
+                extra_context={"EXTRA_APPS": EXTRA_APPS},
+                redirect_authenticated_user=True,
+            ),
+            name="login",
+        ),
+        path("logout", LogoutView.as_view(next_page=reverse_lazy("login")), name="logout"),
+    ]
