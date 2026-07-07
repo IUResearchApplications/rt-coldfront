@@ -1,0 +1,24 @@
+{% extends "common/base.html" %}
+{% load crispy_forms_tags %}
+{% load common_tags %}
+{% load static %}
+
+
+{% block title %}
+Add Project Notification
+{% endblock %}
+
+
+{% block content %}
+<h1>
+  Adding notification to {{project.title}} for PI {{ project.pi.first_name }}
+  {{ project.pi.last_name }} ({{ project.pi.username }})
+</h1>
+
+<form method="post">
+  {% csrf_token %}
+  {{form |crispy}}
+  <button class="btn btn-success" type="submit">Add</button>
+  <a class="btn btn-secondary" href="{% url 'project-detail' project.pk %}">Back to Project</a><br>
+</form>
+{% endblock %}

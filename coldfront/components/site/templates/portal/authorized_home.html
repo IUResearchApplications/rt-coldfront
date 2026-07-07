@@ -1,0 +1,266 @@
+{% extends "common/base.html" %}
+{% load common_tags %}
+
+
+{% block content %}
+<h1 class="sr-only">RT Project Home</h1>
+<div class="row">
+  <section class="col-lg-6 mt-2" aria-labelledby="projects">
+    <h2 id="projects"><a href="{% url 'project-list' %}">My Projects &raquo;</a></h2>
+    <hr>
+    <p>
+      You can add additional users to your project and request a resource allocation as part of the project request.
+      Students should list an IU faculty or staff member as the PI. You can also search for your PI's username and
+      request access to a project they already have.
+      {% if not user.userprofile.title == 'group' %}
+      <a href="{% url 'project-list' %}" aria-label="Request a new RT Project">Request a project &raquo;</a>
+      {% endif %}
+    </p>
+
+
+    {% if project_list %}
+      <hr>
+      <div class="table-responsive">
+        <table id="project_table" class="table table-hover">
+          <caption class="sr-only">User’s projects</caption>
+          <thead>
+            <tr>
+              <th scope="col" class="nosearch">Projects</th>
+              <th scope="col">PI</th>
+              <th scope="col">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for project in project_list %}
+              <tr>
+                <td>
+                  <a href="{% url 'project-detail' project.pk %}" aria-label="Project {{ project.title|default:'details' }}">
+                    <i class="fa fa-folder fa-lg" aria-hidden="true"></i>
+                    {{ project.title|truncatechars:30 }}
+                  </a>
+                </td>
+                <td>{{ project.pi.first_name }} {{ project.pi.last_name }} ({{ project.pi.username }})</td>
+                {% if project.status.name == 'Active' %}
+                  {% if project.needs_review %}
+                    <td class="text-warning"><strong>{{ project.status.name }}</strong>
+                      {% if user.username in project.list_of_manager_usernames %}
+                        <a href="{% url 'project-review' project.pk %}">
+                          <span class="badge badge-warning">
+                            <i class="fas fa-redo-alt" aria-hidden="true"></i>
+                            Expires in {{ project.expires_in }} day{{ project.expires_in|pluralize }} - click to renew
+                          </span>
+                        </a>
+                      {% endif %}
+                    </td>
+                  {% elif project.needs_review %}
+                    <td class="text-warning"><strong>{{ project.status.name }}</strong>
+                      {% if user.username in project.list_of_manager_usernames %}
+                        <a href="{% url 'project-review' project.pk %}">
+                          <span class="badge badge-warning">
+                            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                            Needs Review - click to review
+                          </span>
+                        </a>
+                      {% endif %}
+                    </td>
+                  {% else %}
+                    <td class="text-success"><strong>{{ project.status.name }}</strong></td>
+                  {% endif %}
+                {% elif project.status.name in 'Archived, Denied, Expired, Renewal Denied' %}
+                  <td class="text-danger">
+                    <strong>{{ project.status.name }}</strong>
+                    {% if user.username in project.list_of_manager_usernames %}
+                      {% if project.status.name == 'Expired' and project.needs_review %}
+                        <a href="{% url 'project-review' project.pk %}">
+                          <span class="badge badge-warning">
+                            <i class="fas fa-redo-alt" aria-hidden="true"></i>
+                            {% if PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING < 0 %}
+                              Click to renew
+                            {% else %}
+                              {{ project.expires_in|add:PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING }} days left to renew
+                            {% endif %}
+                          </span>
+                        </a>
+                      {% endif %}
+                    {% endif %}
+                  </td>
+                {% else %}
+                  <td class="text-primary"><strong>{{ project.status.name }}</strong></td>
+                {% endif %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="alert alert-info" role="alert"><i class="fa fa-info-circle" aria-hidden="true"></i> There are no projects to display.</div>
+      {% if user.userprofile.is_pi or user.is_superuser %}
+        <a 
+          class="btn btn-primary btn-block"
+          href="{% url 'project-create' %}"
+          role="button" 
+          aria-label="Add a new project"
+        >Add a project</a>
+        <hr>
+      {% endif %}
+    {% endif %}
+  </section>
+
+  <section class="col-lg-6 mt-2" aria-labelledby="allocations">
+    <h2 id="allocations"><a href="{% url 'allocation-list' %}">My Allocations &raquo;</a></h2>
+    <hr>
+    <p>
+      You must first have a project to request an allocation. Be sure to review the <a href="{% url 'resource-list' %}">list of available resources</a>.
+      Users must be added to an allocation in order to gain access to its resource. A project can have multiple storage and
+      compute allocations and each allocation can have its own unique memberships derived from the members of the RT Project.
+    </p>
+
+    {% if allocation_list %}
+      <hr>
+      <div class="table-responsive">
+        <table id="allocation_table" class="table table-hover">
+          <caption class="sr-only">User’s allocations</caption>
+          <thead>
+            <tr>
+              <th scope="col" class="nosearch">Project</th>
+              <th scope="col">Resource</th>
+              <th scope="col">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for allocation in allocation_list %}
+            <tr>
+              <td>{{allocation.project.title|truncatechars:30}}</td>
+              <td>
+                <a href="{% url 'allocation-detail' allocation.id %}" aria-label="Resource allocation details">
+                  {{allocation.get_parent_resource}}
+                </a>
+              </td>
+              {% if allocation.status.name == "Expired" and allocation.expires_in > ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING|change_sign %}
+                <td>
+                  <strong>
+                    <span class="badge badge-light">
+                      {{ allocation.expires_in|add:ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING }}
+                    </span> days left to renew
+                  </strong>
+                </td>
+              {%  elif allocation.status.name == "Renewal Requested" %}
+              <td class="text-primary">
+                <strong>{{allocation.status}}</strong>
+              </td>
+              {% elif allocation.project.requires_review and allocation.expires_in >= 0 and  allocation.expires_in <= 7 %}
+              <td class="text-danger">
+                <strong>
+                  Expires in <span class="badge badge-light">{{allocation.expires_in}}</span>
+                  day{{allocation.expires_in|pluralize }}
+                </strong>
+              </td>
+              {% elif allocation.project.requires_review and allocation.expires_in > 7 and allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING %}
+              <td class="text-warning">
+                <strong>
+                  Expires in <span class="badge badge-light">{{allocation.expires_in}}</span>
+                  day{{allocation.expires_in|pluralize }}
+                </strong>
+              </td>
+              {% elif allocation.status.name == "Pending" %}
+              <td class="text-primary">
+                <strong>{{allocation.status}}</strong>
+              </td>
+              {% elif allocation.status.name == "Active" %}
+                {% if user_status|get_value_by_index:forloop.counter0 == 'PendingEULA' %}
+                <td class="text-info">
+                  <strong>
+                    <a href="{% url 'allocation-review-eula' allocation.pk %}">
+                      Review and Accept EULA to Activate
+                    </a>
+                  </strong>
+                </td>
+                {% else %}
+                <td class="text-success">
+                  <strong>{{allocation.status}}</strong>
+                </td>
+                {% endif %}
+              {% else %}
+              <td class="text-primary">
+                <strong>{{allocation.status}}</strong>
+              </td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="alert alert-info" role="alert">
+        <i class="fa fa-info-circle" aria-hidden="true"></i> There are no allocations to display.
+      </div>
+    {% endif %}
+  </section>
+</div>
+
+{% if slurm_accounts %}
+<section aria-labelledby="slurm_accounts">
+  <h2 id="slurm_accounts" class="sr-only">Slurm Account Info</h2>
+  <div class="card mt-3 mb-3">
+    <div class="card-header">
+      Submitting Slurm Jobs with your Allocation's Slurm Account
+    </div>
+    <div class="card-body">
+      <ul class="list-group list-group-flush">
+        {% for slurm_account, info in slurm_accounts.items %}
+          <li class="list-group-item">
+            <div class="container">
+              <div class="row">
+                <div class="col px-0">
+                  <strong>Project:</strong> <a href="{% url 'project-detail' info.project_pk %}">{{ info.project_title|truncatechars:50 }}</a>
+                </div>
+                <div class="col px-0">
+                  <p><strong>Account Name:</strong> {{ slurm_account }}</p>
+                </div>
+              </div>
+            </div>
+            <p>
+              <strong>Resources:</strong>
+              {% for allocation_pk, resource_name in info.allocations.items %}
+                <a href="{% url 'allocation-detail' allocation_pk %}">{{ resource_name }}</a>{% if not forloop.last %},{% endif %}
+              {% endfor %}
+            </p>
+            <p><strong>Add to Interactive Job Commands:</strong> srun -A {{ slurm_account }} &lt;commands&gt;</p>
+            <p><strong>Add to Batch Job Scripts:</strong> #SBATCH -A {{ slurm_account }}</p>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="card-footer">
+      Additional information on <a target="_blank" href="https://servicenow.iu.edu/kb?id=kb_article_view&sysparm_article=KB0022436">submitting jobs</a> is also available.
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<div class="row">
+  {% include "portal/extra_app_templates.html" %}
+</div>
+{% endblock %}
+
+
+{% block javascript %}
+{{ block.super }}
+<script>
+  $("#navbar-main > ul > li.active").removeClass("active");
+  $("#navbar-home").addClass("active");
+  $("#navbar-home a").attr("aria-current", "page")
+
+  $(document).ready(function() {
+    $('#project_table').DataTable({
+      iDisplayLength: 5,
+      bLengthChange: false,
+    });
+
+    $('#allocation_table').DataTable({
+      iDisplayLength: 5,
+      bLengthChange: false,
+    });
+  })
+</script>
+{% endblock %}

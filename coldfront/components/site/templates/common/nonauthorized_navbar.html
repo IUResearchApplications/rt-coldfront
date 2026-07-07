@@ -1,0 +1,54 @@
+{% include 'common/navbar_brand.html' %}
+{% load common_tags %} 
+<nav class="navbar navbar-expand-md navbar-dark bg-primary">
+  <div class="container">
+    <a class="navbar-brand d-block d-sm-none text-primary" href="#">RT Projects</a>
+
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-toggle="collapse"
+      data-target="#navbar-main"
+      aria-controls="navbar-main"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="navbar-collapse collapse" id="navbar-main">
+      <ul class="navbar-nav">
+        <li id="navbar-home" class="nav-item active">
+          <a class="nav-link" href="/">Home</a>
+        </li>
+        <li id="navbar-center-summary" class="nav-item">
+          <a class="nav-link" href="{% url 'center-summary' %}">Center Summary</a>
+        </li>
+        <li id="navbar-publications" class="nav-item dropdown">
+          <a
+            id="navbarPublicationsToggle"
+            class="nav-link dropdown-toggle"
+            href="#"
+            role="button"
+            data-toggle="dropdown"
+            aria-haspopup="true"
+            aria-controls="publications-submenu"
+            aria-expanded="false"
+            title="Publications menu"
+          >Publications</a>
+          <ul id="publications-submenu" class="dropdown-menu" role="menu" aria-labelledby="navbarPublicationsToggle">
+            <li><a class="dropdown-item" href="{% url 'publication_gallery' %}" role="menuitem">Publication Gallery</a></li>
+            <li><a class="dropdown-item" href="{% url 'publication_catalogue' %}" role="menuitem">Publication Catalog</a></li>
+          </ul>
+        </li>
+        {% if settings.CENTER_HELP_URL %}
+          {% include 'common/navbar_help.html' %}
+        {% endif %}
+      </ul>
+ 
+      <ul class="navbar-nav ml-auto">
+        <li id="navbar-login" class="nav-item"><a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-in-alt" aria-hidden="true"></i> Log In</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>

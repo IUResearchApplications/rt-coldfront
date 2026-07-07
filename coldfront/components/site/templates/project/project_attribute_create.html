@@ -1,0 +1,22 @@
+{% extends "common/base.html" %}
+{% load crispy_forms_tags %}
+{% load common_tags %}
+{% load static %}
+
+
+{% block title %}
+Add Project Attribute
+{% endblock %}
+
+
+{% block content %}
+<h1>Adding project attribute to {{ project }}</h1>
+<hr>
+
+<form method="post">
+	{% csrf_token %}
+	{{ form | crispy }}
+	<button type="submit" class="btn btn-success">Add</button>
+	<a class="btn btn-secondary" href="{% url 'project-detail' project.pk %}">Back to Project</a><br>
+</form>
+{% endblock %}

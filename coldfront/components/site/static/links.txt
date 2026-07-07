@@ -1,0 +1,639 @@
+N4ZREJI8	https://www.mdpi.com/1999-4915/15/8/1672	Molecular Dynamics Simulations of Deformable Viral Capsomers
+QW3FDIE6	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2023EF003851	The Choice of Baseline Period Influences the Assessments of the Outcomes of Stratospheric Aerosol Injection
+TXTVR9MJ	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2022JD037067	The Shortwave Radiative Flux Response to an Injection of Sea Salt Aerosols in the Gulf of Mexico
+SRIIEXWF	https://jov.arvojournals.org/article.aspx?articleid=2791809	Slow change: An analysis of infant egocentric visual experience
+2BR6U46Q	https://onlinelibrary.wiley.com/doi/10.1111/mmi.14969	Roles of <span style="font-variant:small-caps;">RodZ</span> and class A <span style="font-variant:small-caps;">PBP1b</span> in the assembly and regulation of the peripheral peptidoglycan elongasome in ovoid‐shaped cells of <i>Streptococcus pneumoniae</i> <span style="font-variant:small-caps;">D39</span>
+ITNAJ56K	https://www.nature.com/articles/s41467-023-41216-7	Multimaterial fiber as a physical simulator of a capillary instability
+3I85KTEL	https://www.spiedigitallibrary.org/conference-proceedings-of-spie/12433/2644870/Creating-fiber-embedded-photonic-circuitry-by-liquid-phase-structuring-of/10.1117/12.2644870.full	Creating fiber-embedded photonic circuitry by liquid-phase structuring of multi-material cores
+XXVCILLL	https://xlink.rsc.org/?DOI=C8SC03677B	Mechanistic study of styrene aziridination by iron( <span style="font-variant:small-caps;">iv</span> ) nitrides
+R6ITXDPA	https://pubs.acs.org/doi/10.1021/jacs.9b04389	A Dimeric Hydride-Bridged Complex with Geometrically Distinct Iron Centers Giving Rise to an <i>S</i> = 3 Ground State
+4HZCFGX6	https://pubs.acs.org/doi/10.1021/jacs.0c07300	Two-State Reactivity in Iron-Catalyzed Alkene Isomerization Confers σ-Base Resistance
+SNEF62TE	https://pubs.acs.org/doi/10.1021/acs.inorgchem.0c02575	Iron(II) Complexes of an Anionic Bis(ylide)diphenylborate Ligand
+5YDJMAVJ	https://www.science.org/doi/10.1126/science.abd3054	Structural and spectroscopic characterization of an Fe(VI) bis(imido) complex
+6XYDEAPZ	https://pubs.acs.org/doi/10.1021/jacs.1c02068	Catalytic Carbodiimide Guanylation by a Nucleophilic, High Spin Iron(II) Imido Complex
+B9LWJQ3X	https://chemistry-europe.onlinelibrary.wiley.com/doi/10.1002/ejic.202200675	Heteroleptic Square Planar Cobalt(I/II) Complexes
+228QL2PR	https://linkinghub.elsevier.com/retrieve/pii/S2451929423002395	Hydrogen atom abstraction by a high-spin [FeIII=S] complex
+NLZCQ9M8	https://pubs.acs.org/doi/10.1021/jacs.1c11429	Alkali Metal Ions Dictate the Structure and Reactivity of an Iron(II) Imido Complex
+JGBFY7DF	https://pubs.acs.org/doi/10.1021/jacs.2c03487	A Spectroscopically Observed Iron Nitrosyl Intermediate in the Reduction of Nitrate by a Surface-Conjugated Electrocatalyst
+XTW58RE6	https://pubs.acs.org/doi/10.1021/jacs.2c13350	Catalytic 1,3-Proton Transfer in Alkenes Enabled by Fe═NR Bond Cooperativity: A Strategy for p <i>K</i><sub>a</sub> -Dictated Regioselective Transposition of C═C Double Bonds
+2WIPR99L	https://pubs.acs.org/doi/10.1021/acscentsci.1c00890	Hydrocarbon Oxidation by an Exposed, Multiply Bonded Iron(III) Oxo Complex
+9P4PDPAK	https://linkinghub.elsevier.com/retrieve/pii/S0021925820335560	Non-growing Rhodopseudomonas palustris Increases the Hydrogen Gas Yield from Acetate by Shifting from the Glyoxylate Shunt to the Tricarboxylic Acid Cycle
+7V7T5W6C	http://link.springer.com/10.1007/s11682-015-9500-7	Neural correlates of emotion reappraisal in individuals with externalizing psychopathology
+Q8E6XD3I	https://onlinelibrary.wiley.com/doi/10.1002/brb3.3312	Impact of aversive affect on neural mechanisms of categorization decisions
+STVRS9KV	https://onlinelibrary.wiley.com/doi/10.1002/hbm.26648	Dynamic threat–reward neural processing under semi‐naturalistic ecologically relevant scenarios
+GT372DC7	https://linkinghub.elsevier.com/retrieve/pii/S2589004220308476	Tumor Phylogeny Topology Inference via Deep Learning
+Q2HUAHZN	https://www.ijcai.org/proceedings/2023/591	DiSProD: Differentiable Symbolic Propagation of Distributions for Planning
+3AWWNUNM	https://linkinghub.elsevier.com/retrieve/pii/S2352673421000639	Occupy Wall Street ten years on: How its disruptive institutional entrepreneurship spread and why it fizzled
+GJWVPZEW	https://www.aanda.org/10.1051/0004-6361/202346095	Ongoing hierarchical massive cluster assembly: The LISCA II structure in the Perseus complex
+5VR4LX9I	https://www.aanda.org/10.1051/0004-6361/202346792	The structural properties of multiple populations in the dynamically young globular cluster NGC 2419
+3TM2E3JG	https://www.aanda.org/10.1051/0004-6361/202347420	Young, wild, and free: The early expansion of star clusters
+AZDLRC32	https://www.aanda.org/10.1051/0004-6361/202349021	The structural properties of multiple populations in globular clusters: The instructive case of NGC 3201
+TU9N5FBR	https://academic.oup.com/mnras/article/516/4/5914/6691715	Sub-parsec resolution cosmological simulations of star-forming clumps at high redshift with feedback of individual stars
+8WE2QPHC	https://academic.oup.com/mnras/article/512/2/2584/6546161	Long-term evolution of multimass rotating star clusters
+R6LCTMU7	https://academic.oup.com/mnras/article/525/2/3136/7243400	Effects of massive central objects on the degree of energy equipartition of globular clusters
+ZHW7FI2T	https://academic.oup.com/mnras/article/526/1/1428/7271420	Shaping the unseen: the influence of baryons and environment on low-mass, high-redshift dark matter haloes in the SIEGE simulations
+XQWI9R53	https://academic.oup.com/mnras/article/521/3/4395/7080163	Evolution of binary stars in the early evolutionary phases of ultra-faint dwarf galaxies
+ZVP7N2IL	https://academic.oup.com/mnrasl/article/522/1/L61/7086132	First observational evidence of a relation between globular clusters’ internal rotation and stellar masses
+6P7XBKS9	https://pubs.acs.org/doi/10.1021/acs.jctc.6b00001	Hybrid Extended Lagrangian, Post-Hartree–Fock Born–Oppenheimer ab Initio Molecular Dynamics Using Fragment-Based Electronic Structure
+SAR9SFJP	https://pubs.acs.org/doi/10.1021/acs.jctc.6b01107	Efficient, “On-the-Fly”, Born–Oppenheimer and Car–Parrinello-type Dynamics with Coupled Cluster Accuracy through Fragment Based Electronic Structure
+93HZWE6D	https://pubs.acs.org/doi/10.1021/acs.jctc.7b00927	Efficient and Adaptive Methods for Computing Accurate Potential Surfaces for Quantum Nuclear Effects: Applications to Hydrogen-Transfer Reactions
+BUW2WF9J	https://pubs.acs.org/doi/10.1021/acs.jctc.8b00186	Adaptive, Geometric Networks for Efficient Coarse-Grained <i>Ab Initio</i> Molecular Dynamics with Post-Hartree–Fock Accuracy
+XL9E3S3G	https://pubs.acs.org/doi/10.1021/acs.jctc.8b00803	Efficiently Capturing Weak Interactions in ab Initio Molecular Dynamics with on-the-Fly Basis Set Extrapolation
+KX4N8JST	https://pubs.acs.org/doi/10.1021/acs.jctc.9b00608	Fragment-Based Electronic Structure for Potential Energy Surfaces Using a Superposition of Fragmentation Topologies
+HJ9H8MCP	https://onlinelibrary.wiley.com/doi/10.1002/qua.26244	Embedded, graph‐theoretically defined many‐body approximations for <span style="font-variant:small-caps;">wavefunction‐in‐DFT</span> and <span style="font-variant:small-caps;">DFT‐in‐DFT</span> : Applications to gas‐ and condensed‐phase ab initio molecular dynamics, and potential surfaces for quantum nuclear effects
+LPTPLX8M	https://pubs.acs.org/doi/10.1021/acs.jctc.9b01089	Efficient and Accurate Approach To Estimate Hybrid Functional and Large Basis-Set Contributions to Condensed-Phase Systems and Molecule–Surface Interactions
+QLDUJLB4	https://pubs.acs.org/doi/10.1021/acs.jctc.0c01287	Weighted-Graph-Theoretic Methods for Many-Body Corrections within ONIOM: Smooth AIMD and the Role of High-Order Many-Body Terms
+JCWVSDJ7	https://pubs.acs.org/doi/10.1021/acs.jctc.5b00433	<i>Ab Initio</i> Molecular Dynamics Using Recursive, Spatially Separated, Overlapping Model Subsystems Mixed within an ONIOM-Based Fragmentation Energy Extrapolation Technique
+2EWFAKGL	https://aacrjournals.org/cancerres/article/83/7_Supplement/5874/720067/Abstract-5874-HSF1-downregulation-of-CCL5-reduces	Abstract 5874: HSF1 downregulation of CCL5 reduces CD8 T cell trafficking in breast cancer
+K8LB2Y6D	https://www.mdpi.com/2072-6694/15/13/3309	MCAK Inhibitors Induce Aneuploidy in Triple-Negative Breast Cancer Models
+ZH8GJ4IN	https://aacrjournals.org/cancerres/article/84/2/276/733116/HSF1-Inhibits-Antitumor-Immune-Activity-in-Breast	HSF1 Inhibits Antitumor Immune Activity in Breast Cancer by Suppressing CCL5 to Block CD8+ T-cell Recruitment
+WL78YP5D	http://journals.ametsoc.org/doi/10.1175/JCLI-D-15-0439.1	The Influence of Climate Model Biases on Projections of Aridity and Drought
+GX6NTUAD	https://agupubs.onlinelibrary.wiley.com/doi/10.1002/2016GL069121	Impacts of recent climate change on trends in baseflow and stormflow in United States watersheds
+JKJ723P8	https://linkinghub.elsevier.com/retrieve/pii/S0034425716301900	Mapping spatial distribution and biomass of coastal wetland vegetation in Indonesian Papua by combining active and passive remotely sensed data
+KRCU6LPD	https://www.tandfonline.com/doi/full/10.1080/01431161.2016.1183834	Revisiting empirical ocean-colour algorithms for remote estimation of chlorophyll- <i> <b>a</b> </i> content on a global scale
+9H5KZ8CW	https://agupubs.onlinelibrary.wiley.com/doi/10.1002/2015GL064593	Revisiting the recent California drought as an extreme value
+5IG3BRPL	https://linkinghub.elsevier.com/retrieve/pii/S0167715218303407	Intrinsic random functions on the sphere
+Z2M2X725	https://rmets.onlinelibrary.wiley.com/doi/10.1002/joc.2419	A refined index of model performance
+E4FDNW56	https://linkinghub.elsevier.com/retrieve/pii/S2212095521001929	Climate change impacts and urban green space adaptation efforts: Evidence from U.S. municipal parks and recreation departments
+EC2CEVPM	https://linkinghub.elsevier.com/retrieve/pii/S0022169421010222	Incorporating rain-on-snow into the SWAT model results in more accurate simulations of hydrologic extremes
+2LB7X4Z3	https://rmets.onlinelibrary.wiley.com/doi/10.1002/gdj3.188	A convection‐permitting dynamically downscaled dataset over the Midwestern United States
+CPBNR7D3	https://dl.acm.org/doi/10.1145/3491418.3535171	HPC Data Analysis Pipeline for Neuronal Cluster Detection
+GXDJT4DQ	https://onlinelibrary.wiley.com/doi/10.1002/ajpa.24712	Updated imaging and phylogenetic comparative methods reassess relative temporal lobe size in anthropoids and modern humans
+9B3SVACY	https://academic.oup.com/zoolinnean/article/199/3/567/7226103	Notes from the Anatolian underground: two new mole taxa from Eastern Turkey, together with a revised phylogeny of the genus <i>Talpa</i> (Mammalia: Eulipotyphla: Talpidae)
+NND5FHVD	https://linkinghub.elsevier.com/retrieve/pii/S0167278915000573	Continuous data assimilation for the 2D Bénard convection through velocity measurements alone
+6Y5S47HQ	https://www.aimsciences.org//article/doi/10.3934/jcd.2019006	Numerical efficacy study of data assimilation for the 2D magnetohydrodynamic equations
+2WDP6PRM	https://asmedigitalcollection.asme.org/computationalnonlinear/article/doi/10.1115/1.4002088/465846/Numerical-Techniques-for-Approximating-Lyapunov	Numerical Techniques for Approximating Lyapunov Exponents and Their Implementation
+ALB6ESQR	https://academic.oup.com/biometrics/article/79/4/3294/7587573	Bayesian Functional Data Analysis Over Dependent Regions and Its Application for Identification of Differentially Methylated Regions
+CGM5TKEQ	https://journals.sagepub.com/doi/10.1177/1545968315584004	Dynamic Changes in White Matter Abnormalities Correlate With Late Improvement and Deterioration Following TBI: A Diffusion Tensor Imaging Study
+8IGQFYJL	https://www.nature.com/articles/s41598-020-78780-7	Impact of tumor-parenchyma biomechanics on liver metastatic progression: a multi-model approach
+9NUU6N7M	https://gigabytejournal.com/articles/22	DAPT: A package enabling distributed automated parameter testing
+ABPVXK7M	https://dl.acm.org/doi/10.1145/3588983.3596679	HQ-Sim: High-performance State Vector Simulation of Quantum Circuits on Heterogeneous HPC Systems
+3BB2YMVJ	https://dl.acm.org/doi/10.1145/3624062.3624217	MEMQSim: Highly Memory-Efficient and Modularized Quantum State-Vector Simulation
+KAWUFQ9W	https://dl.acm.org/doi/10.1145/3624062.3624257	Benchmarking and In-depth Performance Study of Large Language Models on Habana Gaudi Processors
+5W6DUXB8	https://dl.acm.org/doi/10.1145/3624062.3625123	Analyzing Impact of Data Reduction Techniques on Visualization for AMR Applications Using AMReX Framework
+QYWVAXP8	https://pubs.acs.org/doi/10.1021/acs.jpca.3c03738	Electronic Structure of Heteronuclear Cerium-Platinum Clusters
+4MUJD9IH	https://ideals.illinois.edu/handle/2142/107392	PROBING THE EFFECTS OF ELECTRON CORRELATION: THE NOT-SO-SIMPLE CASE OF Gd2O
+SWA8JZ9M	https://hdl.handle.net/2142/116827	A SPECTROSCOPIC INVESTIGATION OF THE EFFECTS OF SPIN STRAIN ON LN3O− CLUSTERS
+VGVXR22Z	https://hdl.handle.net/2142/116854	ZINC OXIDE ELECTRONIC STRUCTURE STUDY USING PES
+TLR3DF5P	https://pubs.acs.org/doi/10.1021/acs.jpca.1c04253	Lanthanide Oxides: From Diatomics to High-Spin, Strongly Correlated Homo- and Heterometallic Clusters
+D5E67MPG	https://pubs.acs.org/doi/10.1021/acs.jpca.3c04327	Trend in the Electron Affinities of Fluorophenyl Radicals ·C<sub>6</sub> H<sub>5-x</sub> F<sub> <i>x</i> </sub> (1 ≤ <i>x</i> ≤ 4)
+MNA5FE63	https://pubs.acs.org/doi/10.1021/acs.jpca.3c04016	Anion Photoelectron Imaging Spectroscopy of C<sub>6</sub> HF<sub>5</sub><sup>–</sup> , C<sub>6</sub> F<sub>6</sub><sup>–</sup> , and the Absence of C<sub>6</sub> H<sub>2</sub> F<sub>4</sub><sup>–</sup>
+A25GKM62	https://pubs.acs.org/doi/10.1021/jacs.4c00556	Isomer-Dependent Electron Affinities of Fluorophenyl Radicals,<sup>•</sup> C<sub>6</sub> H<sub> 5– <i>x</i> </sub> F<sub> <i>x</i> </sub> (2 ≤ <i>x</i> ≤ 4)
+9T7T5W4N	http://link.springer.com/10.1007/11960669_14	An Approximate de Bruijn Graph Approach to Multiple Local Alignment and Motif Discovery in Protein Sequences
+MFMIJHF6	https://linkinghub.elsevier.com/retrieve/pii/S1054139X14007137	Feasibility of Functional Neuroimaging to Understand Adolescent Women's Sexual Decision Making
+GASZ8VYT	https://linkinghub.elsevier.com/retrieve/pii/S0028393223002294	Neural segregation and integration of sensory, decision, and action processes during object categorization
+VQ74YJYQ	https://link.springer.com/10.1007/s11682-020-00308-4	Neural Modulation in Approach-Avoidance Conflicts in Externalizing Psychopathology
+TSIUC6IS	https://link.springer.com/10.1007/s00213-021-05815-w	Neural mechanisms of sexual decision-making in women with alcohol use disorder
+BY6LLRHL	https://onlinelibrary.wiley.com/doi/10.1111/adb.12121	Neural mechanisms of high‐risk decisions‐to‐drink in alcohol‐dependent women
+7X25ZJ2Q	https://www.liebertpub.com/doi/10.1089/brain.2023.0048	Increased Segregation in Functional Connectivity Networks When Watching Unpleasant Arousing Videos: A Generalized Psychophysiological Interaction Analysis
+M9N97B9D	https://journals.lww.com/10.1249/01.mss.0000875844.04195.62	Test-retest Reliability And Efficacy Of Individual Symptoms In Concussion Management: 266
+W7CXM9FX	https://linkinghub.elsevier.com/retrieve/pii/S2213158224000858	Diffusion tensor analysis of white matter tracts is prognostic of persisting post-concussion symptoms in collegiate athletes
+AWLDKHJG	https://www.nature.com/articles/s41592-024-02237-2	brainlife.io: a decentralized and open-source cloud platform to support neuroscience research
+EPVHNVGS	https://www.nature.com/articles/s41592-024-02296-5	Author Correction: brainlife.io: a decentralized and open-source cloud platform to support neuroscience research
+3HX5TD29	https://bjsm.bmj.com/lookup/doi/10.1136/bjsports-2023-concussion.279	6.1 Predicting the time to return to play and persistent post concussion symptoms utilizing machine learning of behavior and diffusion weighted MR imaging: findings from the NCAA/DOD CARE consortium
+PDFS3M33	https://bjsm.bmj.com/lookup/doi/10.1136/bjsports-2023-concussion.293	6.15 Protective and risk factors for persistent post concussion symptoms and return to play of NCAA collegiate athletes: findings from the NCAA-DOD CARE consortium
+2UK7G3EU	https://bjsm.bmj.com/lookup/doi/10.1136/bjsports-2023-concussion.90	7.2 A deep learning neural network predicts return-to-play time-point groups utilizing the vestibular/ocular-motor screening and SCAT3: an NCAA-DoD CARE consortium analysis
+TSP9MIXP	https://iopscience.iop.org/article/10.3847/1538-4357/acb434	New Parameters for Star Cluster Dynamics: The Effect of Primordial Binaries and Dark Remnants
+4P7PJAF8	https://iopscience.iop.org/article/10.3847/1538-4357/ad3dec	New Parameters for Star Cluster Dynamics: The Role of Clusters’ Initial Conditions
+4CCJFJBF	https://ieeexplore.ieee.org/document/10821233/	Entangled Meanings: Classification and Ambiguity Resolution in QNLP
+RXPDGNNN	https://ieeexplore.ieee.org/document/10821048/	Semantic Similarities Using Classical Embeddings in Quantum NLP
+IYBWZI6T	https://ieeexplore.ieee.org/document/10821150/	Entangled Meanings: Classification and Ambiguity Resolution in Near-Term QNLP
+TF6IWRNX	https://linkinghub.elsevier.com/retrieve/pii/S0167278918300599	Turbulence in vertically averaged convection
+UMMLEY74	https://iopscience.iop.org/article/10.1088/1361-6544/abb1c6	Algebraic bounds on the Rayleigh–Bénard attractor
+EBLEPM2S	https://epubs.siam.org/doi/10.1137/20M136058X	Data Assimilation for the Navier--Stokes Equations Using Local Observables
+2HZ4ZGSM	https://onlinelibrary.wiley.com/doi/10.1002/fld.5152	Data assimilation with higher order finite element interpolants
+2PUFN5S6	https://www.aimsciences.org//article/doi/10.3934/dcds.2023078	Convergence of a mobile data assimilation scheme for the 2D Navier-Stokes equations
+2X9HTNFX	https://iopscience.iop.org/article/10.1088/1361-648X/accd38	Metal–insulator transition in composition-tuned nickel oxide films
+STSIG8Y4	https://pubs.acs.org/doi/10.1021/om401221v	Iridium-Promoted, Palladium-Catalyzed Direct Arylation of Unactivated Arenes
+JTQUEW9L	https://www.nature.com/articles/ncomms8789	Engineering a dirhodium artificial metalloenzyme for selective olefin cyclopropanation
+DATERCB8	https://linkinghub.elsevier.com/retrieve/pii/S2667109322003463	Analysis of laboratory-evolved flavin-dependent halogenases affords a computational model for predicting halogenase site selectivity
+MA7XCL8M	https://pubs.acs.org/doi/10.1021/jacs.2c07422	Directed Evolution of Flavin-Dependent Halogenases for Site- and Atroposelective Halogenation of 3-Aryl-4(3 <i>H</i> )-Quinazolinones via Kinetic or Dynamic Kinetic Resolution
+SZCJCVZE	https://pubs.acs.org/doi/10.1021/acscatal.2c03383	Expanding the Reactivity of Flavin-Dependent Halogenases toward Olefins via Enantioselective Intramolecular Haloetherification and Chemoenzymatic Oxidative Rearrangements
+S7K4FDYT	https://pubs.acs.org/doi/10.1021/acs.chemrev.3c00215	Non-Native Site-Selective Enzyme Catalysis
+9RL848QN	https://rmets.onlinelibrary.wiley.com/doi/10.1002/joc.8668	A Multiscalar Standardized Vapor Pressure Deficit Index for Drought Monitoring and Impacts
+NAEFYKKB	http://link.springer.com/10.1007/s00021-019-0478-6	Tracer Turbulence: The Batchelor–Howells–Townsend Spectrum Revisited
+KELPMD25	https://jov.arvojournals.org/article.aspx?articleid=2792416	The statistics of infants’ natural visual experience are shaped by motor development.
+NR3IPS3U	https://linkinghub.elsevier.com/retrieve/pii/S1053811909012889	Neural processing of asynchronous audiovisual speech perception
+8XMY76KU	https://jov.arvojournals.org/article.aspx?articleid=2749967	Alcoholic drink preferences modulate acquired salience
+NDBAVWR9	https://linkinghub.elsevier.com/retrieve/pii/S0741832918300922	Risky drinking decisions: The influence of party music and alcohol abuse in young adult women
+WYZ6FGFJ	https://academic.oup.com/mnrasl/article/504/1/L12/6217434	New insights into star cluster evolution towards energy equipartition
+IL56565Z	https://academic.oup.com/mnras/article/509/3/3815/6425755	Evolution towards energy equipartition in star clusters: effects of the tidal field, primordial binaries, and internal velocity anisotropy
+LV7IIBGH	https://academic.oup.com/mnras/article/515/2/1830/6618562	Mass segregation and dynamics of primordial binaries in star clusters with a radially anisotropic velocity distribution
+GC422TSZ	https://www.aanda.org/10.1051/0004-6361/202450270	Dynamics of star clusters with tangentially anisotropic velocity distribution
+XXMHSNUB	https://direct.mit.edu/artl/article/22/2/153-171/2832	Exploring the Space of Viable Configurations in a Model of Metabolism–Boundary Co-construction
+C6Y8WDLR	https://linkinghub.elsevier.com/retrieve/pii/S0959438816300691	The whole worm: brain–body–environment models of C. elegans
+XC9SCGB8	https://pubs.aip.org/cha/article/27/11/111104/136041/Computing-aggregate-properties-of-preimages-for-2D	Computing aggregate properties of preimages for 2D cellular automata
+IS7BVQ77	https://www.frontiersin.org/articles/10.3389/fncom.2021.572339/full	A Neuromechanical Model of Multiple Network Rhythmic Pattern Generators for Forward Locomotion in C. elegans
+LY2QD9TN	https://link.springer.com/10.1007/s00422-022-00938-5	Codimension-2 parameter space structure of continuous-time recurrent neural networks
+M3JPCB6T	https://linkinghub.elsevier.com/retrieve/pii/S0303264722002040	The theoretical foundations of enaction: Precariousness
+KEWIBTXR	https://onlinelibrary.wiley.com/doi/10.1111/tops.12686	On the Proper Treatment of Dynamics in Cognitive Science
+FP8QJZLA	https://onlinelibrary.wiley.com/doi/10.1111/cogs.12142	Information Processing and Dynamics in Minimally Cognitive Agents
+UT9JLDH2	https://direct.mit.edu/artl/article/21/1/1-19/2792	Characterizing Autopoiesis in the Game of Life
+HQQSVR54	https://journals.sagepub.com/doi/10.1177/1059712310363163	Fitness Space Structure of a Neuromechanical System
+F9HUB2VI	https://dx.plos.org/10.1371/journal.pcbi.1002890	Connecting a Connectome to Behavior: An Ensemble of Neuroanatomical Models of C. elegans Klinotaxis
+9HP94MQA	http://link.springer.com/10.1007/s00359-006-0124-7	Mechanical reconfiguration mediates swallowing and rejection in Aplysia californica
+VUZKXZ5K	http://link.springer.com/10.1007/s00422-004-0517-z	Neural control exploits changing mechanical advantage and context dependence to generate different feeding responses in Aplysia
+QUQKXSPG	https://onlinelibrary.wiley.com/doi/10.1111/j.1525-142X.2008.00245.x	Developmental bias in evolution: evolutionary accessibility of phenotypes in a model evo‐devo system
+W7X96ZNF	https://ieeexplore.ieee.org/document/1650256/	Design and Implementation of Multipattern Generators in Analog VLSI
+5YBIDUYS	http://www.scholarpedia.org/article/Computational_neuroethology	Computational neuroethology
+ZGFNVBPH	http://link.springer.com/10.1007/978-3-642-15193-4_4	Information Dynamics of Evolved Agents
+R96YFKBG	http://link.springer.com/10.1007/978-3-642-15193-4_52	The Dependence of Braking Strategies on Optical Variables in an Evolved Model of Visually-Guided Braking
+VCVFI9HW	https://www.mitpressjournals.org/doi/abs/10.1162/978-0-262-33936-0-ch087	Propagation of rhythmic dorsoventral wave in a neuromechanical model of locomotion in Caernohabditis elegans
+E6WMABVN	https://www.mitpressjournals.org/doi/abs/10.1162/isal_a_008	Structural coupling of a Potts model cell
+V2Z4SAMV	https://www.mitpressjournals.org/doi/abs/10.1162/isal_a_040	An evolutionary robotics model of visually-guided braking: Testing optical variables
+N3MV3MQH	https://www.mitpressjournals.org/doi/abs/10.1162/isal_a_00019	On the Origin of Gliders
+D89WEHTM	https://www.mitpressjournals.org/doi/abs/10.1162/isal_a_00598	The Sun Always Rises: Behavioral Attunement to Abiotic Reins
+2TN4IZS6	https://www.mitpressjournals.org/doi/abs/10.1162/isal_a_00599	Characterizing the Role of Homeostatic Plasticity in Central Pattern Generators
+4DSUFRY9	https://direct.mit.edu/isal/article-abstract/doi/10.1162/978-0-262-31709-2-ch008	Analysis of Ultrastability in Small Dynamical Recurrent Neural Networks
+EZYQERCA	https://direct.mit.edu/isal/article-abstract/doi/10.1162/978-0-262-31709-2-ch041	Environmental Feedback Drives Multiple Behaviors from the Same Neural Circuit
+SF7IJ3R3	https://direct.mit.edu/isal/article-abstract/doi/10.1162/978-0-262-32621-6-ch082	Quantifying Robustness in a Spatial Model of Metabolism-Boundary Co-Construction
+J7XCQWQN	https://direct.mit.edu/isal/article-abstract/doi/10.1162/978-0-262-33027-5-ch040	An Integrated Neuromechanical Model of Steering in C. elegans
+69IMEMPH	https://direct.mit.edu/isal/article-abstract/doi/10.1162/978-0-262-33027-5-ch043	Ontogeny and adaptivity in a model protocell
+GFP4XA7V	https://direct.mit.edu/isal/article-abstract/doi/10.1162/978-0-262-33936-0-ch087	Propagation of rhythmic dorsoventral wave in a neuromechanical model of locomotion in Caernohabditis elegans
+89X3SEYC	https://www.mitpressjournals.org/doi/abs/10.1162/isal_a_00738	Deriving Community Models with Evolutionary Robotics: A Case Study of Sensory Pollution
+9QZSZTGJ	https://www.mitpressjournals.org/doi/abs/10.1162/978-0-262-31709-2-ch008	Analysis of Ultrastability in Small Dynamical Recurrent Neural Networks
+WLIIZ8RF	https://www.mitpressjournals.org/doi/abs/10.1162/978-0-262-31709-2-ch041	Environmental Feedback Drives Multiple Behaviors from the Same Neural Circuit
+YDMVCJ9P	https://www.mitpressjournals.org/doi/abs/10.1162/978-0-262-32621-6-ch082	Quantifying Robustness in a Spatial Model of Metabolism-Boundary Co-Construction
+IKF5ERYX	https://www.mitpressjournals.org/doi/abs/10.1162/978-0-262-33027-5-ch043	Ontogeny and adaptivity in a model protocell
+9FWNP3TT	https://www.mitpressjournals.org/doi/abs/10.1162/978-0-262-33027-5-ch040	An Integrated Neuromechanical Model of Steering in C. elegans
+U36SEK6W	https://pnas.org/doi/full/10.1073/pnas.2202230119	Scenarios for modeling solar radiation modification
+7URIW76U	https://gmd.copernicus.org/articles/8/3379/2015/gmd-8-3379-2015-discussion.html	The Geoengineering Model Intercomparison Project Phase 6 (GeoMIP6): simulation design and preliminary results
+7CBJKUYY	https://agupubs.onlinelibrary.wiley.com/doi/10.1002/2013JD020569	An overview of the Geoengineering Model Intercomparison Project (GeoMIP)
+534HF7QE	https://onlinelibrary.wiley.com/doi/10.1111/mmi.15122	Negative regulation of <span style="font-variant:small-caps;">MurZ</span> and <span style="font-variant:small-caps;">MurA</span> underlies the essentiality of <span style="font-variant:small-caps;">GpsB</span> ‐ and <span style="font-variant:small-caps;">StkP</span> ‐mediated protein phosphorylation in <i>Streptococcus pneumoniae</i> <span style="font-variant:small-caps;">D39</span>
+F7DGM9SK	https://www.journals.uchicago.edu/doi/10.1086/716197	Tracking Public and Private Responses to the COVID-19 Epidemic: Evidence from State and Local Government Actions
+EDNXLHB5	https://dx.plos.org/10.1371/journal.pbio.3003015	Unprecedented female mutation bias in the aye-aye, a highly unusual lemur from Madagascar
+U6LPBMQP	https://peerj.com/articles/cs-38	Measuring online social bubbles
+I355HIII	https://dl.acm.org/doi/10.1145/2818717	The rise of social bots
+V8W8I7TB	https://peerj.com/articles/cs-87	OSoMe: the IUNI observatory on social media
+7WM3MEP8	https://link.aps.org/doi/10.1103/PhysRevE.98.042304	Weight thresholding on complex networks
+XH4KVMLN	https://asistdl.onlinelibrary.wiley.com/doi/10.1002/asi.24121	Quantifying Biases in Online Information Exposure
+YDJPGPCJ	https://direct.mit.edu/qss/article/1/3/1298-1308/96112	Recency predicts bursts in the evolution of author citations
+MNK8VUTT	https://link.aps.org/doi/10.1103/PhysRevResearch.2.033171	Classes of critical avalanche dynamics in complex networks
+V8W5SIXH	https://epjdatascience.springeropen.com/articles/10.1140/epjds/s13688-023-00410-9	A language framework for modeling social media account behavior
+FH3KHWB5	http://link.springer.com/10.1007/s13278-014-0237-x	Clustering memes in social media streams
+XSQY79NA	https://www.nature.com/articles/nphys209	Detecting rich-club ordering in complex networks
+PVTJFQHF	http://dl.acm.org/citation.cfm?doid=2872518.2889302	BotOrNot: A System to Evaluate Social Bots
+W6N3S4RY	http://dl.acm.org/citation.cfm?doid=2872518.2890098	Hoaxy: A Platform for Tracking Online Misinformation
+4GS76GGJ	https://dl.acm.org/doi/10.1145/3366424.3385775	Unveiling Coordinated Groups Behind White Helmets Disinformation
+2459AVAB	https://dl.acm.org/doi/10.1145/2997657	Mining for Topics to Suggest Knowledge Model Extensions
+NS9ZRS8U	http://www.epjdatascience.com/content/5/1/5	Women through the glass ceiling: gender asymmetries in Wikipedia
+4HN3BCVE	https://onlinelibrary.wiley.com/doi/10.1609/aimag.v29i3.2155	Intelligent Peer Networks for Collaborative Web Search
+BCVRVD9K	https://onlinelibrary.wiley.com/doi/10.1609/aimag.v38i4.2772	Reports of the Workshops Held at the 2017 International AAAI Conference on Web and Social Media
+SGINWM8K	https://ieeexplore.ieee.org/document/8248802/	Ultra High-Dimensional Nonlinear Feature Selection for Big Biological Data
+84RDWEND	https://www.nature.com/articles/s41467-021-25738-6	Neutral bots probe political bias on social media
+UUF53E78	https://www.nature.com/articles/s41467-021-27855-8	Publisher Correction: Neutral bots probe political bias on social media
+4J7HN9UT	https://www.nature.com/articles/srep02522	Virality Prediction and Community Structure in Social Networks
+ED6CMUSH	https://link.springer.com/10.1007/s42001-022-00177-5	Botometer 101: social bot practicum for computational social scientists
+MZ2C4VQR	https://peerj.com/articles/cs-1025	How Twitter data sampling biases U.S. voter behavior characterizations
+GVTRHMAU	https://ojs.aaai.org/index.php/ICWSM/article/view/7370	BotSlayer: DIY Real-Time Influence Campaign Detection
+35K2D2BH	https://ojs.aaai.org/index.php/ICWSM/article/view/18122	CoVaxxy: A Collection of English-Language Twitter Posts About COVID-19 Vaccines
+4E62RKGB	https://ojs.aaai.org/index.php/ICWSM/article/view/19354	The Manufacture of Partisan Echo Chambers by Follow Train Abuse on Twitter
+SWB6FY9Z	https://infodemiology.jmir.org/2023/1/e44207	Measuring the Burden of Infodemics: Summary of the Methods and Results of the Fifth WHO Infodemic Management Conference
+KBCSHYEZ	https://dl.acm.org/doi/10.1145/1944339.1944342	Properties and Evolution of Internet Traffic Networks from Anonymized Flow Data
+UJG8G5W8	https://dl.acm.org/doi/10.1145/2037676.2037689	Contextual tag inference
+E5RCJKKH	https://dl.acm.org/doi/10.1145/2180861.2180866	Friendship prediction and homophily in social media
+YCRBA6SG	https://dx.plos.org/10.1371/journal.pone.0043235	Scholarometer: A Social Framework for Analyzing Impact across Disciplines
+BGIX8CE5	https://dx.plos.org/10.1371/journal.pone.0118410	Topicality and Impact in Social Media: Diverse Messages, Focused Messengers
+93S2KAIX	https://dl.acm.org/doi/10.1145/2389661.2389663	The diffusion of political memes in social media: keynote abstract
+FZ5UBX9C	https://dl.acm.org/doi/10.1145/2441955.2441962	Truthy: enabling the study of online social networks
+K354RZDT	http://dl.acm.org/citation.cfm?doid=2872518.2890092	The Spread of Misinformation in Social Media
+PW9CX6WB	https://link.springer.com/10.1007/978-3-319-47874-6_19	On the Influence of Social Bots in Online Protests: Preliminary Findings of a Mexican Case Study
+SNQ77TD6	https://dl.acm.org/doi/10.1145/3308560.3316499	Bot Electioneering Volume: Visualizing Social Bot Activity During Elections
+SFF22XQC	https://ieeexplore.ieee.org/document/10068635/	Ukraine as a Political Tool in Facebook Sponsored Content
+QHPDBY8N	https://aclanthology.org/2024.findings-naacl.64	REMATCH: Robust and Efficient Matching of Local Knowledge Graphs to Improve Structural and Semantic Similarity
+U9C6FD3D	https://www.nature.com/articles/s41467-018-06930-7	The spread of low-credibility content by social bots
+RWATN9WD	https://onlinelibrary.wiley.com/doi/10.1002/hbe2.115	Arming the public with artificial intelligence to counter social bots
+U7H4LCZL	https://www.nature.com/articles/s41598-022-10070-w	Online misinformation is linked to early COVID-19 vaccination hesitancy and refusal
+H257PWKR	https://dl.acm.org/doi/10.1145/3340531.3412698	Detection of Novel Social Bots by Ensembles of Specialized Classifiers
+I5Q52XEE	https://joss.theoj.org/papers/10.21105/joss.01706	BotSlayer: real-time detection of bot amplification on Twitter
+3JS64SHG	https://ojs.aaai.org/index.php/AAAI/article/view/5460	Scalable and Generalizable Social Bot Detection through Data Selection
+VMINUZSD	https://journals.sagepub.com/doi/10.1177/1461444820942744	Asymmetrical perceptions of partisan political bots
+BKLISHDE	https://www.jmir.org/2023/1/e42227	One Year of COVID-19 Vaccine Misinformation on Twitter: Longitudinal Study
+4EH4XNV8	https://www.nature.com/articles/s41598-023-46630-x	Exposure to social bots amplifies perceptual biases and regulation propensity
+ZC4MUTBH	https://pnas.org/doi/10.1073/pnas.2322823121	Fact-checking information from large language models can decrease headline discernment
+JM89NE6K	https://ojs.aaai.org/index.php/ICWSM/article/view/22205	A Multi-Platform Collection of Social Media Posts about the 2022 U.S. Midterm Elections
+X2RPAA67	https://dx.plos.org/10.1371/journal.pone.0302201	Identifying and characterizing superspreaders of low-credibility content on Twitter
+4ILEI93C	https://link.springer.com/10.1007/978-3-031-78541-2_26	The Dawn of Decentralized Social Media: An Exploration of Bluesky’s Public Opening
+6962V9HC	https://ojs.aaai.org/index.php/ICWSM/article/view/18075	Uncovering Coordinated Networks on Social Media: Methods and Case Studies
+QI65PCEE	https://academic.oup.com/pnasnexus/article/doi/10.1093/pnasnexus/pgae258/7701371	Quantifying the vulnerabilities of the online public square to adversarial manipulation tactics
+YKWPSKFN	https://epjdatascience.springeropen.com/articles/10.1140/epjds/s13688-024-00450-9	Account credibility inference based on news-sharing networks
+MN9NE57I	https://journals.sagepub.com/doi/10.1177/20539517211013861	The COVID-19 Infodemic: Twitter versus Facebook
+VDQHFNHW	https://ojs.aaai.org/index.php/ICWSM/article/view/19355	Manipulating Twitter through Deletions
+G7J4E2ZC	https://dx.plos.org/10.1371/journal.pone.0196087	Anatomy of an online misinformation network
+J5EJT2NX	https://appliednetsci.springeropen.com/articles/10.1007/s41109-021-00357-8	On the challenges of predicting microscopic dynamics of online conversations
+YMK75TBE	https://ojs.aaai.org/index.php/ICWSM/article/view/14986	The Hoaxy Misinformation and Fact-Checking Diffusion Network
+ULRS8GXS	https://linkinghub.elsevier.com/retrieve/pii/S2589004225003645	From initial formation to developmental refinement: GABAergic inputs shape neuronal subnetworks in the primary somatosensory cortex
+5EXYLNRM	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2020JB020833	New Insights Into the Slip Budget at Nankai: An Iterative Approach to Estimate Coseismic Slip and Afterslip
+J3FLY8M7	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2024JB029346	Locating Boundaries Between Locked and Creeping Regions at Nankai and Cascadia Subduction Zones
+MDUH4NAF	https://aacrjournals.org/cancerres/article/76/17/4970/613885/Activation-of-the-c-Met-Pathway-Mobilizes-an	Activation of the c-Met Pathway Mobilizes an Inflammatory Network in the Brain Microenvironment to Promote Brain Metastasis of Breast Cancer
+9D4NP5C5	https://febs.onlinelibrary.wiley.com/doi/10.1111/febs.16375	AKT1 mediates multiple phosphorylation events that functionally promote HSF1 activation
+AW4XKFWZ	https://www.embopress.org/doi/10.1038/embor.2012.162	Reactive oxygen species regulate ERBB2 and ERBB3 expression via miR‐199a/125b and DNA methylation
+4822GD75	https://www.nature.com/articles/onc2013582	Akt phosphorylates and activates HSF-1 independent of heat shock, leading to Slug overexpression and epithelial–mesenchymal transition (EMT) of HER2-overexpressing breast cancer cells
+B59MPAXA	https://www.cambridge.org/core/product/identifier/S2059866123003497/type/journal_article	294 Identification of MCAK Inhibitors that Induce Aneuploidy in Triple Negative Breast Cancer Models
+UK84AGIE	https://journals.iupui.edu/index.php/IMPRS/article/view/27850	Inhibition of HSF1 as a Mechanism for Overcoming Hsp90 Treatment Resistance
+4376ISP3	https://aacrjournals.org/cancerres/article/84/5_Supplement_2/B031/734568/Abstract-B031-The-PLK1-inhibitor-Volasertib-as-a	Abstract B031: The PLK1 inhibitor Volasertib as a treatment for HSF1 and MYC coamplified ovarian cancer
+DIXF9UDG	https://aacrjournals.org/cancerres/article/79/13_Supplement/2602/634546/Abstract-2602-AKT1-mediated-activation-of-HSF1-by	Abstract 2602: AKT1-mediated activation of HSF1 by phosphorylation and an association with metastasis-free survival
+REAMAWZ6	https://aacrjournals.org/cancerres/article/79/13_Supplement/2602/634546/Abstract-2602-AKT1-mediated-activation-of-HSF1-by	Abstract 2602: AKT1-mediated activation of HSF1 by phosphorylation and an association with metastasis-free survival
+YVM4A2RD	http://www.ssrn.com/abstract=2863094	Firm Scope and the Value of One-Stop Shopping in Washington State's Deregulated Liquor Market
+WCVWGXSF	https://www.journals.uchicago.edu/doi/10.17310/ntj.2020.2.07	TAXING THE POTENCY OF SIN GOODS: EVIDENCE FROM RECREATIONAL CANNABIS AND LIQUOR MARKETS
+HNQCP5BV	https://ieeexplore.ieee.org/document/10190998/	Representing Latent Dimensions Using Compressed Number Lines
+99TQ7BIB	https://ieeexplore.ieee.org/document/10191578/	Characterizing neural activity in cognitively inspired RL agents during an evidence accumulation task
+7JFZ8GNS	https://pubs.acs.org/doi/10.1021/acsami.4c11537	Controlled Vapor–Liquid–Solid Growth of Long and Remarkably Thin Pb<sub> 1– <i>x</i> </sub> Sn<sub> <i>x</i> </sub> Te Nanowires with Strain-Tunable Ferroelectric Phase Transition
+Y4CEKQAP	https://pubs.acs.org/doi/10.1021/acsanm.4c01612	Anisotropic Straintronic Transport in Topological Semimetal Nanoflakes
+L9EP2M7A	https://ieeexplore.ieee.org/document/10142120/	Building and Testing a Network of Social Trust in an Underground Forum: Robust Connections and Overlapping Criminal Domains
+9G7B96KL	https://ieeexplore.ieee.org/document/10190691/	An Argument for Linguistic Expertise in Cyberthreat Analysis: LOLSec in Russian Language eCrime Landscape
+R48ED6JB	https://aclanthology.org/2024.c3nlp-1.9	Computational Language Documentation: Designing a Modular Annotation and Data Management Tool for Cross-cultural Applicability
+DHN7HH6N	https://linkinghub.elsevier.com/retrieve/pii/S2211124719304346	Disruption in A-to-I Editing Levels Affects C. elegans Development More Than a Complete Lack of Editing
+LGUZ7QCQ	https://www.tandfonline.com/doi/full/10.1080/10409238.2020.1856768	To protect and modify double-stranded RNA – the critical roles of ADARs in development, immunity and oncogenesis
+FVP8J8QY	http://genome.cshlp.org/lookup/doi/10.1101/gr.267575.120	Profiling neural editomes reveals a molecular mechanism to regulate RNA editing during development
+WUX7NDQV	https://faseb.onlinelibrary.wiley.com/doi/10.1096/fasebj.2018.32.1_supplement.650.11	Dimerization of ADARs Expands The Range of Substrates That Can Undergo A‐to‐I RNA Editing
+E6QU9NNR	https://www.nature.com/articles/nbt.2452	The difficult calls in RNA editing
+2DA5YSFJ	https://academic.oup.com/genetics/article/doi/10.1093/genetics/iyac099/6619166	The RNA-binding protein Swm is critical for <i>Drosophila melanogaster</i> intestinal progenitor cell maintenance
+DEVD3RV5	https://www.nature.com/articles/s41598-022-17559-4	ADAR3 activates NF-κB signaling and promotes glioblastoma cell resistance to temozolomide
+5KU4GXWG	https://linkinghub.elsevier.com/retrieve/pii/S2211124722013456	MicroRNA mediated regulation of the onset of enteroblast differentiation in the Drosophila adult intestine
+AKIZ547W	https://bmcbiol.biomedcentral.com/articles/10.1186/s12915-024-01840-1	ADARs regulate cuticle collagen expression and promote survival to pathogen infection
+WSTKXK53	https://link.aps.org/doi/10.1103/PhysRevD.81.013005	Measurement of ν μ and ν ¯ μ induced neutral current single π 0 production cross sections on mineral oil at E ν ∼ O (1 GeV)
+H954JPE2	https://link.aps.org/doi/10.1103/PhysRevD.81.092005	First measurement of the muon neutrino charged current quasielastic double differential cross section
+3MTPWPQD	https://link.aps.org/doi/10.1103/PhysRevD.82.092005	Measurement of the neutrino neutral-current elastic differential cross section on mineral oil at E ν ∼ 1 GeV
+MTAUR86Y	https://link.aps.org/doi/10.1103/PhysRevLett.102.101802	Unexplained Excess of Electronlike Events from a 1-GeV Neutrino Beam
+YNHXWSZK	https://link.aps.org/doi/10.1103/PhysRevLett.103.061802	Search for Muon Neutrino and Antineutrino Disappearance in MiniBooNE
+64TMYYNG	https://linkinghub.elsevier.com/retrieve/pii/S0370269312012592	Test of Lorentz and CPT violation with short baseline neutrino oscillation excesses
+N949J392	https://link.aps.org/doi/10.1103/PhysRevD.72.076004	Tests of Lorentz violation in ν ¯ μ → ν ¯ e oscillations
+VGM4RU9M	https://link.aps.org/doi/10.1103/PhysRevD.81.033004	Measurement of inclusive neutral current π 0 production on carbon in a few-GeV neutrino beam
+HPHIPYRM	https://link.aps.org/doi/10.1103/PhysRevD.84.072005	Measurement of the neutrino component of an antineutrino beam observed by a nonmagnetized detector
+8DNUUUI3	https://link.aps.org/doi/10.1103/PhysRevD.86.052009	Dual baseline search for muon antineutrino disappearance at 0.1 eV 2 < Δ m 2 < 100 eV 2
+LNY8WKB7	https://link.aps.org/doi/10.1103/PhysRevD.88.032001	First measurement of the muon antineutrino double-differential charged-current quasielastic cross section
+DIMJTVYK	https://link.aps.org/doi/10.1103/PhysRevD.89.072004	A method for measuring coherent elastic neutrino-nucleus scattering at a far off-axis high-energy neutrino beam target
+TJZKXPAL	https://link.aps.org/doi/10.1103/PhysRevD.91.012004	Measurement of the antineutrino neutral-current elastic differential cross section
+3A4WIGFN	https://link.aps.org/doi/10.1103/PhysRevLett.103.111801	Search for Electron Antineutrino Appearance at the Δ m 2 ∼ 1 eV 2 Scale
+LP2DH8WX	https://link.aps.org/doi/10.1103/PhysRevLett.110.161801	Improved Search for ν ¯ μ → ν ¯ e Oscillations in the MiniBooNE Experiment
+WQYXC9F8	https://linkinghub.elsevier.com/retrieve/pii/S0920563211007080	Neutrino cross section measurements with MiniBooNE
+BFI7NIJ8	https://linkinghub.elsevier.com/retrieve/pii/S0920563211007481	Global three-parameter model for neutrino oscillations using Lorentz violation
+ITGYR9SA	https://pubs.aip.org/aip/acp/article/842/1/748-755/988264	Neutrinos, Oscillations and New Physics: An Introduction
+KZDZALVH	https://pubs.aip.org/aip/acp/article/967/1/39-44/776276	Measuring Neutrino Interactions with MiniBooNE
+MNLV5RP2	https://pubs.aip.org/aip/acp/article/1189/1/175-180/799718	Measurement of Neutrino-Nucleon Neutral Current Elastic Scattering in MiniBooNE
+YPCRPN3X	https://pubs.aip.org/aip/acp/article/1189/1/291-296/799821	The Path Forward: Neutrino Quasi-Elastic Scattering Discussion
+7RKPNTQA	https://pubs.aip.org/aip/acp/article/1222/1/191-195/666707	Quasielastic Neutrino Scattering at E[sub ν]≈1 GeV: Recent Measurements and Interpretations
+VQKBA7QE	http://ieeexplore.ieee.org/document/1462277/	Study of scintillation, fluorescence and scattering in mineral oil for the miniboone neutrino detector
+EUY6KHHE	http://www.worldscientific.com/doi/abs/10.1142/9789812779519_0012	NEUTRINO OSCILLATIONS AND LORENTZ VIOLATION WITH MINIBOONE
+LFWLKN5W	http://www.worldscientific.com/doi/abs/10.1142/9789812779519_0048	TEST FOR LORENTZ VIOLATION IN THE MINIBOONE NEUTRINO OSCILLATION EXPERIMENT
+A6I2JZWR	http://www.worldscientific.com/doi/abs/10.1142/9789814327688_0047	RECENT RESULTS FROM $\bar \nu _\mu \, \to \,\bar \nu _e$ WITH MINIBOONE
+MRB2GQMI	https://linkinghub.elsevier.com/retrieve/pii/S0168900208015404	The MiniBooNE detector
+FCQG945G	https://aacrjournals.org/cancerres/article/81/14/3791/670249/LSD1-and-Aberrant-DNA-Methylation-Mediate	LSD1 and Aberrant DNA Methylation Mediate Persistence of Enteroendocrine Progenitors That Support <i>BRAF</i> -Mutant Colorectal Cancer
+L3UA8SN3	https://aacrjournals.org/cancerres/article/85/1/52/750634/LSD1-and-CoREST2-Potentiate-STAT3-Activity-to	LSD1 and CoREST2 Potentiate STAT3 Activity to Promote Enteroendocrine Cell Differentiation in Mucinous Colorectal Cancer
+IJNYHCJE	https://linkinghub.elsevier.com/retrieve/pii/S2212267222005184	Adding Walnuts to The Regular Diet Improved the Diet Quality Among U.S. Adults: Results of An NHANES Modeling Study
+22KCX6VA	https://linkinghub.elsevier.com/retrieve/pii/S0167923613001851	Capital markets valuation and accounting performance of Most Admired Knowledge Enterprise (MAKE) award winners
+6QRY9XKT	https://ieeexplore.ieee.org/document/10701477/	Bias-Corrected Joint Spectral Embedding for Multilayer Networks With Invariant Subspace: Entrywise Eigenvector Perturbation and Inference
+NN3Z2ZNH	https://www.ssrn.com/abstract=3375922	The Impact of Trade Credit Provision on Retail Inventory: An Empirical Investigation Using Synthetic Controls
+MU8RXHVZ	https://pubsonline.informs.org/doi/10.1287/mnsc.2022.4600	The Impact of Trade Credit Provision on Retail Inventory: An Empirical Investigation Using Synthetic Controls
+NIQSYU66	https://linkinghub.elsevier.com/retrieve/pii/S0166445X18305885	Profiling microRNA expression in Atlantic killifish (Fundulus heteroclitus) gill and responses to arsenic and hyperosmotic stress
+YWQ666YM	https://linkinghub.elsevier.com/retrieve/pii/S0048969712007899	Adaptive iterative design (AID): A novel approach for evaluating the interactive effects of multiple stressors on aquatic organisms
+F82D7XN8	https://ehp.niehs.nih.gov/doi/10.1289/EHP8932	Genome-Wide Analysis of Cadmium-Induced, Germline Mutations in a Long-Term <i>Daphnia pulex</i> Mutation-Accumulation Experiment
+8I46EME8	https://onlinelibrary.wiley.com/doi/10.1111/mec.13148	Conserved transcriptional responses to cyanobacterial stressors are mediated by alternate regulation of paralogous genes in <i>Daphnia</i>
+Z2GFSIGB	http://genome.cshlp.org/lookup/doi/10.1101/gr.191338.115	High mutational rates of large-scale duplication and deletion in <i>Daphnia pulex</i>
+UMRGE7D2	https://linkinghub.elsevier.com/retrieve/pii/S0306456516301772	Thermal variation and factors influencing vertical migration behavior in Daphnia populations
+KYIXLX8X	http://academic.oup.com/gbe/article/9/3/659/2992614	The Landscape of Extreme Genomic Variation in the Highly Adaptable Atlantic Killifish
+GIQ74HMB	https://pubs.acs.org/doi/10.1021/acs.est.8b06720	Genome-Wide Stress Responses to Copper and Arsenic in a Field Population of <i>Daphnia</i>
+K4696QCN	https://pubs.acs.org/doi/10.1021/acs.est.9b05006	Dynamics of Cadmium Acclimation in <i>Daphnia pulex</i> : Linking Fitness Costs, Cross-Tolerance, and Hyper-Induction of Metallothionein
+BT873DV2	https://academic.oup.com/mbe/article-lookup/doi/10.1093/molbev/msu241	Natural Selection Canalizes Expression Variation of Environmentally Induced Plasticity-Enabling Genes
+LRUSGG24	https://academic.oup.com/mbe/article-lookup/doi/10.1093/molbev/msv190	Hybridization and the Origin of Contagious Asexuality in <i>Daphnia pulex</i>
+FZS2TRC9	http://bmcgenomics.biomedcentral.com/articles/10.1186/1471-2164-8-477	Gene response profiles for Daphnia pulex exposed to the environmental stressor cadmium reveals novel crustacean metallothioneins
+YQ6RKXDD	https://linkinghub.elsevier.com/retrieve/pii/S1532045615000216	A novel variant of aquaporin 3 is expressed in killifish (Fundulus heteroclitus) intestine
+6LK9ZYT6	https://link.aps.org/doi/10.1103/PhysRevD.100.115020	First constraint on coherent elastic neutrino-nucleus scattering in argon
+CY2FL47H	https://link.aps.org/doi/10.1103/PhysRevLett.126.012002	First Measurement of Coherent Elastic Neutrino-Nucleus Scattering on Argon
+46P3MTJD	https://iopscience.iop.org/article/10.1088/1748-0221/16/04/P04002	Development of a<sup>83</sup> mKr source for the calibration of the CENNS-10 liquid argon detector
+754ZYWCV	https://iopscience.iop.org/article/10.1088/1748-0221/16/08/P08048	A D<sub>2</sub> O detector for flux normalization of a pion decay-at-rest neutrino source
+PGKCMC27	https://iopscience.iop.org/article/10.1088/1748-0221/17/03/P03021	Monitoring the SNS basement neutron background with the MARS detector
+C8GNXCHN	https://link.aps.org/doi/10.1103/PhysRevD.106.032003	Simulating the neutrino flux from the Spallation Neutron Source for the COHERENT experiment
+NFTG44KA	https://link.aps.org/doi/10.1103/PhysRevLett.129.081801	Measurement of the Coherent Elastic Neutrino-Nucleus Scattering Cross Section on CsI by COHERENT
+MMZE8ZR5	https://iopscience.iop.org/article/10.1088/1742-6596/798/1/012213	COHERENT Experiment: current status
+2TGHSZBH	https://link.aps.org/doi/10.1103/PhysRevD.102.052007	Sensitivity of the COHERENT experiment to accelerator-produced dark matter
+RJILWKTM	https://www.science.org/doi/10.1126/science.aao0990	Observation of coherent elastic neutrino-nucleus scattering
+JLL4JEJL	https://link.aps.org/doi/10.1103/PhysRevLett.130.051803	First Probe of Sub-GeV Dark Matter beyond the Cosmological Expectation with the COHERENT CsI Detector at the SNS
+TD6W7DR8	https://link.aps.org/doi/10.1103/PhysRevD.108.072001	Measurement of Pb n a t ( ν e , X n ) production with a stopped-pion neutrino source
+63B6AUFA	https://link.aps.org/doi/10.1103/PhysRevLett.131.221801	Measurement of Electron-Neutrino Charged-Current Cross Sections on I 127 with the COHERENT NaI ν E Detector
+UZWUX4YD	https://link.aps.org/doi/10.1103/PhysRevD.109.092005	Accessing new physics with an undoped, cryogenic CsI CEvNS detector for COHERENT at the SNS
+EYQP7NXU	https://link.springer.com/10.1007/978-3-031-63646-2_26	On Implementing Case-Based Reasoning with Large Language Models
+JZM4Y9KC	https://onlinelibrary.wiley.com/doi/10.1111/1475-679X.12590	Silent Suffering: Using Machine Learning to Measure CEO Depression
+3S5FFLEQ	https://www.nature.com/articles/s41562-024-01910-y	Improving academic mentorship practices
+2EM56CXT	https://linkinghub.elsevier.com/retrieve/pii/S0022519306005649	Nonlinear simulation of the effect of microenvironment on tumor growth
+4B937CDP	https://pubs.acs.org/doi/10.1021/acs.jctc.1c00245	Reaction Path-Force Matching in Collective Variables: Determining Ab Initio QM/MM Free Energy Profiles by Fitting Mean Force
+CY4626ZJ	https://pubs.acs.org/doi/10.1021/acs.jctc.1c00565	Machine-Learning-Assisted Free Energy Simulation of Solution-Phase and Enzyme Reactions
+GGTLEAGW	https://pubs.acs.org/doi/10.1021/acs.jctc.1c00567	Doubly Polarized QM/MM with Machine Learning Chaperone Polarizability
+RQG3C66A	https://pubs.acs.org/doi/10.1021/acs.jpcb.2c02262	Accelerating <i>Ab Initio</i> Quantum Mechanical and Molecular Mechanical (QM/MM) Molecular Dynamics Simulations with Multiple Time Step Integration and a Recalibrated Semiempirical QM/MM Hamiltonian
+TLBEJTNG	https://xlink.rsc.org/?DOI=D2CP02820D	Facilitating <i>ab initio</i> QM/MM free energy simulations by Gaussian process regression with derivative observations
+ZQW7PLAY	https://xlink.rsc.org/?DOI=D2RA08180F	Machine learning based implicit solvent model for aqueous-solution alanine dipeptide molecular dynamics simulations
+KEJ4HNEX	https://pubs.aip.org/jcp/article/159/5/054107/2905186/Bridging-semiempirical-and-ab-initio-QM-MM	Bridging semiempirical and <i>ab initio</i> QM/MM potentials by Gaussian process regression and its sparse variants for free energy simulation
+HPIW2ET9	https://pubs.acs.org/doi/10.1021/acsnano.3c06047	Hybrid Metal–Ligand Interfacial Dipole Engineering of Functional Plasmonic Nanostructures for Extraordinary Responses of Optoelectronic Properties
+HAX2L7DT	https://www.mitpressjournals.org/doi/abs/10.1162/isal_a_00599	Characterizing the Role of Homeostatic Plasticity in Central Pattern Generators
+BDDKS3GX	https://academic.oup.com/nar/article/52/D1/D1400/7327073	PancanQTLv2.0: a comprehensive resource for expression quantitative trait loci across human cancers
+UVADH5IP	https://pubs.acs.org/doi/10.1021/acs.jctc.3c00973	Free Energy Profile Decomposition Analysis for QM/MM Simulations of Enzymatic Reactions
+I7VEDV8N	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2023JD039434	Stratospheric Aerosol Injection Can Reduce Risks to Antarctic Ice Loss Depending on Injection Location and Amount
+Y5N7X37K	https://iopscience.iop.org/article/10.1088/2515-7620/acf441	Transboundary effects from idealized regional geoengineering
+GSARUURJ	https://onlinelibrary.wiley.com/doi/10.1002/jcc.27269	Training machine learning potentials for reactive systems: A Colab tutorial on basic models
+86JFNQ8I	https://linkinghub.elsevier.com/retrieve/pii/S0010465523002783	Polyrate 2023: A computer program for the calculation of chemical reaction rates for polyatomics. New version announcement
+NG6WYJ73	https://linkinghub.elsevier.com/retrieve/pii/S0301462223000431	Revealing intrinsic changes of DNA induced by spore photoproduct lesion through computer simulation
+HK37DCT6	https://linkinghub.elsevier.com/retrieve/pii/S1452398123001049	Photoactivities of thiophene monomer/polymer transition in gel–based photoelectrochemical assembly: A theoretical/experimental approach
+FXGSNSU4	https://pubs.acs.org/doi/10.1021/acscatal.2c02993	Photoinduced Site-Selective Functionalization of Aliphatic C–H Bonds by Pyridine <i>N</i> -oxide Based HAT Catalysts
+IZJHZIX7	https://alz-journals.onlinelibrary.wiley.com/doi/10.1002/alz.13319	A simulative deep learning model of SNP interactions on chromosome 19 for predicting Alzheimer's disease risk and rates of disease progression
+JYUSL6SW	https://onlinelibrary.wiley.com/doi/10.1002/ece3.8429	Low base‐substitution mutation rate and predominance of insertion‐deletion events in the acidophilic bacterium <i>Acidobacterium capsulatum</i>
+IH43BBJF	https://academic.oup.com/g3journal/article/doi/10.1093/g3journal/jkac303/6905443	Similar mutation rates but different mutation spectra in moderate and extremely halophilic archaea
+DP9Z3NWV	https://ieeexplore.ieee.org/document/9375950/	CondenseNeXt: An Ultra-Efficient Deep Neural Network for Embedded Systems
+MNUWS2WV	https://www.mdpi.com/1999-5903/14/12/355	NextDet: Efficient Sparse-to-Dense Object Detection with Attentive Feature Aggregation
+WMEJCDPW	https://ieeexplore.ieee.org/document/9422541/	Image Classification with CondenseNeXt for ARM-Based Computing Platforms
+R9RWPY6T	https://www.mdpi.com/2079-9268/13/3/49	An Improved Lightweight Network Using Attentive Feature Aggregation for Object Detection in Autonomous Driving
+IN26KTMW	https://www.mdpi.com/2079-9268/12/1/8	CondenseNeXtV2: Light-Weight Modern Image Classifier Utilizing Self-Querying Augmentation Policies
+8RCUN6C7	http://www.sciencepublishinggroup.com/journal/paperinfo?journalid=523&doi=10.11648/j.ajece.20210502.15	EffCNet: An Efficient CondenseNet for Image Classification on NXP BlueBox
+VSPFYJB4	https://link.springer.com/10.1007/s00775-024-02046-0	Probing calmodulin–NO synthase interactions via site-specific infrared spectroscopy: an introductory investigation
+5WRM3AIW	https://linkinghub.elsevier.com/retrieve/pii/S1384107624000241	Photometric study of the overcontact binary NSVS2910034
+HVHFG4AB	https://linkinghub.elsevier.com/retrieve/pii/S1384107623000209	Photometric study of the overcontact binary V826 Aur
+44QGKKRU	https://chemistry-europe.onlinelibrary.wiley.com/doi/10.1002/chem.202304006	Towards Amplified Probing of Weak Intermolecular Interactions on the External Surfaces of Molecular Capsules
+3INJHFWM	https://pubs.acs.org/doi/10.1021/acs.jpca.3c08476	Mechanism of the Sharpless Epoxidation Reaction: A DFT Study
+R45KX4ZW	https://pubs.acs.org/doi/10.1021/acsanm.3c01721	Discrete Cu-Metalloporous Polycarbazole as a Nanoelectromediator for Effective Electrocarboxylation of Benzyl Bromide with CO<sub>2</sub>
+3JPL6XZA	https://onlinelibrary.wiley.com/doi/10.1002/vjch.202200210	HO<sup>●</sup> ‐ initiated oxidation of isoleucine amino acid in the aqueous phase
+V39KIVM9	https://pubs.acs.org/doi/10.1021/acs.jpca.3c02322	Mg-Containing Zn<sub>3</sub> O<sub>3</sub> Structures for Detection of CO<sub>2</sub> : A DFT Study on CHEM Effects of SERS and Electronic Properties
+6HPZHHWB	https://royalsocietypublishing.org/doi/10.1098/rsos.230114	Revisiting the HO<sup>●</sup> -initiated oxidation of L-proline amino acid in the aqueous phase: influence of transition metal ions
+X925CU5T	https://pubs.acs.org/doi/10.1021/acs.jpca.2c06549	Vector Correlations in the 225 nm Photodissociation of Co(CO)<sub>3</sub> NO
+6HFD4T9P	https://linkinghub.elsevier.com/retrieve/pii/S2213343723006802	Theoretical insights into the oxidation of quinmerac herbicide initiated by HO• radical in aqueous media: Mechanism, kinetics, and ecotoxicity
+BTFRKQRH	https://linkinghub.elsevier.com/retrieve/pii/S0045653522037274	Hydroxyl radical-initiated decomposition of metazachlor herbicide in the gaseous and aqueous phases: Mechanism, kinetics, and toxicity evaluation
+GMRWUY2Y	https://xlink.rsc.org/?DOI=D3EM00325F	New insight into environmental oxidation of phosmet insecticide initiated by HO˙ radicals in gas and water – a theoretical study
+SCHYCGIQ	https://linkinghub.elsevier.com/retrieve/pii/S0167732222024655	Experimental and theoretical calculation of pKa values of substituted-2,4,6-trinitrodiphenylamines
+NPDLPFE3	https://link.springer.com/10.1007/s40997-023-00676-4	Toward Directional Motion on Graphene by Uniaxial Strain
+RUAST49P	https://xlink.rsc.org/?DOI=D2RA07044H	Computational study of the interaction of the psychoactive amphetamine with 1,2-indanedione and 1,8-diazafluoren-9-one as fingerprinting reagents
+8IF27M3P	https://www.degruyter.com/document/doi/10.1515/pac-2022-1104/html	Electrophilic substitution reactions of thiophene and thieno[2,3- <i>b</i> ]thiophene heterocycles: a DFT study
+GD5CNV3G	https://xlink.rsc.org/?DOI=D2CP05814F	A study of the thermodynamics and mechanisms of the atmospherically relevant reaction dimethyl sulphide (DMS) with atomic chlorine (Cl) in the absence and presence of water, using electronic structure methods
+NYX66EEZ	https://linkinghub.elsevier.com/retrieve/pii/S001945222200485X	Synthesis, structural, spectral, computational, docking and biological activities of Schiff base (E)-4-bromo-2-hydroxybenzylidene) amino)-N-(pyrimidin-2-yl) benzenesulfonamide from 5-bromosalicylaldehyde and sulfadiazine
+S6ZETR7Y	https://chemistry-europe.onlinelibrary.wiley.com/doi/10.1002/slct.202302135	Theoretical Study of the Photophysical and Photochemical Properties of 1H‐Benzimidazole and 2‐Ethyl‐7‐nitro‐5‐Substituted 1H‐Benzimidazoles
+SGNFSCHC	https://linkinghub.elsevier.com/retrieve/pii/S0019452222004976	Synthesis, computational, molecular docking studies and photophysical properties of (Z)-N-(pyrimidin-2-yl)-4-(thiophen-2-ylmethylene)amino) benzenesulfonamide
+YZLWG6B2	https://linkinghub.elsevier.com/retrieve/pii/S001945222300033X	(E)-4-((4-chlorobenzylidene)amino)-N-(thiazole-2yl) benzenesulfonamide: Synthesis, characterization and electronic structure theory and docking studies
+WUWR4L9E	https://linkinghub.elsevier.com/retrieve/pii/S0019452222004988	Synthesis, Computational, Electronic spectra, and molecular docking studies of 4-((diphenylmethylene)amino)-N-(pyrimidin-2-yl)benzenesulfonamide
+PWSEYLLN	https://linkinghub.elsevier.com/retrieve/pii/S0167732222025946	Schiff bases from chlorine substituted anilines and salicylaldehyde: Synthesis, characterization, fluorescence, thermal features, biological studies and electronic structure investigations
+UMHPQSU4	https://pnas.org/doi/full/10.1073/pnas.2115899118	Structure and RNA template requirements of <i>Arabidopsis</i> RNA-DEPENDENT RNA POLYMERASE 2
+Q7IDWTVC	https://www.nature.com/articles/s41564-023-01579-5	Double-stranded RNA sequencing reveals distinct riboviruses associated with thermoacidophilic bacteria from hot springs in Japan
+36XUHUBJ	https://link.springer.com/10.1007/s40264-023-01373-6	SGLT2 Inhibitor Use and Risk of Breast Cancer Among Adult Women with Type 2 Diabetes
+UIUH6HDM	https://www.nature.com/articles/s41467-023-44208-9	Fast free energy estimates from λ-dynamics with bias-updated Gibbs sampling
+X6ACFCGB	https://linkinghub.elsevier.com/retrieve/pii/S0021925823002934	Identification of nonhistone substrates of the lysine methyltransferase PRDM9
+DVDRZUSH	https://onlinelibrary.wiley.com/doi/10.1002/anie.202114813	Exploring Unconventional SAM Analogues To Build Cell‐Potent Bisubstrate Inhibitors for Nicotinamide <i>N</i> ‐Methyltransferase
+ZKHNFLI8	https://linkinghub.elsevier.com/retrieve/pii/S1387380621000294	Gas-phase ion/ion chemistry for structurally sensitive probes of gaseous protein ion structure: Electrostatic and electrostatic to covalent cross-linking
+WX7K7EWI	https://www.mdpi.com/1420-3049/27/4/1381	Improved Cell-Potent and Selective Peptidomimetic Inhibitors of Protein N-Terminal Methyltransferase 1
+SJRXZFV6	https://linkinghub.elsevier.com/retrieve/pii/S0021925817504457	Mutant thermal proteome profiling for characterization of missense protein variants and their associated phenotypes within the proteome
+EFYBWXLL	http://medrxiv.org/lookup/doi/10.1101/2023.04.18.23288742	Gut community structure as a risk factor for infection in <i>Klebsiella</i> -colonized patients
+W2CC5ENB	https://academic.oup.com/nar/article/52/D1/D426/7337615	DescribePROT in 2023: more, higher-quality and experimental annotations and improved data download options
+UKIY92CG	https://journals.asm.org/doi/10.1128/mbio.03125-22	Haemophilus ducreyi Infection Induces Oxidative Stress, Central Metabolic Changes, and a Mixed Pro- and Anti-inflammatory Environment in the Human Host
+QW74CRRC	https://academic.oup.com/jid/article/227/3/317/6649666	Dispensability of Ascorbic Acid Uptake and Utilization Encoded by <i>ulaABCD</i> for the Virulence of <i>Haemophilus ducreyi</i> in Humans
+2NRZPZE3	https://journals.asm.org/doi/10.1128/iai.00176-23	Formate production is dispensable for <i>Haemophilus ducreyi</i> virulence in human volunteers
+LPIPWTHB	https://journals.asm.org/doi/10.1128/jb.00005-22	Genes Differentially Expressed by Haemophilus ducreyi during Anaerobic Growth Significantly Overlap Those Differentially Expressed during Experimental Infection of Human Volunteers
+F2WMHT4C	https://journals.asm.org/doi/10.1128/iai.00058-24	A <i>Haemophilus ducreyi</i> strain lacking the <i>yfeABCD</i> iron transport system is virulent in human volunteers
+RU6TTIG3	https://www.nature.com/articles/s41467-024-45159-5	The role of interdecadal climate oscillations in driving Arctic atmospheric river trends
+3Q7B7RIE	https://rmets.onlinelibrary.wiley.com/doi/10.1002/gdj3.188	A convection‐permitting dynamically downscaled dataset over the Midwestern United States
+ZVNI3BWF	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2023GL104417	Quantifying the Efficiency of Stratospheric Aerosol Geoengineering at Different Altitudes
+66GWQCH9	https://pnas.org/doi/full/10.1073/pnas.2202230119	Scenarios for modeling solar radiation modification
+5EHIL72X	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2023GL107702	The Potential of Stratospheric Aerosol Injection to Reduce the Climatic Risks of Explosive Volcanic Eruptions
+GYY6FBQH	https://esd.copernicus.org/articles/13/201/2022/	How large is the design space for stratospheric aerosol geoengineering?
+CEJECQ92	https://acp.copernicus.org/articles/23/13665/2023/	Injection strategy – a driver of atmospheric circulation and ozone response to stratospheric aerosol geoengineering
+5TT4JJEQ	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2020GL088337	Seasonally Modulated Stratospheric Aerosol Geoengineering Alters the Climate Outcomes
+DCFSHTKP	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2020JD033952	Is Turning Down the Sun a Good Proxy for Stratospheric Sulfate Geoengineering?
+CM9HBV3S	https://acp.copernicus.org/articles/23/687/2023/	Climate response to off-equatorial stratospheric sulfur injections in three Earth system models – Part 2: Stratospheric and free-tropospheric response
+ZMUCJA82	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2021GL094058	Sensitivity of Total Column Ozone to Stratospheric Sulfur Injection Strategies
+XXAHPSLS	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2021GL092696	High‐Latitude Stratospheric Aerosol Geoengineering Can Be More Effective if Injection Is Limited to Spring
+8E3ANJ4D	https://gmd.copernicus.org/articles/17/2583/2024/	G6-1.5K-SAI: a new Geoengineering Model Intercomparison Project (GeoMIP) experiment integrating recent advances in solar radiation modification studies
+I6YZ5WSK	https://rmets.onlinelibrary.wiley.com/doi/10.1002/joc.7391	Impact of solar geoengineering on temperatures over the Indonesian Maritime Continent
+B7FE8EFG	https://esd.copernicus.org/articles/11/1051/2020/	Expanding the design space of stratospheric aerosol geoengineering to include precipitation-based objectives and explore trade-offs
+HTP9AVV6	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2020GL089470	Reduced Poleward Transport Due to Stratospheric Heating Under Stratospheric Aerosols Geoengineering
+73NB2N55	https://www.nature.com/articles/s41598-021-89249-6	Response of the Indian summer monsoon to global warming, solar geoengineering and its termination
+6MBMJ88Z	http://www.emerald.com/ijccsm/article/14/4/399-423/123536	Influence of stratospheric aerosol geoengineering on temperature mean and precipitation extremes indices in Africa
+NYBI3BLQ	https://acp.copernicus.org/articles/21/1287/2021/	North Atlantic Oscillation response in GeoMIP experiments G6solar and G6sulfur: why detailed modelling is needed for understanding regional implications of solar radiation management
+R5JFMZVK	https://acp.copernicus.org/articles/21/8845/2021/	Harnessing stratospheric diffusion barriers for enhanced climate geoengineering
+4KTLCYP7	https://linkinghub.elsevier.com/retrieve/pii/S0048969722079098	Implication of stratospheric aerosol geoengineering on compound precipitation and temperature extremes in Africa
+T4XSVC3V	https://www.nature.com/articles/s41612-022-00254-6	Changes in Hadley circulation and intertropical convergence zone under strategic stratospheric aerosol geoengineering
+LNFZ39ZX	https://acp.copernicus.org/articles/23/663/2023/	Climate response to off-equatorial stratospheric sulfur injections in three Earth system models – Part 1: Experimental protocols and surface changes
+GCRLPSS7	https://iopscience.iop.org/article/10.1088/1748-9326/abacf7	Assessing terrestrial biogeochemical feedbacks in a strategically geoengineered climate
+R6E694BW	https://esd.copernicus.org/articles/13/1233/2022/	Indices of extremes: geographic patterns of change in extremes and associated vegetation impacts under climate intervention
+LS97JMKY	https://acp.copernicus.org/articles/22/2999/2022/	The impact of stratospheric aerosol intervention on the North Atlantic and Quasi-Biennial Oscillations in the Geoengineering Model Intercomparison Project (GeoMIP) G6sulfur experiment
+6NEF7ERL	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2022EF003052	High‐Latitude Stratospheric Aerosol Injection to Preserve the Arctic
+JR75RFIU	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2023GL104726	Potential Non‐Linearities in the High Latitude Circulation and Ozone Response to Stratospheric Aerosol Injection
+42Y3IR2A	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2022GL098773	The Overlooked Role of the Stratosphere Under a Solar Constant Reduction
+TNGQYQ7F	https://acp.copernicus.org/articles/23/5149/2023/	Opinion: The scientific and community-building roles of the Geoengineering Model Intercomparison Project (GeoMIP) – past, present, and future
+T9IMIK7W	https://acp.copernicus.org/articles/21/4231/2021/	Comparing different generations of idealized solar geoengineering simulations in the Geoengineering Model Intercomparison Project (GeoMIP)
+4UHHSK3D	https://acp.copernicus.org/articles/22/1739/2022/	Limitations of assuming internal mixing between different aerosol species: a case study with sulfate geoengineering simulations
+FWYZPVTK	https://acp.copernicus.org/articles/22/5757/2022/	An approach to sulfate geoengineering with surface emissions of carbonyl sulfide
+FMLM9ISP	https://iopscience.iop.org/article/10.3847/2041-8213/ad0fea	TOI-1670 c, a 40 day Orbital Period Warm Jupiter in a Compact System, Is Well Aligned
+MMN8Z9ZJ	https://iopscience.iop.org/article/10.3847/1538-3881/ad09de	Evidence for Low-level Dynamical Excitation in Near-resonant Exoplanet Systems*
+RPGFUK2G	http://biorxiv.org/lookup/doi/10.1101/2024.04.27.591458	xSiGra: Explainable model for single-cell spatial data elucidation
+NHPWFVHJ	https://pos.sissa.it/453/292	Update on the gradient flow scale on the 2+1+1 HISQ ensembles
+D26U77IQ	https://link.aps.org/doi/10.1103/PhysRevD.107.114514	Light-quark connected intermediate-window contributions to the muon g − 2 hadronic vacuum polarization from lattice QCD
+BRHHNVUP	https://onlinelibrary.wiley.com/doi/10.1002/fld.5152	Data assimilation with higher order finite element interpolants
+D4TWK2RB	https://linkinghub.elsevier.com/retrieve/pii/S1468121822000839	Continuous data assimilation for the 3D Ladyzhenskaya model: analysis and computations
+XV7ZKX5D	https://linkinghub.elsevier.com/retrieve/pii/S0021999122004570	Continuous data assimilation for two-phase flow: Analysis and simulations
+NCDQQ7BX	https://www.mdpi.com/2072-6694/15/17/4411	Genetic Regulation of Human isomiR Biogenesis
+QFVVXKJF	http://biorxiv.org/lookup/doi/10.1101/2023.11.04.565623	Exploring building blocks of cell organization by estimating network motifs using graph isomorphism network
+DAY2NW2S	http://biorxiv.org/lookup/doi/10.1101/2024.05.06.592851	scBSP: A fast and accurate tool for identifying spatially variable genes from spatial transcriptomic data
+NQKUDYND	http://biorxiv.org/lookup/doi/10.1101/2023.11.09.566479	Exploring the Mosaic-like Tissue Architecture of Kidney Diseases Using Relation Equivariant Graph Neural Networks on Spatially Resolved Transcriptomics
+GH7IRYZZ	https://www.eneuro.org/lookup/doi/10.1523/ENEURO.0385-23.2024	Proactive Versus Reactive Control Strategies Differentially Mediate Alcohol Drinking in Male Wistars and P Rats
+B62VMAML	https://www.nature.com/articles/s41467-022-31731-4	Compulsive alcohol drinking in rodents is associated with altered representations of behavioral control and seeking in dorsal medial prefrontal cortex
+DDWWESR6	http://biorxiv.org/lookup/doi/10.1101/2023.06.15.545101	Flexible coding schemes in dorsomedial prefrontal cortex underlie decision-making during delay discounting
+EC8GPQE7	https://www.jneurosci.org/lookup/doi/10.1523/JNEUROSCI.1490-23.2023	Neural activity in anterior insula at drinking onset and licking relates to compulsion-like alcohol consumption
+26UII4UB	https://dx.plos.org/10.1371/journal.pone.0279841	Distinct cortico-striatal compartments drive competition between adaptive and automatized behavior
+QKN7D6RX	https://academic.oup.com/cercor/article/doi/10.1093/cercor/bhae172/7658636	Longitudinal MRI of the developing ferret brain reveals regional variations in timing and rate of growth
+WAZ4S77T	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2020JD033746	Constraining and Characterizing the Size of Atmospheric Rivers: A Perspective Independent From the Detection Algorithm
+GAVIU5P4	https://gmd.copernicus.org/articles/17/301/2024/	Scalable Feature Extraction and Tracking (SCAFET): a general framework for feature extraction from large climate data sets
+GG9UCERD	https://journals.ametsoc.org/view/journals/clim/35/12/JCLI-D-21-0590.1.xml	Exploratory Precipitation Metrics: Spatiotemporal Characteristics, Process-Oriented, and Phenomena-Based
+MJ34KDJS	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2021GL095335	Extreme Water Vapor Transport During the March 2021 Sydney Floods in the Context of Climate Projections
+MYD5D2UY	https://www.researchsquare.com/article/rs-2038838/v1	Anthropogenic aerosols mask increases in US rainfall by greenhouse gases
+VLREQFVL	https://link.springer.com/10.1007/s00382-021-05638-7	Quantifying the influence of natural climate variability on in situ measurements of seasonal total and extreme daily precipitation
+7JSWGINK	https://gmd.copernicus.org/articles/17/3533/2024/	Identifying atmospheric rivers and their poleward latent heat transport with generalizable neural networks: ARCNNv1
+RY3JCCR6	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2022JD037105	Characteristics and Variability of Winter Northern Pacific Atmospheric River Flavors
+WCE6NMNP	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2022GL102091	Future Atmospheric Rivers and Impacts on Precipitation: Overview of the ARTMIP Tier 2 High‐Resolution Global Warming Experiment
+SBHE9U5F	https://www.nature.com/articles/s41467-024-45504-8	Anthropogenic aerosols mask increases in US rainfall by greenhouse gases
+49NCF3AA	https://link.springer.com/10.1007/s00382-022-06321-1	A framework for detection and attribution of regional precipitation change: Application to the United States historical record
+PCRRPHPG	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2022GL099186	Sign of Observed California Temperature Trends Depends on Data Set Homogenization: Implications for Weighting and Downscaling
+EJEY7FUM	https://journals.sagepub.com/doi/full/10.3233/JAD-231286	Associations Between Neuroinflammation-Related Conditions and Alzheimer’s Disease: A Study of US Insurance Claims Data
+LM2UI92T	https://link.springer.com/10.1007/s40264-023-01370-9	Application of an Innovative Data Mining Approach Towards Safe Polypharmacy Practice in Older Adults
+8HZ6LLHN	http://biorxiv.org/lookup/doi/10.1101/2023.12.20.572422	Measure of major contents in animal and plant genomes, using Gnodes, finds under-assemblies of model plant, Daphnia, fire ant and others
+YSYZVQHR	http://biorxiv.org/lookup/doi/10.1101/2022.05.13.491861	Genes ruler for genomes, Gnodes, measures assembly accuracy in animals and plants
+ZJ8LFIAD	https://peerj.com/articles/6374	Genes of the pig, <i>Sus scrofa</i> , reconstructed with EvidentialGene
+879F4TNK	http://biorxiv.org/lookup/doi/10.1101/829184	Longest protein, longest transcript or most expression, for accurate gene reconstruction of transcriptomes?
+JQYUJUIJ	https://ieeexplore.ieee.org/document/10271940/	Data-To-Question Generation Using Deep Learning
+TXQ5WZ6F	https://journals.biologists.com/dev/article/150/18/dev201872/329481/Polycomb-safeguards-imaginal-disc-specification	Polycomb safeguards imaginal disc specification through control of the Vestigial–Scalloped complex
+Y28R65HC	http://biorxiv.org/lookup/doi/10.1101/2024.04.09.588498	Drug-loaded nanoparticles for cancer therapy: a high-throughput multicellular agent-based modeling study
+DRCLU9B7	http://biorxiv.org/lookup/doi/10.1101/2023.10.17.562733	A multiscale model of immune surveillance in micrometastases: towards cancer patient digital twins
+M5RGU5ZI	https://www.nature.com/articles/s41467-024-48484-x	Effects of SPI1-mediated transcriptome remodeling on Alzheimer’s disease-related phenotypes in mouse models of Aβ amyloidosis
+I4AQHDY2	http://www.actaphys.uj.edu.pl/findarticle?series=Sup&vol=16&aid=8-A22	Confining Potential in Coulomb-gauge Lattice QCD
+WUBDS492	https://link.aps.org/doi/10.1103/PhysRevD.108.076001	Ambiguities in partial wave analysis of two spinless meson photoproduction
+LCBA4MP4	https://link.aps.org/doi/10.1103/PhysRevD.108.054018	Dynamics in near-threshold J / ψ photoproduction
+RDY93W5L	https://dl.acm.org/doi/10.1145/3674829.3675060	AAVE Corpus Generation and Low-Resource Dialect Machine Translation
+ZY43WIZA	https://iopscience.iop.org/article/10.3847/1538-3881/ad61d8	Evidence for Primordial Alignment: Insights from Stellar Obliquity Measurements for Compact Sub-Saturn Systems
+V3YU6Q5X	https://iopscience.iop.org/article/10.3847/2041-8213/ad7469	Single-star Warm-Jupiter Systems Tend to Be Aligned, Even around Hot Stellar Hosts: No T<sub>eff</sub> –λ Dependency*
+7MLLW3UK	https://ijpds.org/article/view/2395	A statewide system for maternal-infant linked longitudinal surveillance: Indiana's model for improving maternal and child health
+EHKP25IS	https://bmjopen.bmj.com/lookup/doi/10.1136/bmjopen-2023-073791	Using electronic health records to enhance surveillance of diabetes in children, adolescents and young adults: a study protocol for the DiCAYA Network
+5HKVXA27	https://bmcpublichealth.biomedcentral.com/articles/10.1186/s12889-024-19772-4	Tracking the burden, distribution, and impact of Post-COVID conditions in diverse populations for children, adolescents, and adults (Track PCC): passive and active surveillance protocols
+YKGPYFUS	https://link.aps.org/doi/10.1103/PhysRevD.110.094509	Coulomb confinement in the Hamiltonian limit
+CZDDFQD5	https://academic.oup.com/mnras/article/537/2/1518/7965979	A dusty dawn: galactic dust buildup at <i>z</i> ≳ 5
+2JKVX9B2	https://onlinelibrary.wiley.com/doi/10.1002/adom.202400801	Design of Light‐Induced Solid‐State Plasmonic Rulers via Tethering Photoswitchable Molecular Machines to Gold Nanostructures Displaying Angstrom Length Resolution
+LXUFPSDW	https://pubs.acs.org/doi/10.1021/acs.jpcb.4c04100	CHARMM at 45: Enhancements in Accessibility, Functionality, and Speed
+Z3GIHJZP	https://link.springer.com/10.1007/s00401-024-02775-1	Enhanced microglial dynamics and a paucity of tau seeding in the amyloid plaque microenvironment contribute to cognitive resilience in Alzheimer’s disease
+YFHXEYSP	https://iopscience.iop.org/article/10.3847/1538-3881/ad6b7f	SOLES XII. The Aligned Orbit of TOI-2533 b, a Transiting Brown Dwarf Orbiting an F8-type Star
+X2TXCJHN	https://scholarworks.iu.edu/journals/index.php/thst/article/view/37892	Incorporating Climate Engineering into Secondary Education: A New Direction for Indiana’s Science Classrooms
+32KBT36E	https://iopscience.iop.org/article/10.3847/2041-8213/adc129	From Misaligned Sub-Saturns to Aligned Brown Dwarfs: The Highest <i>M</i><sub> <i>p</i> </sub> / <i>M</i><sub>*</sub> Systems Exhibit Low Obliquities, Even around Hot Stars*
+HREM3P93	https://alz-journals.onlinelibrary.wiley.com/doi/10.1002/alz.13901	Loss of <i>Inpp5d</i> has disease‐relevant and sex‐specific effects on glial transcriptomes
+5RVWMZWZ	https://www.aanda.org/10.1051/0004-6361/202450954	Inference of black-hole mass fraction in Galactic globular clusters: A multi-dimensional approach to break the initial-condition degeneracies
+VUZVT8R6	https://www.aanda.org/10.1051/0004-6361/202451054	A 3D view of multiple populations’ kinematics in Galactic globular clusters
+TEQ3F68U	https://academic.oup.com/mnras/article/534/3/2397/7775518	Energy equipartition in multiple-population globular clusters
+ECDQDXAN	https://www.aanda.org/10.1051/0004-6361/202452786	Exploring the formation environment and dynamics of multiple stellar populations in globular clusters through binary systems
+I7AZBRQZ	https://www.aanda.org/10.1051/0004-6361/202348653	MOCCA: Global properties of tidally filling and underfilling globular star clusters with multiple stellar populations
+TKIKJEQI	https://www.atsjournals.org/doi/10.1164/ajrccm.2025.211.Abstracts.A7716	Novel Insights Into Right Ventricular Dysfunction in Pulmonary Arterial Hypertension: The Role of Mitochondrial Dysfunction and Cell Cycle Arrest
+DNPE7YUN	https://dl.acm.org/doi/10.1145/3703157	Scaling Terrain-Aware Spatial Machine Learning for Flood Mapping on Large Scale Earth Imagery Data
+JRJIIP5K	https://www.aimsciences.org//article/doi/10.3934/jcd.2019006	Numerical efficacy study of data assimilation for the 2D magnetohydrodynamic equations
+Q9H69JLM	https://linkinghub.elsevier.com/retrieve/pii/S0168169924008184	CattleAssigner: A framework for accurate assignment of individuals to cattle lineages and populations using minimum informative markers
+5WCF58N2	https://molecular-cancer.biomedcentral.com/articles/10.1186/s12943-025-02311-z	LSD1 inhibition attenuates targeted therapy-induced lineage plasticity in BRAF mutant colorectal cancer
+QQVC38NH	https://www.mdpi.com/2072-6694/16/11/2040	Single-Cell Profiling Reveals the Impact of Genetic Alterations on the Differentiation of Inflammation-Induced Murine Colon Tumors
+QJMRSMMY	https://onlinelibrary.wiley.com/doi/10.1111/ede.70004	A Conserved Somatic Sex Determination Cascade Instructs Trait‐Specific Sexual Dimorphism in Horned Dung Beetles
+7QYUIRI5	https://www.cambridge.org/core/product/identifier/S002214302500036X/type/journal_article	The effect of melt-channel geometry on ice-shelf flow
+Z64QKAK9	https://www.frontiersin.org/articles/10.3389/fmed.2022.1029227/full	Predicting melanoma survival and metastasis with interpretable histopathological features and machine learning models
+T6T5Y8AP	https://elifesciences.org/articles/97981	Robust single-nucleus RNA sequencing reveals depot-specific cell population dynamics in adipose tissue remodeling during obesity
+5YIZS4WR	https://bmcpublichealth.biomedcentral.com/articles/10.1186/s12889-025-22425-9	Equivalence of electronic health record data for measuring hypertension prevalence: a retrospective comparison to BRFSS with data from two Indiana health systems, 2021
+NZY6GMGA	https://link.aps.org/doi/10.1103/PhysRevD.111.094508	Hadronic vacuum polarization for the muon g − 2 from lattice QCD: Complete short and intermediate windows
+6Z3ADSY4	https://linkinghub.elsevier.com/retrieve/pii/S0893395225000936	Multimodal Explainable Artificial Intelligence for Prognostic Stratification of Patients With Glioblastoma
+8P6CZP35	https://aacrjournals.org/cancerres/article/85/8_Supplement_1/6247/758662/Abstract-6247-Artificial-intelligence-predicts	Abstract 6247: Artificial intelligence predicts 2021 WHO glioma subtypes from whole slide images
+SPAAF9A5	https://meridian.allenpress.com/aplm/article/doi/10.5858/arpa.2024-0374-OA/505697/Artificial-Intelligence-Based-Classification-of	Artificial Intelligence–Based Classification of Renal Oncocytic Neoplasms: Advancing From a 2-Class Model of Renal Oncocytoma and Low-Grade Oncocytic Tumor to a 3-Class Model Including Chromophobe Renal Cell Carcinoma
+UAM3LZYJ	https://pos.sissa.it/466/412	Lattice gauge ensembles and data management
+66J3HQQ6	https://www.frontiersin.org/articles/10.3389/fnins.2024.1304191/full	Prognostic stratification of glioblastoma patients by unsupervised clustering of morphology patterns on whole slide images furthering our disease understanding
+XW9DXLER	https://ieeexplore.ieee.org/document/10635869/	Weakly Supervised IDH-Status Glioma Classification from H&E-Stained Whole Slide Images
+V7QWPM4D	https://academic.oup.com/neuro-oncology/article/26/Supplement_8/viii187/7890259	PATH-39. AI-BASED IDENTIFICATION OF GLIOMA IDH MUTATIONAL STATUS FROM H&E-STAINED WHOLE SLIDE IMAGES
+EHUPLFKQ	http://biorxiv.org/lookup/doi/10.1101/2025.03.25.645306	Comparative analysis of nuclei isolation methods for brain single-nucleus RNA sequencing
+T64QEK8I	https://rupress.org/jem/article/220/11/e20230180/276197/Network-analysis-identifies-strain-dependent	Network analysis identifies strain-dependent response to tau and tau seeding-associated genes
+QV5CUAFR	https://www.science.org/doi/10.1126/sciadv.abe3954	Deletion of <i>Abi3</i> gene locus exacerbates neuropathological features of Alzheimer’s disease in a mouse model of Aβ amyloidosis
+UYPTWMBM	https://dx.plos.org/10.1371/journal.ppat.1013128	The molecular basis for DNA-binding by competence T4P is distinct in a representative Gram-positive and Gram-negative species
+6YTGWQKY	https://pnas.org/doi/10.1073/pnas.2421764122	DprA recruits ComM to facilitate recombination during natural transformation in Gram-negative bacteria
+LRWN8XIT	https://www.jci.org/articles/view/180117	Inflammation primes the murine kidney for recovery by activating AZIN1 adenosine-to-inosine editing
+PQRZNCFI	https://direct.mit.edu/imag/article/doi/10.1162/imag_a_00504/128177/Individual-patterns-of-functional-connectivity-in	Individual patterns of functional connectivity in neonates as revealed by surface-based Bayesian modeling
+6M5LGZ3T	https://royalsocietypublishing.org/doi/10.1098/rsfs.2024.0024	Robust data-driven segmentation of pulsatile cerebral vessels using functional magnetic resonance imaging
+X3VILUIQ	https://pnas.org/doi/10.1073/pnas.2421277122	The world through infant eyes: Evidence for the early emergence of the cardinal orientation bias
+RSKIEX5M	http://biorxiv.org/lookup/doi/10.1101/2025.04.08.647882	Application of Whole Proteome Thermal Shift Assays to Define PERK-dependent Changes in Protein Homeostasis during the Unfolded Protein Response
+5HF2Z6B8	http://biorxiv.org/lookup/doi/10.1101/2024.05.15.594427	Unraveling systemic responses to NQO1-activated IB-DNQ and Rucaparib single and dual agent therapy in triple-negative breast cancers
+A35LI94C	https://www.ahajournals.org/doi/10.1161/JAHA.124.037197	Relationship Between Health Care Team Segregation and Receipt of Care by a Cardiologist According to Patient Race in a Midwestern State
+92GPA2R5	https://www.ahajournals.org/doi/10.1161/CIRCOUTCOMES.124.011643	Relationship Between Race, Predelivery Cardiology Care, and Cardiovascular Outcomes in Preeclampsia/Eclampsia Among a Commercially Insured Population
+UM9ELXNP	https://linkinghub.elsevier.com/retrieve/pii/S2666602224000132	Association between social vulnerability index and admission urgency for transcatheter aortic valve replacement
+BJ7ATIFV	https://onlinelibrary.wiley.com/doi/10.1002/ehf2.15078	Association between clinician team segregation, receipt of cardiovascular care and outcomes in valvular heart diseases
+UNBAJLWM	https://link.springer.com/10.1007/s40615-023-01838-5	Association Between Race, Cardiology Care, and the Receipt of Guideline-Directed Medical Therapy in Peripartum Cardiomyopathy
+R3U5T8CS	https://pubs.acs.org/doi/10.1021/acs.jpca.5c02839	Photoelectron Spectroscopy of Fulvenallenyl and Fluorine-Substituted Fulvenallenyl Anions
+RDNKZW9Q	https://pubs.acs.org/doi/10.1021/acs.jpca.4c03434	Anion Photoelectron Imaging Spectroscopy of C<sub>6</sub> F<sub>5</sub> X<sup>–</sup> (X = F, Cl, Br, I)
+JGVXGES2	https://direct.mit.edu/netn/article/9/1/38/124897/Tangent-space-functional-reconfigurations-in	Tangent space functional reconfigurations in individuals at risk for alcohol use disorder
+A5JJSV67	https://pubs.aip.org/jcp/article/162/5/054301/3333271/Electronic-structures-and-spin-frustration-in-Ln3O	Electronic structures and spin frustration in Ln3O (Ln = Ce, Sm, Gd) neutrals and anions determined by anion photoelectron spectroscopy
+3UXTFYYB	https://onlinelibrary.wiley.com/doi/10.1111/ejn.70150	Left Ventral Caudate Functional Connectivity Mediates the Relationship Between Habitual Responding and Alcohol Use
+GNPAMFEJ	https://www.cambridge.org/core/product/identifier/S2040174424000333/type/journal_article	PedBE age and age acceleration in umbilical vein endothelial cells: an examination of infant birth outcomes
+FHBPJVKG	https://www.nature.com/articles/s41380-024-02652-z	DNA methylation profiles of cancer-related fatigue associated with markers of inflammation and immunometabolism
+5TD9TZU9	https://onlinelibrary.wiley.com/doi/10.1002/dev.22464	Maternal childhood adversity and infant epigenetic aging: Moderation by restless sleep during pregnancy
+CJAILKQD	https://linkinghub.elsevier.com/retrieve/pii/S0022399923003756	Associations of differentially expressed genes with psychoneurological symptoms in patients with head and neck cancer: A longitudinal study
+XDHB56LB	https://alz-journals.onlinelibrary.wiley.com/doi/10.1002/alz.70238	Tau depletion diminishes vascular amyloid‐related deficits in a mouse model of cerebral amyloid angiopathy
+Y9STZIEG	https://academic.oup.com/jbmrplus/article/7479137	<span style="font-variant:small-caps;">L‐BAIBA</span> Synergizes with Sub‐Optimal Mechanical Loading to Promote New Bone Formation
+8T6M6S6K	https://elifesciences.org/articles/92263	Deletion of FNDC5/irisin modifies murine osteocyte function in a sex-specific manner
+LYEIND5Y	https://academic.oup.com/jbmrplus/article/doi/10.1093/jbmrpl/ziae054/7651121	Sex dimorphic response to osteocyte miR21 deletion in murine calvaria bone as determined by RNAseq analysis
+7Q62FRVY	https://iopscience.iop.org/article/10.3847/1538-3881/ad9dd5	Evidence for Primordial Alignment II: Insights from Stellar Obliquity Measurements for Hot Jupiters in Compact Multiplanet Systems
+5TKQF2PB	https://link.aps.org/doi/10.1103/PhysRevLett.133.135301	Universal Diffusion in Coulomb Crystals
+H8IRZPLK	https://linkinghub.elsevier.com/retrieve/pii/S0167732223026272	Synthesis, characterization, and electronic structure of bioactive vanillin based fluorescent Schiff bases
+SUZ5RBXF	https://linkinghub.elsevier.com/retrieve/pii/S0925346724017336	Controlled synthesis of Ag–Au alloy nanoparticles for optimizing surface enhanced Raman scattering-based detection of antibiotic and pesticide residues
+63E22X98	https://xlink.rsc.org/?DOI=D4EM00606B	A theoretical study on the environmental oxidation of fenpyrazamine fungicide initiated by hydroxyl radicals in the aqueous phase
+SPTSI5VK	https://chemistry-europe.onlinelibrary.wiley.com/doi/10.1002/slct.202401487	Exploring the Hydrogen Storage Potential of Allylamine Borane Using Density Functional Theory
+L26QSQGK	https://chemistry-europe.onlinelibrary.wiley.com/doi/10.1002/slct.202403990	Rhodamine‐Based Fluorescence Probe for Monitoring of Lysosomal pH: Spectroscopic Insights and Cellular Applications
+9YZZZWS5	https://linkinghub.elsevier.com/retrieve/pii/S2468823124008903	Silver- and gold-catalyzed azide−alkyne cycloaddition by functionalized NHC-based polynuclear catalysts: Computational investigation and mechanistic insights
+IG6J352M	https://linkinghub.elsevier.com/retrieve/pii/S001623612400396X	Monte-Carlo simulations on H2 adsorption in kaolinite nanopore in the presence of CO2 and CH4 gases
+E8VJV7NC	https://linkinghub.elsevier.com/retrieve/pii/S0045206825000860	Design, Synthesis, Biocompatibility, molecular docking and molecular dynamics studies of novel Benzo[b]thiophene-2-carbaldehyde derivatives targeting human IgM Fc Domains
+DIELQB63	https://onlinelibrary.wiley.com/doi/10.1111/adb.70008	Intra‐striatal dopaminergic inter‐subject covariance in social drinkers and non‐treatment‐seeking alcohol use disorder participants
+M95SCGVY	https://dl.acm.org/doi/10.1145/3491418.3530297	Scholarly Data Share: A Model for Sharing Big Data in Academic Research
+A9AVUYIW	https://dl.acm.org/doi/10.1145/3569951.3597585	Scholarly Data Share 2.0: Granular Access to Research Data
+B5WIRUL3	https://onlinelibrary.wiley.com/doi/10.1002/pro.70148	Chemically induced partial unfolding of the multifunctional apurinic/apyrimidinic endonuclease 1
+5PG6U7EH	https://academic.oup.com/nar/article/doi/10.1093/nar/gkaf166/8069167	<i>In silico</i> λ-dynamics predicts protein binding specificities to modified RNAs
+3V96MZHW	https://link.springer.com/10.1007/s10456-024-09966-0	Ref-1 is overexpressed in neovascular eye disease and targetable with a novel inhibitor
+9NJMMASZ	https://pubs.acs.org/doi/10.1021/acs.jpcb.4c04805	Superimposing Ligands with a Ligand Overlay as an Alternate Topology Model for λ-Dynamics-Based Calculations
+Z86QC74Q	https://pubs.acs.org/doi/10.1021/acs.jcim.4c00662	A λ-Dynamics Investigation of Insulin <i>Wakayama</i> and Other A3 Variant Binding Affinities to the Insulin Receptor
+4MQRR47H	https://www.science.org/doi/10.1126/sciadv.adj4509	Sequence and epigenetic landscapes of active and silent nucleolus organizer regions in <i>Arabidopsis</i>
+HJW2EICD	https://humgenomics.biomedcentral.com/articles/10.1186/s40246-024-00655-z	Rapid discrimination between deleterious and benign missense mutations in the CAGI 6 experiment
+MPJWATEX	https://link.springer.com/10.1007/978-1-0716-4196-5_8	AlphaFold2, SPINE-X, and Seder on Four Hard CASP Targets
+6SHS4A46	https://link.springer.com/10.1007/s00439-025-02731-3	Evaluation of enzyme activity predictions for variants of unknown significance in Arylsulfatase A
+WKAY453L	https://link.springer.com/10.1007/978-3-031-81596-6_25	Machine Learning-Based Tool for Efficient Discrimination Between Deleterious and Neutral Missense Mutations
+VFPRKMBX	https://www.mdpi.com/2071-1050/16/23/10206	A Novel Hybrid Approach: Integrating Bayesian SPDE and Deep Learning for Enhanced Spatiotemporal Modeling of PM2.5 Concentrations in Urban Airsheds for Sustainable Climate Action and Public Health
+PSFETXPD	https://pubs.acs.org/doi/10.1021/jacs.4c17874	Reversible Interconversion of Nitrate and Nitrite Catalyzed by Periplasmic Nitrate Reductase from <i>Campylobacter jejuni</i>
+9LXEPPYB	https://linkinghub.elsevier.com/retrieve/pii/S2666247724000939	Non-coding cause of congenital heart defects: Abnormal RNA splicing with multiple isoforms as a mechanism for heterotaxy
+RYZXDSBT	https://journals.biologists.com/bio/article/14/3/bio061677/367400/A-CRISPR-mis-insertion-in-the-Zic3-5-UTR-inhibits	A CRISPR mis-insertion in the <i>Zic3</i> 5′UTR inhibits <i>in vivo</i> translation and is predicted to result in formation of an mRNA stem-loop hairpin
+CJ8HSHM8	https://www.ahajournals.org/doi/10.1161/JAHA.124.039177	Identification of Long Noncoding RNA Candidate Disease Genes Associated With Clinically Reported Copy Number Variants in Congenital Heart Disease
+NPHJCGKK	https://www.nature.com/articles/s41390-025-03819-2	Genomics of pediatric cardiomyopathy
+ZQLXQUY4	https://ojs.aaai.org/index.php/AAAI/article/view/32124	Deep Reinforcement Learning with Time-Scale Invariant Memory
+FV6M8HTB	https://dl.acm.org/doi/10.1145/3626203.3670545	Automated Transcription Service: Enabling Transcription at Scale for Social Science Research
+GZJIVN32	https://academic.oup.com/g3journal/article/doi/10.1093/g3journal/jkaf107/8132832	Gene expression and pollen performance indicate altered postmating selection between <i>Solanum</i> species with different mating systems
+LMXMDQJZ	https://academic.oup.com/cercor/article/doi/10.1093/cercor/bhaf131/8157445	Functional reconfiguration between rest and movie watching relates to theory-of-mind performance among young and older adults
+P9PN9A2S	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2024JH000496	Recommendations for Comprehensive and Independent Evaluation of Machine Learning‐Based Earth System Models
+3QD3LWCF	https://gmd.copernicus.org/articles/18/961/2025/	A new metrics framework for quantifying and intercomparing atmospheric rivers in observations, reanalyses, and climate models
+UJ3L82ZP	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2024JD042222	Atmospheric River Detection Under Changing Seasonality and Mean‐State Climate: ARTMIP Tier 2 Paleoclimate Experiments
+NIK9K2PM	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2024JD042163	Similarities in Meteorological Composites Among Different Atmospheric River Detection Tools During Landfall Over Western Coastal North America
+6U32MRQ4	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2023GL107236	Atmospheric Rivers in the Eastern and Midwestern United States Associated With Baroclinic Waves
+J8WWT4CI	https://gmd.copernicus.org/articles/18/787/2025/	Moving beyond post hoc explainable artificial intelligence: a perspective paper on lessons learned from dynamical climate modeling
+L3Q8DVAT	https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2024JD041687	Co‐Occurring Atmospheric Features and Their Contributions to Precipitation Extremes
+VCSGSALS	https://insight.jci.org/articles/view/167408	Innate immune activation restricts priming and protective efficacy of the radiation-attenuated PfSPZ malaria vaccine
+TUUIT96E	https://linkinghub.elsevier.com/retrieve/pii/S1074761319303358	A Molecular Signature in Blood Reveals a Role for p53 in Regulating Malaria-Induced Inflammation
+B8LXAQGF	http://biorxiv.org/lookup/doi/10.1101/2025.05.31.657176	EXOSC3 S1-domain variants implicated in PCH1b alter RNA exosome cap subunit abundance and thermal stability disrupting rRNA processing and targeting of AU-rich mRNA
+LLK9HKQ7	https://linkinghub.elsevier.com/retrieve/pii/S0021925825002856	Spt6-Spn1 interaction is required for RNA polymerase II association and precise nucleosome positioning along transcribed genes
+VVV2344W	https://alz-journals.onlinelibrary.wiley.com/doi/10.1002/alz.14243	Deletion of miR‐33, a regulator of the ABCA1–APOE pathway, ameliorates neuropathological phenotypes in APP/PS1 mice
+NVH9X52N	https://academic.oup.com/g3journal/article/doi/10.1093/g3journal/jkaf101/8126571	QTL identification and characterization of the recombination landscape of the mountain pine beetle ( <i>Dendroctonus ponderosae</i> )
+HEU6S726	https://www.nature.com/articles/s41467-025-60618-3	An archaeal nucleoid-associated protein binds an essential motif in DNA replication origins
+4QEQ5DLT	https://www.nature.com/articles/s41591-024-03011-9	Single-nucleus chromatin accessibility and transcriptomic map of breast tissues of women of diverse genetic ancestry
+UU9FRVAE	https://aacrjournals.org/cancerrescommun/article/4/1/38/732408/Signaling-Pathway-Alterations-Driven-by-BRCA1-and	Signaling Pathway Alterations Driven by BRCA1 and BRCA2 Germline Mutations are Sufficient to Initiate Breast Tumorigenesis by the PIK3CAH1047R Oncogene
+E4WEIG35	https://ascpt.onlinelibrary.wiley.com/doi/10.1002/psp4.13295	Population Pharmacokinetics and Transfer of Gabapentin When Used as a Pain Adjunct for Cesarean Deliveries
+XCHIIA4A	https://ascopubs.org/doi/10.1200/GO.23.00311	Real-World Cervical Cancer Screening Uptake and Predictors of Visual Inspection With Acetic Acid Positivity Among Women Living With HIV in Care Programs in Western Kenya
+VSAKIFHX	https://journals.lww.com/10.1097/QAI.0000000000003413	Modeling the HIV Cascade of Care Using Routinely Collected Clinical Data to Guide Programmatic Interventions and Policy Decisions
+G3XMMVVT	https://mchandaids.org/impact-of-maternal-viral-suppression-on-growth-patterns-for-hiv-exposed-uninfected-infants-in-kenya/	Impact of Maternal Viral Suppression on Growth Patterns for HIV-Exposed Uninfected Infants in Kenya
+6UXM7Z7Y	https://dx.plos.org/10.1371/journal.pgph.0001756	Adaptation of the Client Diagnostic Questionnaire for East Africa
+BUMS7QKZ	https://journals.lww.com/10.1097/QAI.0000000000003487	Outcomes After Loss to Follow-Up for Pregnant and Postpartum Women Living With HIV and Their Children in Kenya: A Prospective Cohort Study
+8I5GLXE4	https://link.springer.com/10.1007/s10461-024-04483-z	Effects of Alcohol Use on Patient Retention in HIV Care in East Africa
+WZD6GM3C	https://journals.lww.com/10.1097/QAI.0000000000003330	Mortality Among HIV-Infected Adults on Antiretroviral Therapy in Southern Uganda
+CV2L3BV6	https://www.spiedigitallibrary.org/conference-proceedings-of-spie/13302/3042513/Anesthetic-effects-on-functional-connectivity-fingerprinting-in-mice/10.1117/12.3042513.full	Anesthetic effects on functional connectivity fingerprinting in mice
+NWLUSQM7	https://karger.com/article/doi/10.1159/000544824	Quantifying the timing of gyral and sulcal formation relative to growth in the ferret cerebral cortex
+B5E4V5EM	https://link.springer.com/10.1007/s42001-023-00219-6	The value of manual annotation in assessing trends of hate speech on social media: was antisemitism on the rise during the tumultuous weeks of Elon Musk’s Twitter takeover?
+3W7TBD52	https://link.springer.com/10.1007/s10588-022-09363-2	Differences between antisemitic and non-antisemitic English language tweets
+BN3X4ZPT	https://link.springer.com/10.1007/s42001-024-00251-0	Annotating live messages on social media. Testing the efficiency of the AnnotHate – live data annotation portal
+3PLACMPN	https://www.nature.com/articles/s41467-024-52355-w	Network community detection via neural embeddings
+9GT48PZK	https://pnas.org/doi/10.1073/pnas.2305414120	Unsupervised embedding of trajectories captures the latent structure of scientific migration
+WBYGTEZI	https://academic.oup.com/pnasnexus/article/doi/10.1093/pnasnexus/pgae258/7701371	Quantifying the vulnerabilities of the online public square to adversarial manipulation tactics
+6MSR35XM	http://biorxiv.org/lookup/doi/10.1101/2024.10.06.616888	Measuring DNA contents of animal and plant genomes with Gnodes, the long and short of it
+38NIQMPJ	https://linkinghub.elsevier.com/retrieve/pii/S0021925825021490	In vivo pulse-chase in Caenorhabditis elegans reveals intestinal histone turnover changes upon starvation
+2ALP83LZ	https://xlink.rsc.org/?DOI=D4SM01370K	Multilayered ordered arrays self-assembled from a mixed population of nanoparticles
+JAXEHFDU	https://academic.oup.com/schizophreniabulletin/advance-article/doi/10.1093/schbul/sbae147/7754917	Cognitive Mechanisms of Aberrant Self-Referential Social Perception in Psychosis and Bipolar Disorder: Insights From Computational Modeling
+CKNF9LZQ	https://pubs.acs.org/doi/10.1021/jasms.4c00388	Comparison of Partially Denatured Cytochrome <i>c</i> Structural Ensembles in Solution and Gas Phases Using Cross-Linking Mass Spectrometry
+Z7AERU27	https://xlink.rsc.org/?DOI=D3AN01680C	The role of solvation on the conformational landscape of α-synuclein
+SVMVKDN8	https://iopscience.iop.org/article/10.3847/2515-5172/ad9f60	An Exploration of Molecular Lines for Abundance Analysis in M-dwarf IR Spectra
+SBLNNK6K	https://pubs.acs.org/doi/10.1021/acsami.4c19673	Anisotropically Shaped Plasmonic WO<sub> 3– <i>x</i> </sub> Nanostructure-Driven Ultrasensitive SERS Detection and Machine Learning-Based Differentiation of Nitro-Explosives
+NYG9TAVP	https://www.eneuro.org/lookup/doi/10.1523/ENEURO.0379-24.2024	Impulsive Choices Emerge When the Anterior Cingulate Cortex Fails to Encode Deliberative Strategies
+AGMJQWGP	http://biorxiv.org/lookup/doi/10.1101/2024.06.07.597894	Neural basis of cognitive control signals in anterior cingulate cortex during delay discounting
+3QYSUUB4	https://linkinghub.elsevier.com/retrieve/pii/S0028390823003520	Non-consummatory behavior signals predict aversion-resistant alcohol drinking in head-fixed mice
+G25H3WMI	https://www.jci.org/articles/view/180417	Addiction of primary cutaneous γδ T cell lymphomas to JAK/STAT signaling
+FIV2V2FV	https://linkinghub.elsevier.com/retrieve/pii/S2666979X25001028	Deciphering genetic regulation at single-cell resolution in gastric cancer
+2GL9L75C	https://elifesciences.org/articles/81083	GCN2 eIF2 kinase promotes prostate cancer by maintaining amino acid homeostasis
+WJ7WKCLK	https://www.science.org/doi/10.1126/scisignal.adp1375	Coordination between the eIF2 kinase GCN2 and p53 signaling supports purine metabolism and the progression of prostate cancer
+NJEZI68Q	https://journals.asm.org/doi/10.1128/msystems.00786-24	Gut community structure as a risk factor for infection in <i>Klebsiella pneumoniae</i> -colonized patients
+DH3UQYKC	https://www.science.org/doi/10.1126/sciadv.adn1927	Comprehensive characterization of the transcriptional landscape in Alzheimer’s disease (AD) brains
+CX8KB4HB	https://www.liebertpub.com/doi/10.1089/hum.2025.002	Bioinformatic Analysis of the Genetic Basis of Differential Adeno-Associated Virus Production Capability of 293 Variants
+L6IASUC5	https://linkinghub.elsevier.com/retrieve/pii/S0002944025001543	The Patatin-Like Phospholipase Domain–Containing 3 148M Variant Exacerbates Alcohol-Induced Liver Injury and Tumorigenesis in Mice
+YG47Z2ZQ	https://link.aps.org/doi/10.1103/PhysRevD.111.014002	Studying π + π − photoproduction beyond Pomeron exchange
+5W2SN35J	https://pos.sissa.it/465/041	A Comprehensive Study of Double pion Photoproduction: A Regge Approach
+NIN4ZN8A	https://www.mdpi.com/2504-2289/9/3/66	PK-Judge: Enhancing IP Protection of Neural Network Models Using an Asymmetric Approach
+V4ANPGV2	https://aacrjournals.org/cancerdiscovery/article/15/3/511/752115/Ancestral-Differences-in-Anticancer-Treatment	Ancestral Differences in Anticancer Treatment Efficacy and Their Underlying Genomic and Molecular Alterations
+GMSH5KGE	https://linkinghub.elsevier.com/retrieve/pii/S0304383524006992	The pharmacogenomic and immune landscape of snoRNAs in human cancers
+B3YXV5D9	https://www.nature.com/articles/s41380-023-02111-1	RNA alternative splicing impacts the risk for alcohol use disorder
+I2TCRSZD	https://genomebiology.biomedcentral.com/articles/10.1186/s13059-019-1847-4	RegSNPs-intron: a computational framework for predicting pathogenic impact of intronic single nucleotide variants
+IQC8TGVB	https://ascpt.onlinelibrary.wiley.com/doi/10.1002/cpt.2018	Circulating miRNAs as Biomarkers for CYP2B6 Enzyme Activity
+P3D8JQBL	https://www.science.org/doi/10.1126/sciadv.adu0772	TGFβ-dependent signaling drives tumor growth and aberrant extracellular matrix dynamics in NF1-associated plexiform neurofibroma
+KR2LIBHB	https://aacrjournals.org/clincancerres/article/31/10/1988/762200/DLK1-Distinguishes-Subsets-of-NF1-Associated	DLK1 Distinguishes Subsets of NF1-Associated Malignant Peripheral Nerve Sheath Tumors with Divergent Molecular Signatures
+LVIZK66G	https://aacrjournals.org/clincancerres/article/30/5/1038/734307/Spatial-Gene-Expression-Profiling-Unveils-Immuno	Spatial Gene-Expression Profiling Unveils Immuno-oncogenic Programs of NF1-Associated Peripheral Nerve Sheath Tumor Progression
+4VRALQEP	https://linkinghub.elsevier.com/retrieve/pii/S221287782400139X	Glucose intolerance as a consequence of hematopoietic stem cell dysfunction in offspring of obese mice
+NRLLK7C9	https://www.nature.com/articles/s41375-024-02312-9	Combination of menin and kinase inhibitors as an effective treatment for leukemia with NUP98 translocations
+UCWATD7V	https://linkinghub.elsevier.com/retrieve/pii/S1532046425000887	A trajectory-informed model for detecting drug-drug-host interaction from real-world data
+SSP3UZQW	https://www.nature.com/articles/s41598-025-98528-5	A theoretical model for detecting drug interaction with awareness of timing of exposure
+FPDDF5WC	https://journals.lww.com/10.2215/CJN.0000000687	Risk of Urinary Tract Infections with Sodium-Glucose Transport Protein-2 Inhibitors in Subpopulations with Abnormal Genitourinary Pathology
+82ALL98E	https://onlinelibrary.wiley.com/doi/10.1002/sim.10216	A Precision Mixture Risk Model to Identify Adverse Drug Events in Subpopulations Using a Case‐Crossover Design
+GPFVQZ24	https://link.springer.com/10.1007/s11538-024-01408-8	A Simple Framework for Agent-Based Modeling with Extracellular Matrix
+V4D7SIC8	https://www.nature.com/articles/s44401-025-00018-3	Enhancing medical coding efficiency through domain-specific fine-tuned large language models
+YIIZWMBP	https://www.aanda.org/10.1051/0004-6361/202453155	Phase-space mixing of multiple stellar populations in globular clusters
+KEMPE84T	https://www.aanda.org/10.1051/0004-6361/202453252	SIEGE: IV. Compact star clusters in cosmological simulations with a high star formation efficiency and subparsec resolution
+UEXPW4MS	https://www.aanda.org/10.1051/0004-6361/202452876	SIEGE: III. The formation of dense stellar clusters in sub-parsec resolution cosmological simulations with individual star feedback
+K3M7XX26	https://www.aanda.org/10.1051/0004-6361/202554038	A <i>JWST</i> project on 47 Tucanae: Kinematics, energy equipartition, and anisotropy of multiple populations
+CK73VLEI	https://linkinghub.elsevier.com/retrieve/pii/S0899707125001561	Comparative analysis of machine learning-derived nomogram and biomarkers in predicting side-specific extraprostatic extension: Preliminary findings
