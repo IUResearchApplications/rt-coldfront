@@ -6,7 +6,7 @@
     class="nav-link dropdown-toggle"
     href="#"
     role="button"
-    data-toggle="dropdown"
+    data-bs-toggle="dropdown"
     aria-haspopup="true"
     aria-expanded="false"
     aria-controls="admin-submenu"
@@ -26,7 +26,7 @@
         class="dropdown-item dropdown-toggle"
         href="#"
         role="button"
-        data-toggle="dropdown"
+        data-bs-toggle="dropdown"
         aria-haspopup="true"
         aria-controls="projects-submenu"
         aria-expanded="false"
@@ -47,7 +47,7 @@
         class="dropdown-item dropdown-toggle"
         href="#"
         role="button"
-        data-toggle="dropdown"
+        data-bs-toggle="dropdown"
         aria-haspopup="true"
         aria-controls="allocations-submenu"
         aria-expanded="false"
@@ -74,7 +74,9 @@
     {% if 'advanced_search/navbar_advanced_search.html'|template_exists %}
       <li>{% include 'advanced_search/navbar_advanced_search.html' %}</li>
     {% endif %}
-    <li><a id="navbar-grant-report" class="dropdown-item" href="{% url 'grant-report' %}" role="menuitem">Grant Report</a></li>
+    {% if settings.GRANT_ENABLE %}
+      <li><a id="navbar-grant-report" class="dropdown-item" href="{% url 'grant-report' %}" role="menuitem">Grant Report</a></li>
+    {% endif %}
     {% if 'request_forms/software_request.html'|template_exists %}
       <li class="dropdown-submenu">
         <a
@@ -82,7 +84,7 @@
           class="dropdown-item dropdown-toggle"
           href="#"
           role="button"
-          data-toggle="dropdown"
+          data-bs-toggle="dropdown"
           aria-haspopup="true"
           aria-controls="forms-submenu"
           aria-expanded="false"

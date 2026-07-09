@@ -25,7 +25,7 @@
       <strong><u>Project Info</u></strong>
       <a href="{% url 'project-detail' project.pk %}" target="_blank">
         <i class="fas fa-external-link-alt" aria-hidden="true"></i>
-        <span class="sr-only">Link to project {{ project.title }}</span>
+        <span class="visually-hidden">Link to project {{ project.title }}</span>
       </a>
     </legend>
     <p><strong>ID:</strong> {{ project.pk }}</p>
@@ -47,7 +47,7 @@
       {% if allocations %}
         <div class="table-responsive">
           <table class="table table-bordered table-sm">
-            <caption class="sr-only">Active allocations in the project</caption>
+            <caption class="visually-hidden">Active allocations in the project</caption>
             <thead>
               <tr>
                 <th scope="col">Resource</th>

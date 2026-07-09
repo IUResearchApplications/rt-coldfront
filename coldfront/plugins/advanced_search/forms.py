@@ -222,7 +222,7 @@ class ProjectSearchForm(forms.Form):
                 AccordionGroup(
                     "Displays",
                     HTML(
-                        '<div class="form-group">'
+                        '<div class="mb-3">'
                         '<div id="div_id_select_all_project_displays" class="form-check"> '
                         '<input type="checkbox" name="select_all_project_displays" class="checkboxinput form-check-input" id="select_all_project_displays"> '
                         '<label for="select_all_project_displays" class="form-check-label">'
@@ -468,7 +468,7 @@ class AllocationSearchForm(forms.Form):
                         AccordionGroup(
                             "Displays",
                             HTML(
-                                '<div class="form-group">'
+                                '<div class="mb-3">'
                                 '<div id="div_id_select_all_displays" class="form-check"> '
                                 '<input type="checkbox" name="select_all_displays" class="checkboxinput form-check-input" id="select_all_displays"> '
                                 '<label for="select_all_displays" class="form-check-label">'

@@ -35,14 +35,14 @@ Allocation Detail
 <div class="card mb-3 bg-light">
   <div class="card-header">
     <h2 class="d-inline" id="manage-allocation"><i class="fas fa-cubes" aria-hidden="true"></i> Manage Allocation</h2>
-    <div class="float-right">
+    <div class="float-end">
       {% if allocation.is_changeable and allocation.status.name == 'Active' and is_allowed_to_update_project %}
-        <a class="btn btn-primary mr-1 float-right" href="{% url 'allocation-change' allocation.pk %}" aria-label="Request changes to allocation">
+        <a class="btn btn-primary me-1 float-end" href="{% url 'allocation-change' allocation.pk %}" aria-label="Request changes to allocation">
           Request Change
         </a>
       {% endif %}
       {% if can_move_allocation %}
-        <a href="{% url 'move-allocation' allocation.pk %}" class="btn btn-primary mr-1 float-right" aria-label="Move allocation to a different project">Move Allocation</a>
+        <a href="{% url 'move-allocation' allocation.pk %}" class="btn btn-primary me-1 float-end" aria-label="Move allocation to a different project">Move Allocation</a>
       {% endif %}
       {% if 'allocation_removal_requests/allocation_removal_request_links.html'|template_exists %}
         {% if allocation.status.name in 'Active, Billing Information Submitted' and allocation.get_parent_resource.name in ALLOCATION_REMOVAL_REQUESTS_ALLOWED %}
@@ -89,9 +89,9 @@ Allocation Detail
       </strong>
     </div>
     {% endif %}
-    <div class="float-right">
-      <a class="btn btn-primary mr-1" href="{% url 'allocation-list' %}" aria-label="Return to the allocation list">Return to Allocation List</a>
-      <a class="btn btn-primary mr-1" href="{% url 'project-detail' allocation.project.pk %}" aria-label="Return to the project details">Return to Project</a>
+    <div class="float-end">
+      <a class="btn btn-primary me-1" href="{% url 'allocation-list' %}" aria-label="Return to the allocation list">Return to Allocation List</a>
+      <a class="btn btn-primary me-1" href="{% url 'project-detail' allocation.project.pk %}" aria-label="Return to the project details">Return to Project</a>
     </div>
   </div>
 </div>
@@ -105,7 +105,7 @@ Allocation Detail
       {% csrf_token %}
       <div class="table-responsive">
         <table class="table table-bordered table-sm">
-          <caption class="sr-only">Allocation details</caption>
+          <caption class="visually-hidden">Allocation details</caption>
           <tr>
             <th scope="row" class="text-nowrap">Project:</th>
             <td><a href="{% url 'project-detail' allocation.project.pk %}">{{ allocation.project }}</a></td>
@@ -132,7 +132,7 @@ Allocation Detail
             <th scope="row" class="text-nowrap">Status:</th>
             <td>
               {% if user_has_permissions %}
-                <label for="{{ form.status.id_for_label }}" class="sr-only">
+                <label for="{{ form.status.id_for_label }}" class="visually-hidden">
                   {{ form.status.label }}
                 </label>
                 {{ form.status }}
@@ -145,7 +145,7 @@ Allocation Detail
             <th scope="row" class="text-nowrap">Start Date:</th>
             <td>
               {% if user_has_permissions %}
-                <label for="{{ form.start_date.id_for_label }}" class="sr-only">
+                <label for="{{ form.start_date.id_for_label }}" class="visually-hidden">
                   {{ form.start_date.label }}
                 </label>
                 {{ form.start_date }}
@@ -159,7 +159,7 @@ Allocation Detail
               <th scope="row" class="text-nowrap">End Date:</th>
               <td>
                 {% if user_has_permissions %}
-                  <label for="{{ form.end_date.id_for_label }}" class="sr-only">
+                  <label for="{{ form.end_date.id_for_label }}" class="visually-hidden">
                     {{ form.end_date.label }}
                   </label>
                   {{ form.end_date }}
@@ -173,7 +173,7 @@ Allocation Detail
             <th scope="row" class="text-nowrap">Description:</th>
             <td>
               {% if user_has_permissions %}
-                <label for="{{ form.description.id_for_label }}" class="sr-only">
+                <label for="{{ form.description.id_for_label }}" class="visually-hidden">
                   {{ form.description.label }}
                 </label>
                 {{ form.description }}
@@ -194,7 +194,7 @@ Allocation Detail
             {% if user_has_permissions %}
               <th scope="row" class="text-nowrap">Lock/Unlock Allocation:</th>
               <td>
-                <label for="{{ form.is_locked.id_for_label }}" class="sr-only">
+                <label for="{{ form.is_locked.id_for_label }}" class="visually-hidden">
                   {{ form.is_locked.label }}
                 </label>
                 {{ form.is_locked }}
@@ -213,7 +213,7 @@ Allocation Detail
             <tr>
               <th scope="row" class="text-nowrap">Allow Change Requests:</th>
               <td>
-                <label for="{{ form.is_changeable.id_for_label }}" class="sr-only">
+                <label for="{{ form.is_changeable.id_for_label }}" class="visually-hidden">
                   {{ form.is_changeable.label }}
                 </label>
                 {{ form.is_changeable }}
@@ -223,13 +223,13 @@ Allocation Detail
         </table>
       </div>
       {% if user_has_permissions %}
-        <div class="float-right">
+        <div class="float-end">
           {% if allocation.status.name in 'New, Renewal Requested, Paid, Billing Information Submitted' %}
             {% if allocation.project.status.name != 'Active' %}
               Project must be approved first.
             {% else %}
-              <button type="submit" name="action" value="approve" class="btn btn-success mr-1 confirm-activate">Approve</button>
-              <button type="submit" name="action" value="deny" class="btn btn-danger mr-1 confirm-deny">Deny</button>
+              <button type="submit" name="action" value="approve" class="btn btn-success me-1 confirm-activate">Approve</button>
+              <button type="submit" name="action" value="deny" class="btn btn-danger me-1 confirm-deny">Deny</button>
             {% endif %}
           {% endif %}
           <button type="submit" name="action" value="update" class="btn btn-primary"><i class="fas fa-sync" aria-hidden="true"></i> Update</button>
@@ -251,7 +251,7 @@ Allocation Detail
   <div class="card-body">
       <div class="table-responsive">
         <table class="table table-bordered table-sm">
-          <caption class="sr-only">EULA agreements</caption>
+          <caption class="visually-hidden">EULA agreements</caption>
           <thead>
             <tr>
               <th scope="col">Resource</th>
@@ -283,7 +283,7 @@ Allocation Detail
   <div class="card mb-3">
     <div class="card-header">
       <h2 class="d-inline"><i class="fas fa-info-circle" aria-hidden="true"></i> Allocation Attributes</h2>
-      <div class="float-right">
+      <div class="float-end">
         {% if user_has_permissions %}
           <a class="btn btn-success" href="{% url 'allocation-attribute-add' allocation.pk %}">
             <i class="fas fa-plus" aria-hidden="true"></i> Add Allocation Attribute
@@ -301,7 +301,7 @@ Allocation Detail
       {% if attributes %}
         <div class="table-responsive">
           <table class="table table-bordered table-sm">
-            <caption class="sr-only">Allocation attributes</caption>
+            <caption class="visually-hidden">Allocation attributes</caption>
             <thead>
               <tr>
                 <th scope="col">Attribute</th>
@@ -330,7 +330,7 @@ Allocation Detail
       {% if attributes_with_usage %}
         <hr>
         {% for attribute in attributes_with_usage %}
-          <div class="card mb-3 mr-1">
+          <div class="card mb-3 me-1">
             <div class="card-body">
               <h4 class="card-title">{{attribute}}</h4>
               <div id="gauge-{{forloop.counter0}}"></div>
@@ -347,14 +347,14 @@ Allocation Detail
 {% if allocation_changes or allocation_changes_enabled %}
   <div class="card mb-3">
     <div class="card-header">
-      <h2 class="d-inline"><i class="fas fa-info-circle" aria-hidden="true"></i> Allocation Change Requests</h2> <span class="badge badge-secondary">{{allocation_changes.count}}</span>
+      <h2 class="d-inline"><i class="fas fa-info-circle" aria-hidden="true"></i> Allocation Change Requests</h2> <span class="badge text-bg-secondary">{{allocation_changes.count}}</span>
     </div>
 
     <div class="card-body">
       {% if allocation_changes %}
         <div class="table-responsive">
           <table class="table table-bordered table-sm">
-            <caption class="sr-only">Allocation change requests</caption>
+            <caption class="visually-hidden">Allocation change requests</caption>
             <thead>
               <tr>
                 <th scope="col">Date Requested</th>
@@ -379,7 +379,7 @@ Allocation Detail
                     {% else %}
                       <td></td>
                     {% endif %}
-                    <td><a href="{% url 'allocation-change-detail' change_request.pk %}"><i class="far fa-edit" aria-hidden="true"></i><span class="sr-only">Edit</span></a></td>
+                    <td><a href="{% url 'allocation-change-detail' change_request.pk %}"><i class="far fa-edit" aria-hidden="true"></i><span class="visually-hidden">Edit</span></a></td>
                   </tr>
               {% endfor %}
             </tbody>
@@ -399,8 +399,8 @@ Allocation Detail
 <div class="card mb-3">
   <div class="card-header">
     <h2 class="d-inline"><i class="fas fa-users" aria-hidden="true"></i> Users in Allocation</h2>
-    <span class="badge badge-secondary">{{allocation_users.count}}</span>
-    <div class="float-right">
+    <span class="badge text-bg-secondary">{{allocation_users.count}}</span>
+    <div class="float-end">
       {% if is_allowed_to_update_project and not allocation.status.name in 'Denied, Expired, Renewal Denied, Removed, Revoked' %}
         {% if not allocation.get_parent_resource.name == 'Geode-Project' %}
           <a class="btn btn-success" href="{% url 'allocation-add-users' allocation.pk %}">
@@ -434,7 +434,7 @@ Allocation Detail
     {% endif %}
     <div class="table-responsive">
       <table id="allocationuser_table" class="table table-hover">
-        <caption class="sr-only">Users in this allocation</caption>
+        <caption class="visually-hidden">Users in this allocation</caption>
         <thead>
           <tr>
             <th scope="col">Username</th>
@@ -492,8 +492,8 @@ Allocation Detail
 <div class="card mb-3">
   <div class="card-header">
     <h2 class="d-inline"><i class="fas fa-users" aria-hidden="true"></i> Notifications</h2>
-    <span class="badge badge-secondary">{{notes.count}}</span>
-    <div class="float-right">
+    <span class="badge text-bg-secondary">{{notes.count}}</span>
+    <div class="float-end">
       {% if user_has_permissions %}
         <a class="btn btn-success" href="{% url 'allocation-note-add' allocation.pk %}">
           <i class="fas fa-plus" aria-hidden="true"></i> Add Notification
@@ -505,7 +505,7 @@ Allocation Detail
     {% if notes %}
       <div class="table-responsive">
         <table class="table table-hover">
-          <caption class="sr-only">Notifications</caption>
+          <caption class="visually-hidden">Notifications</caption>
           <thead>
             <tr>
               <th scope="col">Note</th>
@@ -531,7 +531,7 @@ Allocation Detail
                     <td>
                       <a href="{% url 'allocation-note-update' allocation_pk=allocation.pk pk=note.pk %}">
                         <i class="far fa-edit" aria-hidden="true"></i>
-                        <span class="sr-only">Edit note</span>
+                        <span class="visually-hidden">Edit note</span>
                       </a>
                     </td>
                   {% endif %}
@@ -553,10 +553,7 @@ Allocation Detail
 {{ gauge_data|json_script:"guage-data" }}
 
 <script>
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-project-menu").addClass("active");
-
-  $(document).ready(function () {
+  document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('gauge_data')){
       var gauge_data = JSON.parse(document.getElementById('gauge_data').textContent);
       drawGauges(gauge_data);
@@ -577,6 +574,19 @@ Allocation Detail
         'aTargets': ['nosort']
       }]
     });
+
+    $(document).on('click', '.confirm-activate', function(){
+      var attributes_num = {{ attributes | length }};
+      if (attributes_num == 0) {
+        return confirm('Are you sure you want to activate this allocation request without setting any allocation attributes?');
+      }
+    })
+    $(document).on('click', '.confirm-deny', function(){
+      var notes_num = {{ notes | length }};
+      if (notes_num == 0) {
+        return confirm('Are you sure you want to deny this allocation request without setting a notification?');
+      }
+    })
   });
 
   function drawGauges(guage_data) {
@@ -593,18 +603,5 @@ Allocation Detail
       });
     }
   }
-  $(".datepicker").flatpickr();
-  $(document).on('click', '.confirm-activate', function(){
-    var attributes_num = {{ attributes | length }};
-    if (attributes_num == 0) {
-      return confirm('Are you sure you want to activate this allocation request without setting any allocation attributes?');
-    }
-  })
-  $(document).on('click', '.confirm-deny', function(){
-    var notes_num = {{ notes | length }};
-    if (notes_num == 0) {
-      return confirm('Are you sure you want to deny this allocation request without setting a notification?');
-    }
-  })
 </script>
 {% endblock %}

@@ -7,8 +7,8 @@
     <button
       class="navbar-toggler"
       type="button"
-      data-toggle="collapse"
-      data-target="#navbar-main"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbar-main"
       aria-controls="navbar-main"
       aria-expanded="false"
       aria-label="Toggle navigation"
@@ -18,19 +18,19 @@
 
     <div class="navbar-collapse collapse" id="navbar-main">
       <ul class="navbar-nav">
-        <li id="navbar-home" class="nav-item active">
-          <a class="nav-link" href="/">Home</a>
+        <li id="navbar-home" class="nav-item">
+          <a class="nav-link {% navbar_active_item 'home' request %}" href="{% url 'home' %}">Home</a>
         </li>
         <li id="navbar-center-summary" class="nav-item">
-          <a class="nav-link" href="{% url 'center-summary' %}">Center Summary</a>
+          <a class="nav-link {% navbar_active_item 'center-summary' request %}" href="{% url 'center-summary' %}">Center Summary</a>
         </li>
         <li id="navbar-publications" class="nav-item dropdown">
           <a
             id="navbarPublicationsToggle"
-            class="nav-link dropdown-toggle"
+            class="nav-link {% navbar_active_item 'publications' request %} dropdown-toggle"
             href="#"
             role="button"
-            data-toggle="dropdown"
+            data-bs-toggle="dropdown"
             aria-haspopup="true"
             aria-controls="publications-submenu"
             aria-expanded="false"
@@ -46,7 +46,7 @@
         {% endif %}
       </ul>
  
-      <ul class="navbar-nav ml-auto">
+      <ul class="navbar-nav ms-auto">
         <li id="navbar-login" class="nav-item"><a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-in-alt" aria-hidden="true"></i> Log In</a></li>
       </ul>
     </div>

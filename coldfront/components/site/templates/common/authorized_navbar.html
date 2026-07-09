@@ -8,8 +8,8 @@
     <button
       class="navbar-toggler"
       type="button"
-      data-toggle="collapse"
-      data-target="#navbar-main"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbar-main"
       aria-controls="navbar-main"
       aria-expanded="false"
       aria-label="Toggle navigation"
@@ -19,19 +19,19 @@
 
     <div class="navbar-collapse collapse" id="navbar-main">
       <ul class="navbar-nav">
-        <li id="navbar-home" class="nav-item active">
-          <a class="nav-link" href="/">Home</a>
+        <li id="navbar-home" class="nav-item">
+          <a class="nav-link {% navbar_active_item 'home' request %}" href="{% url 'home' %}">Home</a>
         </li>
         <li id="navbar-center-summary" class="nav-item">
-          <a class="nav-link" href="{% url 'center-summary' %}">Center Summary</a>
+          <a class="nav-link {% navbar_active_item 'center-summary' request %}" href="{% url 'center-summary' %}">Center Summary</a>
         </li>
         <li id="navbar-publications" class="nav-item dropdown">
           <a
             id="navbarPublicationsToggle"
-            class="nav-link dropdown-toggle"
+            class="nav-link dropdown-toggle {% navbar_active_item 'publications' request %}"
             href="#"
             role="button"
-            data-toggle="dropdown"
+            data-bs-toggle="dropdown"
             aria-haspopup="true"
             aria-controls="publications-submenu"
             aria-expanded="false"
@@ -48,7 +48,7 @@
             class="nav-link dropdown-toggle"
             href="#"
             role="button"
-            data-toggle="dropdown"
+            data-bs-toggle="dropdown"
             aria-haspopup="true"
             aria-controls="project-submenu"
             aria-expanded="false"
@@ -83,6 +83,11 @@
         {% elif perms.project.can_review_pending_project_reviews or perms.grant.can_view_all_grants %}
           {% include 'common/navbar_director.html' %}
         {% endif %}
+        {% if settings.INVOICE_ENABLED %}
+          {% if request.user.is_superuser or perms.allocation.can_manage_invoice %}
+            {% include 'common/navbar_invoice.html' %}
+          {% endif %}
+        {% endif %}
         {% if settings.CENTER_HELP_URL %}
           {% include 'common/navbar_help.html' %}
         {% endif %}
@@ -91,7 +96,7 @@
         {% endif %}
       </ul>
 
-      <ul class="navbar-nav ml-auto">
+      <ul class="navbar-nav ms-auto">
         {% include 'common/navbar_login.html' %}
       </ul>
     </div>
@@ -99,7 +104,7 @@
 </nav>
 
 <script>
-  $(document).ready(function() {
+  document.addEventListener('DOMContentLoaded', function() {
     $('.dropdown-menu a.dropdown-toggle').on('click', function() {
       const ele = $(this)
       const menu = ele.next('.dropdown-menu');

@@ -3,7 +3,7 @@
   <form id="academic_analytics_form" method="post">
     {% csrf_token %}
     <fieldset>
-      <legend class="sr-only">Publications found</legend>
+      <legend class="visually-hidden">Publications found</legend>
       <div class="table-responsive">
         <table class="table table-bordered table-sm">
           <caption>Publications found - select the ones to add</caption>
@@ -19,7 +19,7 @@
             {% for form in publication_formset %}
               <tr>
                 <td class="text-center">
-                  <label for="{{ form.selected.id_for_label }}" class="sr-only" aria-label="Select {{ form.title.value }}">
+                  <label for="{{ form.selected.id_for_label }}" class="visually-hidden" aria-label="Select {{ form.title.value }}">
                     {{ form.selected.label }}
                   </label>
                   {{ form.add }}
@@ -50,46 +50,46 @@
 {{ academic_analytics_form|json_script:"academic_analytics_form" }}
 
 <script>
-  var academic_analytics_form = JSON.parse(document.getElementById('academic_analytics_form').textContent);
-
-  academic_analytics_form.submit(function () {
-    var add_pub_button = $('#add_publications_btn')
-    $('#academics_analytics_form_info').html('');
-    add_pub_button.html(
-      '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding Publications...'
-    );
-    add_pub_button.prop('disabled', true);
-    add_pub_button.attr('role', 'status');
-    add_pub_button.blur();
-    $.ajax({
-      url: "{% url 'get-academic-analytics-publications' %}",
-      method: "POST",
-      data: academic_analytics_form.serialize(),
-      success: function (data) {
-        $("#academics_analytics_form").html(data);
-        $("#academics_analytics_form_info").html(
-          '<br>\
-          <div class="alert alert-success" role="alert">\
-            <i class="fas fa-info-circle" aria-hidden="true"></i> \
-            Added publications.\
-          </div>'
-        );
-      },
-      error: function(data) {
-        $("#add_publications_btn").html(
-          '<input class="btn btn-primary" type="submit" value="Add Publications" />'
-        );
-        $("#academics_analytics_form_info").html(
-          '<br>\
-          <div class="alert alert-warning" role="alert">\
-            <i class="fas fa-info-circle" aria-hidden="true"></i> \
-            Error adding publications.\
-          </div>'
-        );
-      }
+  document.addEventListener('DOMContentLoaded', function() {
+    var academic_analytics_form = JSON.parse(document.getElementById('academic_analytics_form').textContent);
+  
+    academic_analytics_form.submit(function () {
+      var add_pub_button = $('#add_publications_btn')
+      $('#academics_analytics_form_info').html('');
+      add_pub_button.html(
+        '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding Publications...'
+      );
+      add_pub_button.prop('disabled', true);
+      add_pub_button.attr('role', 'status');
+      add_pub_button.blur();
+      $.ajax({
+        url: "{% url 'get-academic-analytics-publications' %}",
+        method: "POST",
+        data: academic_analytics_form.serialize(),
+        success: function (data) {
+          $("#academics_analytics_form").html(data);
+          $("#academics_analytics_form_info").html(
+            '<br>\
+            <div class="alert alert-success" role="alert">\
+              <i class="fas fa-info-circle" aria-hidden="true"></i> \
+              Added publications.\
+            </div>'
+          );
+        },
+        error: function(data) {
+          $("#add_publications_btn").html(
+            '<input class="btn btn-primary" type="submit" value="Add Publications" />'
+          );
+          $("#academics_analytics_form_info").html(
+            '<br>\
+            <div class="alert alert-warning" role="alert">\
+              <i class="fas fa-info-circle" aria-hidden="true"></i> \
+              Error adding publications.\
+            </div>'
+          );
+        }
+      });
+      return false;
     });
-    return false;
   });
-
-    
 </script>

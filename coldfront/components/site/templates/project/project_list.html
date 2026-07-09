@@ -26,7 +26,7 @@ Project List
         {% endif %}
       </div>
       <div class="col-7">
-        <div class="float-right">
+        <div class="float-end">
           <a class="btn btn-primary" href="{% url 'project-denied-list' %}"><i class="fas fa-archive" aria-hidden="true"></i> View denied projects</a>
           <a class="btn btn-primary" href="{% url 'project-archived-list' %}"><i class="fas fa-archive" aria-hidden="true"></i> View archived projects</a>
         </div>
@@ -42,7 +42,7 @@ Project List
 </div>
 
 {% if enabled_pi_search or enabled_slate_project_search %}
-  <h2 class="sr-only">Search Functions</h2>
+  <h2 class="visually-hidden">Search Functions</h2>
   <div class="mb-3" id="search_functions_accordion">
     <div class="card">
       <div class="card-header">
@@ -51,20 +51,20 @@ Project List
           href="#collapse_search_functions"
           role="button"
           class="card-link"
-          data-toggle="collapse"
+          data-bs-toggle="collapse"
           aria-expanded="true"
           aria-controls="expand_search_functions_button"
           aria-label="Toggle search functions"
         >
           <i id="search_plus_minus_1" class="fas fa-search-minus"></i>
           Search Functions
-          <i id="plus_minus_1" class="fas fa-minus float-right"></i>
+          <i id="plus_minus_1" class="fas fa-minus float-end"></i>
         </a>
       </div>
       <div
         id="collapse_search_functions"
         class="collapse show"
-        data-parent="#search_functions_accordion"
+        data-bs-parent="#search_functions_accordion"
         role="search"
         aria-labelledby="expand_search_functions_button"
       >
@@ -87,7 +87,7 @@ Project List
   </div>
 {% endif %}
 
-<h2 class="sr-only">Project Table</h2>
+<h2 class="visually-hidden">Project Table</h2>
 <div class="card">
   <div class="card-header">
     <div class="row">
@@ -105,20 +105,20 @@ Project List
               id="expand_button"
               role="button"
               class="card-link "
-              data-toggle="collapse"
+              data-bs-toggle="collapse"
               href="#collapseOne"
               aria-expanded="{{expand_accordion|yesno:'true, false'}}"
               aria-controls="expand_button"
               aria-label="Toggle project filter"
             > 
               <i class="fas fa-filter" aria-hidden="true"></i> Filter
-              <i id="plus_minus" class="fas {{expand_accordion|get_icon}} float-right"></i>
+              <i id="plus_minus" class="fas {{expand_accordion|get_icon}} float-end"></i>
             </a>
           </div>
           <div
             id="collapseOne"
             class="collapse {{expand_accordion}}"
-            data-parent="#accordion"
+            data-bs-parent="#accordion"
             role="region"
             aria-labelledby="expand_button"
           >
@@ -136,29 +136,29 @@ Project List
     {% if project_list %}
       <div class="table-responsive">
         <table class="table table-sm">
-          <caption class="sr-only">Projects</caption>
+          <caption class="visually-hidden">Projects</caption>
           <thead>
             <tr>
               <th scope="col" class="text-nowrap">
                 ID
-                <a href="?order_by=id&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="sr-only">Sort ID asc</span></a>
-                <a href="?order_by=id&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="sr-only">Sort ID desc</span></a>
+                <a href="?order_by=id&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="visually-hidden">Sort ID asc</span></a>
+                <a href="?order_by=id&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="visually-hidden">Sort ID desc</span></a>
               </th>
               <th scope="col" class="text-nowrap">
                 PI
-                <a href="?order_by=pi__username&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="sr-only">Sort PI asc</span></a>
-                <a href="?order_by=pi__username&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="sr-only">Sort PI desc</span></a>
+                <a href="?order_by=pi__username&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="visually-hidden">Sort PI asc</span></a>
+                <a href="?order_by=pi__username&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="visually-hidden">Sort PI desc</span></a>
               </th>
               <th scope="col">Title</th>
               <th scope="col" class="text-nowrap">
                 Type
-                <a href="?order_by=type&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="sr-only">Sort Type asc</span></a>
-                <a href="?order_by=type&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="sr-only">Sort Type desc</span></a>
+                <a href="?order_by=type&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="visually-hidden">Sort Type asc</span></a>
+                <a href="?order_by=type&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="visually-hidden">Sort Type desc</span></a>
               </th>
               <th scope="col" class="text-nowrap">
                 Status
-                <a href="?order_by=status&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="sr-only">Sort Status asc</span></a>
-                <a href="?order_by=status&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="sr-only">Sort Status desc</span></a>
+                <a href="?order_by=status&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="visually-hidden">Sort Status asc</span></a>
+                <a href="?order_by=status&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="visually-hidden">Sort Status desc</span></a>
               </th>
               <th scope="col" class="text-nowrap">
                 End Date
@@ -181,7 +181,7 @@ Project List
                       <strong>{{ project.status.name }}</strong>
                       {% if user.username in project.list_of_manager_usernames %}
                         <a href="{% url 'project-review' project.pk %}">
-                          <span class="badge badge-warning">
+                          <span class="badge text-bg-warning">
                             <i class="fas fa-redo-alt" aria-hidden="true"></i>
                             Expires in {{ project.expires_in }} day{{ project.expires_in|pluralize }} - click to renew
                           </span>
@@ -194,7 +194,7 @@ Project List
                       <strong>{{ project.status.name }}</strong>
                       {% if user.username in project.list_of_manager_usernames %}
                         <a href="{% url 'project-review' project.pk %}">
-                          <span class="badge badge-warning">
+                          <span class="badge text-bg-warning">
                             <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
                             Needs Review - click to review
                           </span>
@@ -210,7 +210,7 @@ Project List
                       {% if user.username in project.list_of_manager_usernames %}
                         {% if project.status.name == 'Expired' and project.needs_review %}
                           <a href="{% url 'project-review' project.pk %}">
-                            <span class="badge badge-warning">
+                            <span class="badge text-bg-warning">
                               <i class="fas fa-redo-alt" aria-hidden="true"></i>
                               {% if PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING < 0 %}
                                 Click to renew
@@ -234,7 +234,7 @@ Project List
           </tbody>
         </table>
         {% if is_paginated %} Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-          <ul class="pagination float-right mr-3">
+          <ul class="pagination float-end me-3">
             {% if page_obj.has_previous %}
               <li class="page-item">
                 <a class="page-link"
@@ -272,30 +272,28 @@ Project List
 <br>
 
 <script>
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-project-menu").addClass("active");
-  $("#navbar-project").addClass("active");
-
-  $(document).on('click', '#form_reset_button', function() {
-    resetForm($('#filter_form'));
-  });
-
-  function resetForm($form) {
-    $form.find('input:text, textarea').val('');
-  };
-
-  $("#expand_button").click(function() {
-    $('#collapseOne').collapse();
-    icon = $("#plus_minus");
-    icon.toggleClass("fa-plus fa-minus");
-  });
-
-  $("#expand_search_functions_button").click(function() {
-    $('#collapse_search_functions').collapse();
-    search_icon = $("#search_plus_minus_1");
-    search_icon.toggleClass("fa-search-plus fa-search-minus")
-    icon = $("#plus_minus_1");
-    icon.toggleClass("fa-plus fa-minus");
+  document.addEventListener('DOMContentLoaded', function() {
+    $(document).on('click', '#form_reset_button', function() {
+      resetForm($('#filter_form'));
+    });
+  
+    function resetForm($form) {
+      $form.find('input:text, textarea').val('');
+    };
+  
+    $("#expand_button").click(function() {
+      $('#collapseOne').collapse();
+      icon = $("#plus_minus");
+      icon.toggleClass("fa-plus fa-minus");
+    });
+  
+    $("#expand_search_functions_button").click(function() {
+      $('#collapse_search_functions').collapse();
+      search_icon = $("#search_plus_minus_1");
+      search_icon.toggleClass("fa-search-plus fa-search-minus")
+      icon = $("#plus_minus_1");
+      icon.toggleClass("fa-plus fa-minus");
+    });
   });
 </script>
 {% endblock %}

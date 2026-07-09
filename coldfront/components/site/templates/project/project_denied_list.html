@@ -12,7 +12,7 @@ Project List
 {% block content %}
 <div class="card mb-3 bg-light">
   <div class="card-body">
-    <div class="float-left">
+    <div class="float-start">
       <a class="btn btn-primary" href="{% url 'project-list' %}"><i class="fas fa-arrow-left" aria-hidden="true"></i> Back to active projects</a>
     </div>
   </div>
@@ -29,20 +29,20 @@ Project List
           id="expand_button"
           role="button"
           class="card-link "
-          data-toggle="collapse"
+          data-bs-toggle="collapse"
           href="#collapseOne"
           aria-expanded="false"
           aria-controls="collapseOne"
           aria-label="Toggle project filter"
         > 
           <i class="fas fa-filter" aria-hidden="true"></i> Filter
-          <i id="plus_minus" class="fas {{expand_accordion|get_icon}} float-right"></i>
+          <i id="plus_minus" class="fas {{expand_accordion|get_icon}} float-end"></i>
         </a>
       </div>
       <div
         id="collapseOne"
         class="collapse {{expand_accordion}}"
-        data-parent="#accordion"
+        data-bs-parent="#accordion"
         role="region"
         aria-labelledby="expand_button"
       >
@@ -63,29 +63,29 @@ Project List
   <strong>Projects: {{projects_count}}</strong>
   <div class="table-responsive">
     <table class="table table-sm">
-      <caption class="sr-only">Denied projects</caption>
+      <caption class="visually-hidden">Denied projects</caption>
       <thead>
         <tr>
           <th scope="col" class="text-nowrap">
             ID
-            <a href="?order_by=id&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="sr-only">Sort ID asc</span></a>
-            <a href="?order_by=id&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="sr-only">Sort ID desc</span></a>
+            <a href="?order_by=id&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="visually-hidden">Sort ID asc</span></a>
+            <a href="?order_by=id&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="visually-hidden">Sort ID desc</span></a>
           </th>
           <th scope="col" class="text-nowrap">
             PI
-            <a href="?order_by=pi__username&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="sr-only">Sort PI asc</span></a>
-            <a href="?order_by=pi__username&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="sr-only">Sort PI desc</span></a>
+            <a href="?order_by=pi__username&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="visually-hidden">Sort PI asc</span></a>
+            <a href="?order_by=pi__username&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="visually-hidden">Sort PI desc</span></a>
           </th>
           <th scope="col">Title and Description</th>
           <th scope="col" class="text-nowrap">
             Type
-            <a href="?order_by=type&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="sr-only">Sort Type asc</span></a>
-            <a href="?order_by=type&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="sr-only">Sort Type desc</span></a>
+            <a href="?order_by=type&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="visually-hidden">Sort Type asc</span></a>
+            <a href="?order_by=type&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="visually-hidden">Sort Type desc</span></a>
           </th>
           <th scope="col" class="text-nowrap">
             Status
-            <a href="?order_by=status&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="sr-only">Sort Status asc</span></a>
-            <a href="?order_by=status&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="sr-only">Sort Status desc</span></a>
+            <a href="?order_by=status&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="visually-hidden">Sort Status asc</span></a>
+            <a href="?order_by=status&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="visually-hidden">Sort Status desc</span></a>
           </th>
           <th scope="col" class="text-nowrap">Actions</th>
         </tr>
@@ -107,7 +107,7 @@ Project List
       </tbody>
     </table>
     {% if is_paginated %} Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-      <ul class="pagination float-right mr-3">
+      <ul class="pagination float-end me-3">
         {% if page_obj.has_previous %}
           <li class="page-item">
             <a
@@ -140,30 +140,28 @@ Project List
 {% endif %}
 
 <script>
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-project-menu").addClass("active");
-  $("#navbar-project").addClass("active");
-
-  $(document).on('click', '#form_reset_button', function() {
-    resetForm($('#filter_form'));
-  });
-
-  function resetForm($form) {
-    $form.find('input:text, textarea').val('');
-  };
-
-  $("#expand_button").click(function() {
-    $('#collapseOne').collapse();
-    icon = $(this).find("i");
-    icon.toggleClass("fa-plus fa-minus");
-  });
+  document.addEventListener('DOMContentLoaded', function() {
+    $(document).on('click', '#form_reset_button', function() {
+      resetForm($('#filter_form'));
+    });
   
-  $('#collapseOne').on('shown.bs.collapse', function () {
-    $('#filter_form input:first').focus();
-  });
+    function resetForm($form) {
+      $form.find('input:text, textarea').val('');
+    };
   
-  $('#collapseOne').on('hidden.bs.collapse', function () {
-    $('#expand_button').focus();
+    $("#expand_button").click(function() {
+      $('#collapseOne').collapse();
+      icon = $(this).find("i");
+      icon.toggleClass("fa-plus fa-minus");
+    });
+    
+    $('#collapseOne').on('shown.bs.collapse', function () {
+      $('#filter_form input:first').focus();
+    });
+    
+    $('#collapseOne').on('hidden.bs.collapse', function () {
+      $('#expand_button').focus();
+    });
   });
 </script>
 {% endblock %}

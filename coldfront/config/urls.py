@@ -37,8 +37,6 @@ _patterns = [
     path("project/", include("coldfront.core.project.urls")),
     path("allocation/", include("coldfront.core.allocation.urls")),
     path("resource/", include("coldfront.core.resource.urls")),
-    path("project-summary", portal_views.project_summary, name="project-summary"),
-    path("user-summary", portal_views.user_summary, name="user-summary"),
 ]
 
 if settings.GRANT_ENABLE:

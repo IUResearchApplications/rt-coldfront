@@ -23,7 +23,7 @@ Choose a Resource for Your Allocation
                   <h3 class="d-inline">{{ resource.resource.name }}</h3>
                   <span
                     title="Total Allocations"
-                    class="badge badge-secondary position-absolute"
+                    class="badge text-bg-secondary position-absolute"
                     style="border-top-right-radius: 0px; border-bottom-left-radius: 0px; top: 0; left: 0; user-select: none;"
                     aria-label="Total allocations: {{ resource.resource_count|default_if_none:0 }}"
                   >
@@ -32,11 +32,11 @@ Choose a Resource for Your Allocation
                   {% if resource.info_url %}
                     <a href="{{ resource.info_url }}" target="_blank" title="More information (external)" rel="noopener noreferrer"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
                   {% endif %}
-                  <div class="float-right">
+                  <div class="float-end">
                     {% if not resource.rule_result.passed %}
                       {{ resource.rule_result.title|safe }}
-                      <a href="#" data-toggle="popover" data-trigger="focus hover" title="{{ resource.rule_result.title }}" data-content="{{ resource.rule_result.description }}">
-                        <i class="fas fa-question-circle" aria-hidden="true"></i> <span class="sr-only">{{ resource.rule_result.description }}</span>
+                      <a href="#" data-bs-toggle="popover" data-bs-trigger="focus hover" title="{{ resource.rule_result.title }}" data-bs-content="{{ resource.rule_result.description }}">
+                        <i class="fas fa-question-circle" aria-hidden="true"></i> <span class="visually-hidden">{{ resource.rule_result.description }}</span>
                       </a>
                     {% else %}
                       <a
@@ -64,9 +64,4 @@ Choose a Resource for Your Allocation
   {% if after_project_creation != 'true' %}
     <a class="btn btn-secondary" href="{% url 'project-detail' project_obj.pk %}">Back to Project</a><br>
   {% endif %}
-
-  <script>
-    $("#navbar-main > ul > li.active").removeClass("active");
-    $("#navbar-project-menu").addClass("active");
-  </script>
 {% endblock %}

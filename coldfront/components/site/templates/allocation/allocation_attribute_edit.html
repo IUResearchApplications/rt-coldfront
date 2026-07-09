@@ -28,7 +28,7 @@
             <tr class="d-flex">
               <td class="col-6">{{form.name.value}}</td>
               <td class="col-6">
-                <label for="{{ form.value.id_for_label }}" class="sr-only">
+                <label for="{{ form.value.id_for_label }}" class="visually-hidden">
                   {{ form.value.label }}
                 </label>
                 {{form.value}}
@@ -69,7 +69,7 @@
 </form>
 
 <script>
-  $(document).ready(function() {
+  document.addEventListener('DOMContentLoaded', function() {
     {% for form in formset %}
     $("#{{form.value.auto_id}}").on("input", function(){
       let change_indicator = $("#change-indicator-{{form.attribute_pk.value}}");
@@ -81,6 +81,6 @@
     });
     $("#{{form.value.auto_id}}").trigger("input");
     {% endfor %}
-  })
+  });
 </script>
 {% endblock %}

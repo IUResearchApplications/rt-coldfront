@@ -18,14 +18,14 @@ Export Publications from Project
       <form id="export_checkbox" action="{% url 'publication-export-publications' project.pk %}" method="post">
         {% csrf_token %} 
         <fieldset>
-          <legend class="sr-only">Select publications to export</legend>
+          <legend class="visually-hidden">Select publications to export</legend>
           <div class="table-responsive">
             <table class="table table-sm table-hover">
               <caption>Publications - select the ones to export</caption>
               <thead>
                 <tr>
                   <th scope="col">
-                    <label for="selectAll" class="sr-only">Select all publications</label>
+                    <label for="selectAll" class="visually-hidden">Select all publications</label>
                     <input type="checkbox" class="check" id="selectAll">
                   </th>
                   <th scope="col">Title</th>
@@ -36,7 +36,7 @@ Export Publications from Project
                 {% for form in formset %}
                   <tr>
                     <td>
-                      <label for="{{ form.selected.id_for_label }}" class="sr-only" aria-label="Select {{ form.title.value }}">
+                      <label for="{{ form.selected.id_for_label }}" class="visually-hidden" aria-label="Select {{ form.title.value }}">
                         {{ form.selected.label }}
                       </label>
                       {{ form.selected }}
@@ -66,44 +66,43 @@ Export Publications from Project
 {% endif %}
 
 <script>
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-project-menu").addClass("active");
-
-  $(document).ready(function () {
-    function anyChecked() {
-      return checkboxes.some(x=>x.checked)
-    }
-
-    function setSubmitEnabled() {
-      if (anyChecked()) {
-        submitbtn.removeAttribute('disabled');
-        submitbtn.setAttribute('aria-disabled', 'false');
-      } else {
-        submitbtn.setAttribute('disabled', '');
-        submitbtn.setAttribute('aria-disabled', 'true');
+  document.addEventListener('DOMContentLoaded', function() {
+    $(document).ready(function () {
+      function anyChecked() {
+        return checkboxes.some(x=>x.checked)
       }
-    }
-
-    $("input[name^='publicationform-']").click(function () {
-      if ( this.id != "selectAll") {
-        $("#selectAll").prop('checked', false);
+  
+      function setSubmitEnabled() {
+        if (anyChecked()) {
+          submitbtn.removeAttribute('disabled');
+          submitbtn.setAttribute('aria-disabled', 'false');
+        } else {
+          submitbtn.setAttribute('disabled', '');
+          submitbtn.setAttribute('aria-disabled', 'true');
+        }
       }
+  
+      $("input[name^='publicationform-']").click(function () {
+        if ( this.id != "selectAll") {
+          $("#selectAll").prop('checked', false);
+        }
+      });
+  
+      $('#selectAll').click(function(e){
+        var table = $(e.target).closest('table');
+        $('td input:checkbox',table).prop('checked', this.checked);
+        setSubmitEnabled()
+      });
+  
+      $('#selectAll').trigger('click');
     });
-
-    $('#selectAll').click(function(e){
-      var table = $(e.target).closest('table');
-      $('td input:checkbox',table).prop('checked', this.checked);
-      setSubmitEnabled()
-    });
-
-    $('#selectAll').trigger('click');
+  
+    const checkboxes = [...document.querySelectorAll('input[type=checkbox]')]
+    checkboxes.forEach(checkbox => {
+      checkbox.addEventListener('click', setSubmitEnabled)
+    })
+  
+    setSubmitEnabled()
   });
-
-  const checkboxes = [...document.querySelectorAll('input[type=checkbox]')]
-  checkboxes.forEach(checkbox => {
-    checkbox.addEventListener('click', setSubmitEnabled)
-  })
-
-  setSubmitEnabled()
 </script>
 {% endblock %}

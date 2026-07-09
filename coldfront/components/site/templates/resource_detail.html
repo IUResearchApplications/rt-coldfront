@@ -21,7 +21,7 @@ Resource Detail
       {% csrf_token %}
       <div class="table-responsive">
         <table class="table table-bordered table-sm">
-          <caption class="sr-only">Resource details</caption>
+          <caption class="visually-hidden">Resource details</caption>
           <tr>
             <th scope="row" class="text-nowrap">Name:</th>
             <td>{{ resource.name }}</td>
@@ -78,7 +78,7 @@ Resource Detail
   <div class="card mb-3">
     <div class="card-header">
       <h2 class="d-inline"><i class="fas fa-info-circle" aria-hidden="true"></i> Resource Attributes</h2>
-      <div class="float-right">
+      <div class="float-end">
         {% if request.user.is_superuser %}
           <a class="btn btn-success" href="{% url 'resource-attribute-add' resource.pk %}" role="button">
             <i class="fas fa-plus" aria-hidden="true"></i> Add Resource Attribute
@@ -93,7 +93,7 @@ Resource Detail
       {% if attributes %}
         <div class="table-responsive">
           <table class="table table-bordered table-sm">
-            <caption class="sr-only">Resource attribute details</caption>
+            <caption class="visually-hidden">Resource attribute details</caption>
             <thead>
               <tr>
                 <th scope="col">Attribute</th>
@@ -125,7 +125,7 @@ Resource Detail
     {% if child_resources %}
       <div class="table-responsive">
         <table id="child_resource_table" class="table table-bordered table-sm">
-          <caption class="sr-only">Child resource details</caption>
+          <caption class="visually-hidden">Child resource details</caption>
           <thead>
             <tr>
               <th scope="col">Resource Name</th>
@@ -161,19 +161,17 @@ Resource Detail
 
 
 <script>
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-project-menu").addClass("active");
-  $("#navbar-resource").addClass("active");
-
-  $(document).ready(function () { 
-    $('#child_resource_table').DataTable({
-      lengthMenu: [5, 10, 20, 50, 100],
-      "pageLength": 5,
-      "ordering": false,
-      'aoColumnDefs': [{
-        'bSortable': false,
-        'aTargets': ['nosort']
-      }]
+  document.addEventListener('DOMContentLoaded', function() {
+    $(document).ready(function () { 
+      $('#child_resource_table').DataTable({
+        lengthMenu: [5, 10, 20, 50, 100],
+        "pageLength": 5,
+        "ordering": false,
+        'aoColumnDefs': [{
+          'bSortable': false,
+          'aTargets': ['nosort']
+        }]
+      });
     });
   });
 </script>

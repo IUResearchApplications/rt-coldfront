@@ -17,4 +17,24 @@ urlpatterns = [
         portal_views.resource_by_type,
         name="portal-resource-type",
     ),
+    path(
+        "data/project-by-type/",
+        portal_views.project_by_type,
+        name="portal-project-type",
+    ),
+    path(
+        "data/project-type-by-user-count/",
+        portal_views.project_type_by_user_count,
+        name="portal-project-user",
+    ),
+    path(
+        "data/users-by-year/",
+        portal_views.users_by_year,
+        name="portal-users-by-year",
+    ),
+    path(
+        "data/users-by-active/",
+        portal_views.users_by_active,
+        name="portal-users-by-active",
+    ),
 ]

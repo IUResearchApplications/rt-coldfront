@@ -60,20 +60,20 @@ Add Users to Allocation
     <div class="card-body">
       <form action="{% url 'allocation-add-users' allocation.pk %}" method="post">
         <fieldset>
-          <legend class="sr-only">Users not in the allocation</legend>
+          <legend class="visually-hidden">Users not in the allocation</legend>
           {% csrf_token %}
           <div class="table-responsive">
             <table class="table table-sm table-hover">
-              <caption class="sr-only">Users not in the allocation – check rows to add them</caption>
+              <caption class="visually-hidden">Users not in the allocation – check rows to add them</caption>
               <thead>
                 <tr>
                   <th>
-                    <label for="selectAll" class="sr-only">Select all users</label>
+                    <label for="selectAll" class="visually-hidden">Select all users</label>
                     <input type="checkbox" class="check" id="selectAll">
                   </th>
                   <th scope="col">
-                    <a href="#" data-toggle="popover" title="Info" data-trigger="hover" data-content="Hover over an icon to see a user's account status for this resource">
-                      <span class="badge badge-info"><i class="fas fa-question-circle"></i></span><span class="sr-only">Hover over an icon to see a user's account status for this resource</span>
+                    <a href="#" data-bs-toggle="popover" title="Info" data-bs-trigger="hover" data-bs-content="Hover over an icon to see a user's account status for this resource">
+                      <span class="badge text-bg-info"><i class="fas fa-question-circle"></i></span><span class="visually-hidden">Hover over an icon to see a user's account status for this resource</span>
                     </a>
                   </th>
                   <th scope="col">#</th>
@@ -90,27 +90,27 @@ Add Users to Allocation
                 {% for form in formset %}
                   <tr>
                     <td>
-                      <label for="{{ form.selected.id_for_label }}" class="sr-only" aria-label="Select {{ form.username.value }}">
+                      <label for="{{ form.selected.id_for_label }}" class="visually-hidden" aria-label="Select {{ form.username.value }}">
                         {{ form.selected.label }}
                       </label>
                       {{ form.selected }}
                     </td>
                     <td>
                       {% if account_results|get_value_from_dict:form.username.value == 'no_account' %}
-                        <a href="#" data-toggle="popover" title="Cannot Add" data-trigger="hover" data-content="No IU account">
-                          <span class="badge badge-danger"><i class="fas fa-times-circle"></i></span><span class="sr-only">No IU account</span>
+                        <a href="#" data-bs-toggle="popover" title="Cannot Add" data-bs-trigger="hover" data-bs-content="No IU account">
+                          <span class="badge rounded-pill bg-danger"><i class="fas fa-times-circle"></i></span><span class="visually-hidden">No IU account</span>
                         </a>
                       {% elif account_results|get_value_from_dict:form.username.value == 'no_resource_account' %}
-                        <a href="#" data-toggle="popover" title="Cannot Add" data-trigger="hover" data-content="No {{ allocation.get_parent_resource.name }} account">
-                          <span class="badge badge-danger"><i class="fas fa-times-circle"></i></span><span class="sr-only">No {{ allocation.get_parent_resource.name }} account</span>
+                        <a href="#" data-bs-toggle="popover" title="Cannot Add" data-bs-trigger="hover" data-bs-content="No {{ allocation.get_parent_resource.name }} account">
+                          <span class="badge rounded-pill bg-danger"><i class="fas fa-times-circle"></i></span><span class="visually-hidden">No {{ allocation.get_parent_resource.name }} account</span>
                         </a>
                       {% elif account_results|get_value_from_dict:form.username.value in 'has_account, has_resource_account' %}
-                        <a href="#" data-toggle="popover" title="Can Add" data-trigger="hover" data-content="Has an account">
-                          <span class="badge badge-success" aria-label="Has an account"><i class="fas fa-check-circle" aria-hidden="true"></i></span><span class="sr-only">Has an account</span>
+                        <a href="#" data-bs-toggle="popover" title="Can Add" data-bs-trigger="hover" data-bs-content="Has an account">
+                          <span class="badge rounded-pill bg-success" aria-label="Has an account"><i class="fas fa-check-circle" aria-hidden="true"></i></span><span class="visually-hidden">Has an account</span>
                         </a>
                       {% else %}
-                        <a href="#" data-toggle="popover" title="Can Add" data-trigger="hover" data-content="No account required">
-                          <span class="badge badge-secondary" aria-label="No account required"><i class="fas fa-minus-circle" aria-hidden="true"></i></span><span class="sr-only">No account required</span>
+                        <a href="#" data-bs-toggle="popover" title="Can Add" data-bs-trigger="hover" data-bs-content="No account required">
+                          <span class="badge rounded-pill bg-secondary" aria-label="No account required"><i class="fas fa-minus-circle" aria-hidden="true"></i></span><span class="visually-hidden">No account required</span>
                         </a>
                       {% endif %}
                     </td>
@@ -141,8 +141,8 @@ Add Users to Allocation
     <div class="card-footer">
       <div class="alert alert-info mb-0">
         <i class="fas fa-question-circle" aria-hidden="true"></i>
-        Users with the <span class="badge badge-success"><i class="fas fa-check-circle"></i></span> icon can be added to the allocation.
-        Users with the <span class="badge badge-danger"><i class="fas fa-times-circle"></i></span> icon cannot be added; hover 
+        Users with the <span class="badge text-bg-success"><i class="fas fa-check-circle"></i></span> icon can be added to the allocation.
+        Users with the <span class="badge text-bg-danger"><i class="fas fa-times-circle"></i></span> icon cannot be added; hover 
         over the icon to see why.
       </div>
     </div>
@@ -157,27 +157,26 @@ Add Users to Allocation
 {% endif %}
 
 <script>
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-project-menu").addClass("active");
-
-  $("#selectAll").click(function () {
-    $("input[name^='userform-']").not(':disabled').prop('checked', $(this).prop('checked'));
-  });
-
-  $('[data-toggle="popover"]').popover({ trigger: 'hover focus' });
-
-  $("input[name^='userform-']").click(function (ele) {
-    var id = $(this).attr('id');
-    if ( id != "selectAll") {
-      $("#selectAll").prop('checked', false);
-    }
-  });
-
-  $(document).ready(function() {
-    $("#allocation_users_table").DataTable({
-      iDisplayLength: 5,
-      bLengthChange: false,
+  document.addEventListener('DOMContentLoaded', function() {
+    $("#selectAll").click(function () {
+      $("input[name^='userform-']").not(':disabled').prop('checked', $(this).prop('checked'));
     });
-  })
+  
+    $('[data-bs-toggle="popover"]').popover({ trigger: 'hover focus' });
+  
+    $("input[name^='userform-']").click(function (ele) {
+      var id = $(this).attr('id');
+      if ( id != "selectAll") {
+        $("#selectAll").prop('checked', false);
+      }
+    });
+  
+    $(document).ready(function() {
+      $("#allocation_users_table").DataTable({
+        iDisplayLength: 5,
+        bLengthChange: false,
+      });
+    })
+  });
 </script>
 {% endblock %}

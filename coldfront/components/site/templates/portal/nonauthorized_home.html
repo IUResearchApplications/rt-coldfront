@@ -4,14 +4,15 @@
 
 {% block content %}
 <div class="row mt-4">
-  <div class="col mr-0">
+  <div class="col me-0">
     <h1 class="text-center">Welcome to RT Projects</h1>
 
-    <p class="mt-3">
-      <a class="btn btn-primary btn-block" href="{% url 'login' %}{{next}}" role="button" aria-label="Log in to RT Projects">
-        <i class="fas fa-sign-in-alt" aria-hidden="true"></i>
-        Log In
-      </a>
+    <p>
+      <div class="d-grid gap-2">
+        <a class="btn btn-primary" href="{% url 'login' %}{{next}}" role="button" aria-label="Log in to RT Projects">
+          <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Log In
+        </a>
+      </div>
     </p>
 
     <hr>
@@ -19,7 +20,7 @@
       <div class="card-body">
         <div>
           <h2 id="resources" class="card-title h2">What resources are available through RT Projects?</h2>
-          <section class="ml-2">
+          <section class="ms-2">
             <h3>Computing</h3>
             <ul>
               <li>
@@ -40,7 +41,7 @@
               </li>
             </ul>
           </section>
-          <section class="ml-2"> 
+          <section class="ms-2"> 
             <h3>Storage</h3>
             <ul>
               <li>
@@ -61,7 +62,7 @@
               </li>
             </ul>
           </section>
-          <section class="ml-2">
+          <section class="ms-2">
             <h3>Services</h3>
             <ul>
               <li>
@@ -100,19 +101,4 @@
   <br>
   </div>
 </div>
-{% endblock %}
-
-
-{% block javascript %}
-  {{ block.super }}
-  <script>
-    $("#navbar-main > ul > li.active").removeClass("active");
-    $("#navbar-home").addClass("active");
-    $("#navbar-home a").attr("aria-current", "page")
-
-    const ref = document.referrer
-    if (ref.includes("idp")) {
-      window.location.reload()
-    }
-  </script>
 {% endblock %}

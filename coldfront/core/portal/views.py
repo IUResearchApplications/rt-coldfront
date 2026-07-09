@@ -242,28 +242,26 @@ def resource_by_type(request):
     allocation_count_by_resource_type = dict(Counter([ele.resource_type.name for ele in allocation_resources]))
 
     data = []
-    for rtype in ["Cluster", "Cloud", "Server", "Storage"]:
+    for rtype in ["Cluster", "service", "Storage"]:
         data.append({"name": rtype, "total": allocation_count_by_resource_type.get(rtype, 0)})
 
     return JsonResponse({"data": data})
 
 
-@cache_page(60 * 15)
-def project_summary(request):
-    context = {}
-    context["project_user_chart_data"] = generate_project_user_chart_data()
-    context["project_type_chart_data"] = generate_project_type_chart_data()
-
-    return render(request, "portal/project_summary.html", context)
+def project_by_type(request):
+    data = generate_project_type_chart_data()
+    return JsonResponse({"data": data})
 
 
-@cache_page(60 * 15)
-def user_summary(request):
-    context = {}
-    context["user_counts"] = generate_user_counts()
-    user_timeline_chart_data, years_to_months_labels, years_to_months_values = generate_user_timeline()
-    context["user_timeline"] = user_timeline_chart_data
-    context["years_to_months_labels"] = years_to_months_labels
-    context["years_to_months_values"] = years_to_months_values
+def project_type_by_user_count(request):
+    data = generate_project_user_chart_data()
+    return JsonResponse({"data": data})
 
-    return render(request, "portal/user_summary.html", context)
+
+def users_by_year(request):
+    data = generate_user_timeline()
+    return JsonResponse({"data": data})
+
+def users_by_active(request):
+    data = generate_user_counts()
+    return JsonResponse({"data": data})
