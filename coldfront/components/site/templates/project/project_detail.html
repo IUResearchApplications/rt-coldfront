@@ -700,17 +700,17 @@ Project Detail
       }
       return cookieValue;
     }
+
+
+    $('user_collapse').on('shown.bs.collapse hidden.bs.collapse', function () {
+      $('#plus_minus').toggleClass('fa-plus fa-minus');
+    });
+
   
     $(document).ready(function(){
       $("a[id*=popover]").click(function(e) {
         e.preventDefault();
       })
-  
-      $("#expand_button").click(function () {
-        $('#user_collapse').collapse();
-        icon = $("#plus_minus");
-        icon.toggleClass("fa-plus fa-minus");
-      });
   
       $('[data-bs-toggle="tooltip"]').tooltip()
   

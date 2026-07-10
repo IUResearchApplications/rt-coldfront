@@ -117,21 +117,8 @@ Resource List
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    $(document).on('click', '#form_reset_button', function () {
-      resetForm($('#filter_form'));
-    });
-  
-    $(".datepicker").flatpickr();
-  
-    function resetForm($form) {
-      $form.find('input:text, input:password, input:file, select, textarea').val('');
-      $form.find('input:radio, input:checkbox').removeAttr('checked').removeAttr('selected');
-    };
-  
-    $("#expand_button").click(function () {
-      $('#collapseOne').collapse();
-      icon = $("#plus_minus");
-      icon.toggleClass("fa-plus fa-minus");
+    $('#collapseOne').on('shown.bs.collapse hidden.bs.collapse', function () {
+      $('#plus_minus').toggleClass('fa-plus fa-minus');
     });
   });
 </script>

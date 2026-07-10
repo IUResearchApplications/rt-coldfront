@@ -133,10 +133,8 @@ Create Project
         displayPIProjects(e.target.value);
       });
   
-      $("#expand_pi_button").click(function() {
-        $('#collapse_pi').collapse();
-        icon = $("#plus_minus_1");
-        icon.toggleClass("fa-plus fa-minus");
+      $('#collapse_pi').on('shown.bs.collapse hidden.bs.collapse', function () {
+        $('#plus_minus_1').toggleClass('fa-plus fa-minus');
       });
     })
   

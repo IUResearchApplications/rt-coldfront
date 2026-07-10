@@ -273,26 +273,13 @@ Project List
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    $(document).on('click', '#form_reset_button', function() {
-      resetForm($('#filter_form'));
+    $('#collapseOne').on('shown.bs.collapse hidden.bs.collapse', function () {
+      $('#plus_minus').toggleClass('fa-plus fa-minus');
     });
-  
-    function resetForm($form) {
-      $form.find('input:text, textarea').val('');
-    };
-  
-    $("#expand_button").click(function() {
-      $('#collapseOne').collapse();
-      icon = $("#plus_minus");
-      icon.toggleClass("fa-plus fa-minus");
-    });
-  
-    $("#expand_search_functions_button").click(function() {
-      $('#collapse_search_functions').collapse();
-      search_icon = $("#search_plus_minus_1");
-      search_icon.toggleClass("fa-search-plus fa-search-minus")
-      icon = $("#plus_minus_1");
-      icon.toggleClass("fa-plus fa-minus");
+
+    $('#collapse_search_functions').on('shown.bs.collapse hidden.bs.collapse', function () {
+      $('#plus_minus_1').toggleClass('fa-plus fa-minus');
+      $('#search_plus_minus_1').toggleClass('fa-search-plus fa-search-minus');
     });
   });
 </script>
