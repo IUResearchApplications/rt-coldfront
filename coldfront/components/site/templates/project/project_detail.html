@@ -237,16 +237,19 @@ Project Detail
               <th scope="col" class="text-nowrap">Last Name</th>
               <th scope="col" class="text-nowrap">Email</th>
               <th scope="col" class="text-nowrap">Role
-                <a
-                id="popover"
-                href="#"
-                data-bs-toggle="popover"
-                title="Role" data-bs-trigger="hover"
-                data-bs-content="Manager role grants user access to add/remove users and allocations in the project. Max permitted Managers: {{ project.max_managers }}"
+                <button
+                  type="button"
+                  id="popover"
+                  class="p-0 bg-transparent border-0"
+                  data-bs-toggle="popover"
+                  title="Role"
+                  data-bs-trigger="hover"
+                  data-bs-content="Manager role grants user access to add/remove users and allocations in the project. Max permitted Managers: {{ project.max_managers }}"
+                  style="cursor: default;"
                 >
-                  <i class="fas fa-info-circle" aria-hidden="true"></i>
+                  <i class="fas fa-info-circle text-primary" aria-hidden="true"></i>
                   <span class="visually-hidden">Manager role grants user access to add/remove users and allocations in the project. Max permitted Managers: {{ project.max_managers }}</span>
-                </a>
+                </button>
               </th>
               <th scope="col" class="text-nowrap">Status</th>
               <th scope="col" class="nosort">Actions</th>
@@ -314,16 +317,19 @@ Project Detail
               {% endif %}
               <th scope="col" class="text-center text-nowrap nosort">
                 Users
-              <a
+              <button
+                type="button"
                 id="popover"
-                href="#"
+                class="p-0 bg-transparent border-0"
                 data-bs-toggle="popover"
-                title="Users" data-bs-trigger="hover"
+                title="Users"
+                data-bs-trigger="hover"
                 data-bs-content="Mouse over a number to see the list of users in the allocation."
-                >
-                  <i class="fas fa-info-circle" aria-hidden="true"></i>
-                  <span class="visually-hidden">Mouse over a number to see the list of users in the allocation.</span>
-                </a>
+                style="cursor: default;"
+              >
+                <i class="fas fa-info-circle text-primary" aria-hidden="true"></i>
+                <span class="visually-hidden">Mouse over a number to see the list of users in the allocation.</span>
+              </button>
               </th>
               <th scope="col" class="text-center nosort">Actions</th>
             </tr>
@@ -358,17 +364,19 @@ Project Detail
               <td>
                 {% with allocation.get_user_list as allocation_users %}
                   <div class="text-center">
-                    <a
+                    <button
+                      type="button"
                       id="popover"
-                      class="badge text-bg-primary"
-                      href="#"
+                      class="badge text-bg-primary border-0"
                       data-bs-toggle="popover"
-                      title="Users" data-bs-trigger="hover"
+                      title="Users"
+                      data-bs-trigger="hover"
                       data-bs-content="{{allocation_users|join:', '}}"
+                      style="cursor: default;"
                     >
                       {{ allocation_users|length }}
                       <span class="visually-hidden">{{allocation_users|join:", "}}</span>
-                    </a>
+                    </button>
                   </div>
                 {% endwith %}
               </td>
@@ -402,7 +410,6 @@ Project Detail
     {% else %}
       <div class="alert alert-info" role="alert"><i class="fas fa-info-circle" aria-hidden="true"></i> There are no allocations to display.</div>
     {% endif %}
-    <hr>
   </div>
 </div>
 <!-- End Project Allocations -->
@@ -684,36 +691,13 @@ Project Detail
     var display_modal = JSON.parse(document.getElementById('display_modal').textContent) === 'true';
     var display_project_created_modal = JSON.parse(document.getElementById('display_project_created_modal').textContent) === 'true';
     var gauge_data = JSON.parse(document.getElementById('gauge_data').textContent);
-  
-    function getCookie(name) {
-      var cookieValue = null;
-      if (document.cookie && document.cookie != '') {
-        var cookies = document.cookie.split(';');
-        for (var i = 0; i < cookies.length; i++) {
-          var cookie = jQuery.trim(cookies[i]);
-          // Does this cookie string begin with the name we want?
-          if (cookie.substring(0, name.length + 1) == (name + '=')) {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
-          }
-        }
-      }
-      return cookieValue;
-    }
 
-
-    $('user_collapse').on('shown.bs.collapse hidden.bs.collapse', function () {
+    $('#user_collapse').on('shown.bs.collapse hidden.bs.collapse', function () {
       $('#plus_minus').toggleClass('fa-plus fa-minus');
     });
 
   
     $(document).ready(function(){
-      $("a[id*=popover]").click(function(e) {
-        e.preventDefault();
-      })
-  
-      $('[data-bs-toggle="tooltip"]').tooltip()
-  
       drawGauges(gauge_data);
   
       if (display_modal) {
@@ -723,70 +707,6 @@ Project Detail
       if (display_project_created_modal) {
         $('#project_created_response_modal').modal('show');
       }
-  
-      $('#user_table').DataTable({
-        'aoColumnDefs': [{
-          'bSortable': false,
-          'aTargets': ['nosort']
-        }]
-      });
-  
-      $('#publication-table').DataTable({
-        "aLengthMenu": [
-          [10, 25, 50, 100, -1],
-          [10, 25, 50, 100, "All"]],
-        "iDisplayLength": 25,
-        "bSortClasses": false,
-        "order": [[ 1, "desc" ]]
-      });
-  
-      $('[data-bs-toggle="popover"]').popover();
-  
-      $('#allocation_table').DataTable({
-        'aoColumnDefs': [{
-          'bSortable': false,
-          'aTargets': ['nosort']
-        }]
-      });
-  
-      $('#grant_table').DataTable({
-        'aoColumnDefs': [{
-          'bSortable': false,
-          'aTargets': ['nosort']
-        }]
-      });
-  
-      $('#projectuser_table').DataTable({
-        'aoColumnDefs': [{
-          'bSortable': false,
-          'aTargets': ['nosort']
-        }]
-      });
-  
-      $("#selectAll").click(function () {
-        $("input[id^='email_notifications_for_user_id_']").not(":disabled").prop('checked', $(this).prop('checked')).change();
-      });
-  
-      $("[id^=email_notifications_for_user_id_]").change(function() {
-        var checked = $(this).prop('checked');
-        var user_project_id = Number($(this).attr('id').split("_").pop());
-  
-        $.ajax({
-          headers: { 'X-CSRFToken': getCookie('csrftoken') },
-          type: "POST",
-          url: "/project/project-user-update-email-notification/",
-          data: {
-            user_project_id: user_project_id,
-            checked: checked
-          },
-          success: function (data) {
-            $("#alert_div").html('<div class="alert alert-success alert-dismissible"><button type="button" class="btn-close" data-bs-dismiss="alert"></button><strong>Success!</strong> Email notification updated.</div>')
-          },
-          error: function (xhr, status, error) {
-            $("#alert_div").html('<div class="alert alert-danger alert-dismissible"><button type="button" class="btn-close" data-bs-dismiss="alert"></button><strong>Error!</strong> Failed updating email notification.</div>')
-          }
-        });
-      });
     });
   
     function drawGauges(guage_data) {
