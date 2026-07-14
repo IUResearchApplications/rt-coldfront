@@ -9,14 +9,14 @@
       <p>
         Search for your PI's project and request to be added to it.
       </p>
-      <form id="pi_search_form" method="post">
+      <form id="pi_search_form">
         {{ form|crispy }}
         <button id="pi_search_submit" type="submit" class="btn btn-primary">Search</button>
         <button id="pi_search_reset" type="reset" class="btn btn-secondary">Clear</button>
       </form>
       <br>
       <div class="row">
-        <div class="col" id="search_results">
+        <div class="col" id="search_results" style="display: none;">
           <hr>
           <div class="card border-light">
             <div class="card-body">
@@ -30,58 +30,61 @@
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    var pi_last_searched = '';
-  
-    $(document).ready(function () {
-      $('#search_results').hide()
-  
-      $('#pi_search_form').on('reset', function() {
-        $('#search_results').hide()
-      })
-  
-      $('#pi_search_form').on('submit', function(event) {
-        event.preventDefault();
-        var pi_username = $('#id_pi_search').val();
-  
-        if (pi_last_searched === pi_username) {
-          $('#search_results').show();
-          return;
-        }
-        pi_last_searched = pi_username
-        
-        if (pi_username === '') {
-          $('#search_results').hide();
-          return;
-        }
-  
-        $('#search_results').show();
-        $('#search_results_inner').html(
-          '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Searching...'
-        );
-  
-        data = {
+  $(document).ready(function() {
+    let pi_last_searched = '';
+    const $searchResults = $('#search_results');
+    const $searchResultsInner = $('#search_results_inner');
+    const $form = $('#pi_search_form');
+
+    function hideResults() {
+      $searchResults.hide();
+      $searchResultsInner.html('');
+    }
+
+    function showResults() {
+      $searchResults.show();
+    }
+
+    $form.on('reset', function() {
+      pi_last_searched = '';
+      hideResults();
+    });
+
+    $form.on('submit', function(event) {
+      event.preventDefault();
+      var pi_username = $('#id_pi_search').val();
+
+      if (pi_last_searched === pi_username) {
+        showResults();
+        return false;
+      }
+      
+      pi_last_searched = pi_username;
+      
+      showResults();
+      $searchResultsInner.html(
+        '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Searching...'
+      );
+
+      $.ajax({
+        url: "{% url 'pi-search-results' %}",
+        type: "POST",
+        data: {
           pi_username: pi_username,
           csrfmiddlewaretoken: "{{ csrf_token }}",
-        }
-        $.ajax({
-          url: "{% url 'pi-search-results' %}",
-          type: "POST",
-          data: data,
-          success: function(data) {
-            $('#search_results').show();
-            $('#search_results_inner').html(data);
-          },
-          error: function(xhr, errmsg, err) {
-            if (xhr.status == 403 || xhr.status == 401) {
-              $('#search_results_inner').html("<div class='alert alert-danger' role='alert'>Your session expired. Please login again. <a href='#' class='btn-close'></a></div>");
-            } else {
-              $('#search_results_inner').html("<div class='alert alert-danger' role='alert'>Oops! We have encountered an error: " + errmsg +
-                " <a href='#' class='btn-close'></a></div>");
-            }
-            console.log(xhr.status + ": " + xhr.responseText);
+        },
+        success: function(data) {
+          $searchResultsInner.html(data);
+        },
+        error: function(xhr, errmsg, err) {
+          if (xhr.status == 403 || xhr.status == 401) {
+            $searchResultsInner.html("<div class='alert alert-danger' role='alert'>Your session expired. Please login again. <a href='#' class='btn-close'></a></div>");
+          } else {
+            $searchResultsInner.html("<div class='alert alert-danger' role='alert'>Oops! We have encountered an error: " + errmsg +
+              " <a href='#' class='btn-close'></a></div>");
           }
-        });
+          console.log(xhr.status + ": " + xhr.responseText);
+        }
       });
     });
   });
