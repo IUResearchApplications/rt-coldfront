@@ -142,7 +142,10 @@ Allocation List
     No allocations to display!
   </div>
 {% endif %}
+{% endblock %}
 
+{% block javascript %}
+{{ block.super }}
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     $('#collapseOne').on('shown.bs.collapse hidden.bs.collapse', function () {
