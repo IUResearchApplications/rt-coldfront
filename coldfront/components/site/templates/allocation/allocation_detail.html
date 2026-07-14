@@ -250,7 +250,7 @@ Allocation Detail
   </div>
   <div class="card-body">
       <div class="table-responsive">
-        <table class="table table-bordered table-sm">
+        <table class="table table-bordered table-sm datatable">
           <caption class="visually-hidden">EULA agreements</caption>
           <thead>
             <tr>
@@ -353,7 +353,7 @@ Allocation Detail
     <div class="card-body">
       {% if allocation_changes %}
         <div class="table-responsive">
-          <table class="table table-bordered table-sm">
+          <table class="table table-bordered table-sm datatable">
             <caption class="visually-hidden">Allocation change requests</caption>
             <thead>
               <tr>
@@ -433,7 +433,7 @@ Allocation Detail
       </div>
     {% endif %}
     <div class="table-responsive">
-      <table id="allocationuser_table" class="table table-hover">
+      <table id="allocationuser_table" class="table table-hover datatable">
         <caption class="visually-hidden">Users in this allocation</caption>
         <thead>
           <tr>
@@ -550,31 +550,12 @@ Allocation Detail
 </div>
 {% endif %}
 
-{{ gauge_data|json_script:"guage-data" }}
+{% endblock %}
 
+{% block javascript %}
+{{ block.super }}
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    if (document.getElementById('gauge_data')){
-      var gauge_data = JSON.parse(document.getElementById('gauge_data').textContent);
-      drawGauges(gauge_data);
-    }
-
-    $('#allocation_change_table').DataTable({
-      lengthMenu: [5, 10, 20, 50, 100],
-      "pageLength": 5,
-      "ordering": false,
-      'aoColumnDefs': [{
-        'bSortable': false,
-        'aTargets': ['nosort']
-      }]
-    });
-    $('#allocationuser_table').DataTable({
-      'aoColumnDefs': [{
-        'bSortable': false,
-        'aTargets': ['nosort']
-      }]
-    });
-
     $(document).on('click', '.confirm-activate', function(){
       var attributes_num = {{ attributes | length }};
       if (attributes_num == 0) {
@@ -588,20 +569,5 @@ Allocation Detail
       }
     })
   });
-
-  function drawGauges(guage_data) {
-    var arrayLength = guage_data.length;
-    for (var i = 0; i < arrayLength; i++) {
-      c3.generate({
-        bindto: '#gauge-' + i,
-        data: guage_data[i],
-        legend: {
-          item: {
-            onclick: function (id) { }
-          }
-        }
-      });
-    }
-  }
 </script>
 {% endblock %}
