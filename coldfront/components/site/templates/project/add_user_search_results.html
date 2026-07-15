@@ -1,4 +1,5 @@
 {% load crispy_forms_tags %}
+{% load static %}
 
 <form action="{% url 'project-add-users' pk %}" method="post" id="postForm">
   {% csrf_token %}
@@ -33,9 +34,17 @@
               <input type="checkbox" class="check" id="selectAll">
             <th scope="col">#</th>
             <th scope="col">
-              <a href="#" class="notnavigable" data-bs-toggle="popover" title="Info" data-bs-trigger="hover" data-bs-content="Hover over an icon to see a user's account status for each selected resource">
+              <button
+                type="button"
+                class="p-0 bg-transparent border-0"
+                data-bs-toggle="popover"
+                title="Info"
+                data-bs-trigger="hover"
+                data-bs-content="Hover over an icon to see a user's account status for each selected resource"
+                style="cursor: default;"
+              >
                 <span class="badge text-bg-info"><i class="fas fa-question-circle"></i></span><span class="visually-hidden">Hover over an icon to see a user's account status for each selected resource</span>
-              </a>
+              </button>
             </th>
             <th scope="col">Username</th>
             <th scope="col">First Name</th>
@@ -55,9 +64,18 @@
               </td>
               <td>{{ forloop.counter }}</td>
               <td>
-                <a id="status-{{ forloop.counter }}" class="notnavigable" href="#" data-bs-toggle="popover" title="No Allocations Selected" data-bs-trigger="hover" data-bs-content="No allocations to check accounts on">
+                <button
+                  id="status-{{ forloop.counter }}"
+                  type="button"
+                  class="p-0 bg-transparent border-0"
+                  data-bs-toggle="popover"
+                  title="No Allocations Selected"
+                  data-bs-trigger="hover"
+                  data-bs-content="No allocations to check accounts on"
+                  style="cursor: default;"
+                >
                   <span class="badge text-bg-secondary"><i class="fas fa-minus-circle"></i></span><span class="visually-hidden">No allocations to check accounts on</span>
-                </a>
+                </button>
               </td>
               <td>{{ form.username.value }}</td>
               <td>{{ form.first_name.value }}</td>
@@ -189,7 +207,7 @@
 {{ account_statuses|json_script:"account_statuses" }}
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
+  $(document).ready(function() {
     const current_num_managers = JSON.parse(document.getElementById('current_num_managers').textContent);
     const max_managers = JSON.parse(document.getElementById('max_managers').textContent);
     const num_matches = JSON.parse(document.getElementById('num_matches').textContent);
@@ -218,8 +236,6 @@
         html = `<span class="badge text-bg-warning"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span><span class="visually-hidden">${content}</span>`
       }
   
-      icon.attr('data-original-title', title)
-      icon.attr('data-content', content)
       icon.html(html)
     }
   
@@ -277,10 +293,7 @@
       }
     }
   
-    $('document').ready(function () {
-      $('[data-bs-toggle="popover"]').popover();
-      $('a.notnavigable').click(function(e) {e.preventDefault();});
-      $('#warning').modal({ show: false});
+    $('document').ready(function () {;
       $('#id_manager_warning').hide();
   
       for (let i = 0; i < num_matches; i++) {

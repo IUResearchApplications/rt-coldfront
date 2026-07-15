@@ -248,8 +248,6 @@ Project Review List
   document.addEventListener('DOMContentLoaded', function() {
     var pi_projects = JSON.parse(document.getElementById('pi_projects').textContent);
   
-    $('[data-bs-toggle="popover"]').popover({ trigger: 'hover focus' });
-  
     $('#id_pi_projects_modal').on('show.bs.modal', function (event) {
       $('#id_pi_projects_modal .modal-body').html('')
       var link = $(event.relatedTarget);

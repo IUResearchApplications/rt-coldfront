@@ -15,7 +15,7 @@ Add Users to Project
 <h2 class="visually-hidden">User Search Form</h2>
 <div class="row">
   <div class="col">
-    <form method="post" action="/search-ldap" id="post-form">
+    <form method="post" id="post-form">
       {% csrf_token %}
       {{ user_search_form|crispy }}
       {% if after_project_creation == 'true' %}
@@ -58,7 +58,7 @@ Add Users to Project
 {% endblock %}
 
 {% block javascript %}
-  {{ block.super }}
+{{ block.super }}
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     var after_project_creation = JSON.parse(document.getElementById('after_project_creation').textContent) === 'true';
@@ -117,7 +117,6 @@ Add Users to Project
       $('#search_results').hide();
       $('#selected_users').hide();
       $('#div_id_search_by').hide();
-      $('[data-bs-toggle="popover"]').popover(); 
     });
   });
 </script>
