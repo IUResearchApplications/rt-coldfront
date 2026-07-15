@@ -15,6 +15,7 @@ AUTHENTICATION_BACKENDS += [
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = ENV.str("LOGOUT_REDIRECT_URL", LOGIN_URL)
+CSRF_TRUSTED_ORIGINS = ENV.list("CSRF_TRUSTED_ORIGINS", default=[])
 
 SU_LOGIN_CALLBACK = "coldfront.core.utils.common.su_login_callback"
 SU_LOGOUT_REDIRECT_URL = f"/{BASE_PATH}admin/auth/user/"
