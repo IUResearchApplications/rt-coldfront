@@ -24,7 +24,7 @@ from django.template.defaultfilters import pluralize
 from django.urls import reverse
 from django.utils.html import format_html
 from django.views import View
-from django.views.generic import CreateView, DetailView, ListView
+from django.views.generic import CreateView, DetailView, ListView, UpdateView
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import FormView
 
@@ -835,10 +835,10 @@ class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         )
 
 
-# TODO - manually review this
-class ProjectUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, FormView):
-    form_class = ProjectUpdateForm
-    template_name = "project/project_update_form.html"
+class ProjectUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Project
+    template_name_suffix = "_update_form"
+    fields = PROJECT_UPDATE_FIELDS
     success_message = "Project updated."
 
     def test_func(self):
@@ -846,7 +846,7 @@ class ProjectUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestM
         if self.request.user.is_superuser:
             return True
 
-        project_obj = get_object_or_404(Project, pk=self.kwargs.get("pk"))
+        project_obj = self.get_object()
 
         if self.request.user.has_perm("project.change_project"):
             return True
@@ -872,46 +872,21 @@ class ProjectUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestM
             project_obj.save(update_fields=["project_code"])
 
         if project_obj.status.name in ["Archived", "Denied", "Expired", "Renewal Denied"]:
-            messages.error(request, 'You cannot update a project with status "{}".'.format(project_obj.status.name))
-            return redirect(project_obj.pk)
+            messages.error(request, f"You cannot update a project with status {project_obj.status.name}.")
+            return redirect(project_obj)
         else:
             return super().dispatch(request, *args, **kwargs)
 
-    def get_form(self, form_class=None):
-        """Return an instance of the form to be used in this view."""
-        if form_class is None:
-            form_class = self.get_form_class()
-        return form_class(self.kwargs.get("pk"), **self.get_form_kwargs())
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["project_pk"] = self.kwargs.get("pk")
-
-        return context
-
-    def form_valid(self, form):
-        project_obj = get_object_or_404(Project, pk=self.kwargs.get("pk"))
-        form_data = form.cleaned_data
-
-        ProjectDescriptionRecord.objects.create(
-            project=project_obj, user=self.request.user, description=project_obj.description
-        )
-
-        save_form = not project_obj.title == form_data.get("title") or not project_obj.description == form_data.get(
-            "description"
-        )
-        project_obj.title = form_data.get("title")
-        project_obj.description = form_data.get("description")
-        if save_form:
-            project_obj.save()
-
+    def post(self, request, *args, **kwargs):
+        render = super().post(request, *args, **kwargs)
+        project_obj = self.get_object()
         if SLACK_MESSAGING_ENABLED:
             url = f"{get_domain_url(self.request)}{reverse('project-detail', kwargs={'pk': project_obj.pk})}"
             send_message(
                 f'Project "{project_obj.title}" with id {project_obj.pk} was updated. You can view it here: {url}'
             )
         logger.info(f"User {self.request.user.username} updated a project (project pk={project_obj.pk})")
-        return super().form_valid(form)
+        return render
 
     def get_success_url(self):
         # project signals
