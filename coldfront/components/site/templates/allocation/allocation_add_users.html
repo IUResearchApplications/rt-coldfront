@@ -19,7 +19,7 @@ Add Users to Allocation
   </div>
   <div class="card-body">
     <div class="table-responsive">
-      <table id="allocation_users_table" class="table table-sm table-hover">
+      <table id="allocation_users_table" class="table table-sm table-hover datatable">
         <thead>
           <tr>
             <th>Username</th>
@@ -72,9 +72,17 @@ Add Users to Allocation
                     <input type="checkbox" class="check" id="selectAll">
                   </th>
                   <th scope="col">
-                    <a href="#" data-bs-toggle="popover" title="Info" data-bs-trigger="hover" data-bs-content="Hover over an icon to see a user's account status for this resource">
+                    <button 
+                      type="button"
+                      class="p-0 bg-transparent border-0"
+                      data-bs-toggle="popover"
+                      title="Info"
+                      data-bs-trigger="hover"
+                      data-bs-content="Hover over an icon to see a user's account status for this resource"
+                      style="cursor: default;"
+                    >
                       <span class="badge text-bg-info"><i class="fas fa-question-circle"></i></span><span class="visually-hidden">Hover over an icon to see a user's account status for this resource</span>
-                    </a>
+                    </button>
                   </th>
                   <th scope="col">#</th>
                   <th scope="col">Username</th>
@@ -97,21 +105,53 @@ Add Users to Allocation
                     </td>
                     <td>
                       {% if account_results|get_value_from_dict:form.username.value == 'no_account' %}
-                        <a href="#" data-bs-toggle="popover" title="Cannot Add" data-bs-trigger="hover" data-bs-content="No IU account">
-                          <span class="badge rounded-pill bg-danger"><i class="fas fa-times-circle"></i></span><span class="visually-hidden">No IU account</span>
-                        </a>
+                        <button
+                          type="button"
+                          class="p-0 bg-transparent border-0"
+                          data-bs-toggle="popover"
+                          title="Cannot Add"
+                          data-bs-trigger="hover"
+                          data-bs-content="No IU account"
+                          style="cursor: default;"
+                        >
+                          <span class="badge bg-danger"><i class="fas fa-times-circle"></i></span><span class="visually-hidden">No IU account</span>
+                        </button>
                       {% elif account_results|get_value_from_dict:form.username.value == 'no_resource_account' %}
-                        <a href="#" data-bs-toggle="popover" title="Cannot Add" data-bs-trigger="hover" data-bs-content="No {{ allocation.get_parent_resource.name }} account">
-                          <span class="badge rounded-pill bg-danger"><i class="fas fa-times-circle"></i></span><span class="visually-hidden">No {{ allocation.get_parent_resource.name }} account</span>
-                        </a>
+                        <button
+                          type="button"
+                          class="p-0 bg-transparent border-0"
+                          data-bs-toggle="popover"
+                          title="Cannot Add" 
+                          data-bs-trigger="hover"
+                          data-bs-content="No {{ allocation.get_parent_resource.name }} account"
+                          style="cursor: default;"
+                        >
+                          <span class="badge bg-danger"><i class="fas fa-times-circle"></i></span><span class="visually-hidden">No {{ allocation.get_parent_resource.name }} account</span>
+                        </button>
                       {% elif account_results|get_value_from_dict:form.username.value in 'has_account, has_resource_account' %}
-                        <a href="#" data-bs-toggle="popover" title="Can Add" data-bs-trigger="hover" data-bs-content="Has an account">
+                        <button
+                          type="button"
+                          class="p-0 bg-transparent border-0"
+                          data-bs-toggle="popover"
+                          title="Can Add"
+                          data-bs-trigger="hover"
+                          data-bs-content="Has an account"
+                          style="cursor: default;"
+                        >
                           <span class="badge rounded-pill bg-success" aria-label="Has an account"><i class="fas fa-check-circle" aria-hidden="true"></i></span><span class="visually-hidden">Has an account</span>
-                        </a>
+                        </button>
                       {% else %}
-                        <a href="#" data-bs-toggle="popover" title="Can Add" data-bs-trigger="hover" data-bs-content="No account required">
-                          <span class="badge rounded-pill bg-secondary" aria-label="No account required"><i class="fas fa-minus-circle" aria-hidden="true"></i></span><span class="visually-hidden">No account required</span>
-                        </a>
+                        <button
+                          type="button"
+                          class="p-0 bg-transparent border-0"
+                          data-bs-toggle="popover"
+                          title="Can Add"
+                          data-bs-trigger="hover"
+                          data-bs-content="No account required"
+                          style="cursor: default;"
+                        >
+                          <span class="badge bg-secondary" aria-label="No account required"><i class="fas fa-minus-circle" aria-hidden="true"></i></span><span class="visually-hidden">No account required</span>
+                        </button>
                       {% endif %}
                     </td>
                     <td>{{ forloop.counter }}</td>
@@ -162,21 +202,12 @@ Add Users to Allocation
       $("input[name^='userform-']").not(':disabled').prop('checked', $(this).prop('checked'));
     });
   
-    $('[data-bs-toggle="popover"]').popover({ trigger: 'hover focus' });
-  
     $("input[name^='userform-']").click(function (ele) {
       var id = $(this).attr('id');
       if ( id != "selectAll") {
         $("#selectAll").prop('checked', false);
       }
     });
-  
-    $(document).ready(function() {
-      $("#allocation_users_table").DataTable({
-        iDisplayLength: 5,
-        bLengthChange: false,
-      });
-    })
   });
 </script>
 {% endblock %}
