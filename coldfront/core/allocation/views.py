@@ -2579,7 +2579,7 @@ class AllocationNoteUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPass
     def test_func(self):
         """UserPassesTestMixin Tests"""
         allocation_note_obj = get_object_or_404(
-            AllocationUserNote.select_related("allocation"), pk=self.kwargs.get("pk")
+            AllocationUserNote.objects.select_related("allocation"), pk=self.kwargs.get("pk")
         )
         allocation_obj = allocation_note_obj.allocation
         user = self.request.user
@@ -2603,6 +2603,6 @@ class AllocationNoteUpdateView(SuccessMessageMixin, LoginRequiredMixin, UserPass
 
     def get_success_url(self):
         logger.info(
-            f"Admin {self.request.user.username} updated an allocation note (allocation pk={self.object.allocation_pk})"
+            f"Admin {self.request.user.username} updated an allocation note (allocation pk={self.object.allocation_id})"
         )
-        return reverse("allocation-detail", kwargs={"pk": self.object.allocation_pk})
+        return reverse("allocation-detail", kwargs={"pk": self.object.allocation_id})
