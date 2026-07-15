@@ -790,11 +790,7 @@ class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
                 "project_id": project_obj.pk,
             }
             send_email_template(
-                "New Project Request",
-                "email/new_project_request.txt",
-                template_context,
-                EMAIL_SENDER,
-                [EMAIL_ALERTS_EMAIL_ADDRESS],
+                "New Project Request", "email/new_project_request.txt", template_context, [EMAIL_ALERTS_EMAIL_ADDRESS]
             )
 
             if not pi_is_requestor:
@@ -814,10 +810,8 @@ class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
                     "PI For Project Request",
                     "email/pi_project_request.txt",
                     template_context,
+                    [form.instance.pi.email],
                     EMAIL_TICKET_SYSTEM_ADDRESS,
-                    [
-                        form.instance.pi.email,
-                    ],
                 )
 
                 logger.info(f"Email sent to pi {form.instance.pi.username} (project pk={project_obj.pk})")
@@ -1303,7 +1297,7 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
         ]
         emails.append(project_obj.pi.email)
         send_email_template(
-            "Added to Project", "email/project_added_users.txt", template_context, EMAIL_TICKET_SYSTEM_ADDRESS, emails
+            "Added to Project", "email/project_added_users.txt", template_context, emails, EMAIL_TICKET_SYSTEM_ADDRESS
         )
 
         if allocations_added_to:
@@ -1477,8 +1471,8 @@ class ProjectRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
             "Removed From Project",
             "email/project_removed_users.txt",
             template_context,
-            EMAIL_TICKET_SYSTEM_ADDRESS,
             emails,
+            EMAIL_TICKET_SYSTEM_ADDRESS,
         )
 
     def log_removed_users(self, request, project_obj, removed_user_objs):
@@ -1797,7 +1791,6 @@ class ProjectReviewView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
                 "New project renewal has been submitted",
                 "email/new_project_renewal.txt",
                 {"url": url, "project_title": project_obj.title, "project_id": project_obj.pk},
-                EMAIL_SENDER,
                 [EMAIL_ALERTS_EMAIL_ADDRESS],
             )
 
@@ -2436,8 +2429,8 @@ class ProjectRequestEmailMixin:
             subject,
             template,
             template_context,
-            EMAIL_TICKET_SYSTEM_ADDRESS,
             get_project_user_emails(project_obj, only_project_managers),
+            EMAIL_TICKET_SYSTEM_ADDRESS,
         )
 
 
@@ -2600,8 +2593,8 @@ class ProjectReviewApproveView(LoginRequiredMixin, UserPassesTestMixin, View):
                 "Your Project Renewal Was Approved",
                 "email/project_renewal_approved.txt",
                 template_context,
-                EMAIL_TICKET_SYSTEM_ADDRESS,
                 get_project_user_emails(project_obj),
+                EMAIL_TICKET_SYSTEM_ADDRESS,
             )
 
         logger.info(f"Admin {request.user.username} approved a project renewal request (project pk={project_obj.pk})")
@@ -2684,8 +2677,8 @@ class ProjectReviewDenyView(LoginRequiredMixin, UserPassesTestMixin, View):
                 "Your Project Renewal Was Denied",
                 "email/project_renewal_denied.txt",
                 template_context,
-                EMAIL_TICKET_SYSTEM_ADDRESS,
                 get_project_user_emails(project_obj, True),
+                EMAIL_TICKET_SYSTEM_ADDRESS,
             )
 
         logger.info(f"Admin {request.user.username} denied a project renewal request (project pk={project_obj.pk})")
@@ -2811,8 +2804,8 @@ class ProjectRequestAccessEmailView(LoginRequiredMixin, View):
                     "help_email": EMAIL_TICKET_SYSTEM_ADDRESS,
                     "signature": EMAIL_SIGNATURE,
                 },
-                EMAIL_TICKET_SYSTEM_ADDRESS,
                 [project_obj.pi.email],
+                EMAIL_TICKET_SYSTEM_ADDRESS,
             )
             logger.info(
                 f"User {request.user.username} sent an email to {project_obj.pi.email} requesting "

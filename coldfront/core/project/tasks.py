@@ -100,8 +100,8 @@ def send_expiry_emails():
                     f"Access to your {CENTER_NAME} projects is expiring soon",
                     "email/project_expiring.txt",
                     template_context,
-                    EMAIL_TICKET_SYSTEM_ADDRESS,
                     [user.email],
+                    EMAIL_TICKET_SYSTEM_ADDRESS,
                 )
 
                 logger.debug(f"Project(s) expiring email sent to user {user}.")
@@ -145,8 +145,8 @@ def send_expiry_emails():
                 f"Access to your {CENTER_NAME} projects has expired",
                 "email/project_expired.txt",
                 template_context,
-                EMAIL_TICKET_SYSTEM_ADDRESS,
                 [user.email],
+                EMAIL_TICKET_SYSTEM_ADDRESS,
             )
 
             logger.debug(f"Project(s) expired email sent to user {user}.")

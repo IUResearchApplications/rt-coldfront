@@ -123,8 +123,8 @@ def send_added_user_email(request, allocation_obj, users, users_emails):
                 "added_user", "email/allocation_added_users.txt"
             ),
             template_context,
-            EMAIL_TICKET_SYSTEM_ADDRESS,
             users_emails,
+            EMAIL_TICKET_SYSTEM_ADDRESS,
         )
 
 
@@ -151,8 +151,8 @@ def send_removed_user_email(request, allocation_obj, users, users_emails):
                 "removed_user", "email/allocation_removed_users.txt"
             ),
             template_context,
-            EMAIL_TICKET_SYSTEM_ADDRESS,
             users_emails,
+            EMAIL_TICKET_SYSTEM_ADDRESS,
         )
 
 
