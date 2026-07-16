@@ -262,6 +262,7 @@ def users_by_year(request):
     data = generate_user_timeline()
     return JsonResponse({"data": data})
 
+
 def users_by_active(request):
     data = generate_user_counts()
     return JsonResponse({"data": data})

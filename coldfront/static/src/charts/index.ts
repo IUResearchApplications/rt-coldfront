@@ -11,6 +11,7 @@ import { initProjectTypeChart } from './projectTypeChart';
 import { initProjectUserChart } from './projectUserChart';
 import { initUsersChart } from './usersChart';
 import { initUsersActiveChart } from './usersActiveChart';
+import { initProjectReviewChart } from './projectReviewChart';
 
 export function initCharts(): void {
   for (const func of [
@@ -23,6 +24,7 @@ export function initCharts(): void {
     initProjectUserChart,
     initUsersChart,
     initUsersActiveChart,
+    initProjectReviewChart,
   ]) {
     func();
   }

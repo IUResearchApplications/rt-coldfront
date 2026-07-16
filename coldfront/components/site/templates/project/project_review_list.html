@@ -15,7 +15,7 @@ Project Review List
 <h2>Pending Project Requests</h2>
 {% if project_requests %}
   <div class="table-responsive">
-    <table id="project_request_table" class="table table-sm">
+    <table id="project_request_table" class="table table-sm datatable">
       <caption class="visually-hidden">Project requests</caption>
       <thead>
         <tr>
@@ -93,7 +93,7 @@ Project Review List
 </h2>
 {% if project_reviews %}
   <div class="table-responsive">
-    <table id="project_review_table" class="table table-sm">
+    <table id="project_review_table" class="table table-sm datatable">
       <caption class="visually-hidden">Project reviews</caption>
       <thead>
         <tr>
@@ -234,10 +234,13 @@ Project Review List
     <div class="modal-content">
       <div class="modal-header">
         <h3 class="modal-title" id="id_project_review_stats_modal_label">Project Review Stats</h3>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-        </button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body" style="max-width: 400px; margin: 0 auto;"></div>
+      <div class="modal-body" style="max-width: 400px; margin: 0 auto;">
+        <div class="chart-container">
+          <canvas id="project-review-stats-chart" data-url="{% url 'project-review-stats' %}"></canvas>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -280,38 +283,11 @@ Project Review List
       }
       $('#id_project_count').text(project_count)
     })
-  
-    $('#id_project_review_stats_modal').on('show.bs.modal', function (event) {
-      $('#id_project_review_stats_modal .modal-body').empty();
-      $.ajax({
-        url: '{% url "projects-review-stats" %}',
-        success: function(data) {
-          $('#id_project_review_stats_modal .modal-body').html(data);
-          drawStats();
-        },
-        error: function() {
-          $('#id_project_review_stats_modal .modal-body').html('<p class="text-danger">Error loading stats.</p>');
-        }
-      });
-    })
-  
-    $(document).ready(function() {
-      $("#project_request_table").DataTable({
-        iDisplayLength: 15,
-        'aoColumnDefs': [{
-          'bSortable': false,
-          'aTargets': ['nosort']
-        }]
-      });
-  
-      $("#project_review_table").DataTable({
-        iDisplayLength: 15,
-        'aoColumnDefs': [{
-          'bSortable': false,
-          'aTargets': ['nosort']
-        }]
-      });
-    })
+
+    $('#id_project_review_stats_modal').on('show.bs.modal', function () {
+      let canvas = document.getElementById('project-review-stats-chart');
+      if (canvas && canvas.projectReviewChart) canvas.projectReviewChart.resize(350, 350);
+    });
   });
 </script>
 {% endblock %}
