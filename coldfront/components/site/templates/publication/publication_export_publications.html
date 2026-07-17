@@ -67,42 +67,42 @@ Export Publications from Project
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    $(document).ready(function () {
-      function anyChecked() {
-        return checkboxes.some(x=>x.checked)
+    const submitbtn = document.getElementById('submitbtn');
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = [...document.querySelectorAll('input[type=checkbox]')];
+
+    function anyChecked() {
+      return checkboxes.some(x => x.checked);
+    }
+
+    function setSubmitEnabled() {
+      if (anyChecked()) {
+        submitbtn.removeAttribute('disabled');
+        submitbtn.setAttribute('aria-disabled', 'false');
+      } else {
+        submitbtn.setAttribute('disabled', '');
+        submitbtn.setAttribute('aria-disabled', 'true');
       }
-  
-      function setSubmitEnabled() {
-        if (anyChecked()) {
-          submitbtn.removeAttribute('disabled');
-          submitbtn.setAttribute('aria-disabled', 'false');
-        } else {
-          submitbtn.setAttribute('disabled', '');
-          submitbtn.setAttribute('aria-disabled', 'true');
-        }
+    }
+
+    $("input[name^='publicationform-']").click(function () {
+      if (this.id != "selectAll") {
+        $("#selectAll").prop('checked', false);
       }
-  
-      $("input[name^='publicationform-']").click(function () {
-        if ( this.id != "selectAll") {
-          $("#selectAll").prop('checked', false);
-        }
-      });
-  
-      $('#selectAll').click(function(e){
-        var table = $(e.target).closest('table');
-        $('td input:checkbox',table).prop('checked', this.checked);
-        setSubmitEnabled()
-      });
-  
-      $('#selectAll').trigger('click');
     });
-  
-    const checkboxes = [...document.querySelectorAll('input[type=checkbox]')]
+
+    selectAll.addEventListener('click', function() {
+      checkboxes.forEach(cb => {
+        if (cb !== selectAll) cb.checked = selectAll.checked;
+      });
+      setSubmitEnabled();
+    });
+
     checkboxes.forEach(checkbox => {
-      checkbox.addEventListener('click', setSubmitEnabled)
-    })
-  
-    setSubmitEnabled()
+      checkbox.addEventListener('click', setSubmitEnabled);
+    });
+
+    setSubmitEnabled();
   });
 </script>
 {% endblock %}
