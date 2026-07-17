@@ -272,10 +272,6 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         if self.request.user.is_superuser:
             context["admin_notes"] = project_obj.projectadmincomment_set.order_by("-modified")
 
-        allocation_submitted = self.request.GET.get("allocation_submitted") == "true"
-        after_project_creation = self.request.GET.get("after_project_creation") == "true"
-        context["display_modal"] = str(allocation_submitted).lower() if not after_project_creation else "false"
-        context["display_project_created_modal"] = str(after_project_creation).lower()
         context["notes"] = notes
         context["project_messages"] = notes.order_by("-created")
         context["publications"] = (
