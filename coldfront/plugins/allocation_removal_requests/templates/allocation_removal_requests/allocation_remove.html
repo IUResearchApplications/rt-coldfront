@@ -7,19 +7,19 @@ Remove Allocation
 {% endblock %}
 
 {% block content %}
-<h2>Request to Remove Allocation</h2>
+<h1>Request to Remove Allocation</h1>
 {% if is_admin %}
   <div class="alert alert-warning" role="alert">
-    <i class="fa fa-exclamation-circle"></i>
+    <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
     This allocation will be removed immediately.
   </div>
 {% endif %}
 
 <div class="card mb-3">
   <div class="card-header">
-    <h4>
-      <strong>{{ allocation.get_parent_resource }}</strong>
-    </h4>
+    <h2>
+      {{ allocation.get_parent_resource }}
+    </h2>
   </div>
   <div class="card-body">
     <div class="card-text">
@@ -38,15 +38,19 @@ Remove Allocation
 </div>
 
 <div class="alert alert-danger" role="alert">
-  <form method="post">{% csrf_token %}
-    <p>
-      Are you sure you want to request to remove this allocation? Anything associated with it will be deleted
-      and everyone in it will lose access to its resource if it is approved. If this is a storage allocation you
-      will need to remove all of the data in it in order for the directory to be deleted. Removing an allocation
-      cannot be undone!
-    </p>
-    <input class="btn btn-danger" type="submit" value="Yes" />
-    <a class="btn btn-secondary" href="{% url 'allocation-detail' allocation.pk %}" role="button">Cancel</a>
+  <form method="post">
+    {% csrf_token %}
+    <fieldset>
+      <legend class="sr-only">Removal confirmation</legend>
+      <p>
+        Are you sure you want to request to remove this allocation? Anything associated with it will be deleted
+        and everyone in it will lose access to its resource if it is approved. If this is a storage allocation you
+        will need to remove all of the data in it in order for the directory to be deleted. Removing an allocation
+        cannot be undone!
+      </p>
+      <button type="submit" class="btn btn-danger">Yes</button>
+      <a class="btn btn-secondary" href="{% url 'allocation-detail' allocation.pk %}">Cancel</a>
+    </fieldset>
   </form>
 </div>
 

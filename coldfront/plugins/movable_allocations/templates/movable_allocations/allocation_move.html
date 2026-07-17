@@ -10,7 +10,7 @@ Move Allocation
 
 
 {% block content %}
-<h2>Move {{ allocation.get_parent_resource.name }} Allocation to a Different Project</h2>
+<h1>Move {{ allocation.get_parent_resource.name }} Allocation to a Different Project</h1>
 <hr>
 
 <p>
@@ -28,7 +28,7 @@ Move Allocation
     <div class="col">
       <div class="card">
         <div class="card-header">
-          <h3>Current</h3>
+          <h2>Current</h2>
         </div>
         <div class="card-body">
           <fieldset>
@@ -36,6 +36,7 @@ Move Allocation
               <strong><u>Project Info</u></strong>
               <a href="{% url 'project-detail' allocation.project.pk %}" target="_blank">
                 <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                <span class="sr-only">Link to project {{ project.title }}</span>
               </a>
             </legend>
             <p><strong>ID:</strong> {{ allocation.project.pk }}</p>
@@ -66,11 +67,12 @@ Move Allocation
             </div>
             <div class="card">
               <div class="card-header">
-                <h4>Attributes</h4>
+                <h3>Attributes</h3>
               </div>
               <div class="card-body">
                 <div class="table-responsive">
                   <table class="table table-bordered table-sm">
+                    <caption class="sr-only">Allocation attributes</caption>
                     <thead>
                       <tr>
                         <th scope="col">Attribute</th>
@@ -94,15 +96,16 @@ Move Allocation
       </div>
     </div>
     <div style="display: flex; align-items: center;">
-      <i class="fas fa-angle-double-right"></i>
+      <i class="fas fa-angle-double-right" aria-hidden="true"></i>
     </div>
     <div class="col">
       <div class="card">
         <div class="card-header">
           <div class="row">
             <div class="col">
-              <label for="id_destination_project">
-                <h3 class="m-0">Destination</h3>
+              <h2 class="m-0">Destination</h2>
+              <label class="sr-only" for="id_destination_project">
+                Destination
               </label>
             </div>
             <div class="col">
@@ -122,14 +125,14 @@ Move Allocation
           </div>
         </div>
         <div class="card-body">
-          <div id="id_destination_project_info"></div>
+          <div id="id_destination_project_info" aria-live="polite"></div>
         </div>
         <div class="card-footer">
           <a href="{% url 'allocation-detail' allocation.pk %}" class="btn btn-secondary float-right">
             Cancel
           </a>
           <button id="id_submit" class="btn btn-primary float-right confirm-move mr-1" type="submit">
-            <i class="fas fa-angle-double-right"></i>  Move Into
+            <i class="fas fa-angle-double-right" aria-hidden="true"></i>  Move Into
           </button>
         </div>
       </div>

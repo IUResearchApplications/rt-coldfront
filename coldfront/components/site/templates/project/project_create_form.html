@@ -9,11 +9,15 @@ Create Project
 
 
 {% block content %}
+<h1>Request a New RT Project</h1>
+<hr>
+<p>
   RT Projects is designed for labs, groups, and classes. If your group has an existing project then please
   contact your PI about adding you to that one instead. Limiting projects to groups helps prevent user
   access fragmentation and simplifies your PI's project management.
-  <hr>
- <form method="post">
+</p>
+<hr>
+<form method="post">
   {% csrf_token %}
   {{ form|as_crispy_errors }}
   {{ form.title|as_crispy_field }}
@@ -28,7 +32,15 @@ Create Project
     </p>
     <div class="card">
       <div class="card-header">
-        <a id="expand_pi_button" href="#collapse_pi" role="button" class="card-link" data-toggle="collapse">
+        <a
+          id="expand_pi_button"
+          href="#collapse_pi"
+          role="button"
+          class="card-link"
+          data-toggle="collapse"
+          aria-expanded="false"
+          aria-controls="collapse_pi"
+        >
           Active Projects
           <i id="plus_minus_1" class="fas fa-plus float-right"></i>
         </a>
@@ -39,7 +51,7 @@ Create Project
             <div class="col" id="search_results">
               <div class="card border-light">
                 <div class="card-body">
-                  <div id="search_results_inner"></div>
+                  <div id="search_results_inner" role="region" aria-live="polite" aria-atomic="false"></div>
                 </div>
               </div>
             </div>
@@ -124,7 +136,7 @@ Create Project
     });
 
     $("#expand_pi_button").click(function() {
-    $('#collapse_pi').collapse();
+      $('#collapse_pi').collapse();
       icon = $("#plus_minus_1");
       icon.toggleClass("fa-plus fa-minus");
     });

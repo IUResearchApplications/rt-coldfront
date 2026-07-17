@@ -9,16 +9,17 @@ Email User
 
 
 {% block content %}
-<h2>Email</h2>
+<h1>Email</h1>
 <hr>
 
 <div class="card mb-3">
   <div class="card-header">
-    <h3><i class="fas fa-list" aria-hidden="true"></i> Project Request Information</h3>
+    <h2><i class="fas fa-list" aria-hidden="true"></i> Project Request Information</h2>
   </div>
   <div class="card-body">
     <div class="table-responsive">
       <table class="table">
+        <caption class="sr-only">Project request details</caption>
         <tr>
           <th scope="row" class="text-nowrap">Project:</th>
           <td><a href="{% url 'project-detail' project.pk %}">{{ project }}</a></td>
@@ -52,12 +53,11 @@ Email User
   </div>
 </div>
 
-
 <form method="post">
-    {% csrf_token %}
-    {{form|crispy}}
-    <input class="btn btn-primary" type="submit" value="Email" />
-    <a class="btn btn-secondary" href="{% url 'project-review-list' %}" role="button">Cancel</a>
+  {% csrf_token %}
+  {{form|crispy}}
+  <button class="btn btn-primary" type="submit">Email</button>
+  <a class="btn btn-secondary" href="{% url 'project-review-list' %}">Cancel</a>
 </form>
 
 <script>

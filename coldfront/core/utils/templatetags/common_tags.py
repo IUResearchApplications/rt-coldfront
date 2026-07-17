@@ -76,8 +76,8 @@ def get_value_from_dict(dict_data, key):
     """
     usage example {{ your_dict|get_value_from_dict:your_key }}
     """
-    if key:
-        if type(dict_data) == str:
+    if key and dict_data:
+        if type(dict_data) is str:
             dict_data = json.loads(dict_data)
         return dict_data.get(key)
 

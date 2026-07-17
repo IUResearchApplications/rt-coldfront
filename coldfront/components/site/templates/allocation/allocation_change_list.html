@@ -9,8 +9,8 @@ Allocation Review New and Pending Change Requests
 {% endblock %}
 
 
-{% block content %}
-<h2>Allocation Change Requests</h2>
+{% block content %} 
+<h1 class="h2">Allocation Change Requests</h1>
 
 <hr>
 
@@ -23,6 +23,7 @@ Allocation Review New and Pending Change Requests
 {% if allocation_change_list %}
   <div class="table-responsive">
     <table class="table table-sm">
+      <caption class="sr-only">Allocation change requests with actions to approve or view details.</caption>
       <thead>
         <tr>
           <th scope="col">#</th>
@@ -51,12 +52,13 @@ Allocation Review New and Pending Change Requests
             <td class="text-nowrap">
                 <form method="post" action="{% url 'allocation-change-detail' change.pk %}">
               {% if change.allocationattributechangerequest_set.all %}
-                <button class="btn btn-success mr-1" aria-disabled="true" 
-                style="
-                      cursor: not-allowed;
-                      opacity: 0.6;
-                      pointer-events: none;">
-                      Approve
+                <button
+                  class="btn btn-success mr-1"
+                  disabled
+                  aria-disabled="true" 
+                  style="cursor: not-allowed; opacity: 0.6; pointer-events: none;"
+                >
+                  Approve
                 </button>
               {% else %}
                   {% csrf_token %}
@@ -72,7 +74,7 @@ Allocation Review New and Pending Change Requests
     </table>
   </div>
 {% else %}
-  <div class="alert alert-info">
+  <div class="alert alert-info" role="alert">
     No new or pending allocation change requests!
   </div>
 {% endif %}

@@ -10,16 +10,24 @@ Allocation List
 
 
 {% block content %}
-<h2>Allocations</h2>
+<h1>Allocations</h1>
 <hr>
 
 {% if expand_accordion == "show" or allocation_list %}
-  <div class="mb-3" id="accordion">
+  <div class="mb-3" id="accordion" role="region">
     <div class="card">
       <div class="card-header">
-        <a id="expand_button" role="button" class="card-link " data-toggle="collapse" href="#collapseOne">
+        <a
+          id="expand_button"
+          role="button"
+          aria-expanded="{{ expand_accordion|yesno:'true,false' }}"
+          aria-controls="collapseOne"
+          class="card-link"
+          data-toggle="collapse"
+          href="#collapseOne"
+        >
           <i class="fas fa-filter" aria-hidden="true"></i> Filter
-          <i id="plus_minus" class="fas {{expand_accordion|get_icon}} float-right"></i>
+          <i id="plus_minus" class="fas {{expand_accordion|get_icon}} float-right" aria-hidden="true"></i>
         </a>
       </div>
       <div id="collapseOne" class="collapse {{expand_accordion}}" data-parent="#accordion">
@@ -27,7 +35,9 @@ Allocation List
           <form id="filter_form" method="GET" action="{% url 'allocation-list' %}" autocomplete="off">
             {{ allocation_search_form|crispy }}
             <input type="submit" class="btn btn-primary" value="Search">
-            <button id="form_reset_button" type="button" class="btn btn-secondary">Reset</button>
+            <button id="form_reset_button" type="button" class="btn btn-secondary" aria-label="Clear all filter fields">
+              Reset
+            </button>
           </form>
         </div>
       </div>
@@ -37,9 +47,10 @@ Allocation List
 {% endif %}
 
 {% if allocation_list %}
-  <strong>Allocation{{allocations_count|pluralize}}: {{allocations_count}}</strong>
+  <h2 class="h4">Allocation{{allocations_count|pluralize}}: {{allocations_count}}</h2>
   <div class="table-responsive">
     <table class="table table-sm">
+      <caption class="sr-only">Allocations</caption>
       <thead>
         <tr>
           <th scope="col" class="text-nowrap">
@@ -72,7 +83,7 @@ Allocation List
             <a href="?order_by=end_date&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="sr-only">Sort End Date asc</span></a>
             <a href="?order_by=end_date&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="sr-only">Sort End Date desc</span></a>
           </th>
-          <th scope="col" class="text-nowrap">Actions</th>
+          <th scope="col" class="text-nowrap">Actions <span class="sr-only">(view allocation details)</span></th>
         </tr>
       </thead>
       <tbody>
@@ -80,12 +91,14 @@ Allocation List
           <tr>
             <td>{{ allocation.id }}</td>
             <td class="text-nowrap"><a 
-                href="/project/{{allocation.project.id}}/">{{ allocation.project.title|truncatechars:50 }}</a></td>
+                href="/project/{{allocation.project.id}}/">{{ allocation.project.title|truncatechars:40 }}</a></td>
             <td class="text-nowrap">{{allocation.project.pi.first_name}} {{allocation.project.pi.last_name}}
               ({{allocation.project.pi.username}})</td>
             <td class="text-nowrap">{{ allocation.get_parent_resource }}</td>
             <td class="text-nowrap {{ allocation.status.name|color_text }}">
-              <strong>{{ allocation.status.name|truncatechars:15 }}</strong>
+              <span class="font-weight-bold" aria-label="{{ allocation.status.name }}">
+                {{ allocation.status.name|truncatechars:15 }}
+              </span>
             </td>
             <td class="text-nowrap">{{ allocation.end_date }}</td>
             <td class="text-nowrap"><a class="btn btn-primary" href="{% url 'allocation-detail' allocation.id %}" role="button">Details</a></td>
@@ -96,24 +109,36 @@ Allocation List
     {% if is_paginated %} Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
       <ul class="pagination float-right mr-3">
         {% if page_obj.has_previous %}
-          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{filter_parameters_with_order_by}}">Previous</a></li>
+          <li class="page-item">
+            <a
+              class="page-link"
+              href="?page={{ page_obj.previous_page_number }}&{{filter_parameters_with_order_by}}"
+              aria-label="Go to previous page, page {{ page_obj.previous_page_number }}"
+            >Previous</a>
+          </li>
         {% else %}
-          <li class="page-item disabled"><a class="page-link" href="#">Previous</a></li>
+          <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-disabled="true" aria-label="Previous page is unavailable">Previous</a></li>
         {% endif %}
         {% if page_obj.has_next %}
-          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&{{filter_parameters_with_order_by}}">Next</a></li>
+          <li class="page-item">
+            <a
+              class="page-link"
+              href="?page={{ page_obj.next_page_number }}&{{filter_parameters_with_order_by}}"
+              aria-label="Go to next page, page {{ page_obj.next_page_number }}"
+            >Next</a>
+          </li>
         {% else %}
-          <li class="page-item disabled"><a class="page-link" href="#">Next</a></li>
+          <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-disabled="true" aria-label="Next page is unavailable">Next</a></li>
         {% endif %}
       </ul>
     {% endif %}
   </div>
 {% elif expand_accordion == "show"%}
-  <div class="alert alert-secondary">
+  <div class="alert alert-secondary" role="alert">
     No search results!
   </div>
 {% else %}
-  <div class="alert alert-secondary">
+  <div class="alert alert-secondary" role="alert">
     No allocations to display!
   </div>
 {% endif %}
@@ -135,9 +160,10 @@ Allocation List
   };
 
   $("#expand_button").click(function () {
-    $('#collapseOne').collapse();
-    icon = $("#plus_minus");
-    icon.toggleClass("fa-plus fa-minus");
+    $('#collapseOne').collapse('toggle');
+    const expanded = $(this).attr("aria-expanded") === "true";
+    $(this).attr("aria-expanded", !expanded);
+    $("#plus_minus").toggleClass("fa-plus fa-minus");
   });
 </script>
 {% endblock %}

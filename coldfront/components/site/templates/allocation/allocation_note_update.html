@@ -7,14 +7,15 @@ Update Allocation Notification
 {% endblock %}
 
 {% block content %}
-<h2>Updating notification in {{allocation.get_parent_resource}} for PI {{ allocation.project.pi.first_name }}
-  {{ allocation.project.pi.last_name }} ({{ allocation.project.pi.username }})</h2>
+<h1>
+  Updating notification in {{allocation.get_parent_resource}} for PI {{ allocation.project.pi.first_name }}
+  {{ allocation.project.pi.last_name }} ({{ allocation.project.pi.username }})
+</h1>
 
 <form method="post">
   {% csrf_token %}
   {{form |crispy}}
-  <input class="btn btn-success" type="submit" value="Update" />
-  <a class="btn btn-secondary" href="{% url 'allocation-detail' allocation.pk %}" role="button">Back to
-    Allocation</a><br>
+  <button class="btn btn-success" type="submit">Update</button>
+  <a class="btn btn-secondary" href="{% url 'allocation-detail' allocation.pk %}">Back to Allocation</a>
 </form>
 {% endblock %}

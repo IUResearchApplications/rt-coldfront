@@ -11,7 +11,7 @@ Publications
 
 
 {% block content %}
-<!-- <h2>{% settings_value 'CENTER_NAME' %} Scientific Impact</h2> -->
+<h1>Publications</h1>
 <style>
 .masonry {
     display: grid;
@@ -55,9 +55,17 @@ img {
     height: 100%;
 }
 </style>
-<div class="masonry" style="padding-top: 150px;">
-    {% for img, url, item in data %}
-        <div class="{{item}}"><a href={{url}}><img src={{img}}></a></div>
+<div class="masonry">
+    {% for img, url, title, item in data %}
+    <div class="{{item}}">
+        <a href="{{url}}">
+            <img src="{{ img }}" alt="{{ title }}" aria-hidden="false">
+        </a>
+    </div>
     {% endfor %}
 </div>
+<script>
+    $("#navbar-main > ul > li.active").removeClass("active");
+    $("#navbar-publications").addClass("active");
+</script>
 {% endblock %}

@@ -58,7 +58,7 @@ class AllocationMoveView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
             messages.error(request, "You cannot move an inactive allocation.")
             return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": kwargs.get("pk")}))
 
-        if allocation_obj.project.status.name not in ["Active", "Review Pending"]:
+        if allocation_obj.project.status.name not in ["Active", "Review Pending", "Expired"]:
             messages.error(request, "You cannot move an allocation in an inactive project.")
             return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": kwargs.get("pk")}))
 
@@ -102,17 +102,17 @@ class AllocationMoveView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
             )
             return HttpResponseRedirect(reverse("move-allocation", kwargs={"pk": pk}))
 
-        allocation_objs = destination_project_obj.allocation_set.filter(
-            status__name__in=["Active", "New", "Renewal Requested"],
-            resources=allocation_obj.get_parent_resource,
-        )
-        if allocation_obj in allocation_objs:
+        if allocation_obj.project == destination_project_obj:
             messages.error(
                 request,
                 "This allocation is already in this project.",
             )
             return HttpResponseRedirect(reverse("move-allocation", kwargs={"pk": pk}))
 
+        allocation_objs = destination_project_obj.allocation_set.filter(
+            status__name__in=["Active", "New", "Renewal Requested", "Expired"],
+            resources=allocation_obj.get_parent_resource,
+        )
         if check_over_allocation_limit(allocation_obj, allocation_objs):
             messages.error(
                 request,
@@ -262,7 +262,7 @@ class ProjectDetailView(LoginRequiredMixin, TemplateView):
         allocation_obj = get_object_or_404(Allocation, pk=allocation_pk)
         context["project"] = project_obj
         allocation_objs = project_obj.allocation_set.filter(status__name__in=["Active", "New", "Renewal Requested"])
-        context["already_in_project"] = allocation_obj in allocation_objs
+        context["already_in_project"] = allocation_obj.project == project_obj
         context["allocations"] = allocation_objs
         context["over_allocation_limit"] = check_over_allocation_limit(allocation_obj, allocation_objs)
         context["resource_allowed"] = check_resource_is_allowed(allocation_obj, project_obj)

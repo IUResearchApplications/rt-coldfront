@@ -9,7 +9,7 @@ Delete Resource Attributes from Resource
 
 
 {% block content %}
-<h2>Delete allocation attributes from {{resource}}</h2>
+<h1>Delete resource attributes from {{resource}}</h1>
 <hr>
 
 {% if formset %}
@@ -19,9 +19,11 @@ Delete Resource Attributes from Resource
         {% csrf_token %}
         <div class="table-responsive">
           <table class="table table-sm table-hover">
+            <caption class="sr-only">Resource attributes - select the ones to delete</caption>
             <thead>
               <tr>
-                <th>
+                <th scope="col">
+                  <label for="selectAll" class="sr-only">Select all users</label>
                   <input type="checkbox" class="check" id="selectAll">
                 </th>
                 <th scope="col">Name</th>
@@ -31,7 +33,12 @@ Delete Resource Attributes from Resource
             <tbody>
               {% for form in formset %}
                 <tr>
-                  <td>{{ form.selected }}</td>
+                  <td>
+                    <label for="{{ form.selected.id_for_label }}" class="sr-only" aria-label="Select {{ form.name.value }}">
+                      {{ form.selected.label }}
+                    </label>
+                    {{ form.selected }}
+                  </td>
                   <td>{{ form.name.value }}</td>
                   <td>{{ form.value.value }}</td>
                 </tr>
@@ -43,7 +50,7 @@ Delete Resource Attributes from Resource
         <div>
           <button type="submit" class="btn btn-danger"><i class="fas fa-minus" aria-hidden="true"></i> Delete Selected Attributes from
             Resource</button>
-          <a class="btn btn-secondary" href="{% url 'resource-detail' resource.pk %}" role="button"><i
+          <a class="btn btn-secondary" href="{% url 'resource-detail' resource.pk %}"><i
               class="fas fa-long-arrow-left" aria-hidden="true"></i> Back to Resource</a>
           <br>
         </div>
@@ -51,9 +58,9 @@ Delete Resource Attributes from Resource
     </div>
   </div>
 {% else %}
-  <a class="btn btn-secondary mb-3" href="{% url 'resource-detail' resource.pk %}" role="button"><i
+  <a class="btn btn-secondary mb-3" href="{% url 'resource-detail' resource.pk %}"><i
       class="fas fa-long-arrow-left" aria-hidden="true"></i> Back to Resource</a>
-  <div class="alert alert-info">
+  <div class="alert alert-info" role="alert">
     No users to remove!
   </div>
 {% endif %}

@@ -5,36 +5,46 @@
     <div class="card-body">
       <form action="{% url 'add-publication' project_pk %}" method="post">
         {% csrf_token %}
-        <div class="table-responsive">
-          <table class="table table-sm table-hover">
-            <thead>
-              <tr>
-                <th>
-                  <input type="checkbox" class="check" id="selectAll">
-                </th>
-                <th scope="col">#</th>
-                <th scope="col">Publication</th>
-                <th scope="col">Unique ID</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for form in formset %}
+        <fieldset>
+          <legend class="sr-only">Search results – select publications to add</legend>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover">
+              <caption>Publications found</caption>
+              <thead>
                 <tr>
-                  <td>{{ form.selected }}</td>
-                  <td>{{ forloop.counter }}</td>
-                  <td>
-                    <strong>Title: </strong>{{ form.title.value }} <br>
-                    <strong>Author: </strong>{{ form.author.value }} <br> 
-                    <strong>Year: </strong>{{ form.year.value }} <br>
-                    <strong>Journal: </strong>{{ form.journal.value }}
-                  </td>
-                  <td class="text-nowrap">{{ form.unique_id.value }}</td>
+                  <th scope="col">
+                    <label for="selectAll" class="sr-only">Select all publications</label>
+                    <input type="checkbox" class="check" id="selectAll">
+                  </th>
+                  <th scope="col">#</th>
+                  <th scope="col">Publication</th>
+                  <th scope="col">Unique ID</th>
                 </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {% for form in formset %}
+                  <tr>
+                    <td>
+                      <label for="{{ form.selected.id_for_label }}" class="sr-only" aria-label="Select {{ form.title.value }}">
+                        {{ form.selected.label }}
+                      </label>
+                      {{ form.selected }}
+                    </td>
+                    <td>{{ forloop.counter }}</td>
+                    <td>
+                      <strong>Title: </strong>{{ form.title.value }} <br>
+                      <strong>Author: </strong>{{ form.author.value }} <br> 
+                      <strong>Year: </strong>{{ form.year.value }} <br>
+                      <strong>Journal: </strong>{{ form.journal.value }}
+                    </td>
+                    <td class="text-nowrap">{{ form.unique_id.value }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         {{ formset.management_form }}
+        </fieldset>
         <div>
           <button type="submit" class="btn btn-primary"><i class="fas fa-user-minus" aria-hidden="true"></i> Add Selected Publications to Project</button>
           <a class="btn btn-secondary" href="{% url 'project-detail' project_pk %}" role="button"><i class="fas fa-long-arrow-left" aria-hidden="true"></i> Back to Project</a>
@@ -45,9 +55,9 @@
     </div>
   </div>
 {% else %}
-  <a class="btn btn-secondary mb-3" href="{% url 'project-detail' project.pk %}" role="button"><i class="fas fa-long-arrow-left" aria-hidden="true"></i> Back to Project</a>
-  <div class="alert alert-info">
-    No users to remove!
+  <a class="btn btn-secondary mb-3" href="{% url 'project-detail' project.pk %}"><i class="fas fa-long-arrow-left" aria-hidden="true"></i> Back to Project</a>
+  <div class="alert alert-info" role="alert">
+    No publications found!
   </div>
 {% endif %}
 

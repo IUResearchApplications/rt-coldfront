@@ -9,7 +9,7 @@ Delete Allocation Attributes from Allocation
 
 
 {% block content %}
-<h2>Delete allocation attributes from allocation for project: {{allocation.project.title}}</h2>
+<h1>Delete allocation attributes from allocation for project: {{allocation.project.title}}</h1>
 <hr>
 
 {% if formset %}
@@ -17,43 +17,51 @@ Delete Allocation Attributes from Allocation
     <div class="card-body">
       <form action="{% url 'allocation-attribute-delete' allocation.pk %}" method="post">
         {% csrf_token %}
-        <div class="table-responsive">
-          <table class="table table-sm table-hover">
-            <thead>
-              <tr>
-                <th>
-                  <input type="checkbox" class="check" id="selectAll">
-                </th>
-                <th scope="col">Name</th>
-                <th scope="col">Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for form in formset %}
+        <fieldset>
+          <legend class="sr-only">Select allocation attributes to delete</legend>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover">
+              <thead>
                 <tr>
-                  <td>{{ form.selected }}</td>
-                  <td>{{ form.name.value }}</td>
-                  <td>{{ form.value.value }}</td>
+                  <th scope="col">
+                    <label for="selectAll" class="sr-only">Select all attributes</label>
+                    <input type="checkbox" class="check" id="selectAll">
+                  </th>
+                  <th scope="col">Name</th>
+                  <th scope="col">Value</th>
                 </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {% for form in formset %}
+                  <tr>
+                    <td>
+                      <label for="{{ form.selected.id_for_label }}" class="sr-only">
+                        {{ form.selected.label }}
+                      </label>
+                      {{ form.selected }}
+                    </td>
+                    <td>{{ form.name.value }}</td>
+                    <td>{{ form.value.value }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </fieldset>
         {{ formset.management_form }}
-        <div>
+        <div class="mt-1">
           <button type="submit" class="btn btn-danger"><i class="fas fa-minus" aria-hidden="true"></i> Delete Selected Attributes from
             Allocation</button>
-          <a class="btn btn-secondary" href="{% url 'allocation-detail' allocation.pk %}" role="button"><i
+          <a class="btn btn-secondary" href="{% url 'allocation-detail' allocation.pk %}"><i
               class="fas fa-long-arrow-left" aria-hidden="true"></i> Back to Allocation</a>
-          <br>
         </div>
       </form>
     </div>
   </div>
 {% else %}
-  <a class="btn btn-secondary mb-3" href="{% url 'allocation-detail' allocation.pk %}" role="button"><i
+  <a class="btn btn-secondary mb-3" href="{% url 'allocation-detail' allocation.pk %}"><i
       class="fas fa-long-arrow-left" aria-hidden="true"></i> Back to Allocation</a>
-  <div class="alert alert-info">
+  <div class="alert alert-info" role="alert">
     No allocations to delete!
   </div>
 {% endif %}

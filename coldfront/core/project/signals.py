@@ -21,4 +21,6 @@ project_remove_user = django.dispatch.Signal()
 
 project_activate = django.dispatch.Signal()
 
+project_review_approved = django.dispatch.Signal()
+
 project_user_role_changed = django.dispatch.Signal()

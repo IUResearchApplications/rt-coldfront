@@ -9,14 +9,13 @@ Renew Allocation
 
 
 {% block content %}
-<h2>Renew allocation to {{allocation.get_parent_resource }} for project: {{allocation.project.title}}</h2>
+<h1>Renew allocation to {{allocation.get_parent_resource }} for project: {{allocation.project.title}}</h1>
 <hr>
 
 <div class="card border-light">
   <div class="card-body">
     <form action="{% url 'allocation-renew' allocation.pk %}" method="post">
       {% csrf_token %}
-
       {{ formset.management_form }}
 
       {% if formset %}
@@ -49,6 +48,7 @@ Renew Allocation
       {% else %}
         <div class="table-responsive">
           <table class="table table-sm">
+            <caption class="sr-only">PI of the project</caption>
             <thead>
               <tr>
                 <th scope="col">Username</th>
@@ -73,15 +73,15 @@ Renew Allocation
         <hr>
       {% endif %}
 
-      <div id="eula-div" style="display: none;">
-        <textarea style="display:none;min-width:100%" id="eula"  rows="15">
-        </textarea>
+      <div id="eula-div" style="display: none;" aria-live="polite">
+        <label for="eula" class="sr-only">End‑User License Agreement</label>
+        <textarea id="eula" name="eula" rows="15" readonly></textarea>
         <br>
         <p class="font-weight-bold">By clicking submit you agree to the Terms and Conditions.</p>
       </div>
       <div class="mb-3">
         <button type="submit" class="btn btn-primary">Submit</button>
-        <a class="btn btn-secondary" href="{% url 'allocation-detail' allocation.pk %}" role="button">
+        <a class="btn btn-secondary" href="{% url 'allocation-detail' allocation.pk %}">
           <i class="fas fa-long-arrow-left" aria-hidden="true"></i> Back to Allocation
         </a>
       </div>
@@ -100,7 +100,7 @@ Renew Allocation
   $(document).ready(function () {
     if (resource_eula['eula']) {
       $('#eula').text(resource_eula['eula'])
-      $('#eula-div').show();
+      $('#eula-div').show().attr('aria-hidden', 'false');
       $('#eula').show();
     }
 

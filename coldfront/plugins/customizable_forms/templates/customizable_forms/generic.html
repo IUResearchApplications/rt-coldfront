@@ -17,7 +17,7 @@ Request New Allocation
   }
 </style>
 
-<h2>Request New {{ resource_obj.name }} Allocation <br><small>Project: {{ project_obj.title }}</small></h2>
+<h1>Request New {{ resource_obj.name }} Allocation <br><small>Project: {{ project_obj.title }}</small></h1>
 <hr>
 
 <form method="post">
@@ -25,18 +25,18 @@ Request New Allocation
   {% for field in form %}
     {{ field|as_crispy_field }}
   {% endfor %}
-  <input class="btn btn-primary" type="submit" value="Submit" />
+  <button type="submit" class="btn btn-primary">Submit</button>
   {% if after_project_creation == 'true' %}
     <a
      class="btn btn-secondary"
      href="{% url 'custom-allocation-create' project_obj.pk %}?after_project_creation=true"
-     role="button">Back to Resource Selection
+     >Back to Resource Selection
     </a>
   {% else %}
     <a
      class="btn btn-secondary"
      href="{% url 'custom-allocation-create' project_obj.pk %}"
-     role="button">Back to Resource Selection
+     >Back to Resource Selection
     </a>
   {% endif %}
 	

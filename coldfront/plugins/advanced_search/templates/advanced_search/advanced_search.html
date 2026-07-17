@@ -4,59 +4,52 @@
 {% load static %}
 
 {% block title %}
-Project and Allocation Export List
+Advanced Search
 {% endblock %}
 
 {% block content %}
-<h1>Advanced Search</h1>
-<hr />
-<div id="loaded_search"></div>
-<div class="mb-3" id="accordion">
-  <div class="card">
-    <div class="card-header">
-      <a
-        id="expand_button"
-        role="button"
-        class="card-link"
-        data-toggle="collapse"
-        href="#collapseOne"
-        aria-expanded="false"
-        aria-controls="collapseOne"
-      >
-        <i class="fas fa-filter" aria-hidden="true"></i> Filter
-        <i
-          id="plus_minus"
-          class="fas {{expand_accordion|get_icon}} float-right"
-          aria-hidden="true"
-        ></i>
-      </a>
-    </div>
-    <div
-      id="collapseOne"
-      class="collapse {{expand_accordion}}"
-      data-parent="#accordion"
-      aria-labelledby="expand_button"
-    >
-      <div class="card-body">
-        <ul class="nav nav-tabs" role="tablist">
-          <li class="nav-item">
-            <a class="nav-link active" href="#project-search" data-toggle="tab" role="tab">Project Search</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#allocation-search" data-toggle="tab" role="tab">Allocation Search</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#user-search" data-toggle="tab" role="tab">User Search</a>
-          </li>
-          <li class="nav-item ml-auto">
-            <a class="nav-link" href="#saved-searches" data-toggle="tab" role="tab">Saved Searches</a>
-          </li>
-        </ul>
-        <div id="full-search" class="tab-content card-body pb-0">
-          <div id="project-search" class="tab-pane active" role="tabpanel">
-            <form method="POST" action="{% url 'advanced-search' %}" autocomplete="off">
-              {% crispy project_form %}
-            </form>
+  <h1>Advanced Search</h1>
+  <hr>
+  <div class="mb-3" id="accordion">
+    <div class="card">
+      <div class="card-header">
+        <a
+          id="expand_button"
+          role="button"
+          class="card-link"
+          data-toggle="collapse"
+          href="#collapseOne"
+          aria-expanded="true"
+          aria-controls="collapseOne"
+          aria-label="Toggle filters"
+        >
+          <i class="fas fa-filter" aria-hidden="true"></i> Filter
+          <i id="plus_minus" class="fas {{expand_accordion|get_icon}} float-right"></i>
+        </a>
+      </div>
+      <div id="collapseOne" class="collapse {{expand_accordion}}" data-parent="#accordion">
+        <div class="card-body">
+          <ul class="nav nav-tabs">
+            <li class="nav-item"><a class="nav-link active" href="#project-search" data-toggle="tab">Project Search</a></li>
+            <li class="nav-item"><a class="nav-link" href="#allocation-search" data-toggle="tab">Allocation Search</a></li>
+            <li class="nav-item"><a class="nav-link" href="#user-search" data-toggle="tab">User Search</a></li>
+          </ul>
+          <div id="full-search" class="tab-content card-body">
+            <div id="project-search" class="tab-pane active">
+              <form method="GET" action="{% url 'advanced-search' %}" autocomplete="off">
+                {% crispy project_form %}
+              </form>
+            </div>
+            <div id="allocation-search" class="tab-pane">
+              <form method="GET" action="{% url 'advanced-search' %}" autocomplete="off">
+                {% crispy allocation_form %}
+              </form>
+            </div>
+            <div id="user-search" class="tab-pane">
+              <form method="GET" action="{% url 'advanced-search' %}" autocomplete="off">
+                {% crispy user_form %}
+              </form>
+            </div>
           </div>
           <div id="allocation-search" class="tab-pane" role="tabpanel">
             <form method="POST" action="{% url 'advanced-search' %}" autocomplete="off">
@@ -110,6 +103,7 @@ Project and Allocation Export List
   <div class="card-body">
     <div class="table-responsive">
       <table id="results_table" class="table table-hover">
+        <caption class="sr-only">Search results</caption>
         <thead>
           <tr>
             {% for column in columns %}
@@ -123,13 +117,14 @@ Project and Allocation Export List
               {% for data in row %}
                 <td>
                   {% with length=CENTER_BASE_URL|length|add:1 %}
-                    {% if CENTER_BASE_URL in data|truncatechars:length %}
-                      <a href="{{ data }}" target="_blank">
-                        <i class="fas fa-external-link-alt" aria-hidden="true"></i>
-                      </a>
-                    {% else %}
-                      {{ data|truncatechars:30 }}
-                    {% endif %}
+                      {% if CENTER_BASE_URL in data|truncatechars:length %}
+                        <a href="{{ data }}" target="_blank">
+                          <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                          <span class="sr-only">Link to project</span>
+                        </a>
+                      {% else %}
+                        {{ data|truncatechars:30 }}
+                      {% endif %}
                   {% endwith %}
                 </td>
               {% endfor %}

@@ -9,13 +9,13 @@
     {% elif matches %}
       <strong>Found {{matches|length}} match{{matches|length|pluralize}}.</strong>
     {% endif %}
-    <br>
     {% if usernames_not_found %}
+      <br>
       Username{{usernames_not_found|length|pluralize}} missing from database
       {{usernames_not_found|length|pluralize:"is, are"}}: {{ usernames_not_found|join:", " }}.
     {% endif %}
-    <br>
     {% if users_already_in_project %} The following
+      <br>
       user{{users_already_in_project|length|pluralize}}
       {{users_already_in_project|length|pluralize:"is, are"}} already in project:
       {{users_already_in_project|join:", "}}
@@ -23,51 +23,14 @@
   </div>
 
   {% if matches %}
-    <div class="card bg-light mb-3 {{div_allocation_class}}">
-      <div class="card-header">Available Allocations</div>
-      <div class="card-body">
-        <div class="table-responsive">
-          <table class="table table-sm table-hover">
-            <thead>
-              <tr>
-                <th><input type="checkbox" class="check" id="selectAllAllocations"></th>
-                <th scope="col">#</th>
-                <th scope="col">Resource</th>
-                <th scope="col">Details</th>
-                <th scope="col">Resource Type</th>
-                <th scope="col">Status</th>
-                <th scope="col">Role</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for form in allocation_form %}
-                <tr id="{{ form.resource.value }}-{{ forloop.counter }}">
-                  <td>{{ form.selected }}</td>
-                  <td><a href="{% url 'allocation-detail' form.pk.value %}" target="_blank">{{ form.pk.value }}</a></td>
-                  <td>{{ form.resource.value }}</td>
-                  <td>{{ form.details.value }}</td>
-                  <td>{{ form.resource_type.value }}</td>
-                  <td>{{ form.status.value }}</td>
-                  <td>{{ form.role }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>      
-      </div>
-      <div class="card-footer">
-        <i class="fa fa-info-circle" aria-hidden="true"></i>
-        Select allocations to add selected users to. If a user does not have an account on a resource in an allocation they will not be added.
-        Allocations with their checkbox disabled must have their users added from the allocation's add user page.
-      </div>
-      {{ allocation_form.management_form }}
-    </div>
-
     <div class="table-responsive">
       <table class="table table-sm table-hover">
+        <caption class="sr-only">Users found</caption>
         <thead>
           <tr>
-            <th><input type="checkbox" class="check" id="selectAll"></th>
+            <th scope="col">
+              <label for="selectAll" class="sr-only">Select all users</label>
+              <input type="checkbox" class="check" id="selectAll">
             <th scope="col">#</th>
             <th scope="col">
               <a href="#" class="notnavigable" data-toggle="popover" title="Info" data-trigger="hover" data-content="Hover over an icon to see a user's account status for each selected resource">
@@ -84,7 +47,12 @@
         <tbody>
           {% for form in formset %}
             <tr id="{{ form.username.value }}">
-              <td>{{ form.selected }}</td>
+              <td>
+                <label for="{{ form.selected.id_for_label }}" class="sr-only" aria-label="Select {{ form.username.value }}">
+                  {{ form.selected.label }}
+                </label>
+                {{ form.selected }}
+              </td>
               <td>{{ forloop.counter }}</td>
               <td>
                 <a id="status-{{ forloop.counter }}" class="notnavigable" href="#" data-toggle="popover" title="No Allocations Selected" data-trigger="hover" data-content="No allocations to check accounts on">
@@ -95,18 +63,25 @@
               <td>{{ form.first_name.value }}</td>
               <td>{{ form.last_name.value }}</td>
               <td>{{ form.email.value }}</td>
-              <td>{{ form.role }}</td>
+              <td>
+                <label for="{{ form.role.id_for_label }}" class="sr-only">
+                  {{ form.role.label }}
+                </label>
+                {{ form.role }}
+              </td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
     <div>
-      <p id="id_manager_warning" class="alert alert-danger">You have too many managers selected. The max allowed managers on this project is {{ max_managers }}.</p>
+      <p id="id_manager_warning" class="alert alert-danger" role="alert">
+        You have too many managers selected. The max allowed managers on this project is {{ max_managers }}.
+      </p>
     </div>
     {{ formset.management_form }}
 
-    <div class="alert alert-info">
+    <div class="alert alert-info" role="alert">
       <i class="fas fa-question-circle" aria-hidden="true"></i>
       Hover over an icon to see a user's account status for each selected resource.
     </div>
@@ -114,6 +89,61 @@
     <input id="q" type="hidden" name="q" value="{{user_search_string}}">
     <input id="search_by" type="hidden" name="search_by" value="{{search_by}}">
     <input id="after_project_creation_field" type="hidden" name="after_project_creation_field" value="{{after_project_creation}}">
+
+    <div class="card bg-light mb-3 {{div_allocation_class}}">
+      <h3 class="card-header">Available Allocations</h3>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover">
+            <caption class="sr-only">Available allocations</caption>
+            <thead>
+              <tr>
+                <th scope="col">
+                  <label for="selectAllAllocations" class="sr-only">Select all allocations</label>
+                  <input type="checkbox" class="check" id="selectAllAllocations">
+                </th>
+                <th scope="col">#</th>
+                <th scope="col">Resource</th>
+                <th scope="col">Details</th>
+                <th scope="col">Resource Type</th>
+                <th scope="col">Status</th>
+                <th scope="col">Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for form in allocation_form %}
+                <tr id="{{ form.resource.value }}-{{ forloop.counter }}">
+                  <td>
+                    <label for="{{ form.selected.id_for_label }}" class="sr-only" aria-label="Select {{ form.resource.value }}">
+                      {{ form.selected.label }}
+                    </label>
+                    {{ form.selected }}
+                  </td>
+                  <td><a href="{% url 'allocation-detail' form.pk.value %}" target="_blank">{{ form.pk.value }}</a></td>
+                  <td>{{ form.resource.value }}</td>
+                  <td>{{ form.details.value }}</td>
+                  <td>{{ form.resource_type.value }}</td>
+                  <td>{{ form.status.value }}</td>
+                  <td>
+                    <label for="{{ form.role.id_for_label }}" class="sr-only">
+                      {{ form.role.label }}
+                    </label>
+                    {{ form.role }}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>      
+      </div>
+      <div class="card-footer">
+        <i class="fa fa-info-circle" aria-hidden="true"></i>
+        Select allocations to add selected users to. If a user does not have an account on a resource in an allocation they will not be added.
+        Allocations with their checkbox disabled must have their users added from the allocation's add user page.
+      </div>
+      {{ allocation_form.management_form }}
+    </div>
+
     <div class="mb-3">
       {% if matches %}
         {% if after_project_creation == 'true' %}
@@ -124,21 +154,21 @@
       {% endif %}
     </div>
   {% else %}
-    <div class="alert alert-info text-center">
+    <div class="alert alert-info text-center" role="alert">
       No results!
     </div>
   {% endif %}
 </form>
 
-<div class="modal fade" id="warning" tabindex="-1" role="dialog" aria-labelledby="warningLabel" aria-hidden="true">
+<div class="modal fade" id="warning" tabindex="-1" role="dialog" aria-labelledby="warningLabel" aria-hidden="true" aria-modal="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title col-12 text-center" id="warningLabel">
-          <span class="badge badge-warning"><i class="fas fa-exclamation-circle"></i></span>
+        <h3 class="modal-title col-12 text-center" id="warningLabel">
+          <span class="badge badge-warning"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span>
           Warning
-          <span class="badge badge-warning"><i class="fas fa-exclamation-circle"></i></span>
-        </h5>
+          <span class="badge badge-warning"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span>
+        </h3>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -160,32 +190,27 @@
 {{ account_statuses|json_script:"account_statuses" }}
 
 <script>
-  var current_num_managers = JSON.parse(document.getElementById('current_num_managers').textContent);
-  var max_managers = JSON.parse(document.getElementById('max_managers').textContent);
-  var num_matches = JSON.parse(document.getElementById('num_matches').textContent);
-  var account_statuses = JSON.parse(document.getElementById('account_statuses').textContent);
-
   function updateIcon(username, reason, missing_accounts) {
-    var icon = $($('#' + username)[0].childNodes[5].firstElementChild)
-    var title = "Has Accounts"
-    var content = "Can be added to all selected allocations"
-    var html = '<span class="badge badge-success"><i class="fas fa-check-circle"></i></span><span class="sr-only"></span>'
+    let icon = $($('#' + username)[0].childNodes[5].firstElementChild)
+    let title = "Has Accounts"
+    let content = "Can be added to all selected allocations"
+    let html = '<span class="badge badge-success"><i class="fas fa-check-circle" aria-hidden="true"></i></span><span class="sr-only"></span>'
     if (reason == "not_selected") {
       title = "Not Selected"
       content = "Not selected to be added to the project"
-      html = '<span class="badge badge-secondary"><i class="fas fa-minus-circle"></i></span><span class="sr-only">Not selected to be added to the project</span>'
+      html = '<span class="badge badge-secondary"><i class="fas fa-minus-circle" aria-hidden="true"></i></span><span class="sr-only">Not selected to be added to the project</span>'
     } else if (reason == "no_selected_allocations") {
       title = "No Allocations Selected"
       content = "No allocations to check accounts on"
-      html = '<span class="badge badge-secondary"><i class="fas fa-minus-circle"></i></span><span class="sr-only">No allocations to check accounts on</span>'
+      html = '<span class="badge badge-secondary"><i class="fas fa-minus-circle" aria-hidden="true"></i></span><span class="sr-only">No allocations to check accounts on</span>'
     } else if (reason == "no_account") {
       title = "No IU Account"
       content = `Will not be added to these resources: ${Array.from(missing_accounts).join(', ')}`
-      html = `<span class="badge badge-warning"><i class="fas fa-exclamation-circle"></i></span><span class="sr-only">${content}</span>`
+      html = `<span class="badge badge-warning"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span><span class="sr-only">${content}</span>`
     } else if (reason == "no_resource_account") {
       title = "Missing Resource Accounts"
       content = `Will not be added to these resources: ${Array.from(missing_accounts).join(', ')}`
-      html = `<span class="badge badge-warning"><i class="fas fa-exclamation-circle"></i></span><span class="sr-only">${content}</span>`
+      html = `<span class="badge badge-warning"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span><span class="sr-only">${content}</span>`
     }
 
     icon.attr('data-original-title', title)
@@ -194,8 +219,8 @@
   }
 
   function checkSelectedUserAccounts(user_field) {
-    var username = user_field.parentElement.parentElement.id
-    var resources_selected = $("input[name^='allocationform-']:checked")
+    const username = user_field.parentElement.parentElement.id
+    const resources_selected = $("input[name^='allocationform-']:checked")
     if (!resources_selected.length) {
       updateIcon(username, "no_selected_allocations", resources_selected)
       return
@@ -204,16 +229,22 @@
       return
     }
   
-    var selected_resource_names = []
+    let selected_resource_names = []
     for (const resource_selected of resources_selected) {
-      selected_resource_names.push(resource_selected.parentElement.parentElement.id.split("-")[0])
+      const resource_name = resource_selected.parentElement.parentElement.id
+      const last_index = resource_name.lastIndexOf("-")
+      if (last_index === -1) {
+        selected_resource_names.push(resource_name)
+      } else {
+        selected_resource_names.push(resource_name.slice(0, last_index))
+      }
     }
-
-    var missing_accounts = []
-    var reason = ""
+    let missing_accounts = []
+    let reason = ""
+    const account_statuses = JSON.parse(document.getElementById('account_statuses').textContent);
     for (const selected_resource_name of selected_resource_names) {
-      var resource_account_statuses = account_statuses[selected_resource_name]
-      var user_account_status = resource_account_statuses[username]
+      const resource_account_statuses = account_statuses[selected_resource_name]
+      const user_account_status = resource_account_statuses[username]
       if (user_account_status["exists"]) { continue; }
 
       missing_accounts.push(selected_resource_name)
@@ -223,21 +254,23 @@
   }
 
   function checkNumManagers() {
-    var checked_users = $("input[name^='userform-']:checked");
-    var num_managers = 0;
-    for (var i=0; i < checked_users.length; i++) {
-      var name = checked_users[i].name.slice(0, -8) + 'role';
-      var role = $("select[name='" + name + "'] option:selected").text();
+    const checked_users = $("input[name^='userform-']:checked");
+    let num_managers = 0;
+    for (let i = 0; i < checked_users.length; i++) {
+      const name = checked_users[i].name.slice(0, -8) + 'role';
+      const role = $("select[name='" + name + "'] option:selected").text();
       if (role === "Manager") {
         num_managers += 1;
       }
     }
-
+    
+    const current_num_managers = JSON.parse(document.getElementById('current_num_managers').textContent)
+    const max_managers = JSON.parse(document.getElementById('max_managers').textContent);
     if (num_managers + current_num_managers > max_managers) {
-      $("#id_add_selected_users").prop('disabled', true);
+      $("#id_add_selected_users").prop('disabled', true).attr('aria-disabled', 'true');
       $("#id_manager_warning").show()
     } else {
-      $("#id_add_selected_users").prop('disabled', false);
+      $("#id_add_selected_users").prop('disabled', false).attr('aria-disabled', 'false');
       $("#id_manager_warning").hide()
     }
   }
@@ -248,12 +281,13 @@
     $('#warning').modal({ show: false});
     $('#id_manager_warning').hide();
 
-    for (var i = 0; i < num_matches; i++) {
+    const num_matches = JSON.parse(document.getElementById('num_matches').textContent);
+    for (let i = 0; i < num_matches; i++) {
       if ($("#id_userform-" + i + "-role option:selected").text() == 'Group') {
         $("#id_userform-" + i + "-role option:not(:selected)").prop('disabled', true);
       }
       else {
-        var options = $("#id_userform-" + i + "-role option");
+        let options = $("#id_userform-" + i + "-role option");
         for (let i = 0; i < options.length; i++) {
           if (options[i].text == 'Group') {
             options[i].disabled = true;
@@ -262,13 +296,13 @@
       }
     }
 
-    $('#id_confirm').click(function() {
+    $('#id_confirm').on("click", function() {
       $('#postForm').submit()
     })
-    $('#postForm').submit(function (e) {
+    $('#postForm').on("submit", function (e) {
       if ($('#warning').not(':hidden').length) { return; }
 
-      var checked_users = $("input[name^='userform-']:checked");
+      const checked_users = $("input[name^='userform-']:checked");
       if (!checked_users.length) {
         $('#warning').modal('show');
         e.preventDefault()
@@ -280,34 +314,31 @@
     }
   })
 
-  $("select[name^='userform-']").change(function() {
+  $("select[name^='userform-']").on("change", function() {
     checkNumManagers();
   });
 
-  $("#selectAll").click(function () {
-    if (this.checked) {
-      var select_all = $("input[name^='userform-']:visible").not(":checked")
-    } else {
-      var select_all = $("input[name^='userform-']:visible:checked")
-    }
-    select_all.click()
+  $("#selectAll").on("change", function () {
+    const should_check = $(this).prop("checked");
+    const targets = $("input[name^='userform-']:visible");
+    targets.prop("checked", should_check).trigger("change");
   });
 
-  $("input[name^='userform-']:visible").click(function () {
+  $("input[name^='userform-']:visible").on("change", function () {
     checkNumManagers();
     checkSelectedUserAccounts(this);
   });
 
-  $("#selectAllAllocations").click(function () {
+  $("#selectAllAllocations").on("change", function () {
     $("input[name^='allocationform-']").prop('checked', this.checked);
-    var selected_users = $("input[name^='userform-']:visible");
+    const selected_users = $("input[name^='userform-']:visible");
     for (selected_user of selected_users) {
       checkSelectedUserAccounts(selected_user);
     }
   });
 
-  $("input[name^='allocationform-']").click(function (ele) {
-    var selected_users = $("input[name^='userform-']:visible")
+  $("input[name^='allocationform-']").on("change", function (ele) {
+    const selected_users = $("input[name^='userform-']:visible")
     for (selected_user of selected_users) {
       checkSelectedUserAccounts(selected_user);
     }

@@ -5,20 +5,40 @@
   since existing templates use javascript to target it by ID
 {% endcomment %}
 <li id="navbar-admin" class="nav-item dropdown">
-  <a id="navbarNonadminDropdownMenuLink" class="nav-link dropdown-toggle" href="#" data-toggle="dropdown">Staff</a>
-  <ul class="dropdown-menu" aria-labelledby="navbarNonadminDropdownMenuLink">
-    <li><a class="dropdown-item" href="/admin">RT Projects Administration</a></li>
+  <a
+    id="navbarNonadminDropdownMenuLink"
+    class="nav-link dropdown-toggle"
+    href="#"
+    data-toggle="dropdown"
+    role="button"
+    aria-haspopup="true"
+    aria-expanded="false"
+    aria-controls="nonadmin-submenu"
+    title="Staff menu"
+  >Staff</a>
+  <ul id="nonadmin-submenu" class="dropdown-menu" role="menu" aria-labelledby="navbarNonadminDropdownMenuLink">
+    <li><a class="dropdown-item" href="/admin" role="menuitem">RT Projects Administration</a></li>
     {# all staff can perform a user search #}
-    <li><a id="navbar-user-search" class="dropdown-item" href="{% url 'user-search-home' %}">User Search</a></li>
+    <li><a id="navbar-user-search" class="dropdown-item" href="{% url 'user-search-home' %}" role="menuitem">User Search</a></li>
     <li class="dropdown-submenu">
-      <a class="dropdown-item dropdown-toggle" href="#">Projects</a>
-      <ul class="dropdown-menu">
+      <a
+        id="navbarProjectsToggle"
+        class="dropdown-item dropdown-toggle"
+        href="#"
+        role="button"
+        data-toggle="dropdown"
+        aria-haspopup="true"
+        aria-controls="projects-submenu"
+        aria-expanded="false"
+        title="Projects submenu"
+      >Projects</a>
+      <ul id="projects-submenu" class="dropdown-menu" role="menu" aria-labelledby="navbarProjectsToggle">
         {% if perms.project.can_view_all_projects %}
-          <li><a class="dropdown-item" href="{% url 'project-list' %}?show_all_projects=on">All Projects</a></li>
+          <li><a class="dropdown-item" href="{% url 'project-list' %}?show_all_projects=on" role="menuitem">All Projects</a></li>
         {% endif %}
         {% if perms.project.can_review_pending_projects %}
           <li>
-            <a id="navbar-project-reviews" class="dropdown-item" href="{% url 'project-review-list' %}">
+            <a id="navbar-project-reviews" class="dropdown-item" href="{% url 'project-review-list' %}" role="menuitem">
               Project Reviews/Requests
             </a>
           </li>
@@ -26,14 +46,24 @@
       </ul>
     </li>
     <li class="dropdown-submenu">
-      <a class="dropdown-item dropdown-toggle" href="#">Allocations</a>
-      <ul class="dropdown-menu">
+      <a
+        id="navbarAllocationsToggle"
+        class="dropdown-item dropdown-toggle"
+        href="#"
+        role="button"
+        data-toggle="dropdown"
+        aria-haspopup="true"
+        aria-controls="allocation-submenu"
+        aria-expanded="false"
+        title="Allocations submenu"
+      >Allocations</a>
+      <ul id="allocation-submenu" class="dropdown-menu" role="menu" aria-labelledby="navbarAllocationsToggle">
         {% if perms.allocation.can_view_all_allocations %}
-          <li><a class="dropdown-item" href="{% url 'allocation-list' %}?show_all_allocations=on">All Allocations</a></li>
+          <li><a class="dropdown-item" href="{% url 'allocation-list' %}?show_all_allocations=on" role="menuitem">All Allocations</a></li>
         {% endif %}
         {% if perms.allocation.can_review_allocation_requests %}
           <li>
-            <a id="navbar-allocation-requests" class="dropdown-item" href="{% url 'allocation-request-list' %}">
+            <a id="navbar-allocation-requests" class="dropdown-item" href="{% url 'allocation-request-list' %}" role="menuitem">
               Allocation Requests
             </a>
           </li>
@@ -45,16 +75,16 @@
         {% endif %}
         {% if perms.allocation.can_view_all_allocations %}
           <li>
-            <a id="navbar-allocation-change-requests" class="dropdown-item" href="{% url 'allocation-change-list' %}">
+            <a id="navbar-allocation-change-requests" class="dropdown-item" href="{% url 'allocation-change-list' %}" role="menuitem">
               Allocation Change Requests
             </a>
           </li>
         {% endif %}
       </ul>
     </li>
-    <li><a class="dropdown-item" href="{% url 'resource-list' %}">All Resources</a></li>
+    <li><a class="dropdown-item" href="{% url 'resource-list' %}" role="menuitem">All Resources</a></li>
     {% if perms.grant.can_view_all_grants %}
-      <li><a id="navbar-grant-report" class="dropdown-item" href="{% url 'grant-report' %}">Grant Report</a></li>
+      <li><a id="navbar-grant-report" class="dropdown-item" href="{% url 'grant-report' %}" role="menuitem">Grant Report</a></li>
     {% endif %}
     {% if 'advanced_search/navbar_advanced_search.html'|template_exists %}
       {% if perms.project.can_view_all_projects and perms.allocation.can_view_all_allocations %}
@@ -63,8 +93,18 @@
     {% endif %}
     {% if 'request_forms/software_request.html'|template_exists %}
       <li class="dropdown-submenu">
-        <a class="dropdown-item dropdown-toggle" href="#">Additional Forms</a>
-        <ul class="dropdown-menu">
+        <a
+          id="navbarFormsToggle"
+          class="dropdown-item dropdown-toggle"
+          href="#"
+          role="button"
+          data-toggle="dropdown"
+          aria-haspopup="true"
+          aria-controls="forms-submenu"
+          aria-expanded="false"
+          title="Additional Forms submenu"
+        >Additional Forms</a>
+        <ul id="forms-submenu" class="dropdown-menu" role="menu" aria-labelledby="navbarFormsToggle">
           <li>{% include 'request_forms/navbar_software_request.html' %}</li>
           <li>{% include 'request_forms/navbar_stats_request.html' %}</li>
         </ul>

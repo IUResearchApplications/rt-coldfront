@@ -3,11 +3,14 @@
 
 
 {% block content %}
+<h1>User Allocations</h1>
+<hr>
 {% if user_dict %}
   <div class="card border-light">
     <div class="card-body">
         <div class="table-responsive">
           <table id="user-table" class="table table-sm table-hover">
+            <caption class="sr-only">User allocations</caption>
             <thead>
               <tr>
                 <th scope="col">#</th>
@@ -26,7 +29,11 @@
                   <td>{{ user.last_name }}</td>
                   <td class="text-nowrap">
                     {% for allocation in allocations %}
-                      <a target="_blank" href="{% url 'allocation-detail' allocation.pk %}">{{ allocation.get_parent_resource.name }} ({{ allocation.get_parent_resource.resource_type.name }})</a>  {% if 'slurm' in allocation.get_information %} -- {{allocation.get_information}} {% else %} <br> {% endif %}
+                      <a target="_blank" href="{% url 'allocation-detail' allocation.pk %}">
+                        {{ allocation.get_parent_resource.name }}
+                        ({{ allocation.get_parent_resource.resource_type.name }})
+                      </a> 
+                      {% if 'slurm' in allocation.get_information %} -- {{allocation.get_information}} {% else %} <br> {% endif %}
                     {% endfor %} 
                   </td>
                 </tr>
@@ -42,14 +49,14 @@
         "iDisplayLength": 25,
         "bSortClasses": false,
         "columnDefs": [ {
-        "targets": 4,
-        "orderable": false
+          "targets": 4,
+          "orderable": false
       } ]
       });
     });
   </script>
 {% else %}
-  <div class="alert alert-secondary">
+  <div class="alert alert-secondary" role="alert">
     You are not a PI on any project with an allocation!
   </div>
 {% endif %}
@@ -60,4 +67,3 @@
   $("#navbar-user-allocation").addClass("active");
 </script>
 {% endblock %}
-

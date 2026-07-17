@@ -1,4 +1,4 @@
-<div id="pi_search_inner"></div>
+<div id="pi_search_inner" aria-live="polite"></div>
 <script>
   $(document).ready(function() {
     $.ajax({
@@ -18,7 +18,7 @@
               PI Search\
             </div>\
             <div class="card-body">\
-              <div class="alert alert-warning">\
+              <div class="alert alert-warning" role="alert">\
                 <i class="fas fa-info-circle" aria-hidden="true"></i>\
                 Error loading the project PI search function\
               </div>\
