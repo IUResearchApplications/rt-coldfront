@@ -69,7 +69,7 @@ Add Users to Allocation
                 <tr>
                   <th>
                     <label for="selectAll" class="visually-hidden">Select all users</label>
-                    <input type="checkbox" class="check" id="selectAll">
+                    <input type="checkbox" id="selectAll">
                   </th>
                   <th scope="col">
                     <button 
@@ -138,7 +138,7 @@ Add Users to Allocation
                           data-bs-content="Has an account"
                           style="cursor: default;"
                         >
-                          <span class="badge rounded-pill bg-success" aria-label="Has an account"><i class="fas fa-check-circle" aria-hidden="true"></i></span><span class="visually-hidden">Has an account</span>
+                          <span class="badge bg-success" aria-label="Has an account"><i class="fas fa-check-circle" aria-hidden="true"></i></span><span class="visually-hidden">Has an account</span>
                         </button>
                       {% else %}
                         <button
@@ -198,12 +198,12 @@ Add Users to Allocation
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    $("#selectAll").click(function () {
+    $("#selectAll").on("click", function () {
       $("input[name^='userform-']").not(':disabled').prop('checked', $(this).prop('checked'));
     });
   
-    $("input[name^='userform-']").click(function (ele) {
-      var id = $(this).attr('id');
+    $("input[name^='userform-']").on("click", function (ele) {
+      const id = $(this).attr('id');
       if ( id != "selectAll") {
         $("#selectAll").prop('checked', false);
       }
