@@ -18,13 +18,13 @@
 
     <div class="navbar-collapse collapse" id="navbar-main">
       <ul class="navbar-nav">
-        <li id="navbar-home" class="nav-item">
-          <a class="nav-link {% navbar_active_item 'home' request %}" href="{% url 'home' %}">Home</a>
+        <li id="navbar-home" class="nav-item {% navbar_active_item 'home' request %}">
+          <a class="nav-link" href="{% url 'home' %}">Home</a>
         </li>
-        <li id="navbar-center-summary" class="nav-item">
-          <a class="nav-link {% navbar_active_item 'center-summary' request %}" href="{% url 'center-summary' %}">Center Summary</a>
+        <li id="navbar-center-summary" class="nav-item {% navbar_active_item 'center-summary' request %}">
+          <a class="nav-link" href="{% url 'center-summary' %}">Center Summary</a>
         </li>
-        <li id="navbar-publications" class="nav-item dropdown">
+        <li id="navbar-publications" class="nav-item dropdown {% navbar_active_item 'publications' request %}">
           <a
             id="navbarPublicationsToggle"
             class="nav-link {% navbar_active_item 'publications' request %} dropdown-toggle"
