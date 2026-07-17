@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import './scss/coldfront.scss';
-import 'bootstrap';
+import { Modal } from 'bootstrap';
 import 'htmx.org';
 import { initDateSelector } from './dateSelector';
 import { initSelect2 } from './select2';
@@ -21,6 +21,7 @@ Object.assign(window, {
   },
   $: jQuery,
   jQuery,
+  bootstrap: { Modal },
 });
 
 function initDocument(): void {

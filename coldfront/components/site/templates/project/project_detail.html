@@ -97,14 +97,14 @@ Project Detail
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="modal-title" id="project_created_response_modal_label">We have received your project request.</h2>
+        <h2 class="modal-title h4" id="project_created_response_modal_label">We have received your project request.</h2>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
         </button>
       </div>
       <div class="modal-body" id="project_created_response_modal_body">
         <p>You will receive an email from us shortly. If you need assistance, please contact
           RT Projects at
-          <a href="mailto:{% settings_value 'EMAIL_TICKET_SYSTEM_ADDRESS' %}" target = "_blank">{% settings_value 'EMAIL_TICKET_SYSTEM_ADDRESS' %}</a>.
+          <a href="mailto:{% settings_value 'EMAIL_TICKET_SYSTEM_ADDRESS' %}" target="_blank">{% settings_value 'EMAIL_TICKET_SYSTEM_ADDRESS' %}</a>.
         </p>
       </div>
       <div class="modal-footer">
@@ -127,14 +127,14 @@ Project Detail
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="modal-title" id="allocation_response_modal_label">We have received your allocation request.</h2>
+        <h2 class="modal-title h4" id="allocation_response_modal_label">We have received your allocation request.</h2>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
         </button>
       </div>
       <div class="modal-body" id="allocation_response_modal_body">
         <p>You will receive an email from us shortly. If you need assistance, please contact
           RT Projects at
-          <a href="mailto:{% settings_value 'EMAIL_TICKET_SYSTEM_ADDRESS' %}" target = "_blank">{% settings_value 'EMAIL_TICKET_SYSTEM_ADDRESS' %}</a>.
+          <a href="mailto:{% settings_value 'EMAIL_TICKET_SYSTEM_ADDRESS' %}" target="_blank">{% settings_value 'EMAIL_TICKET_SYSTEM_ADDRESS' %}</a>.
         </p>
       </div>
       <div class="modal-footer">
@@ -681,33 +681,29 @@ Project Detail
   </div>
 </div>
 <!-- End Admin Messages -->
-
-{{ display_modal|json_script:"display_modal" }}
-{{ display_project_created_modal|json_script:"display_project_created_modal" }}
-
 {% endblock %}
 
 {% block javascript %}
 {{ block.super }}
+{{ request.GET.after_project_creation|json_script:"display_project_created_modal" }}
+{{ request.GET.allocation_submitted|json_script:"display_allocation_created_modal" }}
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    var display_modal = JSON.parse(document.getElementById('display_modal').textContent) === 'true';
+    var display_allocation_created_modal = JSON.parse(document.getElementById('display_allocation_created_modal').textContent) === 'true';
     var display_project_created_modal = JSON.parse(document.getElementById('display_project_created_modal').textContent) === 'true';
 
     $('#user_collapse').on('shown.bs.collapse hidden.bs.collapse', function () {
       $('#plus_minus').toggleClass('fa-plus fa-minus');
     });
 
-  
-    $(document).ready(function(){
-      if (display_modal) {
-        $('#allocation_response_modal').modal('show');
-      }
-  
-      if (display_project_created_modal) {
-        $('#project_created_response_modal').modal('show');
-      }
-    });
+    if (display_project_created_modal) {
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('project_created_response_modal')).show();
+      return;
+    }
+    
+    if (display_allocation_created_modal) {
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('allocation_response_modal')).show();
+    }
   });
 </script>
 {% endblock %}
