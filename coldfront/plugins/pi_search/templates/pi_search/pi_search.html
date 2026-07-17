@@ -17,7 +17,6 @@
       <br>
       <div class="row">
         <div class="col" id="search_results" style="display: none;">
-          <hr>
           <div class="card border-light">
             <div class="card-body">
               <div id="search_results_inner" aria-live="polite"></div>
@@ -48,6 +47,7 @@
     $form.on('reset', function() {
       pi_last_searched = '';
       hideResults();
+      $('#pi_search_submit').prop('disabled', false);
     });
 
     $form.on('submit', function(event) {
@@ -60,11 +60,26 @@
       }
       
       pi_last_searched = pi_username;
-      
+
+      if (pi_username === '') {
+        showResults();
+        $searchResultsInner.html(
+          '<div class="alert alert-info" role="alert">Enter a PI username to search.</div>'
+        );
+        return false;
+      }
+
+      var $searchBtn = $('#pi_search_submit');
+
       showResults();
       $searchResultsInner.html(
         '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Searching...'
       );
+      $searchBtn.prop('disabled', true);
+
+      function enableSearch() {
+        $searchBtn.prop('disabled', false);
+      }
 
       $.ajax({
         url: "{% url 'pi-search-results' %}",
@@ -75,6 +90,7 @@
         },
         success: function(data) {
           $searchResultsInner.html(data);
+          enableSearch();
         },
         error: function(xhr, errmsg, err) {
           if (xhr.status == 403 || xhr.status == 401) {
@@ -84,6 +100,7 @@
               " <a href='#' class='btn-close'></a></div>");
           }
           console.log(xhr.status + ": " + xhr.responseText);
+          enableSearch();
         }
       });
     });
