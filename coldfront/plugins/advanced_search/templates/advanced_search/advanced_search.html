@@ -200,13 +200,6 @@ Advanced Search
         $("#select_all_displays").prop('checked', true);
       }
   
-      var date = new Date();
-      var currentYear = date.getFullYear();
-      $(".datepicker")
-        .flatpickr({
-          dateFormat: "m/d/Y",
-        })
-  
       var is_checked = displayOptionIsSelected(active_tab);
       if (is_checked) {
         $('#no_display_alert').hide();
