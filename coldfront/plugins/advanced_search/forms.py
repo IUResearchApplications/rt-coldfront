@@ -1,250 +1,254 @@
 from crispy_forms.bootstrap import Accordion, AccordionGroup, FormActions, InlineRadios
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import (
-    HTML,
-    Column,
-    Div,
-    Fieldset,
-    Layout,
-    LayoutObject,
-    Reset,
-    Row,
-    Submit,
-)
+from crispy_forms.layout import HTML, Column, Div, Fieldset, Layout, LayoutObject, Reset, Row, Submit
 from django import forms
+from django.contrib.auth import get_user_model
 from django.template.loader import render_to_string
 
 from coldfront.core.allocation.models import AllocationAttributeType, AllocationStatusChoice
-from coldfront.core.project.models import (
-    ProjectAttributeType,
-    ProjectStatusChoice,
-    ProjectTypeChoice,
-)
+from coldfront.core.project.models import ProjectAttributeType, ProjectStatusChoice, ProjectTypeChoice
 from coldfront.core.resource.models import Resource, ResourceType
+from coldfront.plugins.advanced_search.models import SavedSearch
+
+User = get_user_model()
 
 
-class AllocationAttributeFormSetHelper(FormHelper):
-    def __init__(self, *args, **kwargs):
+class AttributeFormSetHelper(FormHelper):
+    """Helper for rendering attribute formsets."""
+
+    def __init__(self, attribute_type, include_usage=True, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.use_custom_control = False
+        layout_elements = [
+            Row(Column("attribute__name"), Column("attribute__value")),
+        ]
+
+        if include_usage:
+            layout_elements.append(
+                Row(
+                    Column("attribute__has_usage"),
+                    Column("attribute__equality"),
+                    Column("attribute__usage"),
+                    Column("attribute__usage_format"),
+                    css_id=f"{attribute_type}-usage-row",
+                    css_class="d-none",
+                )
+            )
+
         self.layout = Layout(
             Div(
                 Div(
-                    Row(
-                        Column("allocationattribute__name"),
-                        Column("allocationattribute__value"),
-                    ),
-                    Row(
-                        Column("allocationattribute__has_usage"),
-                        Column("allocationattribute__equality"),
-                        Column("allocationattribute__usage"),
-                        Column("allocationattribute__usage_format"),
-                    ),
+                    *layout_elements,
                     css_class="card-body",
+                    css_id=f"{attribute_type}-attribute-row",
                 ),
                 css_class="card mb-3",
             )
         )
 
 
-class AllocationAttributeSearchForm(forms.Form):
+class BaseAttributeSearchForm(forms.Form):
+    """Base form for attribute search."""
+
+    prefix = ""
     EQUALITY_CHOICES = (("lt", "<"), ("gt", ">"))
     FORMAT_CHOICES = (("whole", ".00"), ("percent", "%"))
     YES_NO_CHOICES = ((1, "Yes"), (0, "No"))
 
-    allocationattribute__name = forms.ModelChoiceField(
-        label="Allocation Attribute Name",
-        queryset=AllocationAttributeType.objects.none(),
-        help_text=("To display the list of allocation attributes at least one resource must be selected."),
-        required=False,
-    )
-    allocationattribute__value = forms.CharField(label="Allocation Attribute Value", max_length=50, required=False)
-    allocationattribute__has_usage = forms.ChoiceField(
-        initial=0,
-        label="Has usage",
-        choices=YES_NO_CHOICES,
-        required=False,
-    )
-    allocationattribute__equality = forms.ChoiceField(label="Equality", choices=EQUALITY_CHOICES, required=False)
-    allocationattribute__usage = forms.FloatField(label="Usage", required=False)
-    allocationattribute__usage_format = forms.ChoiceField(label="Format", choices=FORMAT_CHOICES, required=False)
+    attribute__name = forms.ModelChoiceField(queryset=None, required=False)
+    attribute__value = forms.CharField(max_length=50, required=False)
+    attribute__has_usage = forms.ChoiceField(initial=0, choices=YES_NO_CHOICES, required=False)
+    attribute__equality = forms.ChoiceField(label="Equality", choices=EQUALITY_CHOICES, required=False)
+    attribute__usage = forms.FloatField(label="Usage", required=False)
+    attribute__usage_format = forms.ChoiceField(label="Format", choices=FORMAT_CHOICES, required=False)
 
-    def __init__(self, *args, resources=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if resources:
-            self.fields["allocationattribute__name"].queryset = (
-                AllocationAttributeType.objects.prefetch_related("attribute_type")
+        self.setup_attribute_field_help_text()
+
+    def setup_attribute_field_help_text(self):
+        """Set help text for attribute field."""
+        if "attribute__name" in self.fields:
+            self.fields["attribute__name"].help_text = "Select an attribute to search by."
+
+
+class AllocationAttributeSearchForm(BaseAttributeSearchForm):
+    """Search form for allocation attributes with resource-based filtering."""
+
+    def __init__(self, *args, resources=None, attribute_type_queryset=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setup_queryset(resources, attribute_type_queryset)
+
+    def setup_queryset(self, resources, attribute_type_queryset):
+        """Setup the attribute name queryset."""
+        if attribute_type_queryset is not None:
+            queryset = attribute_type_queryset
+        elif resources:
+            queryset = (
+                AllocationAttributeType.objects.select_related("attribute_type")
+                .prefetch_related("linked_resources")
                 .filter(linked_resources__in=resources)
                 .distinct()
                 .order_by("name")
             )
         else:
-            self.fields["allocationattribute__name"].queryset = AllocationAttributeType.objects.none()
+            queryset = AllocationAttributeType.objects.none()
+
+        self.fields["attribute__name"].queryset = queryset
+        self.fields[
+            "attribute__name"
+        ].help_text = "To display the list of allocation attributes at least one resource must be selected."
 
 
-class ProjectAttributeFormSetHelper(FormHelper):
-    def __init__(self, *args, **kwargs):
+class ProjectAttributeSearchForm(BaseAttributeSearchForm):
+    """Search form for project attributes."""
+
+    def __init__(self, *args, attribute_type_queryset=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.use_custom_control = False
-        self.layout = Layout(
-            Div(
-                Div(
-                    Row(
-                        Column("projectattribute__name"),
-                        Column("projectattribute__value"),
-                    ),
-                    Row(
-                        Column("projectattribute__has_usage"),
-                        Column("projectattribute__equality"),
-                        Column("projectattribute__usage"),
-                        Column("projectattribute__usage_format"),
-                    ),
-                    css_class="card-body",
-                ),
-                css_class="card mb-3",
-            )
-        )
+        self.setup_queryset(attribute_type_queryset)
+
+    def setup_queryset(self, attribute_type_queryset):
+        """Setup the attribute name queryset."""
+        if attribute_type_queryset is not None:
+            queryset = attribute_type_queryset
+        else:
+            queryset = ProjectAttributeType.objects.all()
+
+        self.fields["attribute__name"].queryset = queryset
 
 
-class ProjectAttributeSearchForm(forms.Form):
-    EQUALITY_CHOICES = (("lt", "<"), ("gt", ">"))
-    FORMAT_CHOICES = (("whole", ".00"), ("percent", "%"))
-    YES_NO_CHOICES = ((1, "Yes"), (0, "No"))
+class SearchForm(forms.Form):
+    """Base search form with common display and filter fields."""
 
-    projectattribute__name = forms.ModelChoiceField(
-        label="Project Attribute Name",
-        queryset=ProjectAttributeType.objects.all(),
-        required=False,
-    )
-    projectattribute__value = forms.CharField(label="Project Attribute Value", max_length=50, required=False)
-    projectattribute__has_usage = forms.ChoiceField(
-        initial=0,
-        label="Has usage",
-        choices=YES_NO_CHOICES,
-        required=False,
-    )
-    projectattribute__equality = forms.ChoiceField(label="Equality", choices=EQUALITY_CHOICES, required=False)
-    projectattribute__usage = forms.FloatField(label="Usage", required=False)
-    projectattribute__usage_format = forms.ChoiceField(label="Format", choices=FORMAT_CHOICES, required=False)
+    prefix = "search"
 
+    display__id = forms.BooleanField(required=False)
+    display__url = forms.BooleanField(required=False)
+    display__status__name = forms.BooleanField(required=False)
+    display__created = forms.BooleanField(required=False)
+    display__end_date = forms.BooleanField(required=False)
+    display__users = forms.BooleanField(required=False, help_text="Active users")
+    display__total_users = forms.BooleanField(required=False, help_text="Active users")
 
-class ProjectSearchForm(forms.Form):
-    display__project__id = forms.BooleanField(required=False)
-
-    display__project__url = forms.BooleanField(required=False)
-
-    project__title = forms.CharField(label="Project Title Contains", max_length=100, required=False)
-    display__project__title = forms.BooleanField(required=False)
-
-    project__description = forms.CharField(label="Project Description Contains", max_length=100, required=False)
-    display__project__description = forms.BooleanField(required=False)
-
-    project__pi__username = forms.CharField(label="PI Username Contains", max_length=25, required=False)
-    display__project__pi__username = forms.BooleanField(required=False)
-
-    project__requestor__username = forms.CharField(label="Requestor Username Contains", max_length=25, required=False)
-    display__project__requestor__username = forms.BooleanField(required=False)
-
-    project__user_username = forms.CharField(
-        label="Username Contains", max_length=25, required=False, help_text="Active user"
-    )
-
-    display__project__project_code = forms.BooleanField(required=False)
-
-    project__status__name = forms.ModelMultipleChoiceField(
-        label="Project Status", queryset=ProjectStatusChoice.objects.all().order_by("name"), required=False
-    )
-    display__project__status__name = forms.BooleanField(required=False)
-
-    project__type__name = forms.ModelMultipleChoiceField(
-        label="Project Type", queryset=ProjectTypeChoice.objects.all().order_by("name"), required=False
-    )
-    display__project__type__name = forms.BooleanField(required=False)
-
-    display__project__users = forms.BooleanField(required=False, help_text="Active users")
-
-    display__project__total_users = forms.BooleanField(required=False, help_text="Active users")
-
-    project__created_after_date = forms.DateField(
+    user_username = forms.CharField(label="Username Contains", max_length=25, required=False, help_text="Active user")
+    status__name = forms.ModelMultipleChoiceField(queryset=None, required=False)
+    created_after_date = forms.DateField(
         widget=forms.TextInput(attrs={"class": "datepicker"}), label="After", required=False, help_text="Includes date"
     )
-    project__created_before_date = forms.DateField(
+    created_before_date = forms.DateField(
         widget=forms.TextInput(attrs={"class": "datepicker"}),
         label="Before",
         required=False,
         help_text="Does not include date",
     )
-    display__project__created = forms.BooleanField(required=False)
-
-    project__end_date = forms.DateField(
-        widget=forms.TextInput(attrs={"class": "datepicker"}),
-        label="Project End Date",
-        required=False,
-    )
-    display__project__end_date = forms.BooleanField(required=False)
-
-    projects_using_ai = forms.BooleanField(label="Only AI", required=False)
-    display__project__resources = forms.BooleanField(required=False)
-
-    projectattribute_form = ProjectAttributeSearchForm()
-    projectattribute_helper = ProjectAttributeFormSetHelper()
+    end_date = forms.DateField(widget=forms.TextInput(attrs={"class": "datepicker"}), label="End Date", required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+    def get_ordered_queryset(self, model, field_name="name", filter_kwargs=None):
+        """Get an ordered queryset for a model, with optional filtering."""
+        queryset = model.objects.all()
+        if filter_kwargs:
+            queryset = queryset.filter(**filter_kwargs)
+        return queryset.order_by(field_name)
+
+    def create_select_all_checkbox(self, field_prefix):
+        """Creates a reusable select all checkbox HTML component."""
+        css_id = f"div_id_{self.prefix}-select_all_{field_prefix}_displays"
+        css_name = f"{self.prefix}-select_all_{field_prefix}_displays"
+        return HTML(f'''
+            <div class="form-group">
+                <div id="{css_id}" class="form-check">
+                    <input type="checkbox" name="{css_name}" class="form-check-input" id="{css_name}">
+                    <label for="{css_name}" class="form-check-label">
+                        <strong>Select All</strong>
+                    </label>
+                </div>
+            </div>
+        ''')
+
+
+class ProjectSearchForm(SearchForm):
+    """Form for searching projects with filters, displays, and attributes."""
+
+    display__title = forms.BooleanField(required=False)
+    display__description = forms.BooleanField(required=False)
+    display__pi__username = forms.BooleanField(required=False)
+    display__requestor__username = forms.BooleanField(required=False)
+    display__project_code = forms.BooleanField(required=False)
+    display__resources = forms.BooleanField(required=False)
+    display__type__name = forms.BooleanField(required=False)
+
+    title = forms.CharField(label="Project Title Contains", max_length=100, required=False)
+    description = forms.CharField(label="Project Description Contains", max_length=100, required=False)
+    pi__username = forms.CharField(label="PI Username Contains", max_length=25, required=False)
+    requestor__username = forms.CharField(label="Requestor Username Contains", max_length=25, required=False)
+    type__name = forms.ModelMultipleChoiceField(queryset=None, required=False)
+
+    projects_using_ai = forms.BooleanField(label="Only AI", required=False)
+
+    attribute_form = ProjectAttributeSearchForm()
+    attribute_helper = AttributeFormSetHelper("project")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setup_querysets()
+        self.setup_layout()
+
+    def setup_querysets(self):
+        """Setup querysets for status and type fields."""
+        self.fields["status__name"].queryset = self.get_ordered_queryset(ProjectStatusChoice)
+        self.fields["type__name"].queryset = self.get_ordered_queryset(ProjectTypeChoice)
+
+    def setup_layout(self):
+        """Setup the form layout with accordions."""
         self.helper = FormHelper(self)
         self.helper.use_custom_control = False
         self.helper.layout = Layout(
             Accordion(
                 AccordionGroup(
                     "Filters",
-                    "project__title",
-                    "project__description",
-                    "project__pi__username",
-                    "project__requestor__username",
-                    "project__user_username",
-                    "project__status__name",
-                    "project__type__name",
+                    "title",
+                    "description",
+                    "pi__username",
+                    "requestor__username",
+                    "user_username",
+                    "status__name",
+                    "type__name",
                     "projects_using_ai",
                     Fieldset(
                         "Created Date Range",
                         Div(
-                            Div("project__created_after_date", css_class="col"),
-                            Div("project__created_before_date", css_class="col"),
+                            Div("created_after_date", css_class="col"),
+                            Div("created_before_date", css_class="col"),
                             css_class="row",
                         ),
                     ),
-                    "project__end_date",
+                    "end_date",
                     active=False,
                 ),
             ),
             Accordion(
                 AccordionGroup(
                     "Displays",
-                    HTML(
-                        '<div class="form-group">'
-                        '<div id="div_id_select_all_project_displays" class="form-check"> '
-                        '<input type="checkbox" name="select_all_project_displays" class="checkboxinput form-check-input" id="select_all_project_displays"> '
-                        '<label for="select_all_project_displays" class="form-check-label">'
-                        "<strong>Select All</strong>"
-                        "</label> </div> </div>"
-                    ),
-                    "display__project__id",
-                    "display__project__url",
-                    "display__project__title",
-                    "display__project__description",
-                    "display__project__pi__username",
-                    "display__project__requestor__username",
-                    "display__project__project_code",
-                    "display__project__status__name",
-                    "display__project__type__name",
-                    "display__project__users",
-                    "display__project__total_users",
-                    "display__project__created",
-                    "display__project__end_date",
-                    "display__project__resources",
+                    self.create_select_all_checkbox("project"),
+                    "display__id",
+                    "display__url",
+                    "display__title",
+                    "display__description",
+                    "display__pi__username",
+                    "display__requestor__username",
+                    "display__project_code",
+                    "display__status__name",
+                    "display__type__name",
+                    "display__users",
+                    "display__total_users",
+                    "display__created",
+                    "display__end_date",
+                    "display__resources",
                     active=False,
-                    css_id="project_search_displays",
+                    css_id=f"{self.prefix}-project_displays",
                 ),
             ),
             Accordion(
@@ -257,114 +261,109 @@ class ProjectSearchForm(forms.Form):
                     active=False,
                 )
             ),
-            FormActions(Submit("submit", "Project Search"), Reset("reset", "Reset")),
+            FormActions(Submit("submit", "Project Search"), Reset("reset", "Reset"), css_class="mb-0"),
         )
 
 
 class UserSearchForm(forms.Form):
+    """Form for searching users with filters and display options."""
+
     USER_TYPE_CHOICE = (("all", "All"), ("project", "Project"), ("allocation", "Allocation"))
 
-    user__usernames = forms.CharField(label="Usernames", required=False, help_text="username1,username2,...")
-    display__user__username = forms.BooleanField(label="Display usernames", required=False)
+    display__username = forms.BooleanField(label="Display usernames", required=False)
+    display__first_name = forms.BooleanField(label="Display first names", required=False)
+    display__last_name = forms.BooleanField(label="Display last names", required=False)
+    display__userprofile__department = forms.BooleanField(label="Display departments", required=False)
+    display__userprofile__title = forms.BooleanField(label="Display titles", required=False)
+    display__total_projects = forms.BooleanField(label="Display total active projects", required=False)
+    display__total_pi_projects = forms.BooleanField(label="Display total active PI projects", required=False)
+    display__total_manager_projects = forms.BooleanField(label="Display total active Manager projects", required=False)
+    display__total_allocations = forms.BooleanField(label="Display total active allocations", required=False)
 
-    user__first_name = forms.CharField(label="First Name", max_length=100, required=False)
-    display__user__first_name = forms.BooleanField(label="Display first names", required=False)
-
-    user__last_name = forms.CharField(label="Last Name", max_length=100, required=False)
-    display__user__last_name = forms.BooleanField(label="Display last names", required=False)
-
-    user__userprofile__department = forms.CharField(label="Department Contains", max_length=100, required=False)
-    display__user__userprofile__department = forms.BooleanField(label="Display departments", required=False)
-
-    user__userprofile__title = forms.CharField(label="Title Contains", max_length=30, required=False)
-    display__user__userprofile__title = forms.BooleanField(label="Display titles", required=False)
-
-    display__user__total_projects = forms.BooleanField(label="Display total active projects", required=False)
-
-    display__user__total_pi_projects = forms.BooleanField(label="Display total active PI projects", required=False)
-
-    display__user__total_manager_projects = forms.BooleanField(
-        label="Display total active Manager projects", required=False
-    )
-
-    display__user__total_allocations = forms.BooleanField(label="Display total active allocations", required=False)
-
-    user__type = forms.ChoiceField(initial="all", choices=USER_TYPE_CHOICE, widget=forms.RadioSelect)
+    usernames = forms.CharField(label="Usernames", required=False, help_text="username1,username2,...")
+    first_name = forms.CharField(label="First Name", max_length=100, required=False)
+    last_name = forms.CharField(label="Last Name", max_length=100, required=False)
+    userprofile__department = forms.CharField(label="Department Contains", max_length=100, required=False)
+    userprofile__title = forms.CharField(label="Title Contains", max_length=30, required=False)
+    type = forms.ChoiceField(initial="all", choices=USER_TYPE_CHOICE, widget=forms.RadioSelect)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.setup_layout()
 
+    def setup_layout(self):
+        """Setup the form layout with accordions."""
         self.helper = FormHelper(self)
         self.helper.use_custom_control = False
         self.helper.layout = Layout(
             Accordion(
                 AccordionGroup(
                     "Users",
-                    "user__usernames",
-                    "user__first_name",
-                    "user__last_name",
-                    "display__user__username",
-                    "display__user__first_name",
-                    "display__user__last_name",
-                    InlineRadios("user__type"),
+                    "usernames",
+                    "first_name",
+                    "last_name",
+                    "display__username",
+                    "display__first_name",
+                    "display__last_name",
+                    InlineRadios("type"),
                     active=False,
                 ),
                 AccordionGroup(
                     "User Profiles",
-                    "user__userprofile__department",
-                    "user__userprofile__title",
-                    "display__user__userprofile__department",
-                    "display__user__userprofile__title",
+                    "userprofile__department",
+                    "userprofile__title",
+                    "display__userprofile__department",
+                    "display__userprofile__title",
                     active=False,
                 ),
                 AccordionGroup(
                     "Projects",
-                    "display__user__total_projects",
-                    "display__user__total_pi_projects",
-                    "display__user__total_manager_projects",
+                    "display__total_projects",
+                    "display__total_pi_projects",
+                    "display__total_manager_projects",
                     active=False,
                 ),
                 AccordionGroup(
                     "Allocations",
-                    "display__user__total_allocations",
+                    "display__total_allocations",
                     active=False,
                 ),
             ),
-            FormActions(Submit("submit", "User Search"), Reset("reset", "Reset")),
+            FormActions(Submit("submit", "User Search"), Reset("reset", "Reset"), css_class="mb-0"),
         )
 
 
-class AllocationSearchForm(forms.Form):
-    display__project__id = forms.BooleanField(required=False)
+class AllocationSearchForm(SearchForm):
+    """Form for searching allocations with project, allocation, and resource filters."""
 
+    display__project__id = forms.BooleanField(required=False)
     display__project__url = forms.BooleanField(required=False)
+    display__project__title = forms.BooleanField(required=False)
+    display__project__description = forms.BooleanField(required=False)
+    display__project__pi__username = forms.BooleanField(required=False)
+    display__project__requestor__username = forms.BooleanField(required=False)
+    display__project__status__name = forms.BooleanField(required=False)
+    display__project__type__name = forms.BooleanField(required=False)
+    display__project__created = forms.BooleanField(required=False)
+    display__project__end_date = forms.BooleanField(required=False)
+    display__project__users = forms.BooleanField(
+        required=False,
+        help_text='Active users. Enable by selecting "only search projects". Enables the user profiles section.',
+    )
+    display__project__total_users = forms.BooleanField(required=False, help_text="Active users")
+
+    display__get_parent_resource__name = forms.BooleanField(required=False, label="Resource name")
+    display__get_parent_resource__resource_type__name = forms.BooleanField(required=False, label="Resource type name")
 
     project__title = forms.CharField(label="Project Title Contains", max_length=100, required=False)
-    display__project__title = forms.BooleanField(required=False)
-
     project__description = forms.CharField(label="Project Description Contains", max_length=100, required=False)
-    display__project__description = forms.BooleanField(required=False)
-
     project__pi__username = forms.CharField(label="PI Username Contains", max_length=25, required=False)
-    display__project__pi__username = forms.BooleanField(required=False)
-
     project__requestor__username = forms.CharField(label="Requestor Username Contains", max_length=25, required=False)
-    display__project__requestor__username = forms.BooleanField(required=False)
-
     project__user_username = forms.CharField(
         label="Username Contains", max_length=25, required=False, help_text="Active user"
     )
-
-    project__status__name = forms.ModelMultipleChoiceField(
-        label="Project Status", queryset=ProjectStatusChoice.objects.all().order_by("name"), required=False
-    )
-    display__project__status__name = forms.BooleanField(required=False)
-
-    project__type__name = forms.ModelMultipleChoiceField(
-        label="Project Type", queryset=ProjectTypeChoice.objects.all().order_by("name"), required=False
-    )
-    display__project__type__name = forms.BooleanField(required=False)
-
+    project__status__name = forms.ModelMultipleChoiceField(label="Project Status", queryset=None, required=False)
+    project__type__name = forms.ModelMultipleChoiceField(label="Project Type", queryset=None, required=False)
     project__created_after_date = forms.DateField(
         widget=forms.TextInput(attrs={"class": "datepicker"}), label="After", required=False, help_text="Includes date"
     )
@@ -374,68 +373,37 @@ class AllocationSearchForm(forms.Form):
         required=False,
         help_text="Does not include date",
     )
-    display__project__created = forms.BooleanField(required=False)
-
     project__end_date = forms.DateField(
-        widget=forms.TextInput(attrs={"class": "datepicker"}),
-        label="Project End Date",
-        required=False,
-    )
-    display__project__end_date = forms.BooleanField(required=False)
-
-    display__project__users = forms.BooleanField(
-        required=False,
-        help_text='Active users. Enable by selecting "only search projects". Enables the user profiles section.',
+        widget=forms.TextInput(attrs={"class": "datepicker"}), label="Project End Date", required=False
     )
 
-    display__project__total_users = forms.BooleanField(required=False, help_text="Active users")
-
-    display__allocation__id = forms.BooleanField(required=False)
-
-    display__allocation__url = forms.BooleanField(required=False)
-
-    allocation__user_username = forms.CharField(
-        label="Username Contains", max_length=25, required=False, help_text="Active user"
-    )
-
-    allocation__status__name = forms.ModelMultipleChoiceField(
-        label="Allocation Status", queryset=AllocationStatusChoice.objects.all().order_by("name"), required=False
-    )
-    display__allocation__status__name = forms.BooleanField(required=False)
-
-    display__allocation__users = forms.BooleanField(
-        required=False, help_text="Active users. Enables the user profiles section."
-    )
-
-    display__allocation__total_users = forms.BooleanField(required=False, help_text="Active users")
-
-    allocation__created_after_date = forms.DateField(
-        widget=forms.TextInput(attrs={"class": "datepicker"}), label="After", required=False, help_text="Includes date"
-    )
-    allocation__created_before_date = forms.DateField(
-        widget=forms.TextInput(attrs={"class": "datepicker"}),
-        label="Before",
-        required=False,
-        help_text="Does not include date",
-    )
-    display__allocation__created = forms.BooleanField(required=False)
-
-    resources__name = forms.ModelMultipleChoiceField(
-        label="Resource Name", queryset=Resource.objects.filter(is_allocatable=True).order_by("name"), required=False
-    )
-    display__resources__name = forms.BooleanField(required=False)
-
+    resources__name = forms.ModelMultipleChoiceField(label="Resource Name", queryset=None, required=False)
     resources__resource_type__name = forms.ModelMultipleChoiceField(
-        label="Resource Type", queryset=ResourceType.objects.all().order_by("name"), required=False
+        label="Resource Type", queryset=None, required=False
     )
-    display__resources__resource_type__name = forms.BooleanField(required=False)
 
     allocationattribute_form = AllocationAttributeSearchForm()
-    allocationattribute_helper = AllocationAttributeFormSetHelper()
+    allocationattribute_helper = AttributeFormSetHelper("allocation")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.setup_querysets()
+        self.setup_layout()
 
+        self.fields["display__users"].help_text = "Active users. Enables the user profiles section."
+
+    def setup_querysets(self):
+        """Setup all querysets for the form."""
+        self.fields["project__status__name"].queryset = ProjectStatusChoice.objects.all().order_by("name")
+        self.fields["project__type__name"].queryset = ProjectTypeChoice.objects.all().order_by("name")
+        self.fields["status__name"].queryset = AllocationStatusChoice.objects.all().order_by("name")
+        self.fields["resources__name"].queryset = (
+            Resource.objects.filter(is_allocatable=True).select_related("resource_type").order_by("name")
+        )
+        self.fields["resources__resource_type__name"].queryset = ResourceType.objects.all().order_by("name")
+
+    def setup_layout(self):
+        """Setup the form layout with accordions."""
         self.helper = FormHelper(self)
         self.helper.use_custom_control = False
         self.helper.layout = Layout(
@@ -467,14 +435,7 @@ class AllocationSearchForm(forms.Form):
                     Accordion(
                         AccordionGroup(
                             "Displays",
-                            HTML(
-                                '<div class="form-group">'
-                                '<div id="div_id_select_all_displays" class="form-check"> '
-                                '<input type="checkbox" name="select_all_displays" class="checkboxinput form-check-input" id="select_all_displays"> '
-                                '<label for="select_all_displays" class="form-check-label">'
-                                "<strong>Select All</strong>"
-                                "</label> </div> </div>"
-                            ),
+                            self.create_select_all_checkbox("project"),
                             "display__project__id",
                             "display__project__url",
                             "display__project__title",
@@ -486,6 +447,7 @@ class AllocationSearchForm(forms.Form):
                             "display__project__created",
                             "display__project__end_date",
                             active=False,
+                            css_id=f"{self.prefix}-project_displays",
                         ),
                     ),
                     active=False,
@@ -494,23 +456,25 @@ class AllocationSearchForm(forms.Form):
             Accordion(
                 AccordionGroup(
                     "Allocations",
-                    "allocation__user_username",
-                    "allocation__status__name",
+                    "user_username",
+                    "status__name",
                     Fieldset(
                         "Created Date Range",
                         Div(
-                            Div("allocation__created_after_date", css_class="col"),
-                            Div("allocation__created_before_date", css_class="col"),
+                            Div("created_after_date", css_class="col"),
+                            Div("created_before_date", css_class="col"),
                             css_class="row",
                         ),
                     ),
-                    "display__allocation__id",
-                    "display__allocation__url",
-                    "display__allocation__status__name",
-                    "display__allocation__users",
-                    "display__allocation__total_users",
-                    "display__allocation__created",
+                    self.create_select_all_checkbox("allocation"),
+                    "display__id",
+                    "display__url",
+                    "display__status__name",
+                    "display__users",
+                    "display__total_users",
+                    "display__created",
                     active=False,
+                    css_id=f"{self.prefix}-allocation_displays",
                 )
             ),
             Accordion(
@@ -518,8 +482,8 @@ class AllocationSearchForm(forms.Form):
                     "Resources",
                     "resources__name",
                     "resources__resource_type__name",
-                    "display__resources__name",
-                    "display__resources__resource_type__name",
+                    "display__get_parent_resource__name",
+                    "display__get_parent_resource__resource_type__name",
                     active=False,
                 )
             ),
@@ -535,11 +499,13 @@ class AllocationSearchForm(forms.Form):
                     active=False,
                 )
             ),
-            FormActions(Submit("submit", "Allocation Search"), Reset("reset", "Reset")),
+            FormActions(Submit("submit", "Allocation Search"), Reset("reset", "Reset"), css_class="mb-0"),
         )
 
 
 class Formset(LayoutObject):
+    """Custom layout object for rendering formsets in crispy forms."""
+
     template = "advanced_search/formset.html"
 
     def __init__(self, formset_context_name, helper_context_name=None, template=None, label=None):
@@ -563,3 +529,20 @@ class Formset(LayoutObject):
 
         context.update({"formset": formset, "helper": helper, "label": self.label})
         return render_to_string(self.template, context.flatten())
+
+
+class SearchCreateForm(forms.ModelForm):
+    class Meta:
+        model = SavedSearch
+        fields = ["name", "description", "shared_with_users", "shared_with_groups"]
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+
+        if user:
+            self.fields["shared_with_users"].queryset = User.objects.filter(is_staff=True)
+            self.fields["shared_with_groups"].queryset = user.groups.all()

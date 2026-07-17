@@ -3,7 +3,6 @@
 {% load crispy_forms_tags %}
 {% load static %}
 
-
 {% block title %}
 Advanced Search
 {% endblock %}
@@ -52,29 +51,52 @@ Advanced Search
               </form>
             </div>
           </div>
+          <div id="allocation-search" class="tab-pane" role="tabpanel">
+            <form method="POST" action="{% url 'advanced-search' %}" autocomplete="off">
+              {% crispy allocation_form %}
+            </form>
+          </div>
+          <div id="user-search" class="tab-pane" role="tabpanel">
+            <form method="POST" action="{% url 'advanced-search' %}" autocomplete="off">
+              {% crispy user_form %}
+            </form>
+          </div>
+          <div id="saved-searches" class="tab-pane" role="tabpanel"></div>
         </div>
       </div>
     </div>
+    <div class="card-footer">
+      <button
+        type="button"
+        id="btn-save-search"
+        class="btn btn-primary"
+      >
+        Save Search
+      </button>
+    </div>
   </div>
+</div>
 
-<div id="no_display_alert" class="alert alert-warning" role="alert">
+{% include "advanced_search/saved_search_modal.html" %}
+
+<div id="no_display_alert" class="alert alert-warning" role="alert" aria-live="polite">
   <i class="fas fa-info-circle" aria-hidden="true"></i> No display option selected so no results will appear
 </div>
 
 <div class="card">
   <div class="card-header">
-    <div class="row">
+    <div class="row align-items-center">
       <div class="col">
         <h2 class="mb-0"><strong>Entries: {{ rows|length }}</strong></h2>
       </div>
-      <div class="col float-right">
-        <div class="float-right">
-          <form id="export_form" method="POST" action="{% url 'export' %}">
-            {% csrf_token %}
-            <input id="export_data" type="hidden" name="data" value="{{ data }}">
+      <div class="col text-right">
+        <form id="export_form" method="POST" action="{% url 'export' %}">
+          {% csrf_token %}
+          {% if columns %}
+            <input id="export_data" type="hidden" name="data" value="{{ data }}" />
             <button id="export_button" type="submit" class="btn btn-success" value="Export">Export to CSV</button>
-          </form>
-        </div>
+          {% endif %}
+        </form>
       </div>
     </div>
   </div>
@@ -85,9 +107,7 @@ Advanced Search
         <thead>
           <tr>
             {% for column in columns %}
-            <th scope="col" class="text-nowrap">
-              {{ column.display_name }}
-            </th>
+              <th scope="col" class="text-nowrap">{{ column.display_name }}</th>
             {% endfor %}
           </tr>
         </thead>
@@ -116,267 +136,409 @@ Advanced Search
   </div>
 </div>
 
-<script>
-  var columns = {{ columns | safe }}
-  var rows = {{ rows | safe }}
-  var allocation_form_count = {{ allocationattribute_form.total_form_count | safe}}
-  var allocation_attribute_type_ids = {{ allocation_attribute_type_ids | safe}}
-  var project_form_count = {{ projectattribute_form.total_form_count | safe}}
-  var project_attribute_type_ids = {{ project_attribute_type_ids | safe}}
-  var linked_allocation_attribute_types = {{ linked_allocation_attribute_types | safe }}
-  var active_tab = '{{ active_tab | safe }}'
+{{ allocation_attribute_type_ids|json_script:"allocation_attribute_type_ids" }}
+{{ project_attribute_type_ids|json_script:"project_attribute_type_ids" }}
+{{ linked_allocation_attribute_types|json_script:"linked_allocation_attribute_types" }}
+{{ active_tab|json_script:"active_tab" }} {{ rows|json_script:"rows" }}
+{{ columns|json_script:"columns" }}
+{{ filter_data|json_script:"filter_data" }}
 
-  function toggleUsageFields(value, base_div_id, type) {
-    if (type == 'allocation') {
-      attribute_type_ids = allocation_attribute_type_ids
-    } else {
-      attribute_type_ids = project_attribute_type_ids
-    }
-    if (attribute_type_ids.includes(value)) {
-      $(base_div_id + type + '__has_usage').show();
-      $(base_div_id + type + '__equality').show();
-      $(base_div_id + type + '__usage').show();
-      $(base_div_id + type + '__usage_format').show();
-    }
-    else {
-      $(base_div_id + type + 'attribute__has_usage').hide();
-      $(base_div_id + type + 'attribute__equality').hide();
-      $(base_div_id + type + 'attribute__usage').hide();
-      $(base_div_id + type + 'attribute__usage_format').hide();
-    }
+<script>
+  var columns = JSON.parse(document.getElementById("columns").textContent);
+  var rows = JSON.parse(document.getElementById("rows").textContent);
+  var allocation_attribute_type_ids = JSON.parse(document.getElementById("allocation_attribute_type_ids").textContent);
+  var project_attribute_type_ids = JSON.parse(document.getElementById("project_attribute_type_ids").textContent);
+  var linked_allocation_attribute_types = JSON.parse(
+    document.getElementById("linked_allocation_attribute_types").textContent
+  );
+  var active_tab = JSON.parse(document.getElementById("active_tab").textContent);
+  var filter_data = JSON.parse(document.getElementById("filter_data").textContent);
+
+  function toggleUsageFields(value, ele, type) {
+    const attribute_type_ids = type === 'allocation' ? allocation_attribute_type_ids : project_attribute_type_ids;
+    element = $(ele).parents('[id*="-attribute-row"]').children('[id*="-usage-row"]');
+    attribute_type_ids.includes(value) ? element.removeClass("d-none") : element.addClass("d-none");
+  }
+
+  function resetAttributeUsageFieldsToDefaults(base_div_id, type) {
+    $(`${base_div_id}attribute__has_usage`).val("0");
+    $(`${base_div_id}attribute__equality`).val("lt");
+    $(`${base_div_id}attribute__usage`).val("");
+    $(`${base_div_id}attribute__usage_format`).val("whole");
   }
 
   function resetAttributeFieldsToDefaults(base_div_id, type) {
-    $(base_div_id + type + 'attribute__name').val(null);
-    $(base_div_id + type + 'attribute__value').val('');
-    $(base_div_id + type + 'attribute__has_usage').val('0');
-    $(base_div_id + type + 'attribute__equality').val('lt');
-    $(base_div_id + type + 'attribute__usage').val('');
-    $(base_div_id + type + 'attribute__usage_format').val('whole');
+    $(`${base_div_id}attribute__name`).val(null);
+    $(`${base_div_id}attribute__value`).val("");
+    resetAttributeUsageFieldsToDefaults(base_div_id, type);
   }
 
   function displayOptionIsSelected(form) {
-    if ($('#' + form + ' input[type=checkbox]').is(":checked")) {
-      return true;
+    return $(`#${form} input[type=checkbox]`).is(":checked");
+  }
+
+  function toggleNoDisplayAlert(tab) {
+    $("#no_display_alert").toggle(!displayOptionIsSelected(tab));
+  }
+
+  function bindSelectAll(group_prefix, id) {
+    const select_all_id = `${group_prefix}-select_all_${id}`;
+    $(`#${select_all_id}`).on("change", function () {
+      $(`#${group_prefix}-${id}`)
+        .find(`input[name*='${group_prefix}']`)
+        .prop("checked", $(this).prop("checked"));
+    });
+
+    $(`#${group_prefix}-${id}`)
+      .find(`input[name*='${group_prefix}']`)
+      .on("change", function (ele) {
+        if ($(this).attr("id") !== select_all_id) {
+          $(`#${select_all_id}`).prop("checked", false);
+        }
+      });
+
+    if ($(`input[name*='${group_prefix}']:checked`).length === $(`input[name*='${group_prefix}']`).length) {
+      $(`#${select_all_id}`).prop("checked", true);
     }
-    return false;
+  }
+
+  function bindAddFormButton(group_prefix) {
+    $(`[id^="id_${group_prefix}attribute-"][id$="-attribute__name"]`).each(function () {
+      const ele = $(this);
+      ele.on("change", function (evt) {
+        toggleUsageFields(parseInt(evt.target.value), this, group_prefix);
+        const id = evt.target.id;
+        resetAttributeUsageFieldsToDefaults("#" + id.substr(0, id.lastIndexOf("-")) + "-", group_prefix);
+      });
+      toggleUsageFields(parseInt(ele[0].value), this, group_prefix);
+    });
+
+    $(`#id_formset_add_${group_prefix}_attribute_button`).on("click", function () {
+      // The formset must have at least one initial form for this to work.
+      let form_count = $(`#id_${group_prefix}attribute-TOTAL_FORMS`).val();
+      let row = $(`#id_${group_prefix}attribute_formset > div:nth-child(3)`)[0].cloneNode(true);
+      row.innerHTML = row.innerHTML.replaceAll("-0-", "-" + form_count + "-");
+      $(`#id_${group_prefix}attribute_formset`).append(row);
+
+      const name_field = $(`#id_${group_prefix}attribute-${form_count}-attribute__name`);
+      name_field.on("change", function (evt) {
+        toggleUsageFields(parseInt(evt.target.value), this, group_prefix);
+      });
+
+      const base_id = `#id_${group_prefix}attribute-${form_count}-`;
+      resetAttributeFieldsToDefaults(base_id, group_prefix);
+
+      form_count++;
+      $(`#id_${group_prefix}attribute-TOTAL_FORMS`).val(form_count);
+    });
+  }
+
+  function populateSearchForm(queryData) {
+    var searchType = null;
+    var mainFormPrefix = null;
+    var attributeFormPrefix = null;
+
+    if (queryData.project_search || (queryData.project_search && queryData.project_attributes)) {
+      searchType = 'project';
+      mainFormPrefix = 'project_search';
+      attributeFormPrefix = 'projectattribute';
+    }
+    else if (queryData.allocation_search || (queryData.allocation_search && queryData.allocation_attributes)) {
+      searchType = 'allocation';
+      mainFormPrefix = 'allocation_search';
+      attributeFormPrefix = 'allocationattribute';
+    }
+    else if (queryData.user_search) {
+      searchType = 'user';
+      mainFormPrefix = 'user_search';
+      attributeFormPrefix = null;
+    }
+
+    if (!searchType) {
+      console.log('No valid search type found in queryData');
+      return;
+    }
+
+    var activeTabSelector = null;
+    if (searchType === 'project') {
+      activeTabSelector = '#project-search';
+    } else if (searchType === 'allocation') {
+      activeTabSelector = '#allocation-search';
+    } else if (searchType === 'user') {
+      activeTabSelector = '#user-search';
+    }
+
+    $(activeTabSelector + ' a[data-toggle="tab"]').tab("show");
+
+    setTimeout(function() {
+      populateFormFields(searchType, mainFormPrefix, attributeFormPrefix, queryData);
+    }, 100);
+  }
+
+  function populateFormFields(searchType, mainFormPrefix, attributeFormPrefix, queryData) {
+    var mainFormData = queryData[mainFormPrefix] || {};
+    var attributeFormData = queryData[attributeFormPrefix + '_attributes'] || {};
+
+    for (var key in mainFormData) {
+      if (mainFormData.hasOwnProperty(key)) {
+        // Convert key like "project_search-resources__name" to ID "id_project_search-resources__name"
+        var fieldId = "id_" + key;
+        var $field = $("#" + fieldId);
+        if ($field.length) {
+          var value = mainFormData[key];
+          console.log('Setting field', fieldId, 'to value:', value);
+          if ($field.is(":checkbox") || $field.is(":radio")) {
+            $field.prop("checked", value === true || value === "true" || value === "on" || value === "1");
+          } else if ($field.is("select")) {
+            $field.val(value);
+            $field.trigger("change");
+          } else {
+            $field.val(value);
+          }
+        }
+      }
+    }
+
+    if (attributeFormPrefix && Object.keys(attributeFormData).length > 0) {
+      var totalForms = 0;
+      var attributeDataByForm = {};
+
+      for (var key in attributeFormData) {
+        if (attributeFormData.hasOwnProperty(key)) {
+          // Parse key like "projectattribute-0-attribute__name"
+          var parts = key.split('-');
+          if (parts.length >= 3) {
+            var formIndex = parseInt(parts[1]);
+            var fieldPart = key.substring(key.indexOf('-', key.indexOf('-') + 1) + 1);
+
+            if (!attributeDataByForm[formIndex]) {
+              attributeDataByForm[formIndex] = {};
+            }
+            attributeDataByForm[formIndex][fieldPart] = attributeFormData[key];
+
+            if (formIndex >= totalForms) {
+              totalForms = formIndex + 1;
+            }
+          }
+        }
+      }
+
+      var totalFormsField = $("#id_" + attributeFormPrefix + "-TOTAL_FORMS");
+      if (totalFormsField.length) {
+        totalFormsField.val(totalForms);
+      }
+
+      var formsToRemove = $('div[id*="-attribute-row"]').length - totalForms;
+      for (var i = 0; i < formsToRemove; i++) {
+        $('div[id*="-attribute-row"]:last').remove();
+      }
+
+      for (var formIndex = 0; formIndex < totalForms; formIndex++) {
+        var formData = attributeDataByForm[formIndex] || {};
+        
+        for (var attrKey in formData) {
+          if (formData.hasOwnProperty(attrKey)) {
+            // Convert key like "attribute__name" to field ID
+            var selector = "#id_" + attributeFormPrefix + "-" + formIndex + "-" + attrKey;
+            var $attrField = $(selector);
+
+            if ($attrField.length) {
+              var value = formData[attrKey];
+              console.log('Setting attribute field', selector, 'to value:', value);
+
+              if ($attrField.is(":checkbox") || $attrField.is(":radio")) {
+                $attrField.prop("checked", value === true || value === "true" || value === "on" || value === "1");
+              } else if ($attrField.is("select")) {
+                $attrField.val(value);
+                $attrField.trigger("change");
+              } else {
+                $attrField.val(value);
+              }
+            }
+          }
+        }
+      }
+
+      updateAttributeFormCount(attributeFormPrefix, totalForms);
+    }
+
+    $(activeTabSelector + ' form input, ' + activeTabSelector + ' form select').trigger("change");
+
+    setTimeout(function() {
+      $(activeTabSelector + ' form').submit();
+    }, 200);
+  }
+
+  function updateAttributeFormCount(prefix, count) {
+    var totalFormsField = $("#id_" + prefix + "-TOTAL_FORMS");
+    if (totalFormsField.length) {
+      totalFormsField.val(count);
+    }
   }
 
   $(document).ready(function () {
     if (columns.length) {
-      $('#results_table').DataTable({
-        bFilter: false
+      $("#results_table").DataTable({ bFilter: false });
+    }
+
+    bindSelectAll("project_search", "project_displays");
+    bindSelectAll("allocation_search", "project_displays");
+    bindSelectAll("allocation_search", "allocation_displays");
+
+    $(".datepicker").flatpickr({ dateFormat: "m/d/Y" });
+
+    toggleNoDisplayAlert(active_tab);
+    const forms = ["project-search", "allocation-search", "user-search"];
+    for (let i = 0; i < forms.length; i++) {
+      let form = forms[i];
+
+      $('[href="#' + form + '"]').on("click", function () {
+        toggleNoDisplayAlert(form);
+      });
+
+      $("#" + form + ' input[type="checkbox"]').change(function () {
+        toggleNoDisplayAlert(form);
       });
     }
 
-    $("#select_all_project_displays").click(function () {
-      $("input[name*='project_search-display__project']").prop('checked', $(this).prop('checked'));
-    });
-
-    $("input[name*='project_search-display__project']").click(function (ele) {
-      var id = $(this).attr('id');
-      if (id != "select_all_project_displays") {
-        $("#select_all_project_displays").prop('checked', false);
-      }
-    });
-
-     if ($("input[name*='project_search-display__project']:checked").length === $("input[name*='project_search-display__project']").length) {
-      $("#select_all_project_displays").prop('checked', true);
-     }
-
-    $("#select_all_displays").click(function () {
-      $("input[name*='allocation_search-display__project']").prop('checked', $(this).prop('checked'));
-    });
-
-    $("input[name*='allocation_search-display__project']").click(function (ele) {
-      var id = $(this).attr('id');
-      if (id != "select_all_allocation_displays") {
-        $("#select_all_allocation_displays").prop('checked', false);
-      }
-    });
-
-    if ($("input[name*='allocation_search-display__project']:checked").length === $("input[name*='allocation_search-display__project']").length) {
-      $("#select_all_displays").prop('checked', true);
-     }
-
-    var date = new Date();
-    var currentYear = date.getFullYear();
-    $(".datepicker")
-      .flatpickr({
-        dateFormat: "m/d/Y",
-      })
-
-    var is_checked = displayOptionIsSelected(active_tab);
-    if (is_checked) {
-      $('#no_display_alert').hide();
-    } else {
-      $('#no_display_alert').show();
-    }
-    var forms = ['project-search', 'allocation-search', 'user-search']
-    for (var i = 0; i < forms.length; i++) {
-      let form = forms[i]
-
-      $('[href="#' + form + '"]').on('click', function() {
-        var is_checked = displayOptionIsSelected(form);
-        if (is_checked) {
-          $('#no_display_alert').hide();
-          return;
-        }
-        $('#no_display_alert').show();
-      })
-
-      $('#' + form + ' input[type="checkbox"]').change(function(){ 
-        var is_checked = displayOptionIsSelected(form);
-        if (is_checked) {
-          $('#no_display_alert').hide();
-          return;
-        }
-        $('#no_display_alert').show();
-      })
-    }
-
-    if (active_tab === 'allocation-search') {
-      $('#project-search').toggleClass('active');
-      $('#allocation-search').toggleClass('active');
-      $('[href="#project-search"]').toggleClass('active');
-      $('[href="#allocation-search"]').toggleClass('active');
-    } else if (active_tab === 'user-search') {
-      $('#project-search').toggleClass('active');
-      $('#user-search').toggleClass('active');
-      $('[href="#project-search"]').toggleClass('active');
-      $('[href="#user-search"]').toggleClass('active');
+    if (active_tab === "allocation-search") {
+      $("#project-search").toggleClass("active");
+      $("#allocation-search").toggleClass("active");
+      $('[href="#project-search"]').toggleClass("active");
+      $('[href="#allocation-search"]').toggleClass("active");
+    } else if (active_tab === "user-search") {
+      $("#project-search").toggleClass("active");
+      $("#user-search").toggleClass("active");
+      $('[href="#project-search"]').toggleClass("active");
+      $('[href="#user-search"]').toggleClass("active");
     }
 
     if (rows.length === 0) {
-      $('#collapseOne').collapse();
-      icon = $("#plus_minus");
+      $("#collapseOne").collapse();
+      const icon = $("#plus_minus");
       icon.toggleClass("fa-plus fa-minus");
     }
 
-    $("#id_allocation_search-resources__name").on('click', function(evt) {
-      options = [];
-      selected_resources = $("#id_allocation_search-resources__name").val();
+    $("#id_allocation_search-resources__name").on("click", function (evt) {
+      let options = [];
+      const selected_resources = $(this).val();
       for (let i = 0; i < selected_resources.length; i++) {
         options.push(linked_allocation_attribute_types[selected_resources[i]]);
       }
 
-      var options_set = new Set();
-      options.flat().forEach(element => {
+      let options_set = new Set();
+      options.flat().forEach((element) => {
         options_set.add(element);
       });
-
-      matches = $("[id*=allocationattribute__name]");
+      let matches = $("[id*=attribute__name]");
       for (let i = 0; i < matches.length; i++) {
-        id = matches[i].id;
-        
-        if (!id.includes('div') && !id.includes('hint')) {
-          value = $("#" + id + " option:selected").val();
-          matches[i].innerHTML = '<option value="">---------</option>' + Array.from(options_set).toString().replace(',', '');
-          $("#" + id).val(value).change();
+        const id = matches[i].id;
+        if (id.includes("project")) {
+          continue;
+        }
+
+        if (!id.includes("div") && !id.includes("hint")) {
+          let value = $("#" + id + " option:selected").val();
+          matches[i].innerHTML =
+            '<option value="">---------</option>' +
+            Array.from(options_set).toString().replace(",", "");
+          $("#" + id)
+            .val(value)
+            .change();
           value = $("#" + id + " option:selected").val();
           if (value === undefined) {
-            $("#" + id).val("").change();
+            $("#" + id)
+              .val("")
+              .change();
 
-            base_id = "#" + id.slice(0, id.length - 25);
-            resetAttributeFieldsToDefaults(base_id, 'allocation');
+            const base_id = "#" + id.slice(0, id.length - 25);
+            resetAttributeFieldsToDefaults(base_id, "allocation");
           }
         }
-      } 
-    })
-
-    $("[id*='allocationattribute__name']").each(function (data) {
-      id = $(this)[0].id;
-      if (id.includes('div')) {
-        return;
       }
+    });
 
-      $(this).on('change', function (evt) {
-        id = evt.target.id
-        base_div_id = '#div_' + id.slice(0, id.indexOf('-', id.indexOf('-') + 1) + 1);
-        toggleUsageFields(parseInt(evt.target.value), base_div_id, 'allocation');
-      })
+    bindAddFormButton("allocation");
+    bindAddFormButton("project");
 
-      base_div_id = '#div_' + id.slice(0, id.indexOf('-', id.indexOf('-') + 1) + 1);
-      toggleUsageFields(parseInt(id = $(this)[0].value), base_div_id, 'allocation');
-    })
-
-    $("[id*='projectattribute__name']").each(function (data) {
-      id = $(this)[0].id;
-      if (id.includes('div')) {
-        return;
+    $('a[data-toggle="tab"]').on("shown.bs.tab", function (e) {
+      const targetId = $(e.target).attr("href");
+      if (targetId === "#saved-searches") {
+        $("#btn-save-search").hide();
+      } else {
+        $("#btn-save-search").show();
       }
+    });
 
-      $(this).on('change', function (evt) {
-        id = evt.target.id
-        base_div_id = '#div_' + id.slice(0, id.indexOf('-', id.indexOf('-') + 1) + 1);
-        toggleUsageFields(parseInt(evt.target.value), base_div_id, 'project');
-      })
+    if ($("#saved-searches").hasClass("active")) {
+      $("#btn-save-search").hide();
+    }
 
-      base_div_id = '#div_' + id.slice(0, id.indexOf('-', id.indexOf('-') + 1) + 1);
-      toggleUsageFields(parseInt(id = $(this)[0].value), base_div_id, 'project');
-    })
-  })
+    $("#export_button").on("click", function () {
+      $("#export_data").val(JSON.stringify({ columns, rows }));
+    });
 
-  $("#id_formset_add_allocation_attribute_button").on('click', function() {
-    // The formset must have at least one initial form for this to work.
-    let row = $("#id_allocationattribute_formset > div:nth-child(3)")[0].cloneNode(true);
-    row.innerHTML = row.innerHTML.replaceAll('-0-', '-' + allocation_form_count + '-');
-    $("#id_allocationattribute_formset").append(row);
+    $("#expand_button").on("click", function () {
+      $("#collapseOne").collapse();
+      const icon = $("#plus_minus");
+      icon.toggleClass("fa-plus fa-minus");
+    });
 
-    var allocationattribute__name_field = $('#id_allocationattribute-' + allocation_form_count + '-allocationattribute__name');
+    $.ajax({
+      type: "GET",
+      url: "{% url 'saved-searches' %}",
+      success: function (data) {
+        const $savedSearchesDiv = $("#saved-searches");
+        $savedSearchesDiv.html(data);
+        attachSavedSearchHandlers();
+      },
+      error: function (xhr) {
+        const $savedSearchesDiv = $("#saved-searches");
+        const errorMessage =
+          '<div class="alert alert-danger" role="alert"> \
+            <i class="fas fa-info-circle" aria-disabled="true"></i> There was an error while fetching the saved searches. \
+          </div>';
 
-    allocationattribute__name_field.on('change', function (evt) {
-      id = evt.target.id;
-      base_div_id = '#div_' + id.slice(0, id.indexOf('-', id.indexOf('-') + 1) + 1);
-      toggleUsageFields(parseInt(evt.target.value), base_div_id, 'allocation');
-    })
+        $savedSearchesDiv.html(errorMessage);
+      },
+    });
 
+    $("#btn-save-search").on("click", function () {
+      window.showSavedSearchModal("save");
+    });
 
-    base_div_id = '#div_id_allocationattribute-' + allocation_form_count + '-';
-    base_id = '#id_allocationattribute-' + allocation_form_count + '-';
-    resetAttributeFieldsToDefaults(base_id, 'allocation');
-    toggleUsageFields(parseInt(id = allocationattribute__name_field.val()), base_div_id, 'allocation');
+    $(document).on("click", "#btn-load-search", function () {
+      const searchId = $(this).data("search-id");
+      const $msgContainer = $(`#load-search-message-${searchId}`);
+      $msgContainer.html("");
+      $.ajax({
+        url: `/advanced_search/load-saved-search/${searchId}/`,
+        type: "GET",
+        success: function (data) {
+          populateSearchForm(data.query_data);
+          $msgContainer.html('<div class="alert alert-success" role="alert">Search loaded successfully.</div>')
+        },
+        error: function (xhr) {
+          if (xhr.responseJSON && xhr.responseJSON.error) {
+            $msgContainer.html(`<div class="alert alert-danger" role="alert">${xhr.responseJSON.error}</div>`)
+          } else {
+            $msgContainer.html('<div class="alert alert-danger" role="alert">Failed to load search.</div>')
+          }
+        }
+      });
+    });
 
-    allocation_form_count++;
-    $('#id_allocationattribute-TOTAL_FORMS').val(allocation_form_count);
-  })
+    function attachSavedSearchHandlers() {
+      $(document).on("click", "#btn-modify-search", function () {
+        const searchId = $(this).data("search-id");
+        window.showSavedSearchModal("modify", searchId);
+      });
 
-  $("#id_formset_add_project_attribute_button").on('click', function() {
-    // The formset must have at least one initial form for this to work.
-    let row = $("#id_projectattribute_formset > div:nth-child(3)")[0].cloneNode(true);
-    row.innerHTML = row.innerHTML.replaceAll('-0-', '-' + project_form_count + '-');
-    $("#id_projectattribute_formset").append(row);
-
-    var projectattribute__name_field = $('#id_projectattribute-' + project_form_count + '-projectattribute__name');
-
-    projectattribute__name_field.on('change', function (evt) {
-      id = evt.target.id;
-      base_div_id = '#div_' + id.slice(0, id.indexOf('-', id.indexOf('-') + 1) + 1);
-      toggleUsageFields(parseInt(evt.target.value), base_div_id, 'project');
-    })
-
-
-    base_div_id = '#div_id_projectattribute-' + project_form_count + '-';
-    base_id = '#id_projectattribute-' + project_form_count + '-';
-    resetAttributeFieldsToDefaults(base_id, 'allocation');
-    toggleUsageFields(parseInt(id = projectattribute__name_field.val()), base_div_id, 'project');
-
-    project_form_count++;
-    $('#id_projectattribute-TOTAL_FORMS').val(project_form_count);
-  })
-
-  $("#export_button").on('click', function () {
-    data = {
-      'columns': columns,
-      'rows': rows,
-    };
-    $("#export_data").val(JSON.stringify(data));
-  })
-
-  $("#expand_button").click(function() {
-    $('#collapseOne').collapse();
-    icon = $("#plus_minus");
-    icon.toggleClass("fa-plus fa-minus");
+      $(document).on("click", "#btn-details-search", function () {
+        const searchId = $(this).data("search-id");
+        window.showSavedSearchModal("details", searchId);
+      });
+    }
   });
 </script>
 {% endblock %}

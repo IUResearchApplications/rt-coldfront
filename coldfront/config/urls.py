@@ -8,6 +8,7 @@ ColdFront URL Configuration
 
 import environ
 import split_settings
+from debug_toolbar.toolbar import debug_toolbar_urls
 from django.conf import settings
 from django.contrib import admin
 from django.core import serializers
@@ -38,7 +39,7 @@ urlpatterns = [
     path("resource/", include("coldfront.core.resource.urls")),
     path("project-summary", portal_views.project_summary, name="project-summary"),
     path("user-summary", portal_views.user_summary, name="user-summary"),
-]
+] + debug_toolbar_urls()
 
 if settings.GRANT_ENABLE:
     urlpatterns.append(path("grant/", include("coldfront.core.grant.urls")))

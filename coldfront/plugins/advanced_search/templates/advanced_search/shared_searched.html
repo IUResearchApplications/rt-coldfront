@@ -1,0 +1,53 @@
+{% load common_tags %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% if shared_searches %}
+  <div id="accordion-shared_searches" role="tablist">
+    <div class="card mb-2">
+      <div class="card-header" role="tab">
+        <h5 class="mb-0">
+          <a data-toggle="collapse" href="#all_shared_searches" aria-expanded="true" aria-controls="all_shared_searches">
+            Shared Searches
+          </a>
+        </h5>
+      </div>
+      <div
+        id="all_shared_searches"
+        class="collapse"
+        role="tabpanel"
+        aria-labelledby="all_shared_searches"
+        data-parent="#accordion-shared_searches"
+        style=""
+      >
+        <div class="card-body">
+          <div class="row">
+            {% for shared_search in shared_searches %}
+              <div class="col-md-4 mb-3">
+                <div class="card">
+                  <div class="card-header">
+                    <h6 class="mb-0">{{ shared_search.name }}</h6>
+                  </div>
+                  <div class="card-body">
+                    {{ shared_search.description }}
+                  </div>
+                  <div class="card-footer d-flex align-items-center">
+                    <div id="load-search-message" class="alert d-none mb-0 flex-grow-1 mr-2" role="alert" style="width: auto;"></div>
+                    <div class="d-flex justify-content-end">
+                      <button type="button" id="btn-load-search" class="btn btn-success mr-2">Load</button>
+                      <button type="button" id="btn-details-search" class="btn btn-secondary" data-search-id="{{ shared_search.pk }}">Details</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% else %}
+  <div class="alert alert-info" role="alert">
+    <i class="fas fa-info-circle" aria-disabled="true"></i> No shared searches.
+  </div>
+{% endif %}

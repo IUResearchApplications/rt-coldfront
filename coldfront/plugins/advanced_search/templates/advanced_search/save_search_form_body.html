@@ -1,0 +1,12 @@
+{% load crispy_forms_tags %}
+
+{% csrf_token %}
+{{ save_search_form.name|as_crispy_field }}
+{{ save_search_form.description|as_crispy_field }}
+<div class="multiselect-wrapper">
+  <label for="id_shared_with_users"> Select Users </label>
+  {{ save_search_form.shared_with_users }}
+  <label for="id_shared_with_groups"> Select Groups </label>
+  {{ save_search_form.shared_with_groups }}
+</div>
+<input type="hidden" name="query_data" id="hidden-query-data" value="" />
