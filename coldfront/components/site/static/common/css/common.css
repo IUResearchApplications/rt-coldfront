@@ -85,3 +85,14 @@ body > main > div > div.card.border-primary > div.card-body > form > div.alert.a
 #branding-bar {
     position: relative !important;
 }
+
+.form-label {
+  font-weight: bold;
+}
+
+.validating-feedback {
+  width: 100%;
+  margin-top: .25rem;
+  font-size: 80%;
+  color: #006298;
+}
