@@ -10,6 +10,24 @@ Advanced Search
 {% block content %}
   <h1>Advanced Search</h1>
   <hr>
+  
+  {% if loaded_search %}
+  <div class="alert alert-info d-flex align-items-center mb-3" id="loaded-search-banner" role="alert" aria-live="polite">
+    <div class="flex-grow-1">
+      <strong>Loaded Search:</strong> <span id="search_title">{{ loaded_search.name }}</span>
+      <strong>by {{ loaded_search.owner.username }}</strong>
+    </div>
+    <div>
+      {% if is_loaded_search_owner %}
+        <button type="button" class="btn btn-sm btn-primary mr-2" id="btn-update-search">Update This Search</button>
+      {% elif loaded_search_is_shared %}
+        <button type="button" class="btn btn-sm btn-secondary mr-2" id="btn-copy-search" data-url="{% url 'copy-search' pk=loaded_search.pk %}">Copy to My Searches</button>
+      {% endif %}
+      <button type="button" class="btn btn-sm btn-danger" id="btn-clear-search">Clear</button>
+    </div>
+  </div>
+  {% endif %}
+  
   <div class="mb-3" id="accordion">
     <div class="card">
       <div class="card-header">
@@ -33,46 +51,37 @@ Advanced Search
             <li class="nav-item"><a class="nav-link active" href="#project-search" data-toggle="tab">Project Search</a></li>
             <li class="nav-item"><a class="nav-link" href="#allocation-search" data-toggle="tab">Allocation Search</a></li>
             <li class="nav-item"><a class="nav-link" href="#user-search" data-toggle="tab">User Search</a></li>
+            <li class="nav-item ml-auto"><a class="nav-link" href="#searches" data-toggle="tab">Saved Searches</a></li>
           </ul>
           <div id="full-search" class="tab-content card-body">
             <div id="project-search" class="tab-pane active">
-              <form method="GET" action="{% url 'advanced-search' %}" autocomplete="off">
+              <form method="POST" action="{% url 'advanced-search' %}" autocomplete="off">
+                {% csrf_token %}
+                <input type="hidden" name="search_type" value="project">
                 {% crispy project_form %}
               </form>
             </div>
             <div id="allocation-search" class="tab-pane">
-              <form method="GET" action="{% url 'advanced-search' %}" autocomplete="off">
+              <form method="POST" action="{% url 'advanced-search' %}" autocomplete="off">
+                {% csrf_token %}
+                <input type="hidden" name="search_type" value="allocation">
                 {% crispy allocation_form %}
               </form>
             </div>
             <div id="user-search" class="tab-pane">
-              <form method="GET" action="{% url 'advanced-search' %}" autocomplete="off">
+              <form method="POST" action="{% url 'advanced-search' %}" autocomplete="off">
+                {% csrf_token %}
+                <input type="hidden" name="search_type" value="user">
                 {% crispy user_form %}
               </form>
             </div>
+            <div id="searches" class="tab-pane" role="tabpanel">
+              <div id="saved-searches"></div>
+              <div id="shared-searches"></div>
+            </div>
           </div>
-          <div id="allocation-search" class="tab-pane" role="tabpanel">
-            <form method="POST" action="{% url 'advanced-search' %}" autocomplete="off">
-              {% crispy allocation_form %}
-            </form>
-          </div>
-          <div id="user-search" class="tab-pane" role="tabpanel">
-            <form method="POST" action="{% url 'advanced-search' %}" autocomplete="off">
-              {% crispy user_form %}
-            </form>
-          </div>
-          <div id="saved-searches" class="tab-pane" role="tabpanel"></div>
         </div>
       </div>
-    </div>
-    <div class="card-footer">
-      <button
-        type="button"
-        id="btn-save-search"
-        class="btn btn-primary"
-      >
-        Save Search
-      </button>
     </div>
   </div>
 </div>
@@ -233,149 +242,6 @@ Advanced Search
     });
   }
 
-  function populateSearchForm(queryData) {
-    var searchType = null;
-    var mainFormPrefix = null;
-    var attributeFormPrefix = null;
-
-    if (queryData.project_search || (queryData.project_search && queryData.project_attributes)) {
-      searchType = 'project';
-      mainFormPrefix = 'project_search';
-      attributeFormPrefix = 'projectattribute';
-    }
-    else if (queryData.allocation_search || (queryData.allocation_search && queryData.allocation_attributes)) {
-      searchType = 'allocation';
-      mainFormPrefix = 'allocation_search';
-      attributeFormPrefix = 'allocationattribute';
-    }
-    else if (queryData.user_search) {
-      searchType = 'user';
-      mainFormPrefix = 'user_search';
-      attributeFormPrefix = null;
-    }
-
-    if (!searchType) {
-      console.log('No valid search type found in queryData');
-      return;
-    }
-
-    var activeTabSelector = null;
-    if (searchType === 'project') {
-      activeTabSelector = '#project-search';
-    } else if (searchType === 'allocation') {
-      activeTabSelector = '#allocation-search';
-    } else if (searchType === 'user') {
-      activeTabSelector = '#user-search';
-    }
-
-    $(activeTabSelector + ' a[data-toggle="tab"]').tab("show");
-
-    setTimeout(function() {
-      populateFormFields(searchType, mainFormPrefix, attributeFormPrefix, queryData);
-    }, 100);
-  }
-
-  function populateFormFields(searchType, mainFormPrefix, attributeFormPrefix, queryData) {
-    var mainFormData = queryData[mainFormPrefix] || {};
-    var attributeFormData = queryData[attributeFormPrefix + '_attributes'] || {};
-
-    for (var key in mainFormData) {
-      if (mainFormData.hasOwnProperty(key)) {
-        // Convert key like "project_search-resources__name" to ID "id_project_search-resources__name"
-        var fieldId = "id_" + key;
-        var $field = $("#" + fieldId);
-        if ($field.length) {
-          var value = mainFormData[key];
-          console.log('Setting field', fieldId, 'to value:', value);
-          if ($field.is(":checkbox") || $field.is(":radio")) {
-            $field.prop("checked", value === true || value === "true" || value === "on" || value === "1");
-          } else if ($field.is("select")) {
-            $field.val(value);
-            $field.trigger("change");
-          } else {
-            $field.val(value);
-          }
-        }
-      }
-    }
-
-    if (attributeFormPrefix && Object.keys(attributeFormData).length > 0) {
-      var totalForms = 0;
-      var attributeDataByForm = {};
-
-      for (var key in attributeFormData) {
-        if (attributeFormData.hasOwnProperty(key)) {
-          // Parse key like "projectattribute-0-attribute__name"
-          var parts = key.split('-');
-          if (parts.length >= 3) {
-            var formIndex = parseInt(parts[1]);
-            var fieldPart = key.substring(key.indexOf('-', key.indexOf('-') + 1) + 1);
-
-            if (!attributeDataByForm[formIndex]) {
-              attributeDataByForm[formIndex] = {};
-            }
-            attributeDataByForm[formIndex][fieldPart] = attributeFormData[key];
-
-            if (formIndex >= totalForms) {
-              totalForms = formIndex + 1;
-            }
-          }
-        }
-      }
-
-      var totalFormsField = $("#id_" + attributeFormPrefix + "-TOTAL_FORMS");
-      if (totalFormsField.length) {
-        totalFormsField.val(totalForms);
-      }
-
-      var formsToRemove = $('div[id*="-attribute-row"]').length - totalForms;
-      for (var i = 0; i < formsToRemove; i++) {
-        $('div[id*="-attribute-row"]:last').remove();
-      }
-
-      for (var formIndex = 0; formIndex < totalForms; formIndex++) {
-        var formData = attributeDataByForm[formIndex] || {};
-        
-        for (var attrKey in formData) {
-          if (formData.hasOwnProperty(attrKey)) {
-            // Convert key like "attribute__name" to field ID
-            var selector = "#id_" + attributeFormPrefix + "-" + formIndex + "-" + attrKey;
-            var $attrField = $(selector);
-
-            if ($attrField.length) {
-              var value = formData[attrKey];
-              console.log('Setting attribute field', selector, 'to value:', value);
-
-              if ($attrField.is(":checkbox") || $attrField.is(":radio")) {
-                $attrField.prop("checked", value === true || value === "true" || value === "on" || value === "1");
-              } else if ($attrField.is("select")) {
-                $attrField.val(value);
-                $attrField.trigger("change");
-              } else {
-                $attrField.val(value);
-              }
-            }
-          }
-        }
-      }
-
-      updateAttributeFormCount(attributeFormPrefix, totalForms);
-    }
-
-    $(activeTabSelector + ' form input, ' + activeTabSelector + ' form select').trigger("change");
-
-    setTimeout(function() {
-      $(activeTabSelector + ' form').submit();
-    }, 200);
-  }
-
-  function updateAttributeFormCount(prefix, count) {
-    var totalFormsField = $("#id_" + prefix + "-TOTAL_FORMS");
-    if (totalFormsField.length) {
-      totalFormsField.val(count);
-    }
-  }
-
   $(document).ready(function () {
     if (columns.length) {
       $("#results_table").DataTable({ bFilter: false });
@@ -463,14 +329,14 @@ Advanced Search
 
     $('a[data-toggle="tab"]').on("shown.bs.tab", function (e) {
       const targetId = $(e.target).attr("href");
-      if (targetId === "#saved-searches") {
+      if (targetId === "searches") {
         $("#btn-save-search").hide();
       } else {
         $("#btn-save-search").show();
       }
     });
 
-    if ($("#saved-searches").hasClass("active")) {
+    if ($("searches").hasClass("active")) {
       $("#btn-save-search").hide();
     }
 
@@ -480,8 +346,7 @@ Advanced Search
 
     $("#expand_button").on("click", function () {
       $("#collapseOne").collapse();
-      const icon = $("#plus_minus");
-      icon.toggleClass("fa-plus fa-minus");
+      $("#plus_minus").toggleClass("fa-plus fa-minus");
     });
 
     $.ajax({
@@ -503,26 +368,81 @@ Advanced Search
       },
     });
 
-    $("#btn-save-search").on("click", function () {
+    $.ajax({
+      type: "GET",
+      url: "{% url 'shared-searches' %}",
+      success: function (data) {
+        const $sharedSearchesDiv = $("#shared-searches");
+        $sharedSearchesDiv.html(data);
+        attachSavedSearchHandlers();
+      },
+      error: function (xhr) {
+        const $sharedSearchesDiv = $("#shared-searches");
+        const errorMessage =
+          '<div class="alert alert-danger" role="alert"> \
+            <i class="fas fa-info-circle" aria-disabled="true"></i> There was an error while fetching the shared searches. \
+          </div>';
+
+        $sharedSearchesDiv.html(errorMessage);
+      },
+    });
+
+    $(document).on("click", "#btn-save-search", function () {
       window.showSavedSearchModal("save");
     });
 
     $(document).on("click", "#btn-load-search", function () {
-      const searchId = $(this).data("search-id");
-      const $msgContainer = $(`#load-search-message-${searchId}`);
-      $msgContainer.html("");
+      window.location.href = $(this).data("url");
+    });
+
+    $(document).on("click", "#btn-clear-search", function () {
       $.ajax({
-        url: `/advanced_search/load-saved-search/${searchId}/`,
-        type: "GET",
+        type: "POST",
+        url: "{% url 'clear-search' %}",
+        headers: { "X-CSRFToken": "{{ csrf_token }}" },
+        success: function () {
+          window.location.href = "{% url 'advanced-search' %}";
+        },
+        error: function () {
+          alert("Failed to clear search. Please try again.");
+        }
+      });
+    });
+
+    $(document).on("click", "#btn-update-search", function () {
+      window.showSavedSearchModal("update", "{{ loaded_search.id }}");
+    });
+
+    $(document).on("click", "#btn-copy-search", function () {
+      const $btn = $(this);
+      const $banner = $("#loaded-search-banner");
+      $.ajax({
+        type: "POST",
+        url: $btn.data("url"),
+        headers: { "X-CSRFToken": "{{ csrf_token }}" },
         success: function (data) {
-          populateSearchForm(data.query_data);
-          $msgContainer.html('<div class="alert alert-success" role="alert">Search loaded successfully.</div>')
+          if (data.success) {
+            $.ajax({
+              type: "GET",
+              url: "{% url 'saved-searches' %}",
+              success: function (data) {
+                $("#saved-searches").html(data);
+                // Show a temporary success banner above the accordion
+                const $successBanner = $("<div class='alert alert-success alert-dismissible fade show mb-3' role='alert'>" +
+                  "<i class='fas fa-copy mr-2'></i>Search copied successfully." +
+                  "<button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button></div>"
+                );
+                $("#accordion").before($successBanner);
+                setTimeout(function() { $successBanner.alert("close"); }, 4000);
+              },
+            });
+          }
         },
         error: function (xhr) {
-          if (xhr.responseJSON && xhr.responseJSON.error) {
-            $msgContainer.html(`<div class="alert alert-danger" role="alert">${xhr.responseJSON.error}</div>`)
+          if (xhr.status === 403) {
+            alert("You do not have permission to copy this search.");
           } else {
-            $msgContainer.html('<div class="alert alert-danger" role="alert">Failed to load search.</div>')
+            alert("Failed to copy search. Please try again.");
           }
         }
       });
@@ -530,13 +450,11 @@ Advanced Search
 
     function attachSavedSearchHandlers() {
       $(document).on("click", "#btn-modify-search", function () {
-        const searchId = $(this).data("search-id");
-        window.showSavedSearchModal("modify", searchId);
+        window.showSavedSearchModal("modify", $(this).data("search-id"));
       });
 
       $(document).on("click", "#btn-details-search", function () {
-        const searchId = $(this).data("search-id");
-        window.showSavedSearchModal("details", searchId);
+        window.showSavedSearchModal("details", $(this).data("search-id"));
       });
     }
   });

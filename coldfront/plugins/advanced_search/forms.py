@@ -144,6 +144,9 @@ class SearchForm(forms.Form):
     end_date = forms.DateField(widget=forms.TextInput(attrs={"class": "datepicker"}), label="End Date", required=False)
 
     def __init__(self, *args, **kwargs):
+        self.loaded_search = kwargs.pop("loaded_search", None)
+        self.is_loaded_search_owner = kwargs.pop("is_loaded_search_owner", None)
+
         super().__init__(*args, **kwargs)
 
     def get_ordered_queryset(self, model, field_name="name", filter_kwargs=None):
@@ -167,6 +170,11 @@ class SearchForm(forms.Form):
                 </div>
             </div>
         ''')
+
+    def create_save_search_botton(self, search_type):
+        return HTML(f"""
+            <button type="button" id="btn-save-search" class="btn btn-primary float-right">Save {search_type} Search</button>
+        """)
 
 
 class ProjectSearchForm(SearchForm):
@@ -261,7 +269,12 @@ class ProjectSearchForm(SearchForm):
                     active=False,
                 )
             ),
-            FormActions(Submit("submit", "Project Search"), Reset("reset", "Reset"), css_class="mb-0"),
+            FormActions(
+                Submit("submit", "Project Search"),
+                Reset("reset", "Reset"),
+                self.create_save_search_botton("Project"),
+                css_class="mb-0",
+            ),
         )
 
 
@@ -285,11 +298,19 @@ class UserSearchForm(forms.Form):
     last_name = forms.CharField(label="Last Name", max_length=100, required=False)
     userprofile__department = forms.CharField(label="Department Contains", max_length=100, required=False)
     userprofile__title = forms.CharField(label="Title Contains", max_length=30, required=False)
-    type = forms.ChoiceField(initial="all", choices=USER_TYPE_CHOICE, widget=forms.RadioSelect)
+    type = forms.ChoiceField(initial="all", choices=USER_TYPE_CHOICE, widget=forms.RadioSelect, required=False)
 
     def __init__(self, *args, **kwargs):
+        self.loaded_search = kwargs.pop("loaded_search", None)
+        self.is_loaded_search_owner = kwargs.pop("is_loaded_search_owner", None)
+
         super().__init__(*args, **kwargs)
         self.setup_layout()
+
+    def create_save_search_botton(self, search_type):
+        return HTML(f"""
+            <button type="button" id="btn-save-search" class="btn btn-primary float-right">Save {search_type} Search</button>
+        """)
 
     def setup_layout(self):
         """Setup the form layout with accordions."""
@@ -329,7 +350,12 @@ class UserSearchForm(forms.Form):
                     active=False,
                 ),
             ),
-            FormActions(Submit("submit", "User Search"), Reset("reset", "Reset"), css_class="mb-0"),
+            FormActions(
+                Submit("submit", "User Search"),
+                Reset("reset", "Reset"),
+                self.create_save_search_botton("User"),
+                css_class="mb-0",
+            ),
         )
 
 
@@ -499,7 +525,12 @@ class AllocationSearchForm(SearchForm):
                     active=False,
                 )
             ),
-            FormActions(Submit("submit", "Allocation Search"), Reset("reset", "Reset"), css_class="mb-0"),
+            FormActions(
+                Submit("submit", "Allocation Search"),
+                Reset("reset", "Reset"),
+                self.create_save_search_botton("Allocation"),
+                css_class="mb-0",
+            ),
         )
 
 
@@ -544,5 +575,7 @@ class SearchCreateForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         if user:
-            self.fields["shared_with_users"].queryset = User.objects.filter(is_staff=True)
+            self.fields["shared_with_users"].queryset = User.objects.filter(is_staff=True).exclude(pk=user.pk)
             self.fields["shared_with_groups"].queryset = user.groups.all()
+            self.fields["shared_with_users"].help_text = "Users who can view and load this search."
+            self.fields["shared_with_groups"].help_text = "Groups whose members can view and load this search."

@@ -25,6 +25,12 @@
   role="dialog"
   aria-labelledby="savedSearchModalLabel"
   aria-hidden="true"
+  data-url-save="{% url 'save-search' %}"
+  data-url-modify="{% url 'modify-search' pk=0 %}"
+  data-url-delete="{% url 'delete-search' pk=0 %}"
+  data-url-details="{% url 'search-details' pk=0 %}"
+  data-url-apply="{% url 'apply-saved-search' pk=0 %}"
+  data-url-saved-list="{% url 'saved-searches' %}"
 >
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -35,8 +41,8 @@
         </button>
       </div>
       <div class="modal-body"></div>
-      <div class="modal-footer">
-        <div class="d-none alert" id="modal-message" role="alert"></div>
+      <div class="modal-footer" style="flex-wrap: nowrap;">
+        <div class="d-none alert flex-grow-1" id="modal-message" role="alert"></div>
         <div class="d-flex justify-content-end" id="modal-buttons"></div>
       </div>
     </div>
@@ -66,15 +72,27 @@
     let currentModalType = null;
     let currentSearchId = null;
 
+    function getUrl(name, id) {
+      const template = $("#savedSearchModal").data("url-" + name);
+      return id != null ? template.replace("0", String(id)) : template;
+    }
+
     const modalConfig = {
       save: {
         title: "Save Search",
         footerButtons:
-          '<button type="submit" id="btn-submit-save-search mr-2" class="btn btn-primary">Save</button>' +
+          '<button type="submit" id="btn-submit-save-search" class="btn btn-primary mr-2">Save</button>' +
           '<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>',
       },
       modify: {
         title: "Modify Search",
+        footerButtons:
+          '<button type="submit" id="btn-submit-save-search" class="btn btn-primary mr-2">Save</button>' +
+          '<button type="button" id="btn-delete-search" class="btn btn-danger mr-2">Delete</button>' +
+          '<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>',
+      },
+      update: {
+        title: "Update Search",
         footerButtons:
           '<button type="submit" id="btn-submit-save-search" class="btn btn-primary mr-2">Save</button>' +
           '<button type="button" id="btn-delete-search" class="btn btn-danger mr-2">Delete</button>' +
@@ -215,9 +233,12 @@
 
       let url = ""
       if (searchId) {
-        url = `/advanced_search/modify-search/${searchId}/`
+        url = getUrl("modify", searchId)
+        if (currentModalType === "update") {
+          url += "?update=1"
+        }
       } else {
-        url = "/advanced_search/save-search/"
+        url = getUrl("save")
       }
       $("#saveSearchForm").attr("action", url)
 
@@ -226,8 +247,10 @@
         const $submitBtn = $("#btn-submit-save-search");
         const url = $(this).attr("action");
 
-        const queryData = getSearchData();
-        $("#hidden-query-data").val(JSON.stringify(queryData));
+        if (currentModalType !== "modify") {
+          const queryData = getSearchData();
+          $("#hidden-query-data").val(JSON.stringify(queryData));
+        }
 
         $submitBtn.prop("disabled", true).text("Saving...");
 
@@ -243,21 +266,13 @@
               const $btnContainer = $("#modal-buttons");
               $messageContainer.removeClass("d-none").addClass("alert-success").text(data.message);
               $btnContainer.addClass("d-none")
-              setTimeout(function() {
-                $messageContainer.removeClass("alert-success").text("");
-                $btnContainer.removeClass("d-none")
-                $("#savedSearchModal").modal("hide");
-                $.ajax({
-                  type: "GET",
-                  url: "/advanced_search/saved-searches/",
-                  success: function (data) {
-                    $("#saved-searches").html(data);
-                  },
-                  error: function (xhr) {
-                    console.error('Failed to reload saved searches:', xhr);
-                  }
-                });
-              }, 1000);
+              $.ajax({
+                type: "GET",
+                url: getUrl("saved-list"),
+                success: function (data) {
+                  $("#saved-searches").html(data);
+                },
+              });
             } else {
               const $messageContainer = $("#modal-message");
               let errorMessage = data.message || "There was an issue saving your search.";
@@ -287,7 +302,13 @@
         success: function (data) {
           $modalBody.html(data);
           initSelect2();
-          $("#hidden-query-data").val(JSON.stringify(getSearchData()));
+          if (currentModalType !== "modify") {
+            $("#hidden-query-data").val(JSON.stringify(getSearchData()));
+          }
+          const modifySearchName = $("#modify-search-name").text();
+          if (modifySearchName && currentModalType === "modify") {
+            $("#savedSearchModalLabel").empty().text("Updating saved search: " + modifySearchName);
+          }
         },
         error: function () {
           $modalBody.html(
@@ -304,7 +325,7 @@
       }
 
       $.ajax({
-        url: `/advanced_search/search-details/${searchId}/`,
+        url: getUrl("details", searchId),
         type: "GET",
         success: function (data) {
           $modalBody.html(data);
@@ -331,27 +352,27 @@
       const $msg = $("#modal-message");
 
       $.ajax({
-        url: `/advanced_search/delete-search/${searchId}/`,
+        url: getUrl("delete", searchId),
         type: "POST",
         headers: { "X-CSRFToken": "{{ csrf_token }}" },
         success: function (data) {
           $("#savedSearchModal").modal("hide");
-          $msg.removeClass("d-none").addClass("alert-success");
-          $msg.text("Search deleted successfully.");
-          setTimeout(function() {
-            $msg.removeClass("alert-success").text("");
-            $("#savedSearchModal").modal("hide");
-            $.ajax({
-              type: "GET",
-              url: "/advanced_search/saved-searches/",
-              success: function (data) {
-                $("#saved-searches").html(data);
-              },
-              error: function (xhr) {
-                console.error('Failed to reload saved searches:', xhr);
-              }
-            });
-          }, 1000);
+          $.ajax({
+            type: "GET",
+            url: getUrl("saved-list"),
+            success: function (data) {
+              $("#saved-searches").html(data);
+              const $banner = $("<div class='alert alert-success alert-dismissible fade show mb-3' role='alert'>" +
+                "<i class='fas fa-check-circle mr-2'></i>Search deleted successfully." +
+                "<button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button></div>"
+              );
+              $("#accordion").before($banner);
+              setTimeout(function() { $banner.alert("close"); }, 4000);
+            },
+            error: function (xhr) {
+              console.error('Failed to reload saved searches:', xhr);
+            }
+          });
         },
         error: function () {
           $msg.removeClass("d-none").addClass("alert-danger");

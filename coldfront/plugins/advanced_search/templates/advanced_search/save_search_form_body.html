@@ -1,6 +1,12 @@
 {% load crispy_forms_tags %}
 
 {% csrf_token %}
+{% if save_search_form.instance.pk and show_metadata_note %}
+  <span id="modify-search-name" class="d-none">{{ save_search_form.instance.name }}</span>
+  <div class="alert alert-secondary mb-3">
+    <i class="fas fa-edit"></i> <strong>Note:</strong> Only metadata (name, description, sharing) is being updated. The search fields and parameters are not changed here.
+  </div>
+{% endif %}
 {{ save_search_form.name|as_crispy_field }}
 {{ save_search_form.description|as_crispy_field }}
 <div class="multiselect-wrapper">

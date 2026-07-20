@@ -1000,7 +1000,7 @@ def get_saved_searches(user):
 def get_shared_searches(user):
     return SavedSearch.objects.filter(
         Q(shared_with_users=user) | Q(shared_with_groups__in=user.groups.all())
-    ).distinct()
+    ).exclude(owner=user).distinct()
 
 
 def format_json_query_data(value):

@@ -31,12 +31,12 @@
                   <div class="card-body">
                     {{ user_search.description }}
                   </div>
-                  <div class="card-footer">
+                  <div class="card-footer d-flex align-items-center">
                     <div id="load-search-message-{{ user_search.pk }}">
                       <div></div>
                     </div>
                     <div class="d-flex justify-content-end">
-                      <button type="button" id="btn-load-search" class="btn btn-success mr-2" data-search-id="{{ user_search.pk }}">Load</button>
+                      <button type="button" id="btn-load-search" class="btn btn-success mr-2" data-search-id="{{ user_search.pk }}" data-url="{% url 'apply-saved-search' pk=user_search.pk %}">Load</button>
                       <button type="button" id="btn-modify-search" class="btn btn-primary mr-2" data-search-id="{{ user_search.pk }}">Modify</button>
                       <button type="button" id="btn-details-search" class="btn btn-secondary" data-search-id="{{ user_search.pk }}">Details</button>
                     </div>
@@ -51,6 +51,6 @@
   </div>
 {% else %}
   <div class="alert alert-info" role="alert">
-    <i class="fas fa-info-circle" aria-disabled="true"> No saved searches.
+    <i class="fas fa-info-circle" aria-disabled="true"></i> No saved searches.
   </div>
 {% endif %}
