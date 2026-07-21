@@ -108,7 +108,7 @@ class ProjectAttributeSearchForm(BaseAttributeSearchForm):
         if attribute_type_queryset is not None:
             queryset = attribute_type_queryset
         else:
-            queryset = ProjectAttributeType.objects.all()
+            queryset = ProjectAttributeType.objects.select_related("attribute_type").all()
 
         self.fields["attribute__name"].queryset = queryset
 
