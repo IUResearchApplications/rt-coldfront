@@ -582,7 +582,7 @@ class BaseSearchTable(ABC):
                 filtered_users.append(user.user.username)
         return ", ".join(filtered_users)
 
-    def get_model_list(self, allocations: QuerySet) -> str:
+    def get_resource_list(self, allocations: QuerySet) -> str:
         """
         Get list of resource strings for allocations.
 
@@ -671,7 +671,7 @@ class ProjectTable(BaseSearchTable):
             return self.get_user_list(obj.projectuser_set.all(), ["Active"])
 
         if attribute == "resources":
-            return self.get_model_list(obj.allocation_set.all())
+            return self.get_resource_list(obj.allocation_set.all())
 
         if attribute == "url":
             return f"{settings.CENTER_BASE_URL}{reverse('project-detail', kwargs={'pk': obj.pk})}"
