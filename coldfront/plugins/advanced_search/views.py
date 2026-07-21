@@ -168,12 +168,6 @@ class AdvancedSearchView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
             allocation_search_form = AllocationSearchForm(prefix="allocation_search")
             user_search_form = UserSearchForm(prefix="user_search")
 
-        allocation_search_formset = formset_factory(AllocationAttributeSearchForm, extra=1)
-        context["allocationattribute_form"] = allocation_search_formset(prefix="allocationattribute")
-
-        project_search_formset = formset_factory(ProjectAttributeSearchForm, extra=1)
-        context["projectattribute_form"] = project_search_formset(prefix="projectattribute")
-
         project_formset_data = {}
         allocation_formset_data = {}
         formset_data = {}
