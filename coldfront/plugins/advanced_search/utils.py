@@ -992,15 +992,23 @@ class UserTable(BaseSearchTable):
 
         return None
 
+    def get_attribute_model(self) -> None:
+        pass
+
+    def get_attribute_usage_model(self) -> None:
+        pass
+
 
 def get_saved_searches(user):
     return SavedSearch.objects.filter(owner=user)
 
 
 def get_shared_searches(user):
-    return SavedSearch.objects.filter(
-        Q(shared_with_users=user) | Q(shared_with_groups__in=user.groups.all())
-    ).exclude(owner=user).distinct()
+    return (
+        SavedSearch.objects.filter(Q(shared_with_users=user) | Q(shared_with_groups__in=user.groups.all()))
+        .exclude(owner=user)
+        .distinct()
+    )
 
 
 def format_json_query_data(value):
