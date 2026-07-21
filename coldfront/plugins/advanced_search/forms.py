@@ -1,4 +1,4 @@
-from crispy_forms.bootstrap import Accordion, AccordionGroup, FormActions, InlineRadios
+from crispy_forms.bootstrap import FormActions, InlineRadios
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import HTML, Column, Div, Fieldset, Layout, LayoutObject, Reset, Row, Submit
 from django import forms
@@ -37,13 +37,9 @@ class AttributeFormSetHelper(FormHelper):
 
         self.layout = Layout(
             Div(
-                Div(
-                    *layout_elements,
-                    css_class="card-body",
-                    css_id=f"{attribute_type}-attribute-row",
-                ),
-                css_class="card mb-3",
-            )
+                *layout_elements,
+                css_id=f"{attribute_type}-attribute-row",
+            ),
         )
 
 
@@ -127,17 +123,20 @@ class SearchForm(forms.Form):
     display__status__name = forms.BooleanField(required=False)
     display__created = forms.BooleanField(required=False)
     display__end_date = forms.BooleanField(required=False)
-    display__users = forms.BooleanField(required=False, help_text="Active users")
-    display__total_users = forms.BooleanField(required=False, help_text="Active users")
+    display__users = forms.BooleanField(required=False, label="Display active users")
+    display__total_users = forms.BooleanField(required=False, label="Display total active users")
 
-    user_username = forms.CharField(label="Username Contains", max_length=25, required=False, help_text="Active user")
+    user_username = forms.CharField(label="Active Username Contains", max_length=25, required=False)
     status__name = forms.ModelMultipleChoiceField(queryset=None, required=False)
     created_after_date = forms.DateField(
-        widget=forms.TextInput(attrs={"class": "datepicker"}), label="After", required=False, help_text="Includes date"
+        widget=forms.TextInput(attrs={"class": "datepicker"}),
+        label="Created After Date",
+        required=False,
+        help_text="Includes date",
     )
     created_before_date = forms.DateField(
         widget=forms.TextInput(attrs={"class": "datepicker"}),
-        label="Before",
+        label="Created Before Date",
         required=False,
         help_text="Does not include date",
     )
@@ -210,64 +209,79 @@ class ProjectSearchForm(SearchForm):
         self.fields["type__name"].queryset = self.get_ordered_queryset(ProjectTypeChoice)
 
     def setup_layout(self):
-        """Setup the form layout with accordions."""
+        """Setup the form layout with section headers and columns."""
         self.helper = FormHelper(self)
         self.helper.use_custom_control = False
         self.helper.layout = Layout(
-            Accordion(
-                AccordionGroup(
-                    "Filters",
-                    "title",
-                    "description",
-                    "pi__username",
-                    "requestor__username",
-                    "user_username",
-                    "status__name",
-                    "type__name",
-                    "projects_using_ai",
-                    Fieldset(
-                        "Created Date Range",
-                        Div(
-                            Div("created_after_date", css_class="col"),
-                            Div("created_before_date", css_class="col"),
-                            css_class="row",
+            Fieldset(
+                "Projects",
+                Div(
+                    Div(
+                        Row(
+                            Column("title"),
+                            Column("description"),
                         ),
+                        Row(
+                            Column("status__name"),
+                            Column("type__name"),
+                        ),
+                        Row(
+                            Column("pi__username"),
+                            Column("requestor__username"),
+                            Column("user_username"),
+                        ),
+                        Row(
+                            Column("created_after_date"),
+                            Column("created_before_date"),
+                            Column("end_date"),
+                        ),
+                        Row(Column("projects_using_ai")),
+                        HTML("<hr>"),
+                        Div(
+                            Row(Column(self.create_select_all_checkbox("project"))),
+                            Row(
+                                Column(
+                                    "display__id",
+                                    "display__url",
+                                    "display__title",
+                                    "display__description",
+                                ),
+                                Column(
+                                    "display__pi__username",
+                                    "display__requestor__username",
+                                    "display__project_code",
+                                    "display__status__name",
+                                ),
+                                Column(
+                                    "display__type__name",
+                                    "display__created",
+                                    "display__end_date",
+                                    "display__resources",
+                                ),
+                                Column(
+                                    "display__users",
+                                    "display__total_users",
+                                ),
+                            ),
+                            css_id="project_search-project_displays",
+                        ),
+                        css_class="card-body",
                     ),
-                    "end_date",
-                    active=False,
+                    css_class="card mb-3",
                 ),
             ),
-            Accordion(
-                AccordionGroup(
-                    "Displays",
-                    self.create_select_all_checkbox("project"),
-                    "display__id",
-                    "display__url",
-                    "display__title",
-                    "display__description",
-                    "display__pi__username",
-                    "display__requestor__username",
-                    "display__project_code",
-                    "display__status__name",
-                    "display__type__name",
-                    "display__users",
-                    "display__total_users",
-                    "display__created",
-                    "display__end_date",
-                    "display__resources",
-                    active=False,
-                    css_id=f"{self.prefix}-project_displays",
-                ),
-            ),
-            Accordion(
-                AccordionGroup(
-                    "Project Attributes",
-                    Formset("projectattribute_form", "projectattribute_helper", label="projectattribute_formset"),
-                    HTML(
-                        '<button id="id_formset_add_project_attribute_button" type="button" class="btn btn-primary">Add Project Attribute</button>'
+            Fieldset(
+                "Project Attributes",
+                Div(
+                    Div(
+                        Formset("projectattribute_form", "projectattribute_helper", label="projectattribute_formset"),
+                        HTML(
+                            '<button id="id_formset_add_project_attribute_button" type="button" class="btn btn-primary">Add Project Attribute</button>'
+                        ),
+                        css_class="card-body",
                     ),
-                    active=False,
-                )
+                    css_class="card mb-3",
+                ),
             ),
             FormActions(
                 Submit("submit", "Project Search"),
@@ -313,41 +327,72 @@ class UserSearchForm(forms.Form):
         """)
 
     def setup_layout(self):
-        """Setup the form layout with accordions."""
+        """Setup the form layout with section headers and columns."""
         self.helper = FormHelper(self)
         self.helper.use_custom_control = False
         self.helper.layout = Layout(
-            Accordion(
-                AccordionGroup(
-                    "Users",
-                    "usernames",
-                    "first_name",
-                    "last_name",
-                    "display__username",
-                    "display__first_name",
-                    "display__last_name",
-                    InlineRadios("type"),
-                    active=False,
+            Fieldset(
+                "Users",
+                Div(
+                    Div(
+                        Row(
+                            Column("first_name"),
+                            Column("last_name"),
+                        ),
+                        Row(Column("usernames")),
+                        Row(Column(InlineRadios("type"))),
+                        HTML("<hr>"),
+                        Row(
+                            Column("display__username"),
+                            Column("display__first_name"),
+                            Column("display__last_name"),
+                        ),
+                        css_class="card-body",
+                    ),
+                    css_class="card mb-3",
                 ),
-                AccordionGroup(
-                    "User Profiles",
-                    "userprofile__department",
-                    "userprofile__title",
-                    "display__userprofile__department",
-                    "display__userprofile__title",
-                    active=False,
+            ),
+            Fieldset(
+                "User Profiles",
+                Div(
+                    Div(
+                        Row(
+                            Column("userprofile__department"),
+                            Column("userprofile__title"),
+                        ),
+                        Row(
+                            Column("display__userprofile__department"),
+                            Column("display__userprofile__title"),
+                        ),
+                        css_class="card-body",
+                    ),
+                    css_class="card mb-3",
                 ),
-                AccordionGroup(
-                    "Projects",
-                    "display__total_projects",
-                    "display__total_pi_projects",
-                    "display__total_manager_projects",
-                    active=False,
+            ),
+            Fieldset(
+                "Projects",
+                Div(
+                    Div(
+                        Row(
+                            Column("display__total_projects"),
+                            Column("display__total_pi_projects"),
+                            Column("display__total_manager_projects"),
+                        ),
+                        css_class="card-body",
+                    ),
+                    css_class="card mb-3",
                 ),
-                AccordionGroup(
-                    "Allocations",
-                    "display__total_allocations",
-                    active=False,
+            ),
+            Fieldset(
+                "Allocations",
+                Div(
+                    Div(
+                        Row(
+                            Column("display__total_allocations"),
+                        ),
+                        css_class="card-body",
+                    ),
+                    css_class="card mb-3",
                 ),
             ),
             FormActions(
@@ -372,11 +417,8 @@ class AllocationSearchForm(SearchForm):
     display__project__type__name = forms.BooleanField(required=False)
     display__project__created = forms.BooleanField(required=False)
     display__project__end_date = forms.BooleanField(required=False)
-    display__project__users = forms.BooleanField(
-        required=False,
-        help_text='Active users. Enable by selecting "only search projects". Enables the user profiles section.',
-    )
-    display__project__total_users = forms.BooleanField(required=False, help_text="Active users")
+    display__project__total_users = forms.BooleanField(required=False, label="Display project total active users")
+    display__project__project_code = forms.BooleanField(required=False)
 
     display__get_parent_resource__name = forms.BooleanField(required=False, label="Resource name")
     display__get_parent_resource__resource_type__name = forms.BooleanField(required=False, label="Resource type name")
@@ -385,22 +427,23 @@ class AllocationSearchForm(SearchForm):
     project__description = forms.CharField(label="Project Description Contains", max_length=100, required=False)
     project__pi__username = forms.CharField(label="PI Username Contains", max_length=25, required=False)
     project__requestor__username = forms.CharField(label="Requestor Username Contains", max_length=25, required=False)
-    project__user_username = forms.CharField(
-        label="Username Contains", max_length=25, required=False, help_text="Active user"
-    )
+    project__user_username = forms.CharField(label="Active Username Contains", max_length=25, required=False)
     project__status__name = forms.ModelMultipleChoiceField(label="Project Status", queryset=None, required=False)
     project__type__name = forms.ModelMultipleChoiceField(label="Project Type", queryset=None, required=False)
     project__created_after_date = forms.DateField(
-        widget=forms.TextInput(attrs={"class": "datepicker"}), label="After", required=False, help_text="Includes date"
+        widget=forms.TextInput(attrs={"class": "datepicker"}),
+        label="Created After Date",
+        required=False,
+        help_text="Includes date",
     )
     project__created_before_date = forms.DateField(
         widget=forms.TextInput(attrs={"class": "datepicker"}),
-        label="Before",
+        label="Created Before Date",
         required=False,
         help_text="Does not include date",
     )
     project__end_date = forms.DateField(
-        widget=forms.TextInput(attrs={"class": "datepicker"}), label="Project End Date", required=False
+        widget=forms.TextInput(attrs={"class": "datepicker"}), label="End Date", required=False
     )
 
     resources__name = forms.ModelMultipleChoiceField(label="Resource Name", queryset=None, required=False)
@@ -416,8 +459,6 @@ class AllocationSearchForm(SearchForm):
         self.setup_querysets()
         self.setup_layout()
 
-        self.fields["display__users"].help_text = "Active users. Enables the user profiles section."
-
     def setup_querysets(self):
         """Setup all querysets for the form."""
         self.fields["project__status__name"].queryset = ProjectStatusChoice.objects.all().order_by("name")
@@ -429,101 +470,131 @@ class AllocationSearchForm(SearchForm):
         self.fields["resources__resource_type__name"].queryset = ResourceType.objects.all().order_by("name")
 
     def setup_layout(self):
-        """Setup the form layout with accordions."""
+        """Setup the form layout with section headers and columns."""
         self.helper = FormHelper(self)
         self.helper.use_custom_control = False
         self.helper.layout = Layout(
-            Accordion(
-                AccordionGroup(
-                    "Projects",
-                    Accordion(
-                        AccordionGroup(
-                            "Filters",
-                            "project__title",
-                            "project__description",
-                            "project__pi__username",
-                            "project__requestor__username",
-                            "project__user_username",
-                            "project__status__name",
-                            "project__type__name",
-                            Fieldset(
-                                "Created Date Range",
-                                Div(
-                                    Div("project__created_after_date", css_class="col"),
-                                    Div("project__created_before_date", css_class="col"),
-                                    css_class="row",
+            Fieldset(
+                "Projects",
+                Div(
+                    Div(
+                        Row(
+                            Column("project__title"),
+                            Column("project__description"),
+                        ),
+                        Row(
+                            Column("project__status__name"),
+                            Column("project__type__name"),
+                        ),
+                        Row(
+                            Column("project__pi__username"),
+                            Column("project__requestor__username"),
+                            Column("project__user_username"),
+                        ),
+                        Row(
+                            Column("project__created_after_date"),
+                            Column("project__created_before_date"),
+                            Column("project__end_date"),
+                        ),
+                        HTML("<hr>"),
+                        Div(
+                            Row(Column(self.create_select_all_checkbox("project"))),
+                            Row(
+                                Column(
+                                    "display__project__id",
+                                    "display__project__url",
+                                    "display__project__title",
+                                    "display__project__description",
+                                ),
+                                Column(
+                                    "display__project__pi__username",
+                                    "display__project__requestor__username",
+                                    "display__project__project_code",
+                                    "display__project__status__name",
+                                ),
+                                Column(
+                                    "display__project__type__name",
+                                    "display__project__created",
+                                    "display__project__end_date",
+                                    "display__project__total_users",
                                 ),
                             ),
-                            "project__end_date",
-                            active=False,
+                            css_id="allocation_search-project_displays",
                         ),
+                        css_class="card-body",
                     ),
-                    Accordion(
-                        AccordionGroup(
-                            "Displays",
-                            self.create_select_all_checkbox("project"),
-                            "display__project__id",
-                            "display__project__url",
-                            "display__project__title",
-                            "display__project__description",
-                            "display__project__pi__username",
-                            "display__project__requestor__username",
-                            "display__project__status__name",
-                            "display__project__type__name",
-                            "display__project__created",
-                            "display__project__end_date",
-                            active=False,
-                            css_id=f"{self.prefix}-project_displays",
-                        ),
-                    ),
-                    active=False,
-                )
+                    css_class="card mb-3",
+                ),
             ),
-            Accordion(
-                AccordionGroup(
-                    "Allocations",
-                    "user_username",
-                    "status__name",
-                    Fieldset(
-                        "Created Date Range",
+            Fieldset(
+                "Allocations",
+                Div(
+                    Div(
+                        Row(
+                            Column("user_username"),
+                        ),
+                        Row(
+                            Column("status__name"),
+                        ),
+                        Row(
+                            Column("created_after_date"),
+                            Column("created_before_date"),
+                        ),
+                        HTML("<hr>"),
                         Div(
-                            Div("created_after_date", css_class="col"),
-                            Div("created_before_date", css_class="col"),
-                            css_class="row",
+                            Row(Column(self.create_select_all_checkbox("allocation"))),
+                            Row(
+                                Column(
+                                    "display__id",
+                                    "display__url",
+                                    "display__status__name",
+                                ),
+                                Column(
+                                    "display__users",
+                                    "display__total_users",
+                                    "display__created",
+                                ),
+                            ),
+                            css_id="allocation_search-allocation_displays",
                         ),
+                        css_class="card-body",
                     ),
-                    self.create_select_all_checkbox("allocation"),
-                    "display__id",
-                    "display__url",
-                    "display__status__name",
-                    "display__users",
-                    "display__total_users",
-                    "display__created",
-                    active=False,
-                    css_id=f"{self.prefix}-allocation_displays",
-                )
+                    css_class="card mb-3",
+                ),
             ),
-            Accordion(
-                AccordionGroup(
-                    "Resources",
-                    "resources__name",
-                    "resources__resource_type__name",
-                    "display__get_parent_resource__name",
-                    "display__get_parent_resource__resource_type__name",
-                    active=False,
-                )
+            Fieldset(
+                "Resources",
+                Div(
+                    Div(
+                        Row(
+                            Column("resources__name"),
+                            Column("resources__resource_type__name"),
+                        ),
+                        Row(
+                            Column("display__get_parent_resource__name"),
+                            Column("display__get_parent_resource__resource_type__name"),
+                        ),
+                        css_class="card-body",
+                    ),
+                    css_class="card mb-3",
+                ),
             ),
-            Accordion(
-                AccordionGroup(
-                    "Allocation Attributes",
-                    Formset(
-                        "allocationattribute_form", "allocationattribute_helper", label="allocationattribute_formset"
+            Fieldset(
+                "Allocation Attributes",
+                Div(
+                    Div(
+                        Formset(
+                            "allocationattribute_form",
+                            "allocationattribute_helper",
+                            label="allocationattribute_formset",
+                        ),
+                        HTML(
+                            '<button id="id_formset_add_allocation_attribute_button" type="button" class="btn btn-primary">Add Allocation Attribute</button>'
+                        ),
+                        css_class="card-body",
                     ),
-                    HTML(
-                        '<button id="id_formset_add_allocation_attribute_button" type="button" class="btn btn-primary">Add Allocation Attribute</button>'
-                    ),
-                    active=False,
-                )
+                    css_class="card mb-3",
+                ),
             ),
             FormActions(
                 Submit("submit", "Allocation Search"),
