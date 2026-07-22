@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.db.models import CharField, Count, F, FloatField, Func, Model, OuterRef, Q, QuerySet, Subquery
 from django.db.models.expressions import ExpressionWrapper
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 
 from coldfront.core.allocation.models import (
@@ -22,6 +23,17 @@ from coldfront.core.project.models import (
 )
 from coldfront.core.resource.models import Resource
 from coldfront.core.user.models import UserProfile
+from coldfront.plugins.advanced_search.models import SavedSearch
+
+
+def check_saved_search_access(pk, user):
+    """Check if user has access to a saved search."""
+    saved_search = get_object_or_404(SavedSearch, pk=pk)
+    return (
+        saved_search.owner == user
+        or saved_search.shared_with_users.filter(pk=user.pk).exists()
+        or saved_search.shared_with_groups.filter(pk__in=user.groups.values_list("pk", flat=True)).exists()
+    )
 
 
 class SearchFilterBuilder:
@@ -77,8 +89,8 @@ class SearchFilterBuilder:
             "last_name": lambda data: {"last_name": data},
         },
         "userprofile": {
-            "department": lambda data: {"title__icontains": data},
-            "title": lambda data: {"department__icontains": data},
+            "department": lambda data: {"department__icontains": data},
+            "title": lambda data: {"title__icontains": data},
         },
     }
 
@@ -599,11 +611,11 @@ class BaseSearchTable(ABC):
         Note:
             A filter isn't used because the queryset is prefetched earlier.
         """
-        resource_list = []
-        for allocation in allocations:
-            if allocation.status.name in ["Active", "Renewal Requested"]:
-                resource_list.append(f"{allocation.get_parent_resource.name} ({allocation.pk})")
-        return ", ".join(resource_list)
+        return ", ".join(
+            f"{allocation.get_parent_resource.name} ({allocation.pk})"
+            for allocation in allocations
+            if allocation.status.name in ["Active", "Renewal Requested"]
+        )
 
 
 class ProjectTable(BaseSearchTable):
@@ -952,6 +964,41 @@ class UserTable(BaseSearchTable):
         user_profile_queryset = self.get_user_profile_queryset()
         user_queryset = user_queryset.filter(userprofile__in=user_profile_queryset)
 
+        user_queryset = user_queryset.annotate(
+            total_projects=Count(
+                "projectuser",
+                filter=Q(projectuser__status__name="Active", project__status__name="Active"),
+                distinct=True,
+            ),
+            total_pi_projects=Count(
+                "projectuser",
+                filter=Q(
+                    projectuser__status__name="Active",
+                    project__pi=F("pk"),
+                    project__status__name="Active",
+                ),
+                distinct=True,
+            ),
+            total_manager_projects=Count(
+                "projectuser",
+                filter=Q(
+                    projectuser__role__name="Manager",
+                    projectuser__status__name="Active",
+                    project__status__name="Active",
+                ),
+                distinct=True,
+            ),
+            total_allocations=Count(
+                "allocationuser",
+                filter=Q(
+                    allocationuser__status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"],
+                    allocationuser__allocation__status__name="Active",
+                    allocationuser__allocation__project__status__name="Active",
+                ),
+                distinct=True,
+            ),
+        )
+
         self.queryset = user_queryset
 
     def get_user_queryset(self) -> QuerySet:
@@ -1034,22 +1081,13 @@ class UserTable(BaseSearchTable):
             or None if attribute is not recognized.
         """
         if attribute == "total_projects":
-            return ProjectUser.objects.filter(user=obj, status__name="Active", project__status__name="Active").count()
+            return getattr(obj, "total_projects", 0)
         if attribute == "total_pi_projects":
-            return ProjectUser.objects.filter(
-                user=obj, project__pi=obj, status__name="Active", project__status__name="Active"
-            ).count()
+            return getattr(obj, "total_pi_projects", 0)
         if attribute == "total_manager_projects":
-            return ProjectUser.objects.filter(
-                user=obj, role__name="Manager", status__name="Active", project__status__name="Active"
-            ).count()
+            return getattr(obj, "total_manager_projects", 0)
         if attribute == "total_allocations":
-            return AllocationUser.objects.filter(
-                user=obj,
-                status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"],
-                allocation__status__name="Active",
-                allocation__project__status__name="Active",
-            ).count()
+            return getattr(obj, "total_allocations", 0)
 
         return None
 

@@ -7,13 +7,19 @@ from django.db.models import Q
 from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
+from coldfront.plugins.advanced_search.validators import validate_query_data
+
 User = get_user_model()
 
 
 class SavedSearch(TimeStampedModel):
     name = models.CharField(max_length=255)
     description = models.TextField()
-    query_data = models.JSONField(help_text="JSON representation of the search query parameters")
+    query_data = models.JSONField(
+        help_text="JSON representation of the search query parameters",
+        default=dict,
+        validators=[validate_query_data],
+    )
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="saved_searches")
     shared_with_users = models.ManyToManyField(User, blank=True, related_name="shared_searches")
     shared_with_groups = models.ManyToManyField(Group, blank=True, related_name="shared_searches")

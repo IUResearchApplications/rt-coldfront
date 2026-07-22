@@ -1,11 +1,11 @@
 import csv
 import json
 import logging
+from functools import cached_property
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.db.utils import cached_property
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms import formset_factory
 from django.http import HttpResponseRedirect, JsonResponse
 from django.http.response import StreamingHttpResponse
@@ -25,45 +25,11 @@ from coldfront.plugins.advanced_search.forms import (
     SearchCreateForm,
     UserSearchForm,
 )
+from coldfront.plugins.advanced_search.mixins import AdvancedSearchPermissionMixin, CanAccessSavedSearchMixin
 from coldfront.plugins.advanced_search.models import SavedSearch
-from coldfront.plugins.advanced_search.utils import (
-    AllocationTable,
-    ProjectTable,
-    UserTable,
-)
+from coldfront.plugins.advanced_search.utils import AllocationTable, ProjectTable, UserTable
 
 logger = logging.getLogger(__name__)
-
-
-class AdvancedSearchPermissionMixin(UserPassesTestMixin):
-    """Mixin that grants access to superusers or users with global view perms."""
-
-    def test_func(self):
-        user = self.request.user
-        if user.is_superuser:
-            return True
-        return user.has_perms(["project.can_view_all_projects", "allocation.can_view_all_allocations"])
-
-
-class CanAccessSavedSearchMixin:
-    """Mixin that restricts access to saved search owners or shared users.
-
-    Returns None to defer to AdvancedSearchPermissionMixin for superuser/
-    global-perm fallback when the user has no ownership/share relationship.
-    """
-
-    def _check_saved_search_access(self, saved_search, user):
-        return (
-            saved_search.owner == user
-            or saved_search.shared_with_users.filter(pk=user.pk).exists()
-            or saved_search.shared_with_groups.filter(pk__in=user.groups.values_list("pk", flat=True)).exists()
-        )
-
-    def test_func(self):
-        saved_search = get_object_or_404(SavedSearch, pk=self.kwargs.get("pk"))
-        if self._check_saved_search_access(saved_search, self.request.user):
-            return True
-        return None
 
 
 class AdvancedSearchView(LoginRequiredMixin, AdvancedSearchPermissionMixin, TemplateView):
@@ -102,7 +68,7 @@ class AdvancedSearchView(LoginRequiredMixin, AdvancedSearchPermissionMixin, Temp
             f"{type}attribute",
         )
 
-        if search_form.is_valid():
+        if search_form and search_form.is_valid():
             table = table_class(search_form.cleaned_data, attribute_data)
             context["rows"], context["columns"] = table.build_table()
             context[f"{type}attribute_form"] = search_formset
@@ -182,6 +148,7 @@ class AdvancedSearchView(LoginRequiredMixin, AdvancedSearchPermissionMixin, Temp
         session["filter_data"] = request.POST.dict()
         session["search_type"] = request.POST.get("search_type", "project")
         submit = request.POST.get("submit", "")
+        session.save()
         return HttpResponseRedirect(f"{reverse('advanced-search')}?submit={submit}")
 
     def get_context_data(self, **kwargs):
@@ -306,7 +273,7 @@ class SavedSearchCreateView(LoginRequiredMixin, AdvancedSearchPermissionMixin, T
 
                 return JsonResponse({"success": True, "message": "Saved successfully.", "search_id": saved_search.pk})
 
-            except json.JSONDecodeError:
+            except (json.JSONDecodeError, TypeError, ValueError):
                 return JsonResponse({"success": False, "message": "Invalid search data format."}, status=400)
             except Exception as e:
                 logger.error(f"Error saving search: {str(e)}")
@@ -336,7 +303,7 @@ class SharedSearchListView(LoginRequiredMixin, AdvancedSearchPermissionMixin, Te
         return context
 
 
-class SavedSearchModifyView(LoginRequiredMixin, AdvancedSearchPermissionMixin, CanAccessSavedSearchMixin, TemplateView):
+class SavedSearchModifyView(LoginRequiredMixin, CanAccessSavedSearchMixin, TemplateView):
     template_name = "advanced_search/save_search_form_body.html"
 
     def get_context_data(self, **kwargs):
@@ -349,14 +316,6 @@ class SavedSearchModifyView(LoginRequiredMixin, AdvancedSearchPermissionMixin, C
 
     def post(self, request, pk):
         saved_search = get_object_or_404(SavedSearch, pk=pk)
-
-        if not (
-            saved_search.owner == request.user
-            or saved_search.shared_with_users.filter(pk=request.user.pk).exists()
-            or saved_search.shared_with_groups.filter(pk__in=request.user.groups.values_list("pk", flat=True)).exists()
-        ):
-            return JsonResponse({"error": "Unauthorized"}, status=403)
-
         form = SearchCreateForm(request.POST, instance=saved_search, user=request.user)
 
         if form.is_valid():
@@ -364,7 +323,10 @@ class SavedSearchModifyView(LoginRequiredMixin, AdvancedSearchPermissionMixin, C
             # Also update query_data from the current form state
             query_data_raw = request.POST.get("query_data")
             if query_data_raw:
-                saved_search.query_data = json.loads(query_data_raw)
+                try:
+                    saved_search.query_data = json.loads(query_data_raw)
+                except (json.JSONDecodeError, TypeError):
+                    return JsonResponse({"success": False, "message": "Invalid query data format."}, status=400)
             saved_search.save()
             form.save_m2m()
 
@@ -430,7 +392,7 @@ class SavedSearchDetailView(LoginRequiredMixin, AdvancedSearchPermissionMixin, T
         return context
 
 
-class SavedSearchCopyView(LoginRequiredMixin, AdvancedSearchPermissionMixin, CanAccessSavedSearchMixin, View):
+class SavedSearchCopyView(LoginRequiredMixin, CanAccessSavedSearchMixin, View):
     """View to copy a saved search, creating a new one owned by the current user."""
 
     def post(self, request, pk):
@@ -453,7 +415,7 @@ class SavedSearchCopyView(LoginRequiredMixin, AdvancedSearchPermissionMixin, Can
         )
 
 
-class SavedSearchDeleteView(LoginRequiredMixin, AdvancedSearchPermissionMixin, CanAccessSavedSearchMixin, View):
+class SavedSearchDeleteView(LoginRequiredMixin, CanAccessSavedSearchMixin, View):
     def post(self, request, pk):
         saved_search = get_object_or_404(SavedSearch, pk=pk)
         saved_search.delete()
@@ -490,32 +452,20 @@ class AdvancedExportView(LoginRequiredMixin, AdvancedSearchPermissionMixin, View
         return response
 
 
-class ApplySavedSearchView(LoginRequiredMixin, AdvancedSearchPermissionMixin, CanAccessSavedSearchMixin, RedirectView):
+class ApplySavedSearchView(LoginRequiredMixin, CanAccessSavedSearchMixin, RedirectView):
     pattern_name = "advanced-search"
 
     def get_redirect_url(self, *args, **kwargs):
         saved_search = get_object_or_404(SavedSearch, pk=self.kwargs.get("pk"))
 
-        if not (
-            saved_search.owner == self.request.user
-            or saved_search.shared_with_users.filter(pk=self.request.user.pk).exists()
-            or saved_search.shared_with_groups.filter(
-                pk__in=self.request.user.groups.values_list("pk", flat=True)
-            ).exists()
-        ):
-            messages.error(self.request, "You do not have access to this saved search.")
-            return reverse("advanced-search")
-
         query_data = saved_search.query_data or {}
 
-        if "project_search" in query_data:
-            search_type = "project"
-        elif "allocation_search" in query_data:
-            search_type = "allocation"
-        elif "user_search" in query_data:
-            search_type = "user"
-        else:
-            search_type = "project"
+        search_type = "project"
+        type_map = {"project_search": "project", "allocation_search": "allocation", "user_search": "user"}
+        for key in query_data:
+            if key in type_map:
+                search_type = type_map[key]
+                break
 
         session = self.request.session
 
@@ -536,7 +486,7 @@ class ApplySavedSearchView(LoginRequiredMixin, AdvancedSearchPermissionMixin, Ca
         return reverse("advanced-search")
 
 
-class LoadSavedSearchView(LoginRequiredMixin, AdvancedSearchPermissionMixin, CanAccessSavedSearchMixin, View):
+class LoadSavedSearchView(LoginRequiredMixin, CanAccessSavedSearchMixin, View):
     """AJAX view to load saved search data and return as JSON for dynamic form population."""
 
     def get(self, request, *args, **kwargs):
