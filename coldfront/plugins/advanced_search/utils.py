@@ -656,6 +656,7 @@ class ProjectTable(BaseSearchTable):
                 "projectuser_set__user",
                 "allocation_set",
                 "allocation_set__status",
+                "allocation_set__resources",
             )
             .all()
             .order_by("id")
