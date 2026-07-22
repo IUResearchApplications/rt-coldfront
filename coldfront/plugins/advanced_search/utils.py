@@ -637,38 +637,38 @@ class ProjectTable(BaseSearchTable):
         Build and set the project queryset with filters.
 
         Retrieves all projects with related data for PI, requestor, status,
-        and type. Prefetches project users and allocations to minimize queries.
-        Applies search filters and attribute parameter filters to the queryset.
+        and type. Prefetches project users and allocations only when the
+        corresponding display columns or filters need them. Applies search
+        filters and attribute parameter filters to the queryset.
 
         Returns:
             None - Result is stored in self.queryset
         """
+        display = self.search_data
+
+        prefetch = []
+        if display.get("display__users") or display.get("display__total_users") or display.get("user_username"):
+            prefetch.extend(["projectuser_set", "projectuser_set__status", "projectuser_set__user"])
+
+        if display.get("display__resources"):
+            prefetch.extend(["allocation_set", "allocation_set__status", "allocation_set__resources"])
+
         projects = (
-            Project.objects.select_related(
-                "pi",
-                "requestor",
-                "status",
-                "type",
-            )
-            .prefetch_related(
-                "projectuser_set",
-                "projectuser_set__status",
-                "projectuser_set__user",
-                "allocation_set",
-                "allocation_set__status",
-                "allocation_set__resources",
-            )
+            Project.objects.select_related("pi", "requestor", "status", "type")
+            .prefetch_related(*prefetch)
             .all()
             .order_by("id")
         )
 
-        projects = projects.annotate(
-            total_users=Count(
+        annotations = {}
+        if display.get("display__total_users"):
+            annotations["total_users"] = Count(
                 "projectuser",
                 filter=Q(projectuser__status__name="Active"),
                 distinct=True,
-            ),
-            users=Subquery(
+            )
+        if display.get("display__users"):
+            annotations["users"] = Subquery(
                 ProjectUser.objects.filter(
                     project=OuterRef("pk"),
                     status__name="Active",
@@ -683,8 +683,10 @@ class ProjectTable(BaseSearchTable):
                     )
                 )
                 .values("usernames")[:1]
-            ),
-        )
+            )
+
+        if annotations:
+            projects = projects.annotate(**annotations)
 
         filter_kwargs = SearchFilterBuilder.build_filters(self.search_data, "project")
         if filter_kwargs:
@@ -772,41 +774,46 @@ class AllocationTable(BaseSearchTable):
         Build the base allocation queryset with search filters.
 
         Retrieves all allocations with related project and resource data.
-        Prefetches users for both project and allocation to minimize queries.
-        Applies allocation-specific search filters.
+        Prefetches users and resources only when the corresponding display
+        columns or filters need them. Applies allocation-specific search filters.
 
         Returns:
             QuerySet of Allocation objects filtered by allocation search criteria.
         """
+        display = self.search_data
+
+        prefetch = ["resources", "resources__resource_type"]
+        if (
+            display.get("display__users")
+            or display.get("display__total_users")
+            or display.get("display__project__project_total_users")
+            or display.get("user_username")
+        ):
+            prefetch.extend(["allocationuser_set", "allocationuser_set__status", "allocationuser_set__user"])
+
+        if display.get("display__project__total_users") or display.get("display__project_users"):
+            prefetch.extend(
+                ["project__projectuser_set", "project__projectuser_set__status", "project__projectuser_set__user"]
+            )
+
         allocations = (
             Allocation.objects.select_related(
-                "project",
-                "project__pi",
-                "project__requestor",
-                "project__status",
-                "project__type",
-                "status",
+                "project", "project__pi", "project__requestor", "project__status", "project__type", "status"
             )
-            .prefetch_related(
-                "project__projectuser_set",
-                "project__projectuser_set__status",
-                "allocationuser_set",
-                "allocationuser_set__status",
-                "allocationuser_set__user",
-                "resources",
-                "resources__resource_type",
-            )
+            .prefetch_related(*prefetch)
             .all()
             .order_by("project__id")
         )
 
-        allocations = allocations.annotate(
-            total_users=Count(
+        annotations = {}
+        if display.get("display__total_users"):
+            annotations["total_users"] = Count(
                 "allocationuser",
                 filter=Q(allocationuser__status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"]),
                 distinct=True,
-            ),
-            users=Subquery(
+            )
+        if display.get("display__users"):
+            annotations["users"] = Subquery(
                 AllocationUser.objects.filter(
                     allocation=OuterRef("pk"),
                     status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"],
@@ -821,13 +828,16 @@ class AllocationTable(BaseSearchTable):
                     )
                 )
                 .values("usernames")[:1]
-            ),
-            project_total_users=Count(
+            )
+        if display.get("display__project__project_total_users"):
+            annotations["project_total_users"] = Count(
                 "project__projectuser",
                 filter=Q(project__projectuser__status__name="Active"),
                 distinct=True,
-            ),
-        )
+            )
+
+        if annotations:
+            allocations = allocations.annotate(**annotations)
 
         filter_kwargs = SearchFilterBuilder.build_filters(self.search_data, "allocation")
         if filter_kwargs:
@@ -908,11 +918,11 @@ class AllocationTable(BaseSearchTable):
         Returns:
             The computed value, or None if not a special attribute
         """
-        if attribute == "project__total_users":
+        if attribute == "project_total_users":
             count = getattr(obj, "project_total_users", None)
             return count if count is not None else 0
 
-        if attribute == "project__url":
+        if attribute == "project_url":
             return f"{settings.CENTER_BASE_URL}{reverse('project-detail', kwargs={'pk': obj.project_id})}"
 
         if attribute == "total_users":

@@ -408,7 +408,7 @@ class AllocationSearchForm(SearchForm):
     """Form for searching allocations with project, allocation, and resource filters."""
 
     display__project__id = forms.BooleanField(required=False)
-    display__project__url = forms.BooleanField(required=False)
+    display__project__project_url = forms.BooleanField(required=False)
     display__project__title = forms.BooleanField(required=False)
     display__project__description = forms.BooleanField(required=False)
     display__project__pi__username = forms.BooleanField(required=False)
@@ -417,7 +417,7 @@ class AllocationSearchForm(SearchForm):
     display__project__type__name = forms.BooleanField(required=False)
     display__project__created = forms.BooleanField(required=False)
     display__project__end_date = forms.BooleanField(required=False)
-    display__project__total_users = forms.BooleanField(required=False, label="Display project total active users")
+    display__project__project_total_users = forms.BooleanField(required=False, label="Display project total active users")
     display__project__project_code = forms.BooleanField(required=False)
 
     display__get_parent_resource__name = forms.BooleanField(required=False, label="Resource name")
@@ -502,7 +502,7 @@ class AllocationSearchForm(SearchForm):
                             Row(
                                 Column(
                                     "display__project__id",
-                                    "display__project__url",
+                                    "display__project__project_url",
                                     "display__project__title",
                                     "display__project__description",
                                 ),
@@ -516,7 +516,7 @@ class AllocationSearchForm(SearchForm):
                                     "display__project__type__name",
                                     "display__project__created",
                                     "display__project__end_date",
-                                    "display__project__total_users",
+                                    "display__project__project_total_users",
                                 ),
                             ),
                             css_id="allocation_search-project_displays",
