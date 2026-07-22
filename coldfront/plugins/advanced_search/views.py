@@ -3,6 +3,7 @@ import json
 import logging
 from functools import cached_property
 
+from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -81,21 +82,55 @@ class AdvancedSearchView(LoginRequiredMixin, AdvancedSearchPermissionMixin, Temp
             project_data = {k: v for k, v in filter_data.items() if k.startswith("project_search-")}
             allocation_data = {k: v for k, v in filter_data.items() if k.startswith("allocation_search-")}
             user_data = {k: v for k, v in filter_data.items() if k.startswith("user_search-")}
-            context["project_form"] = ProjectSearchForm(project_data, prefix="project_search")
-            context["allocation_form"] = AllocationSearchForm(allocation_data, prefix="allocation_search")
-            context["user_form"] = UserSearchForm(user_data, prefix="user_search")
+            context["project_form"] = ProjectSearchForm(
+                self.normalize_form_data(project_data, ProjectSearchForm), prefix="project_search"
+            )
+            context["allocation_form"] = AllocationSearchForm(
+                self.normalize_form_data(allocation_data, AllocationSearchForm), prefix="allocation_search"
+            )
+            context["user_form"] = UserSearchForm(
+                self.normalize_form_data(user_data, UserSearchForm), prefix="user_search"
+            )
         else:
             context["project_form"] = ProjectSearchForm(prefix="project_search")
             context["allocation_form"] = AllocationSearchForm(prefix="allocation_search")
             context["user_form"] = UserSearchForm(prefix="user_search")
 
+    def normalize_form_data(self, data, form_class):
+        """Flatten single-element lists for fields that expect a single value.
+
+        Multi-select fields (ModelMultipleChoiceField) keep their list so the
+        form correctly renders the selected option(s).
+        """
+        normalized = {}
+        for key, value in data.items():
+            field_name = key.split("-", 1)[1] if "-" in key else key
+            field = form_class.base_fields.get(field_name)
+            if isinstance(value, list) and len(value) == 1 and not isinstance(field, forms.ModelMultipleChoiceField):
+                normalized[key] = value[0]
+            else:
+                normalized[key] = value
+        return normalized
+
     def build_formsets(self, context, filter_data):
         """Build attribute formsets from session filter data."""
         project_data = (
-            {k: v for k, v in filter_data.items() if k.startswith("projectattribute-")} if filter_data else {}
+            {
+                k: v[0] if isinstance(v, list) and len(v) == 1 else v
+                for k, v in filter_data.items()
+                if k.startswith("projectattribute-")
+            }
+            if filter_data
+            else {}
         )
         allocation_data = (
-            {k: v for k, v in filter_data.items() if k.startswith("allocationattribute-")} if filter_data else {}
+            {
+                k: v[0] if isinstance(v, list) and len(v) == 1 else v
+                for k, v in filter_data.items()
+                if k.startswith("allocationattribute-")
+            }
+            if filter_data
+            else {}
         )
 
         context["projectattribute_form"] = formset_factory(ProjectAttributeSearchForm, extra=1)(
@@ -145,7 +180,7 @@ class AdvancedSearchView(LoginRequiredMixin, AdvancedSearchPermissionMixin, Temp
 
     def post(self, request, *args, **kwargs):
         session = request.session
-        session["filter_data"] = request.POST.dict()
+        session["filter_data"] = dict(request.POST.lists())
         session["search_type"] = request.POST.get("search_type", "project")
         submit = request.POST.get("submit", "")
         session.save()
