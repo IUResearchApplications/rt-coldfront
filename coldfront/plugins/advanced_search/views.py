@@ -132,12 +132,19 @@ class AdvancedSearchView(LoginRequiredMixin, AdvancedSearchPermissionMixin, Temp
             if filter_data
             else {}
         )
-
         context["projectattribute_form"] = formset_factory(ProjectAttributeSearchForm, extra=1)(
             project_data or None, prefix="projectattribute"
         )
+
+        allocation_form = context.get("allocation_form")
+        selected_resources = None
+        if allocation_form and allocation_form.is_valid():
+            selected_resources = allocation_form.cleaned_data.get("resources__name")
+
         context["allocationattribute_form"] = formset_factory(AllocationAttributeSearchForm, extra=1)(
-            allocation_data or None, prefix="allocationattribute"
+            allocation_data or None,
+            prefix="allocationattribute",
+            form_kwargs={"resources": selected_resources},
         )
 
     def get_loaded_search_state(self):
