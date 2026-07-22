@@ -511,6 +511,9 @@ class ApplySavedSearchView(LoginRequiredMixin, CanAccessSavedSearchMixin, Redire
             else:
                 flattened[search_type_key] = fields
 
+        for prefix in ["projectattribute", "allocationattribute"]:
+            self.add_formset_management_fields(flattened, prefix)
+
         session["filter_data"] = flattened
         session["search_type"] = search_type
         session["loaded_search_id"] = saved_search.pk
@@ -519,6 +522,21 @@ class ApplySavedSearchView(LoginRequiredMixin, CanAccessSavedSearchMixin, Redire
         session["is_loaded_search_owner"] = saved_search.owner == self.request.user
         session.save()
         return reverse("advanced-search")
+
+    def add_formset_management_fields(self, data, prefix):
+        """Add formset management fields based on the attribute data indices."""
+        indices = set()
+        for key in data:
+            if key.startswith(f"{prefix}-"):
+                parts = key.split("-", 2)
+                if len(parts) >= 2 and parts[1].isdigit():
+                    indices.add(int(parts[1]))
+
+        num_forms = max(indices) + 1 if indices else 0
+        data[f"{prefix}-TOTAL_FORMS"] = str(num_forms)
+        data[f"{prefix}-INITIAL_FORMS"] = str(num_forms)
+        data[f"{prefix}-MIN_NUM_FORMS"] = "0"
+        data[f"{prefix}-MAX_NUM_FORMS"] = "1000"
 
 
 class LoadSavedSearchView(LoginRequiredMixin, CanAccessSavedSearchMixin, View):
