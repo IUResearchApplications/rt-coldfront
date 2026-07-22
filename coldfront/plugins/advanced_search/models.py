@@ -1,6 +1,9 @@
+import json
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import models
+from django.db.models import Q
 from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
@@ -23,3 +26,32 @@ class SavedSearch(TimeStampedModel):
 
     def __str__(self):
         return f"{self.name} (by {self.owner})"
+
+    @classmethod
+    def get_for_user(cls, user):
+        """Return all saved searches owned by the given user."""
+        return cls.objects.filter(owner=user)
+
+    @classmethod
+    def get_shared_with_user(cls, user):
+        """Return saved searches shared with the user (not owned by them)."""
+        return (
+            cls.objects.filter(Q(shared_with_users=user) | Q(shared_with_groups__in=user.groups.all()))
+            .exclude(owner=user)
+            .distinct()
+        )
+
+    @staticmethod
+    def format_query_data(value):
+        """Format JSON query data for display."""
+        if value is None:
+            return "{}"
+        if isinstance(value, dict):
+            return json.dumps(value, indent=2, sort_keys=True)
+        if isinstance(value, str):
+            try:
+                data = json.loads(value)
+                return json.dumps(data, indent=2, sort_keys=True)
+            except json.JSONDecodeError:
+                return value
+        return str(value)

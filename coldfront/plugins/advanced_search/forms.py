@@ -170,7 +170,7 @@ class SearchForm(forms.Form):
             </div>
         ''')
 
-    def create_save_search_botton(self, search_type):
+    def create_save_search_button(self, search_type):
         return HTML(f"""
             <button type="button" id="btn-save-search" class="btn btn-primary float-right">Save {search_type} Search</button>
         """)
@@ -286,7 +286,7 @@ class ProjectSearchForm(SearchForm):
             FormActions(
                 Submit("submit", "Project Search"),
                 Reset("reset", "Reset"),
-                self.create_save_search_botton("Project"),
+                self.create_save_search_button("Project"),
                 css_class="mb-0",
             ),
         )
@@ -321,7 +321,7 @@ class UserSearchForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.setup_layout()
 
-    def create_save_search_botton(self, search_type):
+    def create_save_search_button(self, search_type):
         return HTML(f"""
             <button type="button" id="btn-save-search" class="btn btn-primary float-right">Save {search_type} Search</button>
         """)
@@ -398,7 +398,7 @@ class UserSearchForm(forms.Form):
             FormActions(
                 Submit("submit", "User Search"),
                 Reset("reset", "Reset"),
-                self.create_save_search_botton("User"),
+                self.create_save_search_button("User"),
                 css_class="mb-0",
             ),
         )
@@ -599,7 +599,7 @@ class AllocationSearchForm(SearchForm):
             FormActions(
                 Submit("submit", "Allocation Search"),
                 Reset("reset", "Reset"),
-                self.create_save_search_botton("Allocation"),
+                self.create_save_search_button("Allocation"),
                 css_class="mb-0",
             ),
         )

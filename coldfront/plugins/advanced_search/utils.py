@@ -1,11 +1,10 @@
 import datetime
-import json
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Tuple, Type
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db.models import F, FloatField, Model, Q, QuerySet
+from django.db.models import CharField, Count, F, FloatField, Func, Model, OuterRef, Q, QuerySet, Subquery
 from django.db.models.expressions import ExpressionWrapper
 from django.urls import reverse
 
@@ -23,7 +22,6 @@ from coldfront.core.project.models import (
 )
 from coldfront.core.resource.models import Resource
 from coldfront.core.user.models import UserProfile
-from coldfront.plugins.advanced_search.models import SavedSearch
 
 
 class SearchFilterBuilder:
@@ -97,7 +95,7 @@ class SearchFilterBuilder:
             Dictionary of filter kwargs suitable for queryset.filter(**kwargs)
         """
         filter_kwargs: Dict[str, Any] = {}
-        filter_map = cls.FILTER_MAPS.get(table_type, {})
+        filter_map = dict(cls.FILTER_MAPS.get(table_type, {}))
 
         for param, builder in filter_map.items():
             value = search_data.get(param)
@@ -155,7 +153,7 @@ class BaseSearchTable(ABC):
         self.rows = {}
 
     @abstractmethod
-    def get_queryset(self) -> None:
+    def get_queryset(self) -> QuerySet:
         """
         Build and set the queryset for the entity type.
 
@@ -168,7 +166,7 @@ class BaseSearchTable(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_attribute_model(self) -> Type[Model]:
+    def get_attribute_model(self) -> Optional[Type[Model]]:
         """
         Return the attribute model class for the entity type.
 
@@ -181,7 +179,7 @@ class BaseSearchTable(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_attribute_usage_model(self) -> Type[Model]:
+    def get_attribute_usage_model(self) -> Optional[Type[Model]]:
         """
         Return the attribute usage model class for the entity type.
 
@@ -193,6 +191,23 @@ class BaseSearchTable(ABC):
         """
         raise NotImplementedError()
 
+    def bucket_related(self, model_class, filter_kwargs, key_func):
+        """
+        Query a model and bucket results by a parent key.
+
+        Args:
+            model_class: The model class to query
+            filter_kwargs: Dict of filter kwargs for the queryset
+            key_func: Callable(obj) -> parent_id for bucketing
+
+        Returns:
+            Dict mapping parent_id -> list of objects
+        """
+        results = {}
+        for obj in model_class.objects.filter(**filter_kwargs):
+            results.setdefault(key_func(obj), []).append(obj)
+        return results
+
     def get_attribute_data(self) -> Dict[int, List[Any]]:
         """
         Retrieve attribute data for the entity type.
@@ -203,25 +218,17 @@ class BaseSearchTable(ABC):
             Dictionary mapping parent object IDs to lists of attribute instances.
             The dictionary is empty if no attribute types are found.
         """
-        all_attributes = {}
-        attribute_types = []
-        for entry in self.attribute_data:
-            attribute_type = entry.get("attribute__name")
-            if attribute_type:
-                attribute_types.append(attribute_type)
-
+        attribute_types = [
+            entry.get("attribute__name") for entry in self.attribute_data if entry.get("attribute__name")
+        ]
         if not attribute_types:
-            return all_attributes
+            return {}
 
-        attributes = (
-            self.get_attribute_model()
-            .objects.select_related(self.type, self.attr_type)
-            .filter(**{f"{self.attr_type}__id__in": [attr.id for attr in attribute_types]})
+        return self.bucket_related(
+            self.get_attribute_model(),
+            {f"{self.attr_type}__id__in": [attr.id for attr in attribute_types]},
+            lambda obj: getattr(obj, self.type).id,
         )
-        for attribute in attributes:
-            all_attributes.setdefault(getattr(attribute, self.type).id, []).append(attribute)
-
-        return all_attributes
 
     def get_attribute_usage(self, additional_data: Dict[int, List[Any]]) -> Dict[int, List[Any]]:
         """
@@ -238,22 +245,15 @@ class BaseSearchTable(ABC):
             Dictionary mapping parent object IDs to lists of usage instances.
             The dictionary is empty if no attributes have usage data.
         """
-        all_attribute_usages = {}
-        attributes = [attribute for attributes in additional_data.values() for attribute in attributes]
+        attributes = [a for attrs in additional_data.values() for a in attrs]
         if not attributes:
-            return all_attribute_usages
+            return {}
 
-        attribute_usages = (
-            self.get_attribute_usage_model()
-            .objects.prefetch_related(f"{self.type}_attribute")
-            .filter(**{f"{self.type}_attribute__in": attributes})
+        return self.bucket_related(
+            self.get_attribute_usage_model(),
+            {f"{self.type}_attribute__in": attributes},
+            lambda obj: getattr(getattr(obj, f"{self.type}_attribute"), self.type).id,
         )
-        for attribute_usage in attribute_usages:
-            attribute = getattr(attribute_usage, f"{self.type}_attribute")
-            parent_id = getattr(attribute, self.type).id
-            all_attribute_usages.setdefault(parent_id, []).append(attribute_usage)
-
-        return all_attribute_usages
 
     def build_columns(self) -> None:
         """
@@ -337,7 +337,11 @@ class BaseSearchTable(ABC):
                 current_attribute = ""
 
             if isinstance(current_attribute, (datetime.datetime, datetime.date)):
-                current_attribute = current_attribute.isoformat()
+                current_attribute = (
+                    current_attribute.isoformat(sep="T")
+                    if isinstance(current_attribute, datetime.datetime)
+                    else current_attribute.isoformat()
+                )
 
             row.append(current_attribute)
 
@@ -413,7 +417,7 @@ class BaseSearchTable(ABC):
                 f"{self.type}attribute__{self.attr_type}": attribute_type,
                 f"{self.type}attribute__value__icontains": attribute_value,
             }
-        )
+        ).distinct()
 
     def filter_by_usage(self, queryset: QuerySet, entry: Dict[str, Any]) -> QuerySet:
         """
@@ -645,11 +649,36 @@ class ProjectTable(BaseSearchTable):
             .order_by("id")
         )
 
+        projects = projects.annotate(
+            total_users=Count(
+                "projectuser",
+                filter=Q(projectuser__status__name="Active"),
+                distinct=True,
+            ),
+            users=Subquery(
+                ProjectUser.objects.filter(
+                    project=OuterRef("pk"),
+                    status__name="Active",
+                )
+                .values("project")
+                .annotate(
+                    usernames=Func(
+                        F("user__username"),
+                        function="GROUP_CONCAT",
+                        template="%(function)s(DISTINCT %(expressions)s ORDER BY %(expressions)s SEPARATOR ', ')",
+                        output_field=CharField(),
+                    )
+                )
+                .values("usernames")[:1]
+            ),
+        )
+
         filter_kwargs = SearchFilterBuilder.build_filters(self.search_data, "project")
         if filter_kwargs:
             projects = projects.filter(**filter_kwargs)
 
         projects = self.filter_by_attribute_parameters(projects)
+        projects = projects.distinct()
 
         self.queryset = projects
 
@@ -665,10 +694,12 @@ class ProjectTable(BaseSearchTable):
             The computed value, or None if not a special attribute
         """
         if attribute == "total_users":
-            return self.get_total_users(obj.projectuser_set.all(), ["Active"])
+            count = getattr(obj, "total_users", None)
+            return count if count is not None else 0
 
         if attribute == "users":
-            return self.get_user_list(obj.projectuser_set.all(), ["Active"])
+            usernames = getattr(obj, "users", None)
+            return usernames if usernames else ""
 
         if attribute == "resources":
             return self.get_resource_list(obj.allocation_set.all())
@@ -719,6 +750,7 @@ class AllocationTable(BaseSearchTable):
         allocation_queryset = allocation_queryset.filter(resources__in=resource_queryset)
 
         allocation_queryset = self.filter_by_attribute_parameters(allocation_queryset)
+        allocation_queryset = allocation_queryset.distinct()
 
         self.queryset = allocation_queryset
 
@@ -753,6 +785,35 @@ class AllocationTable(BaseSearchTable):
             )
             .all()
             .order_by("project__id")
+        )
+
+        allocations = allocations.annotate(
+            total_users=Count(
+                "allocationuser",
+                filter=Q(allocationuser__status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"]),
+                distinct=True,
+            ),
+            users=Subquery(
+                AllocationUser.objects.filter(
+                    allocation=OuterRef("pk"),
+                    status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"],
+                )
+                .values("allocation")
+                .annotate(
+                    usernames=Func(
+                        F("user__username"),
+                        function="GROUP_CONCAT",
+                        template="%(function)s(DISTINCT %(expressions)s ORDER BY %(expressions)s SEPARATOR ', ')",
+                        output_field=CharField(),
+                    )
+                )
+                .values("usernames")[:1]
+            ),
+            project_total_users=Count(
+                "project__projectuser",
+                filter=Q(project__projectuser__status__name="Active"),
+                distinct=True,
+            ),
         )
 
         filter_kwargs = SearchFilterBuilder.build_filters(self.search_data, "allocation")
@@ -835,19 +896,19 @@ class AllocationTable(BaseSearchTable):
             The computed value, or None if not a special attribute
         """
         if attribute == "project__total_users":
-            # Need to do all() or prefetch doesn't work and we end up running more queries
-            return self.get_total_users(obj.projectuser_set.all(), ["Active"])
+            count = getattr(obj, "project_total_users", None)
+            return count if count is not None else 0
 
         if attribute == "project__url":
-            return f"{settings.CENTER_BASE_URL}{reverse('project-detail', kwargs={'pk': obj.pk})}"
+            return f"{settings.CENTER_BASE_URL}{reverse('project-detail', kwargs={'pk': obj.project_id})}"
 
         if attribute == "total_users":
-            status_names = ["Active", "Invited", "Pending", "Disabled", "Retired"]
-            return self.get_total_users(obj.allocationuser_set.all(), status_names)
+            count = getattr(obj, "total_users", None)
+            return count if count is not None else 0
 
         if attribute == "users":
-            status_names = ["Active", "Invited", "Pending", "Disabled", "Retired"]
-            return self.get_user_list(obj.allocationuser_set.all(), status_names)
+            usernames = getattr(obj, "users", None)
+            return usernames if usernames else ""
 
         if attribute == "url":
             return f"{settings.CENTER_BASE_URL}{reverse('allocation-detail', kwargs={'pk': obj.pk})}"
@@ -997,30 +1058,3 @@ class UserTable(BaseSearchTable):
 
     def get_attribute_usage_model(self) -> None:
         pass
-
-
-def get_saved_searches(user):
-    return SavedSearch.objects.filter(owner=user)
-
-
-def get_shared_searches(user):
-    return (
-        SavedSearch.objects.filter(Q(shared_with_users=user) | Q(shared_with_groups__in=user.groups.all()))
-        .exclude(owner=user)
-        .distinct()
-    )
-
-
-def format_json_query_data(value):
-    """Format JSON query data for display in templates."""
-    if value is None:
-        return "{}"
-    if isinstance(value, dict):
-        return json.dumps(value, indent=2, sort_keys=True)
-    if isinstance(value, str):
-        try:
-            data = json.loads(value)
-            return json.dumps(data, indent=2, sort_keys=True)
-        except json.JSONDecodeError:
-            return value
-    return str(value)
