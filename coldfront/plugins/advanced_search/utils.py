@@ -203,7 +203,7 @@ class BaseSearchTable(ABC):
         """
         raise NotImplementedError()
 
-    def bucket_related(self, model_class, filter_kwargs, key_func):
+    def bucket_related(self, query, filter_kwargs, key_func):
         """
         Query a model and bucket results by a parent key.
 
@@ -216,7 +216,7 @@ class BaseSearchTable(ABC):
             Dict mapping parent_id -> list of objects
         """
         results = {}
-        for obj in model_class.objects.filter(**filter_kwargs):
+        for obj in query.filter(**filter_kwargs):
             results.setdefault(key_func(obj), []).append(obj)
         return results
 
@@ -237,7 +237,7 @@ class BaseSearchTable(ABC):
             return {}
 
         return self.bucket_related(
-            self.get_attribute_model(),
+            self.get_attribute_model().objects.select_related("allocation", "allocation_attribute_type"),
             {f"{self.attr_type}__id__in": [attr.id for attr in attribute_types]},
             lambda obj: getattr(obj, self.type).id,
         )
@@ -262,7 +262,7 @@ class BaseSearchTable(ABC):
             return {}
 
         return self.bucket_related(
-            self.get_attribute_usage_model(),
+            self.get_attribute_usage_model().objects,
             {f"{self.type}_attribute__in": attributes},
             lambda obj: getattr(getattr(obj, f"{self.type}_attribute"), self.type).id,
         )
@@ -893,9 +893,7 @@ class AllocationTable(BaseSearchTable):
             QuerySet of Resource objects filtered by resource search criteria,
             containing only resources where is_allocatable=True.
         """
-        resources = Resource.objects.select_related(
-            "resource_type",
-        ).filter(is_allocatable=True)
+        resources = Resource.objects.select_related("resource_type").filter(is_allocatable=True)
 
         resource_filters = {}
         for filter, value in self.search_data.items():
