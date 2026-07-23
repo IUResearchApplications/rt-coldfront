@@ -341,21 +341,21 @@ class BaseSearchTable(ABC):
 
             if attributes[0] == "attribute":
                 attributes = attributes[1:]
-                current_attribute = self.get_attribute_value(model_obj.id, attributes[0], column, *args)
+                attribute_value = self.get_attribute_value(model_obj.id, attributes[0], column, *args)
             else:
-                current_attribute = self.get_nested_attribute_value(model_obj, attributes)
+                attribute_value = self.get_nested_attribute_value(model_obj, attributes)
 
-            if current_attribute is None:
-                current_attribute = ""
+            if attribute_value is None:
+                attribute_value = ""
 
-            if isinstance(current_attribute, (datetime.datetime, datetime.date)):
-                current_attribute = (
-                    current_attribute.isoformat(sep="T")
-                    if isinstance(current_attribute, datetime.datetime)
-                    else current_attribute.isoformat()
+            if isinstance(attribute_value, (datetime.datetime, datetime.date)):
+                attribute_value = (
+                    attribute_value.isoformat(sep="T")
+                    if isinstance(attribute_value, datetime.datetime)
+                    else attribute_value.isoformat()
                 )
 
-            row.append(current_attribute)
+            row.append(attribute_value)
 
         return row
 
