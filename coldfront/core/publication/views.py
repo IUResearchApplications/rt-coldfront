@@ -38,37 +38,44 @@ MANUAL_SOURCE = "manual"
 
 def publication_gallery(request):
     static_dir = settings.SITE_STATIC
+    image_dir = os.path.join(static_dir, "images")
     context = {}
-    imgs = []
-    lnks = []
-    titles = []  # New list for titles
+    imgs, lnks, titles = [], [], []
 
-    # Read links.txt with three columns: key, url, title
+    # Load links.txt (key, url, title)
     with open(os.path.join(static_dir, "links.txt"), "r") as f:
-        contents = f.read()
-        entries = contents.strip().split("\n")
-        link_data = {}  # Create dictionary with key: (url, title) mapping
+        entries = f.read().strip().split("\n")
+        link_data = {}
         for entry in entries:
             parts = entry.split("\t")
-            if len(parts) >= 3:  # Ensure we have all three columns
+            if len(parts) >= 3:
                 key = parts[0]
                 url = parts[1]
-                title = "\t".join(parts[2:])  # Handle titles with internal tabs
+                title = "\t".join(parts[2:])
                 link_data[key] = (url, title)
 
-    image_dir = os.path.join(static_dir, "images")  # Process images
-    for image_name in sorted(os.listdir(image_dir)):
-        img_key = image_name.split("_")[0]
-        imgs.append("/static/images/" + image_name)
+    # Determine which keys actually have an image file on disk
+    existing_keys = {
+        os.path.splitext(fname)[0]
+        for fname in os.listdir(image_dir)
+        if os.path.isfile(os.path.join(image_dir, fname))
+    }
 
-        # Get link and title if available
-        if img_key in link_data:
-            url, title = link_data[img_key]
-            lnks.append(url)
-            titles.append(title)
-        else:
-            lnks.append("")
-            titles.append("")  # Empty title if not found
+    # Keep only link entries that have a corresponding image
+    link_data = {k: v for k, v in link_data.items() if k in existing_keys}
+
+    # Build parallel lists, showing only images that have a link
+    for image_name in sorted(os.listdir(image_dir)):
+        full_path = os.path.join(image_dir, image_name)
+        if not os.path.isfile(full_path):
+            continue
+        img_key = os.path.splitext(image_name)[0]
+        if img_key not in link_data:
+            continue
+        imgs.append("/static/images/" + image_name)
+        url, title = link_data[img_key]
+        lnks.append(url)
+        titles.append(title)
 
     items = ["item item" + str((i % 3) + 1) for i in range(len(imgs))]
     context["data"] = list(zip(imgs, lnks, titles, items))
