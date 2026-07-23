@@ -178,6 +178,19 @@ class BaseSearchTable(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def get_special_value(self) -> Optional[Any]:
+        """
+        Return the computed special values for a queryset.
+
+        This method must be implemented by subclasses to return the appropriate
+        computed values.
+
+        Note:
+            This is an abstract method that must be implemented by subclasses.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
     def get_attribute_model(self) -> Optional[Type[Model]]:
         """
         Return the attribute model class for the entity type.
@@ -1074,31 +1087,8 @@ class UserTable(BaseSearchTable):
 
         return user_profiles
 
-    def get_special_value(self, obj: Model, attribute: str) -> Optional[Any]:
-        """
-        Get computed special values for user objects.
-
-        Computes user-related statistics that require aggregate queries,
-        such as counts of projects, allocations, and specific roles.
-
-        Args:
-            obj: The user object
-            attribute: The special attribute to compute
-
-        Returns:
-            The computed value for special attributes as an integer count,
-            or None if attribute is not recognized.
-        """
-        if attribute == "total_projects":
-            return getattr(obj, "total_projects", 0)
-        if attribute == "total_pi_projects":
-            return getattr(obj, "total_pi_projects", 0)
-        if attribute == "total_manager_projects":
-            return getattr(obj, "total_manager_projects", 0)
-        if attribute == "total_allocations":
-            return getattr(obj, "total_allocations", 0)
-
-        return None
+    def get_special_value(self) -> None:
+        pass
 
     def get_attribute_model(self) -> None:
         pass
