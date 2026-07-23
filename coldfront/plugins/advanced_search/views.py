@@ -64,9 +64,7 @@ class AdvancedSearchView(LoginRequiredMixin, AdvancedSearchPermissionMixin, Temp
         search_form = context.get(f"{type}_form")
         search_formset = context.get(f"{type}attribute_form", [])
         attribute_data = self.clean_formset_data(
-            search_formset,
-            self.usage_attribute_ids.get(type, []),
-            f"{type}attribute",
+            search_formset, self.usage_attribute_ids.get(type, []), f"{type}attribute"
         )
 
         if search_form and search_form.is_valid():
