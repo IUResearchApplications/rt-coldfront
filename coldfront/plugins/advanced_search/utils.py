@@ -4,8 +4,9 @@ from typing import Any, Dict, List, Optional, Tuple, Type
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db.models import CharField, Count, F, FloatField, Func, Model, OuterRef, Q, QuerySet, Subquery
+from django.db.models import CharField, Count, F, FloatField, Func, IntegerField, Model, OuterRef, Q, QuerySet, Subquery
 from django.db.models.expressions import ExpressionWrapper
+from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 
@@ -981,45 +982,90 @@ class UserTable(BaseSearchTable):
         Returns:
             None - Result is stored in self.queryset
         """
+        display = self.search_data
         user_queryset = self.get_user_queryset()
 
         user_profile_queryset = self.get_user_profile_queryset()
         user_queryset = user_queryset.filter(userprofile__in=user_profile_queryset)
 
-        user_queryset = user_queryset.annotate(
-            total_projects=Count(
-                "projectuser",
-                filter=Q(projectuser__status__name="Active", project__status__name="Active"),
-                distinct=True,
-            ),
-            total_pi_projects=Count(
-                "projectuser",
-                filter=Q(
-                    projectuser__status__name="Active",
-                    project__pi=F("pk"),
-                    project__status__name="Active",
+        # Use subqueries to avoid JOIN multiplication that occurs when
+        # annotating counts on a queryset that already has JOINs (e.g. the
+        # userprofile filter). Each subquery computes its count independently.
+        annotations = {}
+        if display.get("display__total_projects"):
+            annotations["total_projects"] = Coalesce(
+                Subquery(
+                    (
+                        ProjectUser.objects.filter(
+                            user=OuterRef("pk"), status__name="Active", project__status__name="Active"
+                        )
+                        .values("user")
+                        .annotate(count=Count("id", distinct=True))
+                        .values("count")
+                    ),
+                    output_field=IntegerField(),
                 ),
-                distinct=True,
-            ),
-            total_manager_projects=Count(
-                "projectuser",
-                filter=Q(
-                    projectuser__role__name="Manager",
-                    projectuser__status__name="Active",
-                    project__status__name="Active",
+                0,
+            )
+
+        if display.get("display__total_pi_projects"):
+            annotations["total_pi_projects"] = Coalesce(
+                Subquery(
+                    (
+                        ProjectUser.objects.filter(
+                            user=OuterRef("pk"),
+                            status__name="Active",
+                            project__pi=OuterRef("pk"),
+                            project__status__name="Active",
+                        )
+                        .values("user")
+                        .annotate(count=Count("id", distinct=True))
+                        .values("count")
+                    ),
+                    output_field=IntegerField(),
                 ),
-                distinct=True,
-            ),
-            total_allocations=Count(
-                "allocationuser",
-                filter=Q(
-                    allocationuser__status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"],
-                    allocationuser__allocation__status__name="Active",
-                    allocationuser__allocation__project__status__name="Active",
+                0,
+            )
+
+        if display.get("display__total_manager_projects"):
+            annotations["total_manager_projects"] = Coalesce(
+                Subquery(
+                    (
+                        ProjectUser.objects.filter(
+                            user=OuterRef("pk"),
+                            role__name="Manager",
+                            status__name="Active",
+                            project__status__name="Active",
+                        )
+                        .values("user")
+                        .annotate(count=Count("id", distinct=True))
+                        .values("count")
+                    ),
+                    output_field=IntegerField(),
                 ),
-                distinct=True,
-            ),
-        )
+                0,
+            )
+
+        if display.get("display__total_allocations"):
+            annotations["total_allocations"] = Coalesce(
+                Subquery(
+                    (
+                        AllocationUser.objects.filter(
+                            user=OuterRef("pk"),
+                            status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"],
+                            allocation__status__name="Active",
+                            allocation__project__status__name="Active",
+                        )
+                        .values("user")
+                        .annotate(count=Count("id", distinct=True))
+                        .values("count")
+                    ),
+                    output_field=IntegerField(),
+                ),
+                0,
+            )
+
+        user_queryset = user_queryset.annotate(**annotations)
 
         self.queryset = user_queryset
 
