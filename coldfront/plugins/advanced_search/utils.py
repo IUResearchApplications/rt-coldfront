@@ -6,8 +6,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.db.models import CharField, Count, F, FloatField, Func, IntegerField, Model, OuterRef, Q, QuerySet, Subquery
 from django.db.models.expressions import ExpressionWrapper
-from django.db.models.functions import Coalesce
-from django.shortcuts import get_object_or_404
+from django.db.models.functions import Cast, Coalesce
 from django.urls import reverse
 
 from coldfront.core.allocation.models import (
@@ -28,8 +27,12 @@ from coldfront.plugins.advanced_search.models import SavedSearch
 
 
 def check_saved_search_access(pk, user):
-    """Check if user has access to a saved search."""
-    saved_search = get_object_or_404(SavedSearch, pk=pk)
+    """Check if user has access to a saved search. Returns False if the search
+    does not exist or the user lacks permission."""
+    saved_search = SavedSearch.objects.filter(pk=pk).first()
+    if not saved_search:
+        return False
+
     return (
         saved_search.owner == user
         or saved_search.shared_with_users.filter(pk=user.pk).exists()
@@ -179,12 +182,16 @@ class BaseSearchTable(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_special_value(self) -> Optional[Any]:
+    def get_special_value(self, obj: Model, attribute: str) -> Optional[Any]:
         """
         Return the computed special values for a queryset.
 
         This method must be implemented by subclasses to return the appropriate
         computed values.
+
+        Args:
+            obj: The model instance to compute special values for
+            attribute: The attribute name to compute
 
         Note:
             This is an abstract method that must be implemented by subclasses.
@@ -242,7 +249,8 @@ class BaseSearchTable(ABC):
 
         Returns:
             Dictionary mapping parent object IDs to lists of attribute instances.
-            The dictionary is empty if no attribute types are found.
+            The dictionary is empty if no attribute types are found or if no
+            attribute model is defined for this entity type.
         """
         attribute_types = [
             entry.get("attribute__name") for entry in self.attribute_data if entry.get("attribute__name")
@@ -250,9 +258,18 @@ class BaseSearchTable(ABC):
         if not attribute_types:
             return {}
 
+        attribute_model = self.get_attribute_model()
+        if attribute_model is None:
+            return {}
+
+        related_fields = [self.type, self.attr_type]
+        filter_kwargs = {
+            f"{self.attr_type}__id__in": [attr.id for attr in attribute_types],
+            f"{self.type}_id__in": self.queryset.values("pk"),
+        }
         return self.bucket_related(
-            self.get_attribute_model().objects.select_related("allocation", "allocation_attribute_type"),
-            {f"{self.attr_type}__id__in": [attr.id for attr in attribute_types]},
+            attribute_model.objects.select_related(*related_fields),
+            filter_kwargs,
             lambda obj: getattr(obj, self.type).id,
         )
 
@@ -307,8 +324,8 @@ class BaseSearchTable(ABC):
                 field_name = "attribute__name"
                 columns.append({"display_name": display_name, "field_name": field_name, "id": attribute_type.id})
 
-                has_usage = int(entry.get("attribute__has_usage"))
-                if has_usage and int(has_usage):
+                has_usage = int(entry.get("attribute__has_usage") or 0)
+                if has_usage:
                     display_name += " Usage"
                     field_name = "attribute__has_usage"
                     columns.append({"display_name": display_name, "field_name": field_name, "id": attribute_type.id})
@@ -461,7 +478,7 @@ class BaseSearchTable(ABC):
             Returns the original queryset if required parameters are missing.
         """
         attribute_has_usage = entry.get("attribute__has_usage")
-        if attribute_has_usage is None or not int(attribute_has_usage):
+        if not attribute_has_usage or not int(attribute_has_usage):
             return queryset
 
         attribute_type = entry.get("attribute__name")
@@ -471,7 +488,7 @@ class BaseSearchTable(ABC):
             return queryset
 
         queryset = queryset.filter(**{f"{self.type}attribute__{self.attr_type}": attribute_type})
-        attribute_usage_format = entry.get(f"{self.type}attribute__usage_format")
+        attribute_usage_format = entry.get("attribute__usage_format")
         if attribute_usage_format == "whole":
             if attribute_equality == "lt":
                 queryset = queryset.filter(
@@ -500,23 +517,22 @@ class BaseSearchTable(ABC):
         """
         usage_field = f"{self.type}attributeusage"
 
+        queryset = queryset.exclude(**{f"{self.type}attribute__value": "0"})
         annotated_queryset = queryset.annotate(
             usage_fraction=ExpressionWrapper(
-                F(f"{self.type}attribute__{usage_field}__value") / F(f"{self.type}attribute__value") * 100,
+                F(f"{self.type}attribute__{usage_field}__value")
+                / Cast(f"{self.type}attribute__value", output_field=FloatField())
+                * 100,
                 output_field=FloatField(),
             )
         )
 
         if attribute_equality == "lt":
-            annotated_queryset = annotated_queryset.filter(usage_fraction__lt=attribute_usage).exclude(
-                **{f"{self.type}attribute__value": 0}
-            )
+            annotated_queryset = annotated_queryset.filter(usage_fraction__lt=attribute_usage)
         elif attribute_equality == "gt":
-            annotated_queryset = annotated_queryset.filter(usage_fraction__gt=attribute_usage).exclude(
-                **{f"{self.type}attribute__value": 0}
-            )
+            annotated_queryset = annotated_queryset.filter(usage_fraction__gt=attribute_usage)
 
-        return annotated_queryset
+        return annotated_queryset.distinct()
 
     def filter_by_attribute_parameters(self, queryset: QuerySet) -> QuerySet:
         """
@@ -805,7 +821,7 @@ class AllocationTable(BaseSearchTable):
         ):
             prefetch.extend(["allocationuser_set", "allocationuser_set__status", "allocationuser_set__user"])
 
-        if display.get("display__project__total_users") or display.get("display__project_users"):
+        if display.get("display__project__project_total_users"):
             prefetch.extend(
                 ["project__projectuser_set", "project__projectuser_set__status", "project__projectuser_set__user"]
             )
@@ -877,14 +893,16 @@ class AllocationTable(BaseSearchTable):
                 "status",
                 "type",
             )
-            .prefetch_related(
+            .all()
+            .order_by("id")
+        )
+
+        if any(key.startswith("project__user") for key in self.search_data):
+            projects = projects.prefetch_related(
                 "projectuser_set",
                 "projectuser_set__status",
                 "projectuser_set__user",
             )
-            .all()
-            .order_by("id")
-        )
 
         project_filters = {}
         for filter, value in self.search_data.items():
@@ -1083,25 +1101,22 @@ class UserTable(BaseSearchTable):
         data = self.search_data
         users = User.objects.select_related("userprofile")
         if data.get("type") == "project":
-            project_usernames = set(
-                ProjectUser.objects.filter(status__name="Active", project__status__name="Active").values_list(
-                    "user__username", flat=True
+            users = users.filter(
+                pk__in=ProjectUser.objects.filter(status__name="Active", project__status__name="Active").values(
+                    "user__pk"
                 )
             )
-            users = users.filter(username__in=project_usernames)
         elif data.get("type") == "allocation":
-            allocation_usernames = set(
-                AllocationUser.objects.filter(
+            users = users.filter(
+                pk__in=AllocationUser.objects.filter(
                     status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"],
                     allocation__status__name="Active",
                     allocation__project__status__name="Active",
-                ).values_list("user__username", flat=True)
+                ).values("user__pk")
             )
-            users = users.filter(username__in=allocation_usernames)
 
         if data.get("usernames"):
-            usernames = data.get("usernames").split(",")
-            usernames = [username.strip() for username in usernames]
+            usernames = [u.strip() for u in data["usernames"].split(",") if u.strip()]
             users = users.filter(username__in=usernames)
 
         filter_kwargs = SearchFilterBuilder.build_filters(self.search_data, "user")
@@ -1133,11 +1148,11 @@ class UserTable(BaseSearchTable):
 
         return user_profiles
 
-    def get_special_value(self) -> None:
-        pass
+    def get_special_value(self, obj: Model, attribute: str) -> Optional[Any]:
+        return None
 
-    def get_attribute_model(self) -> None:
-        pass
+    def get_attribute_model(self) -> Optional[Type[Model]]:
+        return None
 
-    def get_attribute_usage_model(self) -> None:
-        pass
+    def get_attribute_usage_model(self) -> Optional[Type[Model]]:
+        return None

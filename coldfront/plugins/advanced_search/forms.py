@@ -417,7 +417,9 @@ class AllocationSearchForm(SearchForm):
     display__project__type__name = forms.BooleanField(required=False)
     display__project__created = forms.BooleanField(required=False)
     display__project__end_date = forms.BooleanField(required=False)
-    display__project__project_total_users = forms.BooleanField(required=False, label="Display project total active users")
+    display__project__project_total_users = forms.BooleanField(
+        required=False, label="Display project total active users"
+    )
     display__project__project_code = forms.BooleanField(required=False)
 
     display__get_parent_resource__name = forms.BooleanField(required=False, label="Resource name")
@@ -606,7 +608,10 @@ class AllocationSearchForm(SearchForm):
 
 
 class Formset(LayoutObject):
-    """Custom layout object for rendering formsets in crispy forms."""
+    """Custom layout object for rendering formsets in crispy forms.
+
+    Looks up the formset and helper by context key name at render time.
+    """
 
     template = "advanced_search/formset.html"
 
@@ -624,7 +629,10 @@ class Formset(LayoutObject):
 
     def render(self, form, context, **kwargs):
         formset = context.get(self.formset_context_name)
-        helper = context.get(self.helper_context_name)
+        helper = context.get(self.helper_context_name) if self.helper_context_name else None
+        if formset is None:
+            # Context key not found — render nothing instead of crashing
+            return ""
         # closes form prematurely if this isn't explicitly stated
         if helper:
             helper.form_tag = False

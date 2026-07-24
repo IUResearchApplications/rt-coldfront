@@ -25,7 +25,6 @@ urlpatterns = [
     path("modify-search/<int:pk>/", SavedSearchModifyView.as_view(), name="modify-search"),
     path("delete-search/<int:pk>/", SavedSearchDeleteView.as_view(), name="delete-search"),
     path("search-details/<int:pk>/", SavedSearchDetailView.as_view(), name="search-details"),
-    path("save-search-form-body/", SavedSearchCreateView.as_view(), name="save-search-form-body"),
     path("load-saved-search/<int:pk>/", LoadSavedSearchView.as_view(), name="load-saved-search"),
     path("clear-search/", ClearSearchView.as_view(), name="clear-search"),
     path("copy-search/<int:pk>/", SavedSearchCopyView.as_view(), name="copy-search"),

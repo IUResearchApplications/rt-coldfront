@@ -1,12 +1,12 @@
 import csv
 import json
 import logging
-from functools import cached_property
 
 from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.cache import cache
 from django.forms import formset_factory
 from django.http import HttpResponseRedirect, JsonResponse
 from django.http.response import StreamingHttpResponse
@@ -32,21 +32,67 @@ from coldfront.plugins.advanced_search.utils import AllocationTable, ProjectTabl
 
 logger = logging.getLogger(__name__)
 
+CACHE_TTL = 900
 
-class AdvancedSearchView(LoginRequiredMixin, AdvancedSearchPermissionMixin, TemplateView):
-    template_name = "advanced_search/advanced_search.html"
 
-    @cached_property
-    def usage_attribute_ids(self):
-        return {
+def add_formset_management_fields(data, prefix):
+    """Add formset management fields based on the attribute data indices.
+
+    The post() handler strips management fields (TOTAL_FORMS, etc.)
+    from the session filter_data.  When a formset is later recreated from
+    that data Django raises ``ManagementForm data is missing`` unless the
+    fields are re-added.  This function computes them from the form indices
+    actually present in data.
+
+    Returns the computed number of forms (0 when no form fields are present).
+    Management fields are only written when num_forms > 0 so that data
+    from saved searches with no attributes does not force the formset to
+    render zero rows instead of the extra blank row.
+    """
+    indices = set()
+    for key in data:
+        if key.startswith(f"{prefix}-"):
+            parts = key.split("-", 2)
+            if len(parts) >= 2 and parts[1].isdigit():
+                indices.add(int(parts[1]))
+
+    num_forms = max(indices) + 1 if indices else 0
+    if num_forms > 0:
+        data[f"{prefix}-TOTAL_FORMS"] = str(num_forms)
+        data[f"{prefix}-INITIAL_FORMS"] = str(num_forms)
+        data[f"{prefix}-MIN_NUM_FORMS"] = "0"
+        data[f"{prefix}-MAX_NUM_FORMS"] = "1000"
+    return num_forms
+
+
+def get_usage_attribute_ids():
+    """Return cached sets of attribute type IDs that have usage tracking enabled."""
+    data = cache.get("advanced_search_usage_attribute_ids")
+    if data is None:
+        data = {
             "allocation": set(AllocationAttributeType.objects.filter(has_usage=True).values_list("id", flat=True)),
             "project": set(ProjectAttributeType.objects.filter(has_usage=True).values_list("id", flat=True)),
         }
+        cache.set("advanced_search_usage_attribute_ids", data, CACHE_TTL)
+    return data
 
-    def create_formset(self, form, prefix, **kwargs):
-        formset = formset_factory(form, extra=1)
-        filter_data = self.request.session.get("filter_data")
-        return formset(filter_data if filter_data else None, prefix=prefix, **kwargs)
+
+def get_linked_allocation_attribute_types():
+    """Return cached dict mapping resource IDs to their linked allocation attribute type options."""
+    data = cache.get("advanced_search_linked_alloc_attr_types")
+    if data is None:
+        queryset = AllocationAttributeType.objects.prefetch_related("linked_resources")
+        linked = {}
+        for attr_type in queryset:
+            for resource in attr_type.linked_resources.all():
+                linked.setdefault(resource.id, []).append(f'<option value="{attr_type.id}">{attr_type}</option>')
+        cache.set("advanced_search_linked_alloc_attr_types", linked, CACHE_TTL)
+        data = linked
+    return data
+
+
+class AdvancedSearchView(LoginRequiredMixin, AdvancedSearchPermissionMixin, TemplateView):
+    template_name = "advanced_search/advanced_search.html"
 
     def clean_formset_data(self, formset, usage_attribute_ids, attribute_type):
         cleaned = []
@@ -54,9 +100,9 @@ class AdvancedSearchView(LoginRequiredMixin, AdvancedSearchPermissionMixin, Temp
             if not form.is_valid():
                 continue
             data = form.cleaned_data
-            attribute_obj = data.get(f"{attribute_type}__name")
+            attribute_obj = data.get("attribute__name")
             if not attribute_obj or attribute_obj.id not in usage_attribute_ids:
-                data[f"{attribute_type}__has_usage"] = "0"
+                data["attribute__has_usage"] = "0"
             cleaned.append(data)
         return cleaned
 
@@ -64,22 +110,26 @@ class AdvancedSearchView(LoginRequiredMixin, AdvancedSearchPermissionMixin, Temp
         search_form = context.get(f"{type}_form")
         search_formset = context.get(f"{type}attribute_form", [])
         attribute_data = self.clean_formset_data(
-            search_formset, self.usage_attribute_ids.get(type, []), f"{type}attribute"
+            search_formset, get_usage_attribute_ids().get(type, []), f"{type}attribute"
         )
 
-        if search_form and search_form.is_valid():
+        if search_form is None:
+            context[f"{type}_form"] = search_form_class(prefix=f"{type}_search")
+        elif search_form.is_valid():
             table = table_class(search_form.cleaned_data, attribute_data)
             context["rows"], context["columns"] = table.build_table()
             context[f"{type}attribute_form"] = search_formset
-        else:
-            context[f"{type}_form"] = search_form_class(prefix=f"{type}_search")
+
+    def partition_by_prefix(self, filter_data, prefix):
+        """Extract filter_data entries matching a given prefix, stripping the prefix from keys."""
+        return {k: v for k, v in filter_data.items() if k.startswith(prefix)}
 
     def build_forms(self, context, filter_data):
         """Build the three search forms from session filter data."""
         if filter_data:
-            project_data = {k: v for k, v in filter_data.items() if k.startswith("project_search-")}
-            allocation_data = {k: v for k, v in filter_data.items() if k.startswith("allocation_search-")}
-            user_data = {k: v for k, v in filter_data.items() if k.startswith("user_search-")}
+            project_data = self.partition_by_prefix(filter_data, "project_search")
+            allocation_data = self.partition_by_prefix(filter_data, "allocation_search")
+            user_data = self.partition_by_prefix(filter_data, "user_search")
             context["project_form"] = ProjectSearchForm(
                 self.normalize_form_data(project_data, ProjectSearchForm), prefix="project_search"
             )
@@ -130,6 +180,12 @@ class AdvancedSearchView(LoginRequiredMixin, AdvancedSearchPermissionMixin, Temp
             if filter_data
             else {}
         )
+
+        if project_data:
+            add_formset_management_fields(project_data, "projectattribute")
+        if allocation_data:
+            add_formset_management_fields(allocation_data, "allocationattribute")
+
         context["projectattribute_form"] = formset_factory(ProjectAttributeSearchForm, extra=1)(
             project_data or None, prefix="projectattribute"
         )
@@ -155,37 +211,37 @@ class AdvancedSearchView(LoginRequiredMixin, AdvancedSearchPermissionMixin, Temp
         if not loaded_search:
             return None, False, False
 
-        is_owner = loaded_search.owner == self.request.user
-        is_shared = not is_owner and (
-            loaded_search.shared_with_users.filter(pk=self.request.user.pk).exists()
-            or loaded_search.shared_with_groups.filter(
-                pk__in=self.request.user.groups.values_list("pk", flat=True)
-            ).exists()
-        )
+        is_owner = loaded_search.owner_id == self.request.user.pk
+        is_shared = False
+        if not is_owner:
+            is_shared = SavedSearch.get_shared_with_user(self.request.user).filter(pk=loaded_search_id).exists()
         return loaded_search, is_owner, is_shared
 
     def resolve_search_type(self, submit):
         """Determine which search to run based on the submit button or session state."""
-        search_type = submit or self.request.session.get("search_type", "")
-        tab_map = {
-            "Project Search": "project-search",
-            "Allocation Search": "allocation-search",
-            "User Search": "user-search",
+        submit_map = {
+            "Project Search": "project",
+            "Allocation Search": "allocation",
+            "User Search": "user",
         }
-        return search_type, tab_map.get(submit, "project-search")
-
-    def linked_allocation_attribute_types(self):
-        """Build a dict mapping resource IDs to their linked allocation attribute type options."""
-        queryset = AllocationAttributeType.objects.prefetch_related("linked_resources")
-        linked = {}
-        for attr_type in queryset:
-            for resource in attr_type.linked_resources.all():
-                linked.setdefault(resource.id, []).append(f'<option value="{attr_type.id}">{attr_type}</option>')
-        return linked
+        search_type = submit_map.get(submit) or self.request.session.get("search_type", "project")
+        tab_map = {
+            "project": "project-search",
+            "allocation": "allocation-search",
+            "user": "user-search",
+        }
+        return search_type, tab_map.get(search_type, "project-search")
 
     def post(self, request, *args, **kwargs):
         session = request.session
-        session["filter_data"] = dict(request.POST.lists())
+        skip_prefixes = ("csrf",)
+        skip_suffixes = ("-TOTAL_FORMS", "-INITIAL_FORMS", "-MIN_NUM_FORMS", "-MAX_NUM_FORMS")
+        filter_data = {
+            key: value
+            for key, value in request.POST.lists()
+            if not key.lower().startswith(skip_prefixes) and not key.endswith(skip_suffixes) and key != "submit"
+        }
+        session["filter_data"] = filter_data
         session["search_type"] = request.POST.get("search_type", "project")
         submit = request.POST.get("submit", "")
         session.save()
@@ -204,18 +260,18 @@ class AdvancedSearchView(LoginRequiredMixin, AdvancedSearchPermissionMixin, Temp
 
         search_type, active_tab = self.resolve_search_type(self.request.GET.get("submit", ""))
 
-        if search_type == "Project Search":
+        if search_type == "project":
             self.handle_search(context, "project", ProjectTable, ProjectSearchForm)
-        elif search_type == "Allocation Search":
+        elif search_type == "allocation":
             self.handle_search(context, "allocation", AllocationTable, AllocationSearchForm)
-        elif search_type == "User Search":
+        elif search_type == "user":
             self.handle_search(context, "user", UserTable, UserSearchForm)
 
         context.update(
             {
-                "allocation_attribute_type_ids": list(self.usage_attribute_ids["allocation"]),
-                "project_attribute_type_ids": list(self.usage_attribute_ids["project"]),
-                "linked_allocation_attribute_types": self.linked_allocation_attribute_types(),
+                "allocation_attribute_type_ids": list(get_usage_attribute_ids()["allocation"]),
+                "project_attribute_type_ids": list(get_usage_attribute_ids()["project"]),
+                "linked_allocation_attribute_types": get_linked_allocation_attribute_types(),
                 "allocationattribute_helper": AttributeFormSetHelper("allocation"),
                 "projectattribute_helper": AttributeFormSetHelper("project"),
                 "CENTER_BASE_URL": settings.CENTER_BASE_URL,
@@ -249,29 +305,16 @@ class SavedSearchCreateView(LoginRequiredMixin, AdvancedSearchPermissionMixin, T
         filter_data = self.request.session.get("filter_data", {})
         search_type = self.request.session.get("search_type", "project")
 
-        initial_query = {}
-        if search_type == "project":
-            initial_query.update(
-                {
-                    "project_search": {k: v for k, v in filter_data.items() if k.startswith("project_search-")},
-                    "project_attributes": {k: v for k, v in filter_data.items() if k.startswith("projectattribute-")},
-                }
-            )
-        elif search_type == "allocation":
-            initial_query.update(
-                {
-                    "allocation_search": {k: v for k, v in filter_data.items() if k.startswith("allocation_search-")},
-                    "allocation_attributes": {
-                        k: v for k, v in filter_data.items() if k.startswith("allocationattribute-")
-                    },
-                }
-            )
-        elif search_type == "user":
-            initial_query.update(
-                {
-                    "user_search": {k: v for k, v in filter_data.items() if k.startswith("user_search-")},
-                }
-            )
+        type_config = {
+            "project": {"project_search": "project_search", "project_attributes": "projectattribute"},
+            "allocation": {"allocation_search": "allocation_search", "allocation_attributes": "allocationattribute"},
+            "user": {"user_search": "user_search"},
+        }
+        config = type_config.get(search_type, {})
+        initial_query = {
+            section: {k: v for k, v in filter_data.items() if k.startswith(f"{prefix}-")}
+            for section, prefix in config.items()
+        }
 
         context["save_search_form"] = SearchCreateForm(user=self.request.user)
         context["query_data"] = json.dumps(initial_query)
@@ -347,7 +390,7 @@ class SavedSearchModifyView(LoginRequiredMixin, CanAccessSavedSearchMixin, Templ
     template_name = "advanced_search/save_search_form_body.html"
 
     def get_context_data(self, **kwargs):
-        saved_search = get_object_or_404(SavedSearch, pk=kwargs.get("pk"))
+        saved_search = self.saved_search
 
         context = super().get_context_data(**kwargs)
         context["save_search_form"] = SearchCreateForm(instance=saved_search, user=self.request.user)
@@ -355,18 +398,25 @@ class SavedSearchModifyView(LoginRequiredMixin, CanAccessSavedSearchMixin, Templ
         return context
 
     def post(self, request, pk):
-        saved_search = get_object_or_404(SavedSearch, pk=pk)
-        form = SearchCreateForm(request.POST, instance=saved_search, user=request.user)
+        saved_search = self.saved_search
+
+        query_data_raw = request.POST.get("query_data")
+        query_data = {}
+        if query_data_raw:
+            try:
+                query_data = json.loads(query_data_raw)
+                if not isinstance(query_data, dict):
+                    raise ValueError("query_data must be a JSON object")
+            except (json.JSONDecodeError, TypeError, ValueError):
+                return JsonResponse({"success": False, "message": "Invalid query data format."}, status=400)
+
+        mutable_post = request.POST.copy()
+        mutable_post["query_data"] = json.dumps(query_data)
+        form = SearchCreateForm(mutable_post, instance=saved_search, user=request.user)
 
         if form.is_valid():
             saved_search = form.save(commit=False)
-            # Also update query_data from the current form state
-            query_data_raw = request.POST.get("query_data")
-            if query_data_raw:
-                try:
-                    saved_search.query_data = json.loads(query_data_raw)
-                except (json.JSONDecodeError, TypeError):
-                    return JsonResponse({"success": False, "message": "Invalid query data format."}, status=400)
+            saved_search.query_data = query_data
             saved_search.save()
             form.save_m2m()
 
@@ -401,7 +451,7 @@ class SavedSearchDetailView(LoginRequiredMixin, AdvancedSearchPermissionMixin, T
         query_data = saved_search.query_data or {}
 
         structured_fields = []
-        search_type = "Project"
+        search_type = "project"
         if query_data:
             search_type = list(query_data.keys())[0].split("_")[0].title()
             for section_values in query_data.values():
@@ -436,7 +486,7 @@ class SavedSearchCopyView(LoginRequiredMixin, CanAccessSavedSearchMixin, View):
     """View to copy a saved search, creating a new one owned by the current user."""
 
     def post(self, request, pk):
-        original = get_object_or_404(SavedSearch, pk=pk)
+        original = self.saved_search
         copy = SavedSearch(
             name=f"{original.name} (copy)",
             description=original.description,
@@ -457,7 +507,7 @@ class SavedSearchCopyView(LoginRequiredMixin, CanAccessSavedSearchMixin, View):
 
 class SavedSearchDeleteView(LoginRequiredMixin, CanAccessSavedSearchMixin, View):
     def post(self, request, pk):
-        saved_search = get_object_or_404(SavedSearch, pk=pk)
+        saved_search = self.saved_search
         saved_search.delete()
         return JsonResponse({"success": True, "message": "Deleted successfully."})
 
@@ -470,6 +520,9 @@ class AdvancedExportView(LoginRequiredMixin, AdvancedSearchPermissionMixin, View
             messages.error(request, "Invalid export data.")
             return HttpResponseRedirect(reverse("advanced-search"))
         columns = data.get("columns")
+        if not columns or not isinstance(columns, list):
+            messages.error(request, "Nothing to export.")
+            return HttpResponseRedirect(reverse("advanced-search"))
         column_names = [column.get("display_name") for column in columns]
         if not column_names:
             messages.error(request, "Nothing to export.")
@@ -496,7 +549,7 @@ class ApplySavedSearchView(LoginRequiredMixin, CanAccessSavedSearchMixin, Redire
     pattern_name = "advanced-search"
 
     def get_redirect_url(self, *args, **kwargs):
-        saved_search = get_object_or_404(SavedSearch, pk=self.kwargs.get("pk"))
+        saved_search = self.saved_search
 
         query_data = saved_search.query_data or {}
 
@@ -517,7 +570,7 @@ class ApplySavedSearchView(LoginRequiredMixin, CanAccessSavedSearchMixin, Redire
                 flattened[search_type_key] = fields
 
         for prefix in ["projectattribute", "allocationattribute"]:
-            self.add_formset_management_fields(flattened, prefix)
+            add_formset_management_fields(flattened, prefix)
 
         session["filter_data"] = flattened
         session["search_type"] = search_type
@@ -528,27 +581,12 @@ class ApplySavedSearchView(LoginRequiredMixin, CanAccessSavedSearchMixin, Redire
         session.save()
         return reverse("advanced-search")
 
-    def add_formset_management_fields(self, data, prefix):
-        """Add formset management fields based on the attribute data indices."""
-        indices = set()
-        for key in data:
-            if key.startswith(f"{prefix}-"):
-                parts = key.split("-", 2)
-                if len(parts) >= 2 and parts[1].isdigit():
-                    indices.add(int(parts[1]))
-
-        num_forms = max(indices) + 1 if indices else 0
-        data[f"{prefix}-TOTAL_FORMS"] = str(num_forms)
-        data[f"{prefix}-INITIAL_FORMS"] = str(num_forms)
-        data[f"{prefix}-MIN_NUM_FORMS"] = "0"
-        data[f"{prefix}-MAX_NUM_FORMS"] = "1000"
-
 
 class LoadSavedSearchView(LoginRequiredMixin, CanAccessSavedSearchMixin, View):
     """AJAX view to load saved search data and return as JSON for dynamic form population."""
 
     def get(self, request, *args, **kwargs):
-        saved_search = get_object_or_404(SavedSearch, pk=self.kwargs.get("pk"))
+        saved_search = self.saved_search
         query_data = saved_search.query_data
         return JsonResponse(
             {
