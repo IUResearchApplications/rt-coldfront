@@ -10,12 +10,7 @@ import logging
 from django.db.models import F
 from django.db.models.query import Prefetch
 
-from coldfront.core.allocation.models import (
-    Allocation,
-    AllocationStatusChoice,
-    AllocationUser,
-    AllocationUserStatusChoice,
-)
+from coldfront.core.allocation.models import Allocation, AllocationStatusChoice, AllocationUser
 from coldfront.core.allocation.signals import allocation_expire
 from coldfront.core.project.models import ProjectUser
 from coldfront.core.user.models import User
@@ -46,6 +41,7 @@ EMAIL_ALLOCATION_EULA_IGNORE_OPT_OUT = import_from_settings("EMAIL_ALLOCATION_EU
 
 
 EMAIL_TICKET_SYSTEM_ADDRESS = import_from_settings("EMAIL_TICKET_SYSTEM_ADDRESS")
+
 
 # TODO - review file
 def update_statuses():

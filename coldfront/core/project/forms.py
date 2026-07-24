@@ -6,7 +6,6 @@
 from django import forms
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.validators import MinLengthValidator
 from django.db.models.functions import Lower
 from django.shortcuts import get_object_or_404
 
@@ -289,25 +288,3 @@ class ProjectReviewAllocationForm(forms.Form):
     status = forms.CharField(max_length=50, disabled=True)
     expires_on = forms.DateField(widget=forms.DateInput(attrs={"class": "datepicker"}), disabled=True)
     renew = forms.BooleanField(initial=True, required=False)
-
-
-class ProjectUpdateForm(forms.Form):
-    title = forms.CharField(
-        max_length=255,
-    )
-    description = forms.CharField(
-        validators=[
-            MinLengthValidator(
-                10,
-                "The project description must be > 10 characters",
-            )
-        ],
-        widget=forms.Textarea,
-    )
-
-    def __init__(self, project_pk, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        project_obj = get_object_or_404(Project, pk=project_pk)
-
-        self.fields["title"].initial = project_obj.title
-        self.fields["description"].initial = project_obj.description

@@ -53,7 +53,6 @@ from coldfront.core.project.forms import (
     ProjectReviewEmailForm,
     ProjectReviewForm,
     ProjectSearchForm,
-    ProjectUpdateForm,
     ProjectUserUpdateForm,
 )
 from coldfront.core.project.models import (
@@ -61,7 +60,6 @@ from coldfront.core.project.models import (
     ProjectAdminComment,
     ProjectAttribute,
     ProjectAttributeType,
-    ProjectDescriptionRecord,
     ProjectReview,
     ProjectReviewStatusChoice,
     ProjectStatusChoice,
