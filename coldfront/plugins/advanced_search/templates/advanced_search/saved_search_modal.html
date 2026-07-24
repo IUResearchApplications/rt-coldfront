@@ -34,17 +34,17 @@
 >
   <div class="modal-dialog" role="document">
     <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title" id="savedSearchModalLabel">Modal Title</h2>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body"></div>
-      <div class="modal-footer" style="flex-wrap: nowrap;">
-        <div class="d-none alert flex-grow-1" id="modal-message" role="alert"></div>
-        <div class="d-flex justify-content-end" id="modal-buttons"></div>
-      </div>
+      <form id="saveSearchForm" method="post" action="">
+        <div class="modal-header">
+          <h2 class="modal-title" id="savedSearchModalLabel">Modal Title</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body"></div>
+        <div class="modal-footer" style="flex-wrap: nowrap;">
+          <div class="d-none alert flex-grow-1" id="modal-message" role="alert"></div>
+          <div class="d-flex justify-content-end" id="modal-buttons"></div>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -53,6 +53,7 @@
   function initSelect2() {
     $(".multiselect-wrapper select").select2({
       width: "100%",
+      dropdownParent: $("#savedSearchModal")
     });
   }
 
@@ -68,7 +69,7 @@
     'user': 'User Search'
   };
 
-  $(document).ready(function () {
+  document.addEventListener('DOMContentLoaded', function() {
     let currentModalType = null;
     let currentSearchId = null;
 
@@ -81,27 +82,27 @@
       save: {
         title: "Save Search",
         footerButtons:
-          '<button type="submit" id="btn-submit-save-search" class="btn btn-primary mr-2">Save</button>' +
-          '<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>',
+          '<button type="submit" id="btn-submit-save-search" class="btn btn-primary me-2">Save</button>' +
+          '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>',
       },
       modify: {
         title: "Modify Search",
         footerButtons:
-          '<button type="submit" id="btn-submit-save-search" class="btn btn-primary mr-2">Save</button>' +
-          '<button type="button" id="btn-delete-search" class="btn btn-danger mr-2">Delete</button>' +
-          '<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>',
+          '<button type="submit" id="btn-submit-save-search" class="btn btn-primary me-2">Save</button>' +
+          '<button type="button" id="btn-delete-search" class="btn btn-danger me-2">Delete</button>' +
+          '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>',
       },
       update: {
         title: "Update Search",
         footerButtons:
-          '<button type="submit" id="btn-submit-save-search" class="btn btn-primary mr-2">Save</button>' +
-          '<button type="button" id="btn-delete-search" class="btn btn-danger mr-2">Delete</button>' +
-          '<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>',
+          '<button type="submit" id="btn-submit-save-search" class="btn btn-primary me-2">Save</button>' +
+          '<button type="button" id="btn-delete-search" class="btn btn-danger me-2">Delete</button>' +
+          '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>',
       },
       details: {
         title: "Search Details",
         footerButtons:
-          '<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>',
+          '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>',
       },
     };
 
@@ -130,7 +131,7 @@
         loadSaveForm($modalBody, $modalContent, searchId);
       }
 
-      $modal.modal("show");
+      bootstrap.Modal.getOrCreateInstance($modal[0]).show();
     }
 
     function getSearchData() {
@@ -227,10 +228,6 @@
     }
 
     function loadSaveForm($modalBody, $modalContent, searchId) {
-      if (!$("#saveSearchForm").length) {
-        $modalContent.wrapInner($(`<form id="saveSearchForm" method="post" action=""></form>`));
-      }
-
       let url = ""
       if (searchId) {
         url = getUrl("modify", searchId)
@@ -265,7 +262,7 @@
               const $messageContainer = $("#modal-message");
               const $btnContainer = $("#modal-buttons");
               $messageContainer.removeClass("d-none").addClass("alert-success").text(data.message);
-              $btnContainer.addClass("d-none")
+              $btnContainer.html('<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Done</button>')
               $.ajax({
                 type: "GET",
                 url: getUrl("saved-list"),
@@ -319,11 +316,6 @@
     }
 
     function loadDetailsContent($modalBody, $modalContent, searchId) {
-      $form = $("#saveSearchForm");
-      if ($form.length) {
-        $modalBody.unwrap();
-      }
-
       $.ajax({
         url: getUrl("details", searchId),
         type: "GET",
@@ -356,18 +348,18 @@
         type: "POST",
         headers: { "X-CSRFToken": "{{ csrf_token }}" },
         success: function (data) {
-          $("#savedSearchModal").modal("hide");
+          bootstrap.Modal.getInstance(document.getElementById("savedSearchModal")).hide();
           $.ajax({
             type: "GET",
             url: getUrl("saved-list"),
             success: function (data) {
               $("#saved-searches").html(data);
               const $banner = $("<div class='alert alert-success alert-dismissible fade show mb-3' role='alert'>" +
-                "<i class='fas fa-check-circle mr-2'></i>Search deleted successfully." +
-                "<button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button></div>"
+                "<i class='fas fa-check-circle me-2'></i>Search deleted successfully." +
+                "<button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button></div>"
               );
               $("#accordion").before($banner);
-              setTimeout(function() { $banner.alert("close"); }, 4000);
+              setTimeout(function() { $banner.fadeOut(); }, 4000);
             },
             error: function (xhr) {
               console.error('Failed to reload saved searches:', xhr);

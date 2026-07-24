@@ -7,7 +7,7 @@
 <p><strong class="text-nowrap">Description:</strong> {{ description }}</p>
 <div class="row mb-3">
   <div class="col">
-    <span class="font-weight-bold">Shared with Users:</span>
+    <span class="fw-bold">Shared with Users:</span>
     <div class="scrollable-box">
       <ul>
         {% for user in shared_with_users %}
@@ -17,7 +17,7 @@
     </div>
   </div>
   <div class="col">
-    <span class="font-weight-bold">Shared with Groups:</span>
+    <span class="fw-bold">Shared with Groups:</span>
     <div class="scrollable-box">
       <ul>
         {% for group in shared_with_groups %}
@@ -29,12 +29,12 @@
 </div>
 
 <ul class="nav nav-tabs" role="tablist">
-  <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#contents-structured">Structured</a></li>
-  <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#contents-json">JSON</a></li>
+  <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#contents-structured">Structured</a></li>
+  <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#contents-json">JSON</a></li>
 </ul>
 <div class="tab-content mt-2">
   <div class="tab-pane" id="contents-json">
-    <span class="font-weight-bold">Contents:</span>
+    <span class="fw-bold">Contents:</span>
     <div class="scrollable-box">
       <pre class="mb-0"><code>{{ raw_query_data|format_json }}</code></pre>
     </div>
