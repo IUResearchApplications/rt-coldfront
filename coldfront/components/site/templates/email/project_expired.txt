@@ -1,12 +1,8 @@
 Dear {{center_name}} user,
 
-Your access to {{center_name}} resources has expired. Any accounts under these RT project(s) and
-allocation(s) are now unable to access the associated resource.
+Your access to {{center_name}} resources has expired. Any accounts under these RT projects and allocations are now unable to access the associated resource. If you wish to continue using them, the managers responsible for the following projects must renew them and their allocations before 7/31/{% now "Y" %}, after which the projects will be terminated and cannot be renewed.
 
-If you wish to continue using them, the managers responsible for the following project(s) must renew the expired
-project(s) and allocation(s) before 7/31, after which the projects will be terminated and cannot be renewed.
-
-Below is your expired project(s):
+Below are your expired projects:
 {% spaceless %}
 {% for project in project_dict %}
 ----------------------------------------------
@@ -18,18 +14,14 @@ Project Type: {{ project.project.type }}
 NOTE: This project cannot be renewed. The PI of this project will need to submit a new project.
 {% endif %}
 Allocations expired:
-{% for allocation in project.allocations %}    {{ allocation.get_parent_resource }}
+{% for allocation in project.allocations %}    {{ allocation.get_parent_resource }} {{ allocation.get_identifiers.values|join:", " }}
 {% empty %}    No allocations to list{% endfor %}
 {% endfor %}
 {% endspaceless %}
 
-The managers responsible for these projects are required to renew them unless stated otherwise. The
-expired allocations can be renewed during the project renewal. If they are not they will need to be
-renewed separately.
-For more information about the yearly renewal, visit our knowledge base: {{ project_renewal_help_url|safe }}.
+The managers responsible for these projects are required to renew them unless stated otherwise. The expired allocations can be renewed during the project renewal. If they are not they will need to be renewed separately. For more information about the yearly renewal, visit our knowledge base: {{ project_renewal_help_url|safe }}.
 
 If you are not the PI or a manager under this project, you are receiving this notice as a courtesy.
-
 If you have any questions please email us at {{ help_email }}
 
 Thank you,

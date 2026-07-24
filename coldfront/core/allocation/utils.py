@@ -113,7 +113,7 @@ def send_added_user_email(request, allocation_obj, users, users_emails):
             "action_user": f"{request.user.first_name} {request.user.last_name}",
             "project_pi": f"{project_obj.pi.first_name} {project_obj.pi.last_name}",
             "signature": EMAIL_SIGNATURE,
-            "allocation_identifiers": allocation_obj.get_identifiers().items(),
+            "allocation_identifiers": allocation_obj.get_identifiers.items(),
             "allocation_status": allocation_obj.status.name,
         }
 
@@ -142,7 +142,7 @@ def send_removed_user_email(request, allocation_obj, users, users_emails):
             "action_user": f"{request.user.first_name} {request.user.last_name}",
             "project_pi": f"{project_obj.pi.first_name} {project_obj.pi.last_name}",
             "signature": EMAIL_SIGNATURE,
-            "allocation_identifiers": allocation_obj.get_identifiers().items(),
+            "allocation_identifiers": allocation_obj.get_identifiers.items(),
         }
 
         send_email_template(

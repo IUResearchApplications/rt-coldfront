@@ -8,6 +8,7 @@ ColdFront URL Configuration
 
 import environ
 import split_settings
+from debug_toolbar.toolbar import debug_toolbar_urls
 from django.conf import settings
 from django.contrib import admin
 from django.core import serializers

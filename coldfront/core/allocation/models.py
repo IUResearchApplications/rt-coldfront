@@ -165,10 +165,11 @@ class Allocation(TimeStampedModel):
 
         super().save(*args, **kwargs)
 
+    @property
     def get_identifiers(self):
         """
         Returns:
-            list: the allocation's attribute types and their values
+            dict: the allocation's attribute types and their values
         """
 
         info = {}

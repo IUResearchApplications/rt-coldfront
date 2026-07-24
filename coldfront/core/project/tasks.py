@@ -3,9 +3,12 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.db.models import Prefetch
 
-from coldfront.core.project.models import Project, ProjectStatusChoice
+from coldfront.core.allocation.models import Allocation, AllocationAttribute, AllocationUser
+from coldfront.core.project.models import Project, ProjectStatusChoice, ProjectUser
 from coldfront.core.project.utils import get_ineligible_pis
+from coldfront.core.resource.models import Resource
 from coldfront.core.utils.common import import_from_settings
 from coldfront.core.utils.mail import send_email_template
 
@@ -51,41 +54,71 @@ def send_expiry_emails():
         return
 
     # Expiring projects
-    for user in User.objects.all():
+    users = User.objects.all().prefetch_related(
+        Prefetch(
+            lookup="projectuser_set",
+            queryset=ProjectUser.objects.filter(
+                status__name="Active",
+                project__status__name="Active",
+                project__requires_review=True,
+                enable_notifications=True,
+            )
+            .select_related(
+                "role",
+                "status",
+                "project",
+                "project__status",
+                "project__type",
+                "project__pi",
+            )
+            .prefetch_related(
+                Prefetch(
+                    lookup="project__allocation_set",
+                    queryset=Allocation.objects.filter(status__name="Active")
+                    .select_related("status")
+                    .prefetch_related(
+                        Prefetch(lookup="resources", queryset=Resource.objects.all().select_related("resource_type")),
+                        Prefetch(
+                            lookup="allocationattribute_set",
+                            queryset=AllocationAttribute.objects.all().select_related("allocation_attribute_type"),
+                        ),
+                        Prefetch(
+                            lookup="allocationuser_set",
+                            queryset=AllocationUser.objects.all().select_related("user", "status"),
+                        ),
+                        "allocationuser_set",
+                    ),
+                    to_attr="project_allocations",
+                )
+            ),
+            to_attr="active_user_projects",
+        ),
+    )
+    for user in users:
         for days_remaining in sorted(set(EMAIL_PROJECT_EXPIRING_NOTIFICATION_DAYS)):
             projects = []
             expiring_in_days = (datetime.datetime.today() + datetime.timedelta(days=days_remaining)).date()
 
-            for project_user in user.projectuser_set.filter(status__name="Active"):
-                if not project_user.enable_notifications:
+            for project_user in user.active_user_projects:
+                if not project_user.role.name == "Manager":
                     continue
 
                 project = project_user.project
-                if project.status.name == "Active" and (project.end_date == expiring_in_days):
-                    if not project.requires_review:
-                        continue
+                if not project.end_date == expiring_in_days:
+                    continue
 
-                    project_url = f"{CENTER_BASE_URL.strip('/')}/{'project'}/{project.pk}/"
+                project_url = f"{CENTER_BASE_URL.strip('/')}/{'project'}/{project.pk}/"
 
-                    allocations = []
-                    for allocation in project.allocation_set.filter(status__name="Active"):
-                        if not project_user.role.name == "Manager":
-                            allocation_user = allocation.allocationuser_set.filter(
-                                status__name__in=["Active", "Invited", "Disabled"], user=user
-                            )
-                            if not allocation_user.exists():
-                                continue
+                allocations = project.project_allocations
 
-                        allocations.append(allocation)
-
-                    projects.append(
-                        {
-                            "project": project,
-                            "project_url": project_url,
-                            "expiring_in_days": expiring_in_days,
-                            "allocations": allocations,
-                        }
-                    )
+                projects.append(
+                    {
+                        "project": project,
+                        "project_url": project_url,
+                        "expiring_in_days": expiring_in_days,
+                        "allocations": allocations,
+                    }
+                )
 
             if projects:
                 template_context = {
@@ -107,31 +140,31 @@ def send_expiry_emails():
                 logger.debug(f"Project(s) expiring email sent to user {user}.")
 
     # Expired projects
-    for user in User.objects.all():
+    for user in users:
         expiring_in_days = (datetime.datetime.today() + datetime.timedelta(days=-1)).date()
-
-        for project_user in user.projectuser_set.filter(status__name="Active"):
-            projects = []
+        projects = []
+        for project_user in user.active_user_projects:
             project = project_user.project
 
-            if project.status.name == "Active" and (project.end_date == expiring_in_days):
-                if not project.requires_review:
+            if not project.end_date == expiring_in_days:
+                continue
+
+            project_url = f"{CENTER_BASE_URL.strip('/')}/{'project'}/{project.pk}/"
+
+            allocations = []
+            for allocation in project.project_allocations:
+                if project_user.role.name == "Manager":
+                    allocations.append(allocation)
                     continue
 
-                project_url = f"{CENTER_BASE_URL.strip('/')}/{'project'}/{project.pk}/"
-
-                allocations = []
-                for allocation in project.allocation_set.filter(status__name="Active"):
-                    if not project_user.role.name == "Manager":
-                        allocation_user = allocation.allocationuser_set.filter(
-                            status__name__in=["Active", "Invited", "Disabled"], user=user
-                        )
-                        if not allocation_user.exists():
-                            continue
-
+                for allocation_user in allocation.allocationuser_set.all():
+                    if not project_user.user == allocation_user.user:
+                        continue
+                    if allocation_user.status.name not in ["Active", "Invited", "Disabled"]:
+                        continue
                     allocations.append(allocation)
 
-                projects.append({"project": project, "project_url": project_url, "allocations": allocations})
+            projects.append({"project": project, "project_url": project_url, "allocations": allocations})
 
         if projects:
             template_context = {

@@ -47,8 +47,6 @@
   </div>
 {% endif %}
 
-{{ academic_analytics_form|json_script:"academic_analytics_form" }}
-
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     var academic_analytics_form = JSON.parse(document.getElementById('academic_analytics_form').textContent);

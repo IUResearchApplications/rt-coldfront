@@ -239,7 +239,7 @@ Allocation Detail
   </div>
 </div>
 
-{% if allocation.get_parent_resource.name == 'REALLMS API' %}
+{% if allocation.get_parent_resource.name in 'REALLMS API, REALLMS Commercial API' %}
   {% include "service/reallms_api/reallms_api_key_div.html" %}
 {% endif %}
 
