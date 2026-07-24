@@ -738,14 +738,6 @@ class ProjectTable(BaseSearchTable):
         Returns:
             The computed value, or None if not a special attribute
         """
-        if attribute == "total_users":
-            count = getattr(obj, "total_users", None)
-            return count if count is not None else 0
-
-        if attribute == "users":
-            usernames = getattr(obj, "users", None)
-            return usernames if usernames else ""
-
         if attribute == "resources":
             return self.get_resource_list(obj.allocation_set.all())
 
