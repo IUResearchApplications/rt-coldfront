@@ -42,10 +42,10 @@ Advanced Search
           aria-label="Toggle filters"
         >
           <i class="fas fa-filter" aria-hidden="true"></i> Filter
-          <i id="plus_minus" class="fas {{expand_accordion|get_icon}} float-end"></i>
+          <i id="plus_minus" class="fas fa-minus float-end"></i>
         </a>
       </div>
-      <div id="collapseOne" class="collapse {{expand_accordion}}" data-bs-parent="#accordion">
+      <div id="collapseOne" class="collapse" data-bs-parent="#accordion">
         <div class="card-body">
           <ul class="nav nav-tabs">
             <li class="nav-item"><a class="nav-link active" href="#project-search" data-bs-toggle="tab">Project Search</a></li>
@@ -333,7 +333,7 @@ Advanced Search
         $("#export_data").val(JSON.stringify({ columns, rows }));
       });
 
-      $('#expand_button').on('shown.bs.collapse hidden.bs.collapse', function () {
+      $('#collapseOne').on('shown.bs.collapse hidden.bs.collapse', function () {
         $('#plus_minus').toggleClass('fa-plus fa-minus');
       });
   
