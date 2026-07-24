@@ -1,5 +1,10 @@
 # ColdFront Changelog
 
+## [1.1.9] - 2026-07-24
+
+- Bump deps
+- Add config option for trusted origins [#1015](https://github.com/coldfront/coldfront/pull/1015)
+
 ## [1.1.8] - 2026-05-11
 
 - Add podman support [#733](https://github.com/coldfront/coldfront/pull/733)
@@ -192,4 +197,5 @@
 [1.1.6]: https://github.com/coldfront/coldfront/releases/tag/v1.1.6
 [1.1.7]: https://github.com/coldfront/coldfront/releases/tag/v1.1.7
 [1.1.8]: https://github.com/coldfront/coldfront/releases/tag/v1.1.8
-[Unreleased]: https://github.com/coldfront/coldfront/compare/v1.1.8...HEAD
+[1.1.9]: https://github.com/coldfront/coldfront/releases/tag/v1.1.9
+[Unreleased]: https://github.com/coldfront/coldfront/compare/v1.1.9...HEAD

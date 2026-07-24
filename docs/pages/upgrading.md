@@ -112,10 +112,10 @@ to `v1.0.3`:
 
 ```python
 EXTRA_APPS += [
-    'coldfront.plugins.slurm',
+    "coldfront.plugins.slurm",
 ]
-SLURM_IGNORE_USERS = ['root']
-SLURM_SACCTMGR_PATH = '/usr/bin/sacctmgr'
+SLURM_IGNORE_USERS = ["root"]
+SLURM_SACCTMGR_PATH = "/usr/bin/sacctmgr"
 ```
 
 After upgrading to `v1.0.3` you'll need to modify your `local_settings.py` file
@@ -125,11 +125,11 @@ as follows:
 from coldfront.config.base import INSTALLED_APPS
 
 INSTALLED_APPS += [
-    'coldfront.plugins.slurm',
+    "coldfront.plugins.slurm",
 ]
 
-SLURM_IGNORE_USERS = ['root']
-SLURM_SACCTMGR_PATH = '/usr/bin/sacctmgr'
+SLURM_IGNORE_USERS = ["root"]
+SLURM_SACCTMGR_PATH = "/usr/bin/sacctmgr"
 ```
 
 Or change to using environment variables:
