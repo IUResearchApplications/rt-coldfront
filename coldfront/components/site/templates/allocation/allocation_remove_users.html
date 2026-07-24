@@ -20,15 +20,15 @@ Remove Users from Allocation
     <div class="card-body">
       <form action="{% url 'allocation-remove-users' allocation.pk %}" method="post">
         <fieldset>
-          <legend class="sr-only">Users in the allocation</legend>
+          <legend class="visually-hidden">Users in the allocation</legend>
           {% csrf_token %}
           <div class="table-responsive">
             <table class="table table-sm table-hover">
-              <caption class="sr-only">Users in the allocation – check rows to remove them</caption>
+              <caption class="visually-hidden">Users in the allocation – check rows to remove them</caption>
               <thead>
                 <tr>
                   <th scope="col">
-                    <label for="selectAll" class="sr-only">Select all users</label>
+                    <label for="selectAll" class="visually-hidden">Select all users</label>
                     <input type="checkbox" class="check" id="selectAll">
                   </th>
                   <th scope="col">#</th>
@@ -42,7 +42,7 @@ Remove Users from Allocation
                 {% for form in formset %}
                   <tr>
                     <td>
-                      <label for="{{ form.selected.id_for_label }}" class="sr-only" aria-label="Select {{ form.username.value }}">
+                      <label for="{{ form.selected.id_for_label }}" class="visually-hidden" aria-label="Select {{ form.username.value }}">
                         {{ form.selected.label }}
                       </label>
                       {{ form.selected }}
@@ -80,18 +80,17 @@ Remove Users from Allocation
 {% endif %}
 
 <script>
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-project-menu").addClass("active");
-
-  $("#selectAll").click(function () {
-    $("input[name^='userform-']").not(":disabled").prop('checked', $(this).prop('checked'));
-  });
-
-  $("input[name^='userform-']").click(function (ele) {
-    var id = $(this).attr('id');
-    if (id != "selectAll") {
-      $("#selectAll").prop('checked', false);
-    }
+  document.addEventListener('DOMContentLoaded', function() {
+    $("#selectAll").click(function () {
+      $("input[name^='userform-']").not(":disabled").prop('checked', $(this).prop('checked'));
+    });
+  
+    $("input[name^='userform-']").click(function (ele) {
+      var id = $(this).attr('id');
+      if (id != "selectAll") {
+        $("#selectAll").prop('checked', false);
+      }
+    });
   });
 </script>
 {% endblock %}

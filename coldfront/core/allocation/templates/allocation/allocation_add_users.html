@@ -22,7 +22,7 @@ Add Users to Allocation
             <thead>
               <tr>
                 <th>
-                  <input type="checkbox" class="check" id="selectAll">
+                  <input type="checkbox" class="form-check-input" id="selectAll">
                 </th>
                 <th scope="col">#</th>
                 <th scope="col">Username</th>
@@ -63,16 +63,4 @@ Add Users to Allocation
   </div>
 {% endif %}
 
-<script>
-  $("#selectAll").click(function () {
-    $("input[name^='userform-']").prop('checked', $(this).prop('checked'));
-  });
-
-  $("input[name^='userform-']").click(function (ele) {
-    var id = $(this).attr('id');
-    if ( id != "selectAll") {
-      $("#selectAll").prop('checked', false);
-    }
-  });
-</script>
 {% endblock %}

@@ -14,6 +14,14 @@ EXTRA_APPS = settings.INSTALLED_APPS
 
 
 urlpatterns = [
+    path(
+        "login",
+        LoginView.as_view(
+            template_name="user/login.html", extra_context={"EXTRA_APPS": EXTRA_APPS}, redirect_authenticated_user=True
+        ),
+        name="login",
+    ),
+    path("logout", user_views.HtmxLogoutView.as_view(), name="logout"),
     path("user-profile/", user_views.UserProfile.as_view(), name="user-profile"),
     path("user-profile/<str:viewed_username>", user_views.UserProfile.as_view(), name="user-profile"),
     path("user-projects-managers/", user_views.UserProjectsManagersView.as_view(), name="user-projects-managers"),

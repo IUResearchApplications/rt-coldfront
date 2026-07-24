@@ -1,9 +1,9 @@
-import os
 import logging
+import os
 
 from coldfront.core.resource.models import ResourceAttribute
-from coldfront.plugins.slurm.utils import SLURM_CLUSTER_ATTRIBUTE_NAME, SLURM_DUMP_TASK_BASE_DIR
 from coldfront.plugins.slurm.associations import SlurmCluster
+from coldfront.plugins.slurm.utils import SLURM_CLUSTER_ATTRIBUTE_NAME, SLURM_DUMP_TASK_BASE_DIR
 
 logger = logging.getLogger(__name__)
 

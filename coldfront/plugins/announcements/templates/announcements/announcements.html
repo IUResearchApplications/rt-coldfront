@@ -12,9 +12,9 @@ Announcements
 {% block content %}
 <h2 class="d-inline">Announcements</h2>
 {% if perms.announcements.add_announcement %}
-  <a class="btn btn-primary float-right ml-1" type="button" href="{% url 'announcement-create' %}">New Announcement</a>
+  <a class="btn btn-primary float-end ms-1" type="button" href="{% url 'announcement-create' %}">New Announcement</a>
 {% endif %}
-<a class="btn btn-primary float-right" type="button" href="{% url 'announcement-read' %}">Mark all as read</a>
+<a class="btn btn-primary float-end" type="button" href="{% url 'announcement-read' %}">Mark all as read</a>
 </div>
 <hr>
 
@@ -22,23 +22,21 @@ Announcements
   <div class="mb-3" id="category_filter_accordion">
     <div class="card">
       <div class="card-header">
-        <a id="expand_category_filter_button" href="#collapse_category_filter" role="button" class="card-link collapsed" data-toggle="collapse" aria-expanded="false">
+        <a id="expand_category_filter_button" href="#collapse_category_filter" role="button" class="card-link collapsed" data-bs-toggle="collapse" aria-expanded="false">
           <i id="search_plus_minus_1" class="fas fa-search-plus"></i>
           Filter Announcements
-          <i id="plus_minus_1" class="fas fa-plus float-right"></i>
+          <i id="plus_minus_1" class="fas fa-plus float-end"></i>
         </a>
       </div>
-      <div id="collapse_category_filter" class="collapse" data-parent="#category_filter_accordion">
+      <div id="collapse_category_filter" class="collapse" data-bs-parent="#category_filter_accordion">
         <div class="card-body">
-          <div id="div_id_title" class="form-group">
+          <div id="div_id_title" class="mb-3">
             <label for="id_title" class="">
               {{ filter_form.title.label }}
             </label>
             <div class="input-group mb-3">
               <input type="text" name="title" maxlength="100" class="textinput form-control" id="id_title">
-              <div class="input-group-append">
-                <button id="id_search_title_button" class="btn btn-secondary" type="submit">Search Title</button>
-              </div>
+              <button id="id_search_title_button" class="btn btn-secondary" type="submit">Search Title</button>
             </div>
           </div>
           {{ filter_form.categories|as_crispy_field }}
@@ -171,7 +169,6 @@ Announcements
     })
 
     $("#expand_category_filter_button").click(function() {
-      $('#collapse_category_filter').collapse();
       search_icon = $("#search_plus_minus_1");
       search_icon.toggleClass("fa-search-plus fa-search-minus")
       icon = $("#plus_minus_1");

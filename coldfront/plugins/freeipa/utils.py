@@ -29,14 +29,15 @@ class NotMemberError(ApiError):
     pass
 
 
-try:
-    os.environ["KRB5_CLIENT_KTNAME"] = CLIENT_KTNAME
-    api.bootstrap()
-    api.finalize()
-    api.Backend.rpcclient.connect()
-except Exception as e:
-    logger.error("Failed to initialze FreeIPA lib: %s", e)
-    raise ImproperlyConfigured("Failed to initialze FreeIPA: {0}".format(e))
+def ipa_bootstrap():
+    try:
+        os.environ["KRB5_CLIENT_KTNAME"] = CLIENT_KTNAME
+        api.bootstrap(context="client", in_server=False)
+        api.finalize()
+        api.Backend.rpcclient.connect()
+    except Exception as e:
+        logger.error("Failed to initialze FreeIPA lib: %s", e)
+        raise ImproperlyConfigured("Failed to initialze FreeIPA: {0}".format(e))
 
 
 def check_ipa_group_error(res):

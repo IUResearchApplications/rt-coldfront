@@ -2,9 +2,14 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+import logging
+
+from django.conf import settings
+from django.contrib import messages
 from django.db.models import Q
 from django.forms.models import model_to_dict
 from django.urls import reverse
+from django.utils.html import format_html
 
 from coldfront.core.allocation.models import (
     AllocationAdminAction,
@@ -14,7 +19,10 @@ from coldfront.core.allocation.models import (
 )
 from coldfront.core.resource.models import Resource
 from coldfront.core.utils.common import get_domain_url, import_from_settings
+from coldfront.core.utils.groups import check_if_groups_in_review_groups
 from coldfront.core.utils.mail import send_email_template
+
+logger = logging.getLogger(__name__)
 
 EMAIL_ENABLED = import_from_settings("EMAIL_ENABLED", False)
 if EMAIL_ENABLED:
@@ -24,6 +32,9 @@ if EMAIL_ENABLED:
     EMAIL_SIGNATURE = import_from_settings("EMAIL_SIGNATURE")
     EMAIL_CENTER_NAME = import_from_settings("CENTER_NAME")
     EMAIL_RESOURCE_EMAIL_TEMPLATES = import_from_settings("EMAIL_RESOURCE_EMAIL_TEMPLATES", {})
+
+
+# TODO - review file
 
 
 def set_allocation_user_status_to_error(allocation_user_pk):
@@ -112,8 +123,8 @@ def send_added_user_email(request, allocation_obj, users, users_emails):
                 "added_user", "email/allocation_added_users.txt"
             ),
             template_context,
-            EMAIL_TICKET_SYSTEM_ADDRESS,
             users_emails,
+            EMAIL_TICKET_SYSTEM_ADDRESS,
         )
 
 
@@ -140,8 +151,8 @@ def send_removed_user_email(request, allocation_obj, users, users_emails):
                 "removed_user", "email/allocation_removed_users.txt"
             ),
             template_context,
-            EMAIL_TICKET_SYSTEM_ADDRESS,
             users_emails,
+            EMAIL_TICKET_SYSTEM_ADDRESS,
         )
 
 
@@ -228,6 +239,31 @@ def check_if_roles_are_enabled(allocation_obj):
     return allocation_obj.get_parent_resource.requires_user_roles
 
 
+def user_in_review_group_with_perm(user, allocation_obj, permission=None):
+    """
+    Return True if the user is a superuser or belongs to a review group of the
+    allocation's parent resource that has the given permission.
+    """
+    if user.is_superuser:
+        return True
+    return check_if_groups_in_review_groups(
+        allocation_obj.get_parent_resource.review_groups.all(),
+        user.groups.all(),
+        permission,
+    )
+
+
+def user_can_move_allocation(user, allocation_obj):
+    """
+    Return True if the movable allocations plugin is enabled and the user is
+    allowed to move the allocation (superuser or a review group with the
+    "can_move_allocations" permission).
+    """
+    if "coldfront.plugins.movable_allocations" not in settings.INSTALLED_APPS:
+        return False
+    return user_in_review_group_with_perm(user, allocation_obj, "can_move_allocations")
+
+
 def get_default_allocation_user_role(resource, project_obj, user):
     project_managers = project_obj.projectuser_set.filter(role__name="Manager").values_list("user__username", flat=True)
     is_manager = user.username in project_managers
@@ -247,3 +283,127 @@ def set_default_allocation_user_role(resource, allocation_user):
     if role_choice_queryset:
         allocation_user.role = role_choice_queryset
         allocation_user.save()
+
+
+def validate_user_accounts_to_add(request, allocation_obj, resource, selected_users):
+    """
+    Check that each selected user has an account on the resource. Users without
+    an account are removed from selected_users and a warning message is shown.
+    """
+    user_account_statuses = resource.get_user_account_statuses([username for username in selected_users.keys()])
+
+    missing_accounts = []
+    missing_resource_accounts = []
+    for username, result in user_account_statuses.items():
+        if not result.get("exists"):
+            if result.get("reason") == "no_account":
+                missing_accounts.append(username)
+            elif result.get("reason") == "no_resource_account":
+                missing_resource_accounts.append(username)
+            selected_users.pop(username)
+
+    if missing_accounts:
+        message = "The following user does not have an IU account and was not added:"
+        if len(missing_accounts) > 1:
+            message = "The following users do not have IU accounts and were not added:"
+        messages.warning(request, f"{message} {', '.join(missing_accounts)}")
+        logger.info(
+            f"User(s) {', '.join(missing_accounts)} do not have IU accounts and "
+            f"were not added to a {resource.name} "
+            f"allocation (allocation pk={allocation_obj.pk})"
+        )
+
+    if missing_resource_accounts:
+        message = "The following user does not have an account on this resource and was not added:"
+        if len(missing_resource_accounts) > 1:
+            message = "The following users do not have an account on this resource and were not added:"
+        accounts_url = "https://access.iu.edu/Accounts/Create"
+        messages.warning(
+            request,
+            format_html(
+                f"{message} {', '.join(missing_resource_accounts)}. Please direct them "
+                f'to <a href="{accounts_url}">{accounts_url}</a> to create one.'
+            ),
+        )
+
+        logger.info(
+            f"User(s) {', '.join(missing_resource_accounts)} were missing accounts for a "
+            f"{resource.name} allocation (allocation pk={allocation_obj.pk})"
+        )
+
+
+def allocation_exceeds_user_limit(request, allocation_obj, resource, selected_users):
+    """
+    Return True if adding the selected users would exceed the resource's
+    user limit. A warning message is shown when the limit is exceeded.
+    """
+    allocation_user_limit = resource.get_attribute("user_limit")
+    if not allocation_user_limit:
+        return False
+
+    existing_users = allocation_obj.allocationuser_set.exclude(status__name__in=["Removed"]).values_list(
+        "user__username", flat=True
+    )
+    total_users = len(list(existing_users)) + len(selected_users)
+    if total_users > int(allocation_user_limit):
+        messages.warning(
+            request,
+            f"Only {allocation_user_limit} users are allowed on this resource. Users "
+            f"were not added. (Total users counted: {total_users})",
+        )
+        return True
+    return False
+
+
+def notify_added_users(request, allocation_obj, resource, selected_users, selected_user_objs):
+    """
+    Send notification emails and show a success message for the users added
+    to the allocation.
+    """
+    allocation_added_users_emails = list(
+        allocation_obj.project.projectuser_set.filter(
+            user__in=selected_user_objs, enable_notifications=True
+        ).values_list("user__email", flat=True)
+    )
+    if allocation_obj.project.pi.email not in allocation_added_users_emails:
+        allocation_added_users_emails.append(allocation_obj.project.pi.email)
+
+    send_added_user_email(request, allocation_obj, selected_user_objs, allocation_added_users_emails)
+
+    is_plural = len(selected_users.keys()) > 1
+    messages.success(
+        request,
+        f"User{'s' if is_plural else ''} added to the allocation: {', '.join(selected_users.keys())}",
+    )
+
+    logger.info(
+        f"User {request.user.username} added {', '.join(selected_users.keys())} "
+        f"to a {resource.name} allocation "
+        f"(allocation pk={allocation_obj.pk})"
+    )
+
+
+def notify_removed_users(request, allocation_obj, removed_user_objs, remove_users_count):
+    """
+    Send notification emails and show a success message for the users removed
+    from the allocation.
+    """
+    removed_users = [user_obj.username for user_obj in removed_user_objs]
+
+    allocation_removed_users_emails = list(
+        allocation_obj.project.projectuser_set.filter(
+            user__in=removed_user_objs, enable_notifications=True
+        ).values_list("user__email", flat=True)
+    )
+    if allocation_obj.project.pi.email not in allocation_removed_users_emails:
+        allocation_removed_users_emails.append(allocation_obj.project.pi.email)
+
+    send_removed_user_email(request, allocation_obj, removed_user_objs, allocation_removed_users_emails)
+
+    user_plural = "user" if remove_users_count == 1 else "users"
+    messages.success(request, f"Removed {user_plural} {', '.join(removed_users)} from allocation.")
+
+    logger.info(
+        f"User {request.user.username} removed {', '.join(removed_users)} from a "
+        f"{allocation_obj.get_parent_resource.name} allocation (allocation pk={allocation_obj.pk})"
+    )

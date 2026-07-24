@@ -36,7 +36,7 @@ Move Allocation
               <strong><u>Project Info</u></strong>
               <a href="{% url 'project-detail' allocation.project.pk %}" target="_blank">
                 <i class="fas fa-external-link-alt" aria-hidden="true"></i>
-                <span class="sr-only">Link to project {{ project.title }}</span>
+                <span class="visually-hidden">Link to project {{ project.title }}</span>
               </a>
             </legend>
             <p><strong>ID:</strong> {{ allocation.project.pk }}</p>
@@ -72,7 +72,7 @@ Move Allocation
               <div class="card-body">
                 <div class="table-responsive">
                   <table class="table table-bordered table-sm">
-                    <caption class="sr-only">Allocation attributes</caption>
+                    <caption class="visually-hidden">Allocation attributes</caption>
                     <thead>
                       <tr>
                         <th scope="col">Attribute</th>
@@ -104,21 +104,17 @@ Move Allocation
           <div class="row">
             <div class="col">
               <h2 class="m-0">Destination</h2>
-              <label class="sr-only" for="id_destination_project">
+              <label class="visually-hidden" for="id_destination_project">
                 Destination
               </label>
             </div>
             <div class="col">
               <div class="input-group mb-3">
-                <div class="input-group-prepend">
-                  <span class="input-group-text">
-                    <i class="fas fa-search"></i>
-                  </span>
-                </div>
+                <span class="input-group-text">
+                  <i class="fas fa-search"></i>
+                </span>
                 {{ form.destination_project }}
-                <div class="input-group-append">
-                  <button id="id_search_project" class="btn btn-outline-secondary" type="button">Search</button>
-                </div>
+                <button id="id_search_project" class="btn btn-outline-secondary" type="button">Search</button>
               </div>
               
             </div>
@@ -128,10 +124,10 @@ Move Allocation
           <div id="id_destination_project_info" aria-live="polite"></div>
         </div>
         <div class="card-footer">
-          <a href="{% url 'allocation-detail' allocation.pk %}" class="btn btn-secondary float-right">
+          <a href="{% url 'allocation-detail' allocation.pk %}" class="btn btn-secondary float-end">
             Cancel
           </a>
-          <button id="id_submit" class="btn btn-primary float-right confirm-move mr-1" type="submit">
+          <button id="id_submit" class="btn btn-primary float-end confirm-move me-1" type="submit">
             <i class="fas fa-angle-double-right" aria-hidden="true"></i>  Move Into
           </button>
         </div>
@@ -141,53 +137,55 @@ Move Allocation
 </form>
 
 <script>
-  $(document).on('click', '.confirm-move', function () {
-    if (!$('#id_destination_project').val()) {
-      return;
-    }
-    var confirmation = confirm('Are you sure you want to move this allocation? All of the users in this allocation will be added to the destination project if they do not exist already.');
-    if (!confirmation) {
-      return confirmation
-    }
-    $('#id_submit').html(
-      '<i class="fas fa-sync fa-spin fa-fw" aria-hidden="true"></i> Moving allocation...'
-    );
-    return confirmation
-  })
-  $(document).ready(function () {
-    $('#id_destination_project').addClass('form-control')
-    $('#id_search_project').click(function (e) {
-      var project_pk = $("#id_destination_project").val();
-      if (!project_pk) {
-        $('#id_destination_project_info').html('')
+  document.addEventListener('DOMContentLoaded', function() {
+    $(document).on('click', '.confirm-move', function () {
+      if (!$('#id_destination_project').val()) {
         return;
       }
-
-      $('#id_destination_project_info').html(
-        '<i class="fas fa-sync fa-spin fa-fw" aria-hidden="true"></i> Grabbing project information...'
+      var confirmation = confirm('Are you sure you want to move this allocation? All of the users in this allocation will be added to the destination project if they do not exist already.');
+      if (!confirmation) {
+        return confirmation
+      }
+      $('#id_submit').html(
+        '<i class="fas fa-sync fa-spin fa-fw" aria-hidden="true"></i> Moving allocation...'
       );
-      $.ajax({
-        url: `project-info/${project_pk}`,
-        success: function (data) {
-          $('#id_destination_project_info').html(data)
-          var not_moveable = $('#id_not_moveable');
-          if (not_moveable.length) {
-            $('#id_submit').prop('disabled', true)
-          } else {
-            $('#id_submit').prop('disabled', false)
-          }
-        },
-        error: function (data) {
-          $('#id_destination_project_info').html(
-            `<div class="alert alert-danger m-0">
-              <i class="fa fa-info-circle" aria-hidden="true"></i> An error has occured.
-            </div>`
-          )
-        }
-      })
+      return confirmation
     })
-    $('#id_destination_project_info')
-  })
+    $(document).ready(function () {
+      $('#id_destination_project').addClass('form-control')
+      $('#id_search_project').click(function (e) {
+        var project_pk = $("#id_destination_project").val();
+        if (!project_pk) {
+          $('#id_destination_project_info').html('')
+          return;
+        }
+  
+        $('#id_destination_project_info').html(
+          '<i class="fas fa-sync fa-spin fa-fw" aria-hidden="true"></i> Grabbing project information...'
+        );
+        $.ajax({
+          url: `project-info/${project_pk}`,
+          success: function (data) {
+            $('#id_destination_project_info').html(data)
+            var not_moveable = $('#id_not_moveable');
+            if (not_moveable.length) {
+              $('#id_submit').prop('disabled', true)
+            } else {
+              $('#id_submit').prop('disabled', false)
+            }
+          },
+          error: function (data) {
+            $('#id_destination_project_info').html(
+              `<div class="alert alert-danger m-0">
+                <i class="fa fa-info-circle" aria-hidden="true"></i> An error has occured.
+              </div>`
+            )
+          }
+        })
+      })
+      $('#id_destination_project_info')
+    })
+  });
 </script>
 
 {% endblock %}

@@ -24,7 +24,7 @@ Request New Allocation
   <div id="eula-div" style="display: none;">
     <textarea style="display:none;min-width:100%" id="eula"  rows="15"></textarea>
     <br>
-    <p class="font-weight-bold">By clicking submit you agree to the Terms and Conditions.</p>
+    <p class="fw-bold">By clicking submit you agree to the Terms and Conditions.</p>
   </div>
 </form>
 
@@ -34,8 +34,7 @@ Request New Allocation
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="id_resource_description_label">Resource Description</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
         </button>
       </div>
       <div class="modal-body">
@@ -51,8 +50,7 @@ Request New Allocation
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="exampleModalLabel">Add New Account Name</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
         </button>
       </div>
       <div class="modal-body">
@@ -61,13 +59,13 @@ Request New Allocation
         <form id="allocation_account_form">
           {{AllocationAccountForm |crispy}}
           <button id="myFormSubmit" class="btn btn-primary" type="submit">Submit</button>
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         </form>
       </div>
     </div>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
     <button type="button" class="btn btn-primary">Send message</button>
   </div>
 </div>
@@ -78,8 +76,7 @@ Request New Allocation
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="id_data_best_practices_label">Data Management Ideas and Best Practices</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
         </button>
       </div>
       <div class="modal-body">
@@ -172,8 +169,8 @@ Request New Allocation
       'Resource<span class="asteriskField">*</span>\
       <a\
       href="#"\
-      data-toggle="modal"\
-      data-target="#id_resource_description_modal"\
+      data-bs-toggle="modal"\
+      data-bs-target="#id_resource_description_modal"\
       >\
         <i class="fas fa-info-circle" aria-hidden="true"></i>\
       </a>'
@@ -304,9 +301,9 @@ Request New Allocation
 
     $(
       '<br>\
-       <div class="custom-control custom-checkbox">\
-       <input id="selectAll" class="custom-control-input" type="checkbox">\
-       <label class="custom-control-label" for="selectAll">\
+       <div class="form-check">\
+       <input id="selectAll" class="form-check-input" type="checkbox">\
+       <label class="form-check-label" for="selectAll">\
        <strong>Select All Users</strong>\
        </label>\
        </div>'
@@ -328,7 +325,7 @@ Request New Allocation
   function moveRadioSelectErrors() {
     // Remove error indentation.
     radioErrors = $('div[class^="w-100"]')
-    radioErrors.removeClass('custom-control')
+    radioErrors.removeClass('form-check')
   }
 
   function enableUserSelection() {

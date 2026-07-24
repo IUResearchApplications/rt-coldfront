@@ -23,7 +23,7 @@ Delete Publications from Project
             <thead>
               <tr>
                 <th>
-                  <input type="checkbox" class="check" id="selectAll">
+                  <input type="checkbox" class="form-check-input" id="selectAll">
                 </th>
                 <th scope="col">Title</th>
                 <th scope="col">Year</th>
@@ -56,8 +56,12 @@ Delete Publications from Project
   </div>
 {% endif %}
 
+{% endblock %}
+
+{% block javascript %}
+{{ block.super }}
 <script>
-  $(document).ready(function () {
+document.addEventListener('DOMContentLoaded', function() {
     $("input[name^='publicationform-']").click(function (ele) {
       var id = $(this).attr('id');
       if ( id != "selectAll") {
@@ -69,6 +73,6 @@ Delete Publications from Project
       var table= $(e.target).closest('table');
       $('td input:checkbox',table).prop('checked',this.checked);
     });
-  });
+});
 </script>
 {% endblock %}

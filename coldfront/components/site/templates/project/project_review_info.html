@@ -15,13 +15,13 @@ Project Review Info
   <div class="card-header">
     <h2 class="d-inline">{{project_review.project}}</h2>
     <a target="_blank" href="{% url 'project-detail' project_review.project.pk%}">
-      <i class="far fa-folder-open" aria-hidden="true"></i><span class="sr-only">Details</span>
+      <i class="far fa-folder-open" aria-hidden="true"></i><span class="visually-hidden">Details</span>
     </a>
   </div>
   <div class="card-body">
     <div class="table-responsive">
       <table class="table table-bordered table-sm">
-        <caption class="sr-only">Project review details</caption>
+        <caption class="visually-hidden">Project review details</caption>
         <tr>
           <th scope="row" class="text-nowrap">Date Submitted:</th>
           <td>{{ project_review.created|date:"M. d, Y" }}</td>
@@ -57,17 +57,11 @@ Project Review Info
       </table>
     </div>
   </div>
-  <div class="card-footer text-right">
-    <a href="{% url 'project-review-approve' project_review.pk %}" class="btn btn-success mr-1">Approve</a>
-    <a href="{% url 'project-review-deny' project_review.pk %}" class="btn btn-danger mr-1">Deny</a>
-    <a href="{% url 'project-review-email' project_review.pk %}" class="btn btn-primary mr-1">Email</a>
-    <a href="{% url 'project-review-list' %}" class="btn btn-secondary mr-1">Back</a>
+  <div class="card-footer text-end">
+    <a href="{% url 'project-review-approve' project_review.pk %}" class="btn btn-success me-1">Approve</a>
+    <a href="{% url 'project-review-deny' project_review.pk %}" class="btn btn-danger me-1">Deny</a>
+    <a href="{% url 'project-review-email' project_review.pk %}" class="btn btn-primary me-1">Email</a>
+    <a href="{% url 'project-review-list' %}" class="btn btn-secondary me-1">Back</a>
   </div>
 </div>
-
-<script>
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-admin").addClass("active");
-  $("#navbar-project-reviews").addClass("active");
-</script>
 {% endblock %}

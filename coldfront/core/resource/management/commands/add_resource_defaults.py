@@ -115,6 +115,7 @@ class Command(BaseCommand):
             ("url_label", "Text"),
             ("user_limit", "Int"),
             ("allocation_limit", "Int"),
+            ("form_description", "Text"),
             ("phone_number", "Text"),
             ("phone_number_label", "Text"),
             ("terms_of_service", "True/False"),

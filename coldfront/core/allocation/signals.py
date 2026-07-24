@@ -10,6 +10,8 @@ allocation_activate = django.dispatch.Signal()
 # providing_args=["allocation_pk"]
 allocation_disable = django.dispatch.Signal()
 # providing_args=["allocation_pk"]
+allocation_remove = django.dispatch.Signal()
+# providing_args=["allocation_pk"]
 
 allocation_activate_user = django.dispatch.Signal()
 # providing_args=["allocation_user_pk"]
@@ -24,7 +26,6 @@ allocation_change_created = django.dispatch.Signal()
 
 allocation_attribute_changed = django.dispatch.Signal()
 # providing_args=["attribute_pk", "allocation_pk"]
-# providing_args=["allocation_pk", "allocation_change_pk"]
 
 allocation_expire = django.dispatch.Signal()
 # providing_args=["allocation_pk"])

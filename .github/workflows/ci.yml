@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   pull_request:
     branches:
       - main
@@ -8,17 +9,32 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+        node-version: ["24.x"]
     env:
-      PLUGIN_API: True
+      PLUGIN_API: true
+      DJANGO_VITE_DEV_MODE: true
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install uv and set the python version
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
 
       - name: Install the project
         run: uv sync --locked --dev
+
+      - name: Install frontend packages
+        run: npm --prefix coldfront/static install
 
       - name: Check for lint violations
         run: uv run ruff check
@@ -26,8 +42,27 @@ jobs:
       - name: Check formatting
         run: uv run ruff format --check
 
+      - name: Check frontend with eslint and prettier
+        run: npm --prefix coldfront/static run check
+
+      - name: Compile and bundle frontend static assets
+        run: npm --prefix coldfront/static run build
+
+      - name: Check bundled frontend static assets have been commited
+        run: |
+          if [[ `git status --porcelain` ]]; then
+            echo "Error: pre-compiled bundled frontend static assets have not been committed"
+            git status
+            exit 1
+          else
+            echo "Bundled frontend static assets check passed."
+          fi
+
       - name: Check licence with reuse
         run: uv run reuse lint
 
       - name: Run tests
         run: uv run coldfront test
+
+      - name: Check for migrations
+        run: uv run coldfront makemigrations --check

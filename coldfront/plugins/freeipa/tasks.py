@@ -16,6 +16,7 @@ from coldfront.plugins.freeipa.utils import (
     AlreadyMemberError,
     NotMemberError,
     check_ipa_group_error,
+    ipa_bootstrap,
 )
 
 logger = logging.getLogger(__name__)
@@ -37,6 +38,7 @@ def add_user_group(allocation_user_pk):
         return
 
     os.environ["KRB5_CLIENT_KTNAME"] = CLIENT_KTNAME
+    ipa_bootstrap()
     for g in groups:
         if FREEIPA_NOOP:
             logger.warning(
@@ -104,6 +106,7 @@ def remove_user_group(allocation_user_pk):
         return
 
     os.environ["KRB5_CLIENT_KTNAME"] = CLIENT_KTNAME
+    ipa_bootstrap()
     for g in groups:
         if FREEIPA_NOOP:
             logger.warning(

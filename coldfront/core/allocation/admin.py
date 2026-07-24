@@ -206,6 +206,7 @@ class AllocationAdmin(SimpleHistoryAdmin, ReviewGroupFilteredResourceQueryset):
             # We are adding an object
             return []
         else:
+            # TODO - Check if this is still an issue on the newer django version
             inline_instances = super().get_inline_instances(request)
             allocation_user_inline = inline_instances[0]
             if obj and obj.allocationuser_set.all().count() > 200:
@@ -238,7 +239,10 @@ class AllocationAttributeTypeAdmin(admin.ModelAdmin):
         "list_linked_resources",
         "attribute_type",
         "has_usage",
+        "is_required",
+        "is_unique",
         "is_private",
+        "is_changeable",
     )
     list_filter = ("linked_resources",)
     filter_horizontal = ("linked_resources",)
@@ -455,20 +459,17 @@ class AllocationUserAdmin(SimpleHistoryAdmin, ReviewGroupFilteredResourceQueryse
         else:
             return super().get_inline_instances(request)
 
+    @admin.action(description="Set Selected User's Status To Active")
     def set_active(self, request, queryset):
         queryset.update(status=AllocationUserStatusChoice.objects.get(name="Active"))
 
+    @admin.action(description="Set Selected User's Status To Denied")
     def set_denied(self, request, queryset):
         queryset.update(status=AllocationUserStatusChoice.objects.get(name="Denied"))
 
+    @admin.action(description="Set Selected User's Status To Removed")
     def set_removed(self, request, queryset):
         queryset.update(status=AllocationUserStatusChoice.objects.get(name="Removed"))
-
-    set_active.short_description = "Set Selected User's Status To Active"
-
-    set_denied.short_description = "Set Selected User's Status To Denied"
-
-    set_removed.short_description = "Set Selected User's Status To Removed"
 
     actions = [
         set_active,

@@ -2,8 +2,6 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-import datetime
-
 import factory
 from django.contrib.auth.models import User
 from factory import SubFactory
@@ -47,12 +45,9 @@ from coldfront.core.project.models import (
 from coldfront.core.project.utils import get_new_end_date_from_list
 from coldfront.core.publication.models import PublicationSource
 from coldfront.core.resource.models import (
-    AttributeType,
-    Resource,
-    ResourceAttribute,
-    ResourceAttributeType,
-    ResourceType,
+    AttributeType as RAttributeType,
 )
+from coldfront.core.resource.models import Resource, ResourceAttribute, ResourceAttributeType, ResourceType
 from coldfront.core.user.models import UserProfile
 
 ### Default values and Faker provider setup ###
@@ -81,10 +76,10 @@ class ColdfrontProvider(BaseProvider):
 
 
 field_of_science_provider = DynamicProvider(provider_name="fieldofscience", elements=field_of_science_names)
-attr_type_provider = DynamicProvider(provider_name="attr_types", elements=attr_types)
 
-for provider in [ColdfrontProvider, field_of_science_provider, attr_type_provider]:
+for provider in [ColdfrontProvider, field_of_science_provider]:
     factory.Faker.add_provider(provider)
+    fake.add_provider(provider)
 
 
 ### User factories ###
@@ -164,7 +159,7 @@ class ProjectFactory(DjangoModelFactory):
         model = Project
 
     pi = SubFactory(UserFactory)
-    title = factory.Faker("project_title")
+    title = factory.Sequence(lambda _: fake.unique.project_title())
     description = factory.Faker("sentence")
     requestor = SubFactory(UserFactory)
     field_of_science = SubFactory(FieldOfScienceFactory)
@@ -172,11 +167,7 @@ class ProjectFactory(DjangoModelFactory):
     type = SubFactory(ProjectTypeChoiceFactory)
     force_review = False
     requires_review = False
-    end_date = get_new_end_date_from_list(
-        [
-            (6, 30),
-        ]
-    )
+    end_date = get_new_end_date_from_list([(6, 30)])
 
 
 class ProjectUserRoleChoiceFactory(DjangoModelFactory):
@@ -214,7 +205,7 @@ class PAttributeTypeFactory(DjangoModelFactory):
         model = PAttributeType
         # django_get_or_create = ('name',)
 
-    name = factory.Faker("attr_type")
+    name = "Text"
 
 
 class ProjectAttributeTypeFactory(DjangoModelFactory):
@@ -267,9 +258,12 @@ class ResourceFactory(DjangoModelFactory):
     resource_type = SubFactory(ResourceTypeFactory)
 
 
+### Resource Attribute factories ###
+
+
 class RAttributeTypeFactory(DjangoModelFactory):
     class Meta:
-        model = AttributeType
+        model = RAttributeType
         django_get_or_create = ("name",)
 
     name = "Text"
@@ -280,7 +274,7 @@ class ResourceAttributeTypeFactory(DjangoModelFactory):
         model = ResourceAttributeType
         django_get_or_create = ("name",)
 
-    name = "storage"
+    name = "Test attribute type"
     attribute_type = SubFactory(RAttributeTypeFactory)
 
 

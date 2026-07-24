@@ -22,7 +22,7 @@ Allocation Review New and Pending Requests
 {% if allocation_list %}
   <div class="table-responsive">
     <table id="allocation_request_table" class="table table-sm">
-      <caption class="sr-only">Allocation requests</caption>
+      <caption class="visually-hidden">Allocation requests</caption>
       <thead>
         <tr>
           <th scope="col">#</th>
@@ -52,14 +52,14 @@ Allocation Review New and Pending Requests
                 {% if allocation.project.needs_review %}
                   <td class="text-warning">
                     <strong>{{ allocation.project.status.name }}</strong>
-                    <span class="badge badge-warning">
+                    <span class="badge text-bg-warning">
                       Expires in {{ allocation.project.expires_in }} day{{ allocation.project.expires_in|pluralize }}
                     </span>
                   </td>
                 {% elif allocation.project.needs_review %}
                   <td class="text-warning">
                     <strong>{{ allocation.project.status.name }}</strong>
-                    <span class="badge badge-warning">Needs Review</span>
+                    <span class="badge text-bg-warning">Needs Review</span>
                   </td>
                 {% else %}
                   <td class="text-success"><strong>{{ allocation.project.status.name }}</strong></td>
@@ -79,8 +79,8 @@ Allocation Review New and Pending Requests
                 <form method="post" action="{% url 'allocation-detail' allocation.pk %}">
                   {% csrf_token %}
                   <input type="hidden" name="status" value="{{ allocation_status_active.id }}" />
-                  <button type="submit" name="action" value="auto-approve" class="btn btn-success mr-1{% if not allocation.get_allocation_attributes %} confirm-activate{% endif %}">Approve</button>
-                  <a href="{% url 'allocation-detail' allocation.pk %}" class="btn btn-primary mr-1" aria-label="View details for allocation {{ allocation.pk }}">Details</a>
+                  <button type="submit" name="action" value="auto-approve" class="btn btn-success me-1{% if not allocation.get_allocation_attributes %} confirm-activate{% endif %}">Approve</button>
+                  <a href="{% url 'allocation-detail' allocation.pk %}" class="btn btn-primary me-1" aria-label="View details for allocation {{ allocation.pk }}">Details</a>
                 </form>
               </td>
             {% endif %}
@@ -99,7 +99,7 @@ Allocation Review New and Pending Requests
 {% if allocation_renewal_list %}
   <div class="table-responsive">
     <table id="allocation_renewal_table" class="table table-sm">
-      <caption class="sr-only">List of allocation renewal requests</caption>
+      <caption class="visually-hidden">List of allocation renewal requests</caption>
       <thead>
         <tr>
           <th scope="col">#</th>
@@ -129,14 +129,14 @@ Allocation Review New and Pending Requests
                 {% if allocation.project.needs_review %}
                   <td class="text-warning">
                     <strong>{{ allocation.project.status.name }}</strong>
-                    <span class="badge badge-warning">
+                    <span class="badge text-bg-warning">
                       Expires in {{ allocation.project.expires_in }} day{{ allocation.project.expires_in|pluralize }}
                     </span>
                   </td>
                 {% elif allocation.project.needs_review %}
                   <td class="text-warning">
                     <strong>{{ allocation.project.status.name }}</strong>
-                    <span class="badge badge-warning">Needs Review</span>
+                    <span class="badge text-bg-warning">Needs Review</span>
                   </td>
                 {% else %}
                   <td class="text-success"><strong>{{ allocation.project.status.name }}</strong></td>
@@ -156,8 +156,8 @@ Allocation Review New and Pending Requests
                 <form method="post" action="{% url 'allocation-detail' allocation.pk %}">
                   {% csrf_token %}
                   <input type="hidden" name="status" value="{{ allocation_status_active.id }}" />
-                  <button type="submit" name="action" value="auto-approve" class="btn btn-success mr-1{% if not allocation.get_allocation_attributes %} confirm-activate{% endif %}">Approve</button>
-                  <a href="{% url 'allocation-detail' allocation.pk %}" class="btn btn-primary mr-1" aria-label="View details for allocation {{ allocation.pk }}">Details</a>
+                  <button type="submit" name="action" value="auto-approve" class="btn btn-success me-1{% if not allocation.get_allocation_attributes %} confirm-activate{% endif %}">Approve</button>
+                  <a href="{% url 'allocation-detail' allocation.pk %}" class="btn btn-primary me-1" aria-label="View details for allocation {{ allocation.pk }}">Details</a>
                 </form>
               </td>
             {% endif %}
@@ -173,30 +173,28 @@ Allocation Review New and Pending Requests
 {% endif %}
 
 <script>
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-admin").addClass("active");
-  $("#navbar-allocation-requests").addClass("active");
-  $(document).on('click', '.confirm-activate', function(){
-      return confirm('Are you sure you want to activate this allocation request without setting any allocation attributes?');
-  })
-
-  $(document).ready(function() {
-    $("#allocation_request_table").DataTable({
-      iDisplayLength: 15,
-      'aoColumnDefs': [{
-        'bSortable': false,
-        'aTargets': ['nosort']
-      }]
-    });
-
-    $("#allocation_renewal_table").DataTable({
-      iDisplayLength: 15,
-      'aoColumnDefs': [{
-        'bSortable': false,
-        'aTargets': ['nosort']
-      }]
-    });
-  })
-
+  document.addEventListener('DOMContentLoaded', function() {
+    $(document).on('click', '.confirm-activate', function(){
+        return confirm('Are you sure you want to activate this allocation request without setting any allocation attributes?');
+    })
+  
+    $(document).ready(function() {
+      $("#allocation_request_table").DataTable({
+        iDisplayLength: 15,
+        'aoColumnDefs': [{
+          'bSortable': false,
+          'aTargets': ['nosort']
+        }]
+      });
+  
+      $("#allocation_renewal_table").DataTable({
+        iDisplayLength: 15,
+        'aoColumnDefs': [{
+          'bSortable': false,
+          'aTargets': ['nosort']
+        }]
+      });
+    })
+  });
 </script>
 {% endblock %}
