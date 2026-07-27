@@ -2,9 +2,10 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import Chart from 'chart.js/auto';
 import { renderChart, ColorPalette } from './data';
 import type { ChartData, ChartDataItem } from './data';
+import { createDoughnutChart } from './doughnutChartFactory';
+import type { Chart } from 'chart.js/auto';
 
 interface ChartCanvas extends HTMLCanvasElement {
   projectReviewChart?: Chart;
@@ -18,33 +19,11 @@ function createProjectReviewChart(
   canvas: HTMLCanvasElement,
   chartData: ChartData
 ): void {
-  const chart = new Chart(canvas, {
-    type: 'doughnut',
-    data: {
-      labels: chartData.data.map((row: ChartDataItem) => row.name),
-      datasets: [
-        {
-          data: chartData.data.map((row: ChartDataItem) => row.total),
-          backgroundColor: ColorPalette.PRIMARY,
-          borderColor: ColorPalette.PRIMARY.map((color) => color + '80'),
-          borderWidth: 1,
-        },
-      ],
-    },
-    options: {
-      radius: '80%',
-      cutout: '65%',
-      responsive: true,
-      plugins: {
-        legend: {
-          position: 'bottom',
-        },
-        title: {
-          display: true,
-          text: 'Project Statuses',
-        },
-      },
-    },
+  const chart = createDoughnutChart(canvas, {
+    title: 'Project Statuses',
+    labels: chartData.data.map((row: ChartDataItem) => row.name),
+    values: chartData.data.map((row: ChartDataItem) => row.total),
+    backgroundColors: ColorPalette.PRIMARY,
   });
 
   (canvas as ChartCanvas).projectReviewChart = chart;

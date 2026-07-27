@@ -11,6 +11,11 @@ export function initPubChart(): void {
 }
 
 function createPubChart(canvas: HTMLCanvasElement, chartData: ChartData): void {
+  const pubTotal = document.getElementById('pubs-total');
+  if (pubTotal) {
+    pubTotal.textContent = chartData.total.toString();
+  }
+
   new Chart(canvas, {
     type: 'bar',
     data: {
@@ -31,14 +36,28 @@ function createPubChart(canvas: HTMLCanvasElement, chartData: ChartData): void {
           suggestedMax: 10,
           ticks: {
             stepSize: 1,
+            color: '#333',
           },
           grid: {
             display: false,
+          },
+          title: {
+            display: true,
+            text: 'Publications',
+            color: '#333',
           },
         },
         x: {
           grid: {
             display: false,
+          },
+          ticks: {
+            color: '#333',
+          },
+          title: {
+            display: true,
+            text: 'Year',
+            color: '#333',
           },
         },
       },

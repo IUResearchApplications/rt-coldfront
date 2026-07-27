@@ -34,14 +34,23 @@ function createUsersActiveChart(
           suggestedMax: 10,
           ticks: {
             stepSize: 1,
+            color: '#333',
           },
           grid: {
             display: false,
+          },
+          title: {
+            display: true,
+            text: 'Users',
+            color: '#333',
           },
         },
         x: {
           grid: {
             display: false,
+          },
+          ticks: {
+            color: '#333',
           },
         },
       },

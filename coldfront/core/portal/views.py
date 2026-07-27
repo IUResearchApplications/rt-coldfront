@@ -242,7 +242,7 @@ def resource_by_type(request):
     allocation_count_by_resource_type = dict(Counter([ele.resource_type.name for ele in allocation_resources]))
 
     data = []
-    for rtype in ["Cluster", "service", "Storage"]:
+    for rtype in ["Cluster", "Service", "Storage"]:
         data.append({"name": rtype, "total": allocation_count_by_resource_type.get(rtype, 0)})
 
     return JsonResponse({"data": data})
