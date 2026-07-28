@@ -353,7 +353,7 @@ Project Detail
               {% else %}
                 <td class="text-success"><strong>{{ allocation.status.name }}</strong></td>
               {% endif %}
-              {% elif  allocation.status.name == 'Expired' or allocation.status.name == 'Denied' %}
+              {% elif  allocation.status.name in 'Expired, Denied, Removed, Revoked' %}
                 <td class="text-danger"><strong>{{ allocation.status.name }}</strong></td>
               {% else %}
                 <td class="text-primary"><strong>{{ allocation.status.name }}</strong></td>
