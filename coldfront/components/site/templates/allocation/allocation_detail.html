@@ -332,7 +332,7 @@ Allocation Detail
         {% for attribute in attributes_with_usage %}
           <div class="card mb-3 me-1">
             <div class="card-body">
-              <h4 class="card-title">{{attribute}}</h4>
+              <h2 class="h4 card-title">{{attribute}}</h2>
               <div id="gauge-{{forloop.counter0}}"></div>
             </div>
           </div>
@@ -425,7 +425,7 @@ Allocation Detail
         <ul>
           <li>Pending - This allocation hasn't been approved yet</li>
           <li>Active - This user has access to the allocation's space </li>
-          <li>Invited - This user needs to create their Slate-Project account at <a href="https://access.iu.edu/Accounts/Create" target="_blank" rel="noopener noreferrer">Create Accounts</a> to get access</li>
+          <li>Invited - This user needs to create their Slate-Project account at <a href="https://access.iu.edu/Accounts/Create" class="link-dark" target="_blank" rel="noopener noreferrer">Create Accounts</a> to get access</li>
           <li>Disabled - This user's access to this allocation's space has been removed</li>
           <li>Retired - This user is no longer active in this allocation and likely should be removed</li>
         </ul>
