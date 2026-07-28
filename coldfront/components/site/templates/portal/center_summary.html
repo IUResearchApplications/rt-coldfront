@@ -39,7 +39,7 @@ Center Summary
     <i class="fas fa-newspaper" aria-hidden="true"></i> User Entered Publications
   </div>
   <div class="card-body">
-    <div class="chart-container" style="position: relative; width:90%">
+    <div class="chart-container">
         <canvas id="pubs-by-year-chart" data-url="{% url 'publications-by-year' %}"></canvas>
     </div>
     <strong>Total Publications:</strong> <span id="pubs-total">0</span>
@@ -68,7 +68,7 @@ Center Summary
     <i class="fas fa-trophy" aria-hidden="true"></i> User Grants Summary
   </div>
   <div class="card-body">
-    <div class="chart-container mx-auto" style="text-align: center; position: relative; width:60%">
+    <div class="chart-container mx-auto" style="width:60%;">
         <canvas id="grant-summary-chart" data-url="{% url 'grant-summary-data' %}"></canvas>
     </div>
     <hr>
@@ -90,10 +90,10 @@ Center Summary
   <div class="card-body">
     <div class="row">
       <div class="col">
-        <div class="chart-container mx-auto" style="text-align: center; position: relative; width:60%">
+        <div class="chart-container mx-auto" style="width:60%;">
           <canvas id="allocation-summary-chart" data-url="{% url 'portal-allocation-status' %}"></canvas>
         </div>
-        <div class="chart-container mx-auto" style="text-align: center; position: relative; width:60%">
+        <div class="chart-container mx-auto" style="width:60%;">
           <canvas id="resource-summary-chart" data-url="{% url 'portal-resource-type' %}"></canvas>
         </div>
       </div>
@@ -127,12 +127,12 @@ Center Summary
   <div class="card-body">
     <div class="row">
       <div class="col">
-        <div class="chart-container mx-auto" style="text-align: center; position: relative; width:60%">
+        <div class="chart-container mx-auto" style="width:60%;">
           <canvas id="project-type-summary-chart" data-url="{% url 'portal-project-type' %}"></canvas>
         </div>
       </div>
       <div class="col">
-        <div class="chart-container mx-auto" style="text-align: center; position: relative; width:60%">
+        <div class="chart-container mx-auto" style="width:60%;">
           <canvas id="project-user-summary-chart" data-url="{% url 'portal-project-user' %}"></canvas>
         </div>
       </div>
@@ -149,12 +149,12 @@ Center Summary
   </div>
   <div class="row">
     <div class="col">
-      <div class="chart-container mx-auto" style="position: relative; width:90%">
+      <div class="chart-container mx-auto">
         <canvas id="users-by-active-chart" data-url="{% url 'portal-users-by-active' %}"></canvas>
       </div>
     </div>
     <div class="col">
-      <div class="chart-container mx-auto" style="position: relative; width:90%">
+      <div class="chart-container mx-auto">
         <canvas id="users-by-year-chart" data-url="{% url 'portal-users-by-year' %}"></canvas>
       </div>
     </div>

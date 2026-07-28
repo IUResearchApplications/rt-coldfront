@@ -154,6 +154,7 @@ export function createDoughnutChart(
       radius: config.radius ?? '80%',
       cutout: config.cutout ?? '65%',
       responsive: true,
+      maintainAspectRatio: false,
       devicePixelRatio: window.devicePixelRatio || 1,
       centerText: config.title ?? '',
       plugins: {

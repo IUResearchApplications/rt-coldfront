@@ -1,11 +1,11 @@
 .fakeimg {
-  height: 77px;
-  background: #E2E2E2;
+    height: 77px;
+    background: #e2e2e2;
 }
 
 html {
-  position: relative;
-  min-height: 100%;
+    position: relative;
+    min-height: 100%;
 }
 
 main {
@@ -14,50 +14,60 @@ main {
 }
 
 .banner-name {
-  padding-top: 25px;
+    padding-top: 25px;
 }
 
 .banner-logo {
-  margin-top: 5px;
-  max-height: 75px !important;
-  margin-bottom: 5px;
+    margin-top: 5px;
+    max-height: 75px !important;
+    margin-bottom: 5px;
 }
 
 body > main > form > div.alert.alert-block.alert-danger > ul > li {
-  list-style: none;
-  margin-top: 14px;
+    list-style: none;
+    margin-top: 14px;
 }
 
-body > main > div > div.card.border-primary > div.card-body > form > div.alert.alert-block.alert-danger > ul > li {
-  list-style: none;
-  margin-top: 14px;
-  
+body
+    > main
+    > div
+    > div.card.border-primary
+    > div.card-body
+    > form
+    > div.alert.alert-block.alert-danger
+    > ul
+    > li {
+    list-style: none;
+    margin-top: 14px;
 }
 
-.form-control[readonly]{background-color:#ffffff;opacity:1}
+.form-control[readonly] {
+    background-color: #ffffff;
+    opacity: 1;
+}
 
 .bg-primary {
-  background-color: #990000 !important;
+    background-color: #990000 !important;
 }
 
 .border-primary {
-  border-color: #990000 !important;
+    border-color: #990000 !important;
 }
 
 .dropdown-submenu {
-  position: relative;
+    position: relative;
 }
 
 .dropdown-submenu .dropdown-menu {
-  top: 0;
-  left: 100%;
-  padding-top: 0;
-  margin-top: 0;
-  margin-left: .1rem;
-  margin-right: .1rem;
+    top: 0;
+    left: 100%;
+    padding-top: 0;
+    margin-top: 0;
+    margin-left: 0.1rem;
+    margin-right: 0.1rem;
 }
 
-.dropdown-submenu a::after{
+.dropdown-submenu a::after {
     transform: rotate(-90deg);
 }
 
@@ -87,12 +97,18 @@ body > main > div > div.card.border-primary > div.card-body > form > div.alert.a
 }
 
 .form-label {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .validating-feedback {
-  width: 100%;
-  margin-top: .25rem;
-  font-size: 80%;
-  color: #006298;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 80%;
+    color: #006298;
+}
+
+.chart-container {
+    height: 300px;
+    position: relative;
+    text-align: center;
 }
