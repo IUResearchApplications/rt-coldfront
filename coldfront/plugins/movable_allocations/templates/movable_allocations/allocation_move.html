@@ -25,7 +25,7 @@ Move Allocation
 <form action="{% url 'move-allocation' allocation.pk %}" method="post">
   {% csrf_token %}
   <div class="row">
-    <div class="col">
+    <div class="col-md-5">
       <div class="card">
         <div class="card-header">
           <h2>Current</h2>
@@ -95,10 +95,10 @@ Move Allocation
         </div>
       </div>
     </div>
-    <div style="display: flex; align-items: center;">
-      <i class="fas fa-angle-double-right" aria-hidden="true"></i>
+    <div class="col-md-1" style="display: flex; align-items: center; justify-content: center;">
+      <i class="fas fa-angle-double-right fa-2x" aria-hidden="true"></i>
     </div>
-    <div class="col">
+    <div class="col-md-5">
       <div class="card">
         <div class="card-header">
           <div class="row">
