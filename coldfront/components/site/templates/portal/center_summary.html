@@ -32,7 +32,6 @@ Center Summary
 
 <!-- Start Publications -->
 {% if settings.PUBLICATION_ENABLE %}
-<!-- Start  Publications -->
 <h2 class="visually-hidden">Publications Overview</h2>
 <div class="card mt-3 mb-3 border-primary">
   <div class="card-header bg-primary text-white">
@@ -40,7 +39,7 @@ Center Summary
   </div>
   <div class="card-body">
     <div class="chart-container">
-        <canvas id="pubs-by-year-chart" data-url="{% url 'publications-by-year' %}"></canvas>
+      <canvas id="pubs-by-year-chart" data-url="{% url 'publications-by-year' %}"></canvas>
     </div>
     <strong>Total Publications:</strong> <span id="pubs-total">0</span>
   </div>
@@ -69,7 +68,7 @@ Center Summary
   </div>
   <div class="card-body">
     <div class="chart-container mx-auto" style="width:60%;">
-        <canvas id="grant-summary-chart" data-url="{% url 'grant-summary-data' %}"></canvas>
+      <canvas id="grant-summary-chart" data-url="{% url 'grant-summary-data' %}"></canvas>
     </div>
     <hr>
     <strong> Grants Total:</strong> ${{grant_total}} <br>
