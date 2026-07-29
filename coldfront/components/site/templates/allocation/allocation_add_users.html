@@ -195,19 +195,4 @@ Add Users to Allocation
     All users in project are already in this allocation!
   </div>
 {% endif %}
-
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    $("#selectAll").on("click", function () {
-      $("input[name^='userform-']").not(':disabled').prop('checked', $(this).prop('checked'));
-    });
-  
-    $("input[name^='userform-']").on("click", function (ele) {
-      const id = $(this).attr('id');
-      if ( id != "selectAll") {
-        $("#selectAll").prop('checked', false);
-      }
-    });
-  });
-</script>
 {% endblock %}

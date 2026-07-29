@@ -20,11 +20,13 @@ export function initForm(): void {
     ['selectAll', 'grantdownloadform-'],
   ];
   for (const f of forms) {
-    $('#' + f[0]).click(function () {
-      $("input[name^='" + f[1] + "']").prop('checked', $(this).prop('checked'));
+    $('#' + f[0]).on('click', function () {
+      $("input[name^='" + f[1] + "']")
+        .not(':disabled')
+        .prop('checked', $(this).prop('checked'));
     });
 
-    $("input[name^='" + f[1] + "']").click(function () {
+    $("input[name^='" + f[1] + "']").on('click', function () {
       const id = $(this).attr('id');
       if (id != f[0]) {
         $('#' + f[0]).prop('checked', false);
