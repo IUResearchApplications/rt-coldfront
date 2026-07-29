@@ -218,7 +218,9 @@
     const account_statuses = JSON.parse(document.getElementById('account_statuses').textContent);
   
     function updateIcon(username, reason, missing_accounts) {
-      let icon = $($('#' + username)[0].childNodes[5].firstElementChild)
+      const row = $('#' + username);
+      const button = row.find('button[data-bs-toggle="popover"]');
+      
       let title = "Has Accounts"
       let content = "Can be added to all selected allocations"
       let html = '<span class="badge text-bg-success"><i class="fas fa-check-circle" aria-hidden="true"></i></span><span class="visually-hidden"></span>'
@@ -239,8 +241,20 @@
         content = `Will not be added to these resources: ${Array.from(missing_accounts).join(', ')}`
         html = `<span class="badge text-bg-warning"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span><span class="visually-hidden">${content}</span>`
       }
-  
-      icon.html(html)
+
+      button.html(html)
+
+      // Update the popover instance dynamically
+      const popoverElement = button[0];
+      const popover = bootstrap.Popover.getInstance(popoverElement);
+      if (popover) {
+        popover.dispose();
+      }
+      new bootstrap.Popover(popoverElement, {
+        title: title,
+        content: content,
+        trigger: 'hover'
+      });
     }
   
     function checkSelectedUserAccounts(user_field) {
