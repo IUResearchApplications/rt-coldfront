@@ -11,7 +11,7 @@ import { initForm } from './form';
 import { initDataTable } from './dataTable';
 import { initCharts } from './charts';
 import { initHtmx } from './htmx';
-import { initBootstrap } from './bs';
+import { initBootstrap, initPopovers } from './bs';
 import { getCookie } from './util';
 import jQuery from 'jquery';
 
@@ -22,6 +22,7 @@ Object.assign(window, {
   $: jQuery,
   jQuery,
   bootstrap: { Modal },
+  initPopovers: initPopovers,
 });
 
 function initDocument(): void {

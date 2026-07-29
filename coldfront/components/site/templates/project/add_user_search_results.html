@@ -208,6 +208,10 @@
 
 <script>
   $(document).ready(function() {
+    if (window.initPopovers) {
+      window.initPopovers();
+    }
+
     const current_num_managers = JSON.parse(document.getElementById('current_num_managers').textContent);
     const max_managers = JSON.parse(document.getElementById('max_managers').textContent);
     const num_matches = JSON.parse(document.getElementById('num_matches').textContent);
