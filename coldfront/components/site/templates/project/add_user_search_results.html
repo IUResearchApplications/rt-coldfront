@@ -341,7 +341,7 @@
         }
       })
   
-      if (after_project_creation){
+      if ("{{ after_project_creation }}" === "true"){
         $('#id_allocationform-0-selected').prop('checked', true);
       }
     })
