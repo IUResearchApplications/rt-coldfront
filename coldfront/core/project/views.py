@@ -697,7 +697,8 @@ class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
                 type=project_obj.type,
                 status__name__in=["Active", "Waiting For Admin Approval", "Contacted By Admin", "Review Pending"],
             ).count()
-            return pi_projects_count >= limit
+            limit = pi_obj.userprofile.limit_overrides.get("project", {}).get(project_obj.type.name.lower(), limit)
+            return pi_projects_count >= int(limit)
 
         return False
 
@@ -708,7 +709,10 @@ class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         form.instance.status = ProjectStatusChoice.objects.get(name="Waiting For Admin Approval")
 
         if self.check_max_project_type_count_reached(form.instance, form.instance.pi):
-            messages.error(self.request, "You have reached the max projects you can have of this type.")
+            if pi_is_requestor:
+                messages.error(self.request, "You have reached the max projects you can have of this type.")
+            else:
+                messages.error(self.request, "Your PI has reached the max projects they can have of this type.")
             return super().form_invalid(form)
 
         env = project_obj.get_env or {}
