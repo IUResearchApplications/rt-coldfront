@@ -16,12 +16,10 @@
               <div class="card-body">
                 {{ user_search.description }}
               </div>
-              <div class="card-footer d-flex align-items-center">
-                <div class="d-flex justify-content-end">
-                  <button type="button" class="btn btn-success me-2 btn-load-search" data-search-id="{{ user_search.pk }}" data-url="{% url 'apply-saved-search' pk=user_search.pk %}">Load</button>
-                  <button type="button" class="btn btn-primary me-2 btn-modify-search" data-search-id="{{ user_search.pk }}">Modify</button>
-                  <button type="button" class="btn btn-secondary btn-details-search" data-search-id="{{ user_search.pk }}">Details</button>
-                </div>
+              <div class="card-footer d-flex justify-content-end">
+                <button type="button" class="btn btn-success me-2 btn-load-search" data-search-id="{{ user_search.pk }}" data-url="{% url 'apply-saved-search' pk=user_search.pk %}">Load</button>
+                <button type="button" class="btn btn-primary me-2 btn-modify-search" data-search-id="{{ user_search.pk }}">Modify</button>
+                <button type="button" class="btn btn-secondary btn-details-search" data-search-id="{{ user_search.pk }}">Details</button>
               </div>
             </div>
           </div>

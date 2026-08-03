@@ -52,6 +52,14 @@ FK_FIELD_MODELS = {
     },
 }
 
+# Maps non-FK ChoiceField field names to a {value: display_text} dict so the
+# detail-view summary shows the same human-readable labels as the on-page form.
+CHOICE_FIELD_DISPLAY = {
+    "attribute__equality": {"lt": "<", "gt": ">"},
+    "attribute__usage_format": {"whole": ".00", "percent": "%"},
+    "type": {"all": "All", "project": "Project", "allocation": "Allocation"},
+}
+
 
 def check_saved_search_access(pk, user):
     """Check if user has access to a saved search. Returns False if the search
@@ -131,7 +139,10 @@ def build_structured_fields(query_data):
                         "attribute__usage_format",
                     ):
                         if attr.get(usage_field) not in (None, ""):
-                            structured_fields.append({"name": usage_field, "value": str(attr[usage_field])})
+                            value = str(attr[usage_field])
+                            if usage_field in CHOICE_FIELD_DISPLAY:
+                                value = CHOICE_FIELD_DISPLAY[usage_field].get(value, value)
+                            structured_fields.append({"name": usage_field, "value": value})
         else:
             for field_name, field_value in section_values.items():
                 clean_name = field_name.split("-")[-1]
@@ -143,6 +154,8 @@ def build_structured_fields(query_data):
                     field_value = resolve_pks(fk_models[clean_name], field_value)
                 elif isinstance(field_value, list):
                     field_value = ", ".join(str(v) for v in field_value)
+                if clean_name in CHOICE_FIELD_DISPLAY:
+                    field_value = CHOICE_FIELD_DISPLAY[clean_name].get(str(field_value), str(field_value))
                 if clean_name.startswith("display__"):
                     field_value = "True" if str(field_value) == "1" else "False"
                 structured_fields.append({"name": clean_name, "value": str(field_value)})

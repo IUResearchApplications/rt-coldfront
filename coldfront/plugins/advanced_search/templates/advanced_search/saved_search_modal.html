@@ -483,7 +483,7 @@
                 "<button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button></div>"
               );
               $("#accordion").before($banner);
-              setTimeout(function() { $banner.fadeOut(); }, 4000);
+              setTimeout(function() { $banner.fadeOut(400, function() { $banner.remove(); }); }, 4000);
             },
             error: function (xhr) {
               console.error('Failed to reload saved searches:', xhr);
