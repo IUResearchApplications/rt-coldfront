@@ -24,3 +24,4 @@ db.json
 node_modules
 coldfront.log
 pyrightconfig.json
+local_urls.py
