@@ -43,7 +43,6 @@ EMAIL_ALLOCATION_EULA_IGNORE_OPT_OUT = import_from_settings("EMAIL_ALLOCATION_EU
 EMAIL_TICKET_SYSTEM_ADDRESS = import_from_settings("EMAIL_TICKET_SYSTEM_ADDRESS")
 
 
-# TODO - review file
 def update_statuses():
     expired_status_choice = AllocationStatusChoice.objects.get(name="Expired")
     allocations_to_expire = Allocation.objects.filter(
