@@ -10,7 +10,6 @@ from django.core.cache import cache
 from django.forms import formset_factory
 from django.http import HttpResponseRedirect, JsonResponse
 from django.http.response import StreamingHttpResponse
-from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.views.generic import RedirectView, TemplateView, View
 
@@ -94,7 +93,7 @@ def get_linked_allocation_attribute_types():
 class AdvancedSearchView(LoginRequiredMixin, AdvancedSearchPermissionMixin, TemplateView):
     template_name = "advanced_search/advanced_search.html"
 
-    def clean_formset_data(self, formset, usage_attribute_ids, attribute_type):
+    def clean_formset_data(self, formset, usage_attribute_ids):
         cleaned = []
         for form in formset:
             if not form.is_valid():
@@ -109,9 +108,7 @@ class AdvancedSearchView(LoginRequiredMixin, AdvancedSearchPermissionMixin, Temp
     def handle_search(self, context, type, table_class, search_form_class):
         search_form = context.get(f"{type}_form")
         search_formset = context.get(f"{type}attribute_form", [])
-        attribute_data = self.clean_formset_data(
-            search_formset, get_usage_attribute_ids().get(type, []), f"{type}attribute"
-        )
+        attribute_data = self.clean_formset_data(search_formset, get_usage_attribute_ids().get(type, []))
 
         if search_form is None:
             context[f"{type}_form"] = search_form_class(prefix=f"{type}_search")
@@ -291,9 +288,6 @@ class ClearSearchView(LoginRequiredMixin, View):
 
     def post(self, request, *args, **kwargs):
         request.session.pop("loaded_search_id", None)
-        request.session.pop("loaded_search_name", None)
-        request.session.pop("loaded_search_owner_id", None)
-        request.session.pop("is_loaded_search_owner", None)
         request.session.pop("search_type", None)
         request.session.pop("filter_data", None)
         return HttpResponseRedirect(reverse("advanced-search"))
@@ -351,9 +345,6 @@ class SavedSearchCreateView(LoginRequiredMixin, AdvancedSearchPermissionMixin, T
                 session = request.session
                 session["filter_data"] = query_data
                 session["loaded_search_id"] = saved_search.pk
-                session["loaded_search_name"] = saved_search.name
-                session["loaded_search_owner_id"] = saved_search.owner_id
-                session["is_loaded_search_owner"] = True
                 session.save()
 
                 return JsonResponse({"success": True, "message": "Saved successfully.", "search_id": saved_search.pk})
@@ -403,7 +394,6 @@ class SavedSearchModifyView(LoginRequiredMixin, CanAccessSavedSearchMixin, Templ
         saved_search = self.saved_search
 
         query_data_raw = request.POST.get("query_data")
-        query_data = {}
         if query_data_raw:
             try:
                 query_data = json.loads(query_data_raw)
@@ -411,6 +401,8 @@ class SavedSearchModifyView(LoginRequiredMixin, CanAccessSavedSearchMixin, Templ
                     raise ValueError("query_data must be a JSON object")
             except (json.JSONDecodeError, TypeError, ValueError):
                 return JsonResponse({"success": False, "message": "Invalid query data format."}, status=400)
+        else:
+            query_data = saved_search.query_data
 
         mutable_post = request.POST.copy()
         mutable_post["query_data"] = json.dumps(query_data)
@@ -421,13 +413,6 @@ class SavedSearchModifyView(LoginRequiredMixin, CanAccessSavedSearchMixin, Templ
             saved_search.query_data = query_data
             saved_search.save()
             form.save_m2m()
-
-            # Update session to reflect the modified search (only if it's currently loaded)
-            session = request.session
-            if session.get("loaded_search_id") == saved_search.pk:
-                session["loaded_search_name"] = saved_search.name
-                session["is_loaded_search_owner"] = saved_search.owner == request.user
-                session.save()
 
             return JsonResponse(
                 {
@@ -443,12 +428,12 @@ class SavedSearchModifyView(LoginRequiredMixin, CanAccessSavedSearchMixin, Templ
             )
 
 
-class SavedSearchDetailView(LoginRequiredMixin, AdvancedSearchPermissionMixin, TemplateView):
+class SavedSearchDetailView(LoginRequiredMixin, CanAccessSavedSearchMixin, TemplateView):
     template_name = "advanced_search/saved_search_details_modal_content.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        saved_search = get_object_or_404(SavedSearch, pk=kwargs.get("pk"))
+        saved_search = self.saved_search
 
         query_data = saved_search.query_data or {}
 
@@ -567,9 +552,6 @@ class ApplySavedSearchView(LoginRequiredMixin, CanAccessSavedSearchMixin, Redire
         session["filter_data"] = flattened
         session["search_type"] = search_type
         session["loaded_search_id"] = saved_search.pk
-        session["loaded_search_name"] = saved_search.name
-        session["loaded_search_owner_id"] = saved_search.owner_id
-        session["is_loaded_search_owner"] = saved_search.owner == self.request.user
         session.save()
         return reverse("advanced-search")
 

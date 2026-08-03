@@ -185,7 +185,7 @@ Advanced Search
   
     function toggleUsageFields(value, ele, type) {
       const attribute_type_ids = type === 'allocation' ? allocation_attribute_type_ids : project_attribute_type_ids;
-      element = $(ele).parents('[id*="-attribute-row"]').children('[id*="-usage-row"]');
+      const element = $(ele).parents('[id*="-attribute-row"]').children('[id*="-usage-row"]');
       attribute_type_ids.includes(value) ? element.removeClass("d-none") : element.addClass("d-none");
     }
   
@@ -203,7 +203,7 @@ Advanced Search
     }
   
     function displayOptionIsSelected(form) {
-      return $(`#${form} input[type=checkbox]`).is(":checked");
+      return $(`#${form} input[name*='display__']`).is(":checked");
     }
   
     function toggleNoDisplayAlert(tab) {
@@ -314,7 +314,7 @@ Advanced Search
 
         if (!id.includes("div") && !id.includes("helptext")) {
           let value = $("#" + id + " option:selected").val();
-          matches[i].innerHTML = '<option value="">---------</option>' + Array.from(options_set).toString().replace(",", "");
+          matches[i].innerHTML = '<option value="">---------</option>' + Array.from(options_set).join("");
           $("#" + id).val(value).change();
           value = $("#" + id + " option:selected").val();
           if (value === undefined) {
@@ -357,6 +357,14 @@ Advanced Search
 
     attachSavedSearchHandlers();
 
+    function showPageAlert(message, type) {
+      const $banner = $("<div class='alert alert-" + type + " alert-dismissible fade show mb-3' role='alert'>" +
+        "<i class='fas fa-exclamation-circle me-2'></i>" + message +
+        "<button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button></div>");
+      $("#accordion").before($banner);
+      setTimeout(function() { $banner.fadeOut(); }, 4000);
+    }
+
     $(document).on("click", ".btn-load-search", function () {
       window.location.href = $(this).data("url");
     });
@@ -370,7 +378,7 @@ Advanced Search
           window.location.href = "{% url 'advanced-search' %}";
         },
         error: function () {
-          alert("Failed to clear search. Please try again.");
+          showPageAlert("Failed to clear search. Please try again.", "danger");
         }
       });
     });
@@ -393,21 +401,16 @@ Advanced Search
               url: "{% url 'saved-searches' %}",
               success: function (data) {
                 $("#saved-searches").html(data);
-                const $successBanner = $("<div class='alert alert-success alert-dismissible fade show mb-3' role='alert'>" +
-                  "<i class='fas fa-copy me-2'></i>Search copied successfully." +
-                  "<button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button></div>"
-                );
-                $("#accordion").before($successBanner);
-                setTimeout(function() { $successBanner.fadeOut(); }, 4000);
+                showPageAlert("Search copied successfully.", "success");
               },
             });
           }
         },
         error: function (xhr) {
           if (xhr.status === 403) {
-            alert("You do not have permission to copy this search.");
+            showPageAlert("You do not have permission to copy this search.", "danger");
           } else {
-            alert("Failed to copy search. Please try again.");
+            showPageAlert("Failed to copy search. Please try again.", "danger");
           }
         }
       });

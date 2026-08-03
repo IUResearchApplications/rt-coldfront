@@ -74,7 +74,6 @@
 
   document.addEventListener('DOMContentLoaded', function() {
     let currentModalType = null;
-    let currentSearchId = null;
 
     function getUrl(name, id) {
       const template = $("#savedSearchModal").data("url-" + name);
@@ -115,7 +114,6 @@
     function showModal(type, searchId = null) {
       const config = modalConfig[type];
       currentModalType = type;
-      currentSearchId = searchId;
 
       const $modal = $("#savedSearchModal");
       const $modalTitle = $("#savedSearchModalLabel");

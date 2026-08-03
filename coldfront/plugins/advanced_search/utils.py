@@ -44,7 +44,6 @@ FK_FIELD_MODELS = {
     },
     "allocation": {
         "status__name": AllocationStatusChoice,
-        "type__name": ProjectTypeChoice,
         "project__status__name": ProjectStatusChoice,
         "project__type__name": ProjectTypeChoice,
         "resources__name": Resource,
@@ -114,7 +113,7 @@ def build_structured_fields(query_data):
                 idx = parts[1]
                 attr_field = "-".join(parts[2:])
                 by_index.setdefault(idx, {})[attr_field] = field_value
-            for idx in sorted(by_index):
+            for idx in sorted(by_index, key=int):
                 attr = by_index[idx]
                 if not attr.get("attribute__name"):
                     continue
@@ -698,46 +697,6 @@ class BaseSearchTable(ABC):
                         return attribute_usage.value
 
         return ""
-
-    def get_total_users(self, users: QuerySet, statuses: List[str]) -> int:
-        """
-        Count users with status in the provided list.
-
-        Args:
-            users: Prefetched queryset of users
-            statuses: List of status names to include
-
-        Returns:
-            Count of users with matching status
-
-        Note:
-            A filter isn't used because the queryset is prefetched earlier.
-        """
-        filtered_users_count = 0
-        for user in users:
-            if user.status.name in statuses:
-                filtered_users_count += 1
-        return filtered_users_count
-
-    def get_user_list(self, users: QuerySet, statuses: List[str]) -> str:
-        """
-        Get comma-separated list of usernames with status in the provided list.
-
-        Args:
-            users: Prefetched queryset of users
-            statuses: List of status names to include
-
-        Returns:
-            Comma-separated string of usernames with matching status
-
-        Note:
-            A filter isn't used because the queryset is prefetched earlier.
-        """
-        filtered_users = []
-        for user in users:
-            if user.status.name in statuses:
-                filtered_users.append(user.user.username)
-        return ", ".join(filtered_users)
 
     def get_resource_list(self, allocations: QuerySet) -> str:
         """

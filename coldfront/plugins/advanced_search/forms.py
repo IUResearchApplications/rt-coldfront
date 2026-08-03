@@ -143,9 +143,6 @@ class SearchForm(forms.Form):
     end_date = forms.DateField(widget=forms.TextInput(attrs={"class": "datepicker"}), label="End Date", required=False)
 
     def __init__(self, *args, **kwargs):
-        self.loaded_search = kwargs.pop("loaded_search", None)
-        self.is_loaded_search_owner = kwargs.pop("is_loaded_search_owner", None)
-
         super().__init__(*args, **kwargs)
 
     def get_ordered_queryset(self, model, field_name="name", filter_kwargs=None):
@@ -315,15 +312,12 @@ class UserSearchForm(forms.Form):
     type = forms.ChoiceField(initial="all", choices=USER_TYPE_CHOICE, widget=forms.RadioSelect, required=False)
 
     def __init__(self, *args, **kwargs):
-        self.loaded_search = kwargs.pop("loaded_search", None)
-        self.is_loaded_search_owner = kwargs.pop("is_loaded_search_owner", None)
-
         super().__init__(*args, **kwargs)
         self.setup_layout()
 
     def create_save_search_button(self, search_type):
         return HTML(f"""
-            <button type="button" class="btn btn-primary float-right btn-save-search">Save {search_type} Search</button>
+            <button type="button" class="btn btn-primary float-end btn-save-search">Save {search_type} Search</button>
         """)
 
     def setup_layout(self):
