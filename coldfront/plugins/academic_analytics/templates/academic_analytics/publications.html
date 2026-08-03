@@ -48,10 +48,10 @@
 {% endif %}
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    var academic_analytics_form = JSON.parse(document.getElementById('academic_analytics_form').textContent);
-  
-    academic_analytics_form.submit(function () {
+  $(document).ready(function() {
+    var academic_analytics_form = $('#academic_analytics_form');
+
+    academic_analytics_form.on('submit', function () {
       var add_pub_button = $('#add_publications_btn')
       $('#academics_analytics_form_info').html('');
       add_pub_button.html(
