@@ -71,15 +71,13 @@ class BaseAttributeSearchForm(forms.Form):
 class AllocationAttributeSearchForm(BaseAttributeSearchForm):
     """Search form for allocation attributes with resource-based filtering."""
 
-    def __init__(self, *args, resources=None, attribute_type_queryset=None, **kwargs):
+    def __init__(self, *args, resources=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setup_queryset(resources, attribute_type_queryset)
+        self.setup_queryset(resources)
 
-    def setup_queryset(self, resources, attribute_type_queryset):
+    def setup_queryset(self, resources):
         """Setup the attribute name queryset."""
-        if attribute_type_queryset is not None:
-            queryset = attribute_type_queryset
-        elif resources:
+        if resources:
             queryset = (
                 AllocationAttributeType.objects.select_related("attribute_type")
                 .prefetch_related("linked_resources")
@@ -99,17 +97,13 @@ class AllocationAttributeSearchForm(BaseAttributeSearchForm):
 class ProjectAttributeSearchForm(BaseAttributeSearchForm):
     """Search form for project attributes."""
 
-    def __init__(self, *args, attribute_type_queryset=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setup_queryset(attribute_type_queryset)
+        self.setup_queryset()
 
-    def setup_queryset(self, attribute_type_queryset):
+    def setup_queryset(self):
         """Setup the attribute name queryset."""
-        if attribute_type_queryset is not None:
-            queryset = attribute_type_queryset
-        else:
-            queryset = ProjectAttributeType.objects.select_related("attribute_type").all()
-
+        queryset = ProjectAttributeType.objects.select_related("attribute_type").all()
         self.fields["attribute__name"].queryset = queryset
 
 

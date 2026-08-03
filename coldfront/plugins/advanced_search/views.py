@@ -399,6 +399,15 @@ class SavedSearchModifyView(LoginRequiredMixin, CanAccessSavedSearchMixin, Templ
                 query_data = json.loads(query_data_raw)
                 if not isinstance(query_data, dict):
                     raise ValueError("query_data must be a JSON object")
+                # Whitelist expected keys to prevent injection of unexpected fields
+                allowed_keys = {
+                    "project_search",
+                    "allocation_search",
+                    "user_search",
+                    "project_attributes",
+                    "allocation_attributes",
+                }
+                query_data = {k: v for k, v in query_data.items() if k in allowed_keys}
             except (json.JSONDecodeError, TypeError, ValueError):
                 return JsonResponse({"success": False, "message": "Invalid query data format."}, status=400)
         else:

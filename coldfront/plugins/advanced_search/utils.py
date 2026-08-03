@@ -28,7 +28,6 @@ from coldfront.core.project.models import (
 )
 from coldfront.core.resource.models import Resource, ResourceType
 from coldfront.core.user.models import UserProfile
-from coldfront.plugins.advanced_search.models import SavedSearch
 
 # Maps a search type to the model used to resolve each foreign-key field's pk
 # into a human-readable name for display in the search criteria summary.
@@ -59,20 +58,6 @@ CHOICE_FIELD_DISPLAY = {
     "attribute__usage_format": {"whole": ".00", "percent": "%"},
     "type": {"all": "All", "project": "Project", "allocation": "Allocation"},
 }
-
-
-def check_saved_search_access(pk, user):
-    """Check if user has access to a saved search. Returns False if the search
-    does not exist or the user lacks permission."""
-    saved_search = SavedSearch.objects.filter(pk=pk).first()
-    if not saved_search:
-        return False
-
-    return (
-        saved_search.owner == user
-        or saved_search.shared_with_users.filter(pk=user.pk).exists()
-        or saved_search.shared_with_groups.filter(pk__in=user.groups.values_list("pk", flat=True)).exists()
-    )
 
 
 def resolve_pks(model, value):
