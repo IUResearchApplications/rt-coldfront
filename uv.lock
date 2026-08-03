@@ -353,7 +353,7 @@ requires-dist = [
     { name = "dbus-python", marker = "extra == 'freeipa'", specifier = ">=1.4.0" },
     { name = "django", specifier = ">5.2,<6" },
     { name = "django-auth-ldap", marker = "extra == 'ldap'", specifier = ">=5.1.0" },
-    { name = "django-cas-ng", marker = "extra == 'cas'" },
+    { name = "django-cas-ng", marker = "extra == 'cas'", specifier = ">=5.1.1" },
     { name = "django-crispy-forms", specifier = ">=2.3" },
     { name = "django-environ", specifier = ">=0.12.0" },
     { name = "django-filter", specifier = ">=25.1" },
@@ -375,7 +375,7 @@ requires-dist = [
     { name = "ldap3", marker = "extra == 'ldap'", specifier = ">=2.9.1" },
     { name = "mozilla-django-oidc", marker = "extra == 'oidc'", specifier = ">=4.0.1" },
     { name = "mysqlclient", marker = "extra == 'mysql'", specifier = ">=2.2.7" },
-    { name = "oracledb", marker = "extra == 'aa'" },
+    { name = "oracledb", marker = "extra == 'aa'", specifier = ">=4.0.1" },
     { name = "psycopg2", marker = "extra == 'pg'", specifier = ">=2.9.10" },
     { name = "python-dateutil", specifier = ">=2.9.0.post0" },
     { name = "redis", specifier = ">=5.2.1" },
@@ -385,16 +385,16 @@ provides-extras = ["ldap", "freeipa", "iquota", "oidc", "mysql", "pg", "cas", "a
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "django-extensions" },
+    { name = "django-extensions", specifier = ">=4.1" },
     { name = "django-sslserver", specifier = ">=0.22" },
     { name = "django-upgrade", specifier = ">=1.29.1" },
     { name = "factory-boy", specifier = ">=3.3.3" },
     { name = "faker", specifier = ">=37.1.0" },
-    { name = "pyopenssl" },
+    { name = "pyopenssl", specifier = ">=26.2.0" },
     { name = "pytest-django", specifier = ">=4.11.1" },
     { name = "reuse", specifier = ">=5.0.2" },
     { name = "ruff", specifier = ">=0.11.4" },
-    { name = "werkzeug" },
+    { name = "werkzeug", specifier = ">=3.1.8" },
 ]
 docs = [
     { name = "mkdocs", specifier = ">=1.6.1" },
