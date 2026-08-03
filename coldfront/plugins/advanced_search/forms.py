@@ -172,7 +172,7 @@ class SearchForm(forms.Form):
 
     def create_save_search_button(self, search_type):
         return HTML(f"""
-            <button type="button" id="btn-save-search" class="btn btn-primary float-end">Save {search_type} Search</button>
+            <button type="button" class="btn btn-primary float-end btn-save-search">Save {search_type} Search</button>
         """)
 
 
@@ -323,7 +323,7 @@ class UserSearchForm(forms.Form):
 
     def create_save_search_button(self, search_type):
         return HTML(f"""
-            <button type="button" id="btn-save-search" class="btn btn-primary float-right">Save {search_type} Search</button>
+            <button type="button" class="btn btn-primary float-right btn-save-search">Save {search_type} Search</button>
         """)
 
     def setup_layout(self):

@@ -28,7 +28,7 @@ from coldfront.plugins.advanced_search.forms import (
 )
 from coldfront.plugins.advanced_search.mixins import AdvancedSearchPermissionMixin, CanAccessSavedSearchMixin
 from coldfront.plugins.advanced_search.models import SavedSearch
-from coldfront.plugins.advanced_search.utils import AllocationTable, ProjectTable, UserTable
+from coldfront.plugins.advanced_search.utils import AllocationTable, ProjectTable, UserTable, build_structured_fields
 
 logger = logging.getLogger(__name__)
 
@@ -257,6 +257,8 @@ class AdvancedSearchView(LoginRequiredMixin, AdvancedSearchPermissionMixin, Temp
 
         context["rows"], context["columns"] = [], []
         context["save_search_form"] = SearchCreateForm(user=self.request.user)
+        context["user_saved_searches"] = SavedSearch.get_for_user(self.request.user)
+        context["shared_searches"] = SavedSearch.get_shared_with_user(self.request.user)
 
         search_type, active_tab = self.resolve_search_type(self.request.GET.get("submit", ""))
 
@@ -450,20 +452,10 @@ class SavedSearchDetailView(LoginRequiredMixin, AdvancedSearchPermissionMixin, T
 
         query_data = saved_search.query_data or {}
 
-        structured_fields = []
+        structured_fields = build_structured_fields(query_data)
         search_type = "project"
         if query_data:
             search_type = list(query_data.keys())[0].split("_")[0].title()
-            for section_values in query_data.values():
-                if isinstance(section_values, dict):
-                    for field_name, field_value in section_values.items():
-                        if not field_value or (isinstance(field_value, list) and len(field_value) == 0):
-                            continue
-                        # Strip the search type prefix from field name
-                        clean_name = field_name.split("-")[-1]
-                        if isinstance(field_value, list):
-                            field_value = ", ".join(str(v) for v in field_value)
-                        structured_fields.append({"name": clean_name, "value": str(field_value)})
 
         context.update(
             {

@@ -5,25 +5,34 @@
 <p><strong class="text-nowrap">Type:</strong> {{ search_type }}</p>
 <p><strong class="text-nowrap">Owner:</strong> {{ owner }}</p>
 <p><strong class="text-nowrap">Description:</strong> {{ description }}</p>
+<p><strong class="text-nowrap">Created:</strong> {{ created|date:"Y-m-d H:i" }} &nbsp; <strong class="text-nowrap">Modified:</strong> {{ modified|date:"Y-m-d H:i" }}</p>
 <div class="row mb-3">
   <div class="col">
     <span class="fw-bold">Shared with Users:</span>
     <div class="scrollable-box">
-      <ul>
-        {% for user in shared_with_users %}
-          <li>{{ user }}</li>
-        {% endfor %}
-      </ul>
+      {% if shared_with_users %}
+        <ul>
+          {% for user in shared_with_users %}
+            <li>{{ user }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <em>Not shared with any users.</em>
+      {% endif %}
     </div>
   </div>
   <div class="col">
     <span class="fw-bold">Shared with Groups:</span>
     <div class="scrollable-box">
-      <ul>
-        {% for group in shared_with_groups %}
-          <li>{{ group }}</li>
-        {% endfor %}
-      </ul>
+      {% if shared_with_groups %}
+        <ul>
+          {% for group in shared_with_groups %}
+            <li>{{ group }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <em>Not shared with any groups.</em>
+      {% endif %}
     </div>
   </div>
 </div>
@@ -43,7 +52,7 @@
     {% if structured_fields %}
     <div class="scrollable-box">
       <table class="table table-sm table-bordered mb-0">
-      <thead class="thead-light"><tr><th style="width: 40%;">Field</th><th>Value</th></tr></thead>
+      <thead class="thead-light"><tr><th class="summary-field-col">Field</th><th>Value</th></tr></thead>
       <tbody>
         {% for field in structured_fields %}
         <tr><td><code>{{ field.name }}</code></td><td>{{ field.value }}</td></tr>

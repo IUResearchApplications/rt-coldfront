@@ -12,18 +12,46 @@ from django.urls import reverse
 from coldfront.core.allocation.models import (
     Allocation,
     AllocationAttribute,
+    AllocationAttributeType,
     AllocationAttributeUsage,
+    AllocationStatusChoice,
     AllocationUser,
 )
 from coldfront.core.project.models import (
     Project,
     ProjectAttribute,
+    ProjectAttributeType,
     ProjectAttributeUsage,
+    ProjectStatusChoice,
+    ProjectTypeChoice,
     ProjectUser,
 )
-from coldfront.core.resource.models import Resource
+from coldfront.core.resource.models import Resource, ResourceType
 from coldfront.core.user.models import UserProfile
 from coldfront.plugins.advanced_search.models import SavedSearch
+
+# Maps a search type to the model used to resolve each foreign-key field's pk
+# into a human-readable name for display in the search criteria summary.
+FK_FIELD_MODELS = {
+    "project": {
+        "status__name": ProjectStatusChoice,
+        "type__name": ProjectTypeChoice,
+        "project__status__name": ProjectStatusChoice,
+        "project__type__name": ProjectTypeChoice,
+        "resources__name": Resource,
+        "resources__resource_type__name": ResourceType,
+        "attribute__name": ProjectAttributeType,
+    },
+    "allocation": {
+        "status__name": AllocationStatusChoice,
+        "type__name": ProjectTypeChoice,
+        "project__status__name": ProjectStatusChoice,
+        "project__type__name": ProjectTypeChoice,
+        "resources__name": Resource,
+        "resources__resource_type__name": ResourceType,
+        "attribute__name": AllocationAttributeType,
+    },
+}
 
 
 def check_saved_search_access(pk, user):
@@ -38,6 +66,89 @@ def check_saved_search_access(pk, user):
         or saved_search.shared_with_users.filter(pk=user.pk).exists()
         or saved_search.shared_with_groups.filter(pk__in=user.groups.values_list("pk", flat=True)).exists()
     )
+
+
+def resolve_pks(model, value):
+    """Resolve a pk (str/int) or list of pks to a comma-joined string of
+    human-readable model names, preserving input order. Falls back to the
+    raw value(s) on any error or if no objects are found.
+    """
+    raw = value if isinstance(value, list) else [value]
+    raw = [v for v in raw if v not in (None, "")]
+    fallback = ", ".join(str(v) for v in raw) if raw else ""
+    try:
+        objs = {obj.pk: str(obj) for obj in model.objects.filter(pk__in=raw)}
+        names = [objs[int(pk)] for pk in raw if int(pk) in objs]
+        return ", ".join(names) if names else fallback
+    except (ValueError, TypeError):
+        return fallback
+
+
+def build_structured_fields(query_data):
+    """Build a flat list of {name, value} fields for display from a saved
+    search's query_data.
+
+    Mirrors the on-page form: display fields render as True/False, the
+    submit button value and select_all_* UI helpers are omitted, and
+    attribute usage fields (equality, usage, usage_format) plus
+    has_usage itself are only surfaced when has_usage is enabled.
+    Foreign-key pks are resolved to human-readable names via FK_FIELD_MODELS.
+    """
+    structured_fields = []
+    if not query_data:
+        return structured_fields
+
+    search_type = next(iter(query_data)).split("_")[0]
+    fk_models = FK_FIELD_MODELS.get(search_type, {})
+
+    for section_key, section_values in query_data.items():
+        if not isinstance(section_values, dict):
+            continue
+
+        if section_key.endswith("_attributes"):
+            by_index = {}
+            for field_name, field_value in section_values.items():
+                parts = field_name.split("-")
+                if len(parts) < 3:
+                    continue
+                idx = parts[1]
+                attr_field = "-".join(parts[2:])
+                by_index.setdefault(idx, {})[attr_field] = field_value
+            for idx in sorted(by_index):
+                attr = by_index[idx]
+                if not attr.get("attribute__name"):
+                    continue
+                attr_name = attr["attribute__name"]
+                if "attribute__name" in fk_models:
+                    attr_name = resolve_pks(fk_models["attribute__name"], attr_name)
+                structured_fields.append({"name": "attribute__name", "value": str(attr_name)})
+                if attr.get("attribute__value"):
+                    structured_fields.append({"name": "attribute__value", "value": str(attr["attribute__value"])})
+                if str(attr.get("attribute__has_usage", "")) == "1":
+                    structured_fields.append({"name": "attribute__has_usage", "value": "True"})
+                    for usage_field in (
+                        "attribute__equality",
+                        "attribute__usage",
+                        "attribute__usage_format",
+                    ):
+                        if attr.get(usage_field) not in (None, ""):
+                            structured_fields.append({"name": usage_field, "value": str(attr[usage_field])})
+        else:
+            for field_name, field_value in section_values.items():
+                clean_name = field_name.split("-")[-1]
+                if clean_name == "submit" or clean_name.startswith("select_all"):
+                    continue
+                if not field_value or (isinstance(field_value, list) and len(field_value) == 0):
+                    continue
+                if clean_name in fk_models:
+                    field_value = resolve_pks(fk_models[clean_name], field_value)
+                elif isinstance(field_value, list):
+                    field_value = ", ".join(str(v) for v in field_value)
+                if clean_name.startswith("display__"):
+                    field_value = "True" if str(field_value) == "1" else "False"
+                structured_fields.append({"name": clean_name, "value": str(field_value)})
+
+    return structured_fields
 
 
 class SearchFilterBuilder:
