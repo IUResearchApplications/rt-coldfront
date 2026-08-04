@@ -112,10 +112,10 @@ to `v1.0.3`:
 
 ```python
 EXTRA_APPS += [
-    'coldfront.plugins.slurm',
+    "coldfront.plugins.slurm",
 ]
-SLURM_IGNORE_USERS = ['root']
-SLURM_SACCTMGR_PATH = '/usr/bin/sacctmgr'
+SLURM_IGNORE_USERS = ["root"]
+SLURM_SACCTMGR_PATH = "/usr/bin/sacctmgr"
 ```
 
 After upgrading to `v1.0.3` you'll need to modify your `local_settings.py` file
@@ -125,11 +125,11 @@ as follows:
 from coldfront.config.base import INSTALLED_APPS
 
 INSTALLED_APPS += [
-    'coldfront.plugins.slurm',
+    "coldfront.plugins.slurm",
 ]
 
-SLURM_IGNORE_USERS = ['root']
-SLURM_SACCTMGR_PATH = '/usr/bin/sacctmgr'
+SLURM_IGNORE_USERS = ["root"]
+SLURM_SACCTMGR_PATH = "/usr/bin/sacctmgr"
 ```
 
 Or change to using environment variables:
@@ -144,6 +144,10 @@ SLURM_SACCTMGR_PATH=/usr/bin/sacctmgr
 
 This is one way to use Git to upgrade your codebase with the latest upstream changes in ColdFront. 
 
+!!! note
+    The main branch should no longer be used for git deployments. Please use
+    one of the stable branches for the version you'd like to run. For example: `stable/1.1.x`.
+
 Git Remote setup:
 
 - `origin` -> Your organization's Git repo for ColdFront
@@ -152,7 +156,7 @@ Git Remote setup:
 Git Branch setup:
 
 - `custom` -> This is your default branch, containing your organization's ColdFront codebase
-- `main` -> This branch tracks the `main` branch of the ColdFront project
+- `stable/1.1.x` -> This branch tracks the stable release branch of the ColdFront project you'd like to run
 - `staged_upgrade` -> This is based on your `custom` branch, used for resolving merge conflicts
 
 Commands:
@@ -161,7 +165,7 @@ Commands:
 # let's assume you only have a `main` branch and a `custom` branch
 git checkout main
 # pull in the latest changes
-git pull upstream main
+git pull upstream stable/1.1.x
 
 # return to your custom branch
 git checkout custom
@@ -169,7 +173,7 @@ git checkout custom
 git checkout -b staged_upgrade
 git merge main
 
-# alternative: checkout a tagged release instead of using `main`
+# alternative: checkout a tagged release instead of using a stable branch
 # git fetch --all --tags
 # git tag -l
 # git merge v1.x.x

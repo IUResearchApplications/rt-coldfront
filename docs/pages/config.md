@@ -411,13 +411,13 @@ Instead of setting the `DB_URL` environment variable, we can add a custom databa
 
 ```python
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'coldfront',
-        'USER': '',
-        'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '',
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "coldfront",
+        "USER": "",
+        "PASSWORD": "",
+        "HOST": "localhost",
+        "PORT": "",
     },
 }
 ```
@@ -427,10 +427,9 @@ the `OPT_REFERRALS` set to `0`. Likewise, we should look for users based
 on their `sAMAccountName` attribute, rather than `uid`.
 
 ```python
-AUTH_LDAP_CONNECTION_OPTIONS={ldap.OPT_REFERRALS: 0}
-AUTH_LDAP_BASE_DN = 'dc=example,dc=org' # same value as AUTH_LDAP_USER_SEARCH
-AUTH_LDAP_USER_SEARCH = LDAPSearch(
-    AUTH_LDAP_BASE_DN, ldap.SCOPE_SUBTREE, '(sAMAccountName=%(user)s)')
+AUTH_LDAP_CONNECTION_OPTIONS = {ldap.OPT_REFERRALS: 0}
+AUTH_LDAP_BASE_DN = "dc=example,dc=org"  # same value as AUTH_LDAP_USER_SEARCH
+AUTH_LDAP_USER_SEARCH = LDAPSearch(AUTH_LDAP_BASE_DN, ldap.SCOPE_SUBTREE, "(sAMAccountName=%(user)s)")
 ```
 
 Additional debug logging can be configured for troubleshooting. This example

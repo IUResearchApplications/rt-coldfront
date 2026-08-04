@@ -44,6 +44,7 @@ in a production environment, [go here](deploy.md)
 ```
 $ git clone https://github.com/coldfront/coldfront.git
 $ cd coldfront
+$ git checkout stable/1.1.x
 $ uv sync --group dev
 ```
 
@@ -64,6 +65,7 @@ tagged releases.
 ```
 $ git clone https://github.com/coldfront/coldfront.git
 $ cd coldfront
+$ git checkout stable/1.1.x
 $ uv sync --group dev
 ```
 
