@@ -50,7 +50,7 @@ The following can be set in your local settings:
 def parse_ldap_entry(attribute_map, entry_dict):
     user_dict = {}
     for user_attr, ldap_attr in attribute_map.items():
-        user_dict[user_attr] = entry_dict.get(ldap_attr)[0] if entry_dict.get(ldap_attr) else ''
+        user_dict[user_attr] = entry_dict.get(ldap_attr)[0] if entry_dict.get(ldap_attr) else ""
     return user_dict
 ```
 
@@ -83,6 +83,7 @@ LDAP_USER_SEARCH_ATTRIBUTE_MAP = {
     "full_name": "cn",
 }
 
+
 def LDAP_USER_SEARCH_MAPPING_CALLBACK(attr_map, entry_dict):
     user_dict = {
         "username": entry_dict.get(attr_map["username"])[0],
@@ -95,11 +96,7 @@ def LDAP_USER_SEARCH_MAPPING_CALLBACK(attr_map, entry_dict):
 
 `entry_dict` is provided as a dictionary mapping from the LDAP attribute to a list of values.
 ```py
-entry_dict = {
-    'mail': ['jane.emily.doe@example.com'],
-    'cn': ['Jane E Doe'],
-    'uid': ['janedoe1234']
-}
+entry_dict = {"mail": ["jane.emily.doe@example.com"], "cn": ["Jane E Doe"], "uid": ["janedoe1234"]}
 ```
 
 If this was the input to the above callback, `user_dict` would look like this:

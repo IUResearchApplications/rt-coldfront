@@ -163,6 +163,9 @@ DJANGO_VITE = {
     }
 }
 
+if DEBUG and not DJANGO_VITE["default"]["dev_mode"]:
+    DJANGO_VITE["default"]["manifest_path"] = PROJECT_ROOT("coldfront/static/bundles/manifest.json")
+
 STATIC_ROOT = ENV.str("STATIC_ROOT", default=PROJECT_ROOT("static_root"))
 STATICFILES_DIRS = [
     PROJECT_ROOT("coldfront/static/bundles"),
