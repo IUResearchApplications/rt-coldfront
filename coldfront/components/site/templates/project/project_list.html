@@ -227,7 +227,9 @@ Project List
                 {% endif %}
                 <td>{{ project.end_date }}</td>
                 <td>
-                  <a class="btn btn-primary" href="{% url 'project-detail' project.pk %}" aria-label="{{ project.title }} project details">Details</a>
+                  <a class="btn btn-primary" href="{% url 'project-detail' project.pk %}" aria-label="{{ project.title }} project details">
+                    <i class="fa fa-folder-open" aria-hidden="true"></i> Details
+                  </a>
                 </td>
               </tr>
             {% endfor %}

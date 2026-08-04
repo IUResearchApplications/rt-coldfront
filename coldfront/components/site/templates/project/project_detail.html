@@ -24,7 +24,7 @@ Project Detail
     <h2 class="d-inline" id="manage-project"><i class="fas fa-cubes" aria-hidden="true"></i> Manage Project</h2>
     <div class="float-end">
       {% if not project.status.name in 'Archived, Denied, Expired, Renewal Denied' and is_allowed_to_update_project %}
-        <a class="btn btn-primary" href="{% url 'project-update' project.pk %}"><i class="far fa-edit" aria-hidden="true"></i> Update Project Information</a>
+        <a class="btn btn-primary" href="{% url 'project-update' project.pk %}"><i class="fa fa-edit" aria-hidden="true"></i> Update Project Information</a>
         {% if not project.status.name in 'Waiting For Admin Approval, Review Pending' %}
           <a class="btn btn-primary" href="{% url 'project-archive' project.id %}"><i class="fas fa-file-archive" aria-hidden="true"></i> Archive Project</a>
         {% endif %}
@@ -81,7 +81,9 @@ Project Detail
         </strong>
       </div>
     {% endif %}
-    <a class="float-end btn btn-primary" href="{% url 'project-list' %}">Return to Project List</a>
+    <a class="float-end btn btn-primary" href="{% url 'project-list' %}">
+      <i class="fa fa-long-arrow-left" aria-hidden="true"></i> Return to Project List
+    </a>
   </div>
 </div>
 
@@ -386,7 +388,7 @@ Project Detail
                     class="btn {% if allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 and allocation.status.name == 'Active' %}btn-warning{% else %}btn-primary{% endif %}"
                     href="{% url 'allocation-detail' allocation.pk %}"
                   >
-                    <i class="far fa-folder-open" aria-hidden="true"></i> Details <br>
+                    <i class="fa fa-folder-open" aria-hidden="true"></i> Details <br>
                     {% if allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 and allocation.status.name == 'Active' %}
                       <div style="margin-top: -10px;">
                         <small><small>Expires in {{allocation.expires_in}} day{{allocation.expires_in|pluralize}}</small></small>

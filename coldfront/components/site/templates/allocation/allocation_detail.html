@@ -38,11 +38,13 @@ Allocation Detail
     <div class="float-end">
       {% if allocation.is_changeable and allocation.status.name == 'Active' and is_allowed_to_update_project %}
         <a class="btn btn-primary me-1 float-end" href="{% url 'allocation-change' allocation.pk %}" aria-label="Request changes to allocation">
-          Request Change
+          <i class="fa fa-edit" aria-hidden="true"></i> Request Change
         </a>
       {% endif %}
       {% if can_move_allocation %}
-        <a href="{% url 'move-allocation' allocation.pk %}" class="btn btn-primary me-1 float-end" aria-label="Move allocation to a different project">Move Allocation</a>
+        <a href="{% url 'move-allocation' allocation.pk %}" class="btn btn-primary me-1 float-end" aria-label="Move allocation to a different project">
+          <i class="fa fa-angles-right"></i> Move Allocation
+        </a>
       {% endif %}
       {% if 'allocation_removal_requests/allocation_removal_request_links.html'|template_exists %}
         {% if allocation.status.name in 'Active, Billing Information Submitted' and allocation.get_parent_resource.name in ALLOCATION_REMOVAL_REQUESTS_ALLOWED %}
@@ -90,8 +92,12 @@ Allocation Detail
     </div>
     {% endif %}
     <div class="float-end">
-      <a class="btn btn-primary me-1" href="{% url 'allocation-list' %}" aria-label="Return to the allocation list">Return to Allocation List</a>
-      <a class="btn btn-primary me-1" href="{% url 'project-detail' allocation.project.pk %}" aria-label="Return to the project details">Return to Project</a>
+      <a class="btn btn-primary me-1" href="{% url 'allocation-list' %}" aria-label="Return to the allocation list">
+        <i class="fa fa-long-arrow-left" aria-hidden="true"></i> Return to Allocation List
+      </a>
+      <a class="btn btn-primary me-1" href="{% url 'project-detail' allocation.project.pk %}" aria-label="Return to the project details">
+        <i class="fa fa-long-arrow-left" aria-hidden="true"></i> Return to Project
+      </a>
     </div>
   </div>
 </div>

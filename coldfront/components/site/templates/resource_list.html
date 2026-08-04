@@ -85,7 +85,11 @@ Resource List
             <td>{{ resource.parent_resource }}</td>
             <td>{{ resource.resource_type.name }}</td>
             <td>{{ resource.requires_payment|yesno:"Yes,No" }}</td>
-            <td><a class="btn btn-primary" href="{% url 'resource-detail' resource.id %}">Details</a></td>
+            <td>
+              <a class="btn btn-primary" href="{% url 'resource-detail' resource.id %}">
+                <i class="fa fa-folder-open" aria-hidden="true"></i> Details
+              </a>
+            </td>
           </tr>
         {% endfor %}
       </tbody>

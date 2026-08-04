@@ -101,7 +101,11 @@ Allocation List
               </span>
             </td>
             <td class="text-nowrap">{{ allocation.end_date }}</td>
-            <td class="text-nowrap"><a class="btn btn-primary" href="{% url 'allocation-detail' allocation.id %}" role="button">Details</a></td>
+            <td class="text-nowrap">
+              <a class="btn btn-primary" href="{% url 'allocation-detail' allocation.id %}" role="button">
+                <i class="fa fa-folder-open" aria-hidden="true"></i> Details
+              </a>
+            </td>
           </tr>
         {% endfor %}
       </tbody>
