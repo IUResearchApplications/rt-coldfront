@@ -22,7 +22,7 @@ def send_message(text):
 
     data = {"text": text}
     try:
-        response = requests.post(SLACK_WEBHOOK_URL, json=data)
+        response = requests.post(SLACK_WEBHOOK_URL, json=data, timeout=10)
         response.raise_for_status()
     except requests.HTTPError as http_error:
         logger.error(f"HTTP error: failed to send Slack notification. {http_error}.")

@@ -14,7 +14,7 @@ from coldfront.core.allocation.models import (
     AllocationPermission,
     AllocationStatusChoice,
 )
-from coldfront.core.allocation.signals import allocation_remove_user
+from coldfront.core.allocation.signals import allocation_remove, allocation_remove_user
 from coldfront.core.allocation.utils import create_admin_action
 from coldfront.core.utils.groups import check_if_groups_in_review_groups
 from coldfront.core.utils.mail import send_allocation_admin_email, send_allocation_customer_email
@@ -22,10 +22,7 @@ from coldfront.plugins.allocation_removal_requests.models import (
     AllocationRemovalRequest,
     AllocationRemovalStatusChoice,
 )
-from coldfront.plugins.allocation_removal_requests.signals import (
-    allocation_removal_request,
-    allocation_remove,
-)
+from coldfront.plugins.allocation_removal_requests.signals import allocation_removal_request
 
 logger = logging.getLogger(__name__)
 

@@ -50,14 +50,16 @@ Delete Allocation Invoice Note
 </div>
 
 <script>
-  $("#selectAll").click(function () {
-    $("input[name^='noteform-']").prop('checked', $(this).prop('checked'));
-  });
-  $("input[name^='noteform-']").click(function (ele) {
-    var id = $(this).attr('id');
-    if (id != "selectAll") {
-      $("#selectAll").prop('checked', false);
-    }
+  document.addEventListener('DOMContentLoaded', function() {
+    $("#selectAll").click(function () {
+      $("input[name^='noteform-']").prop('checked', $(this).prop('checked'));
+    });
+    $("input[name^='noteform-']").click(function (ele) {
+      var id = $(this).attr('id');
+      if (id != "selectAll") {
+        $("#selectAll").prop('checked', false);
+      }
+    });
   });
 </script>
 {% endblock %}

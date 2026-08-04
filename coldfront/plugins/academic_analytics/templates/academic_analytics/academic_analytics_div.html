@@ -14,25 +14,27 @@
 </div>
 
 <script>
-  $.ajax({
-    url: "{% url 'get-academic-analytics-publications' %}",
-    method: 'GET',
-    data: {
-      csrfmiddlewaretoken: '{{ csrf_token }}',
-      project_pk: '{{ project_pk }}'
-    },
-    success: function(data) {
-      $('#publication_search_spinner').html('');
-      $('#academics_analytics_form').html(data);
-    },
-    error: function() {
-      $('#publication_search_spinner').html('');
-      $('#academics_analytics_form').html(
-        '<div class="alert alert-warning" role="alert">\
-          <i class="fas fa-info-circle" aria-hidden="true"></i> \
-          Error getting publication information.\
-        </div>'
-      );
-    }
-  })
+  document.addEventListener('DOMContentLoaded', function() {
+    $.ajax({
+      url: "{% url 'get-academic-analytics-publications' %}",
+      method: 'GET',
+      data: {
+        csrfmiddlewaretoken: '{{ csrf_token }}',
+        project_pk: '{{ project_pk }}'
+      },
+      success: function(data) {
+        $('#publication_search_spinner').html('');
+        $('#academics_analytics_form').html(data);
+      },
+      error: function() {
+        $('#publication_search_spinner').html('');
+        $('#academics_analytics_form').html(
+          '<div class="alert alert-warning" role="alert">\
+            <i class="fas fa-info-circle" aria-hidden="true"></i> \
+            Error getting publication information.\
+          </div>'
+        );
+      }
+    })
+  });
 </script>

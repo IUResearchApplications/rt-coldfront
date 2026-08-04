@@ -1,13 +1,13 @@
 {% extends "common/base.html" %}
 {% load common_tags %}
-{% load static %}
 
 {% block title %}
 Choose a Resource for Your Allocation
 {% endblock %}
 
 {% block content %}
-  <h1>Available Resources <br><small>Project: {{ project_obj.title }}</small></h1>
+  <h1>Available Resources</h1>
+  <p class="h2">Project: {{ project_obj.title }}</p>
   <hr>
   {% for resource_type, resources in resource_types.items %}
     <div class="card mb-3">
@@ -18,13 +18,13 @@ Choose a Resource for Your Allocation
         <div class="row">
           {% for resource in resources %}
             <div class="col-6">
-              <div class="card mb-3" role="region" aria-labelledby="resource_type_{{ forloop.counter }}">
+              <div class="card mb-3" role="region" aria-labelledby="resource_{{ forloop.parentloop.counter }}_{{ forloop.counter }}">
                 <div class="card-header">
-                  <h3 class="d-inline">{{ resource.resource.name }}</h3>
+                  <h3 class="d-inline" id="resource_{{ forloop.parentloop.counter }}_{{ forloop.counter }}">{{ resource.resource.name }}</h3>
                   <span
                     title="Total Allocations"
-                    class="badge badge-secondary position-absolute"
-                    style="border-top-right-radius: 0px; border-bottom-left-radius: 0px; top: 0; left: 0; user-select: none;"
+                    class="badge text-bg-secondary position-absolute py-1 px-1 top-0 start-0"
+                    style="border-top-right-radius: 0px; border-bottom-left-radius: 0px; user-select: none;"
                     aria-label="Total allocations: {{ resource.resource_count|default_if_none:0 }}"
                   >
                       {{ resource.resource_count|default_if_none:0 }}
@@ -32,12 +32,20 @@ Choose a Resource for Your Allocation
                   {% if resource.info_url %}
                     <a href="{{ resource.info_url }}" target="_blank" title="More information (external)" rel="noopener noreferrer"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
                   {% endif %}
-                  <div class="float-right">
+                  <div class="float-end">
                     {% if not resource.rule_result.passed %}
                       {{ resource.rule_result.title|safe }}
-                      <a href="#" data-toggle="popover" data-trigger="focus hover" title="{{ resource.rule_result.title }}" data-content="{{ resource.rule_result.description }}">
-                        <i class="fas fa-question-circle" aria-hidden="true"></i> <span class="sr-only">{{ resource.rule_result.description }}</span>
-                      </a>
+                      <button
+                        type="button"
+                        class="p-0 bg-transparent border-0"
+                        data-bs-toggle="popover"
+                        data-bs-trigger="focus hover"
+                        data-bs-content="{{ resource.rule_result.description }}"
+                        style="cursor: default;"
+                      >
+                        <i class="fas fa-question-circle text-primary" aria-hidden="true"></i>
+                        <span class="visually-hidden">{{ resource.rule_result.description }}</span>
+                      </button>
                     {% else %}
                       <a
                         class="btn btn-primary"
@@ -64,9 +72,4 @@ Choose a Resource for Your Allocation
   {% if after_project_creation != 'true' %}
     <a class="btn btn-secondary" href="{% url 'project-detail' project_obj.pk %}">Back to Project</a><br>
   {% endif %}
-
-  <script>
-    $("#navbar-main > ul > li.active").removeClass("active");
-    $("#navbar-project-menu").addClass("active");
-  </script>
 {% endblock %}

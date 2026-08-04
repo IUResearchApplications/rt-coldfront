@@ -53,7 +53,6 @@ class ResourceAttributeTypeAdmin(SimpleHistoryAdmin):
     search_fields = (
         "name",
         "attribute_type__name",
-        "resource_type__name",
     )
     list_filter = ("attribute_type__name", "name", "is_required", "is_unique_per_resource", "is_value_unique")
 

@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 ADDITIONAL_USER_SEARCH_CLASSES = import_from_settings("ADDITIONAL_USER_SEARCH_CLASSES", [])
 
-
+# TODO - Review file 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:

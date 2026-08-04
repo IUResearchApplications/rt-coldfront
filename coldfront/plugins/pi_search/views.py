@@ -85,8 +85,8 @@ class RequestAccessEmailView(LoginRequiredMixin, View):
                     "help_email": EMAIL_TICKET_SYSTEM_ADDRESS,
                     "signature": EMAIL_SIGNATURE,
                 },
-                EMAIL_TICKET_SYSTEM_ADDRESS,
                 [project_obj.pi.email],
+                EMAIL_TICKET_SYSTEM_ADDRESS,
             )
             logger.info(
                 f"User {request.user.username} sent an email to {project_obj.pi.email} requesting "

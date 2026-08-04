@@ -117,8 +117,8 @@ class AnnouncementCreateView(LoginRequiredMixin, UserPassesTestMixin, FormView):
                     subject=data.get("title"),
                     template_name="announcements/announcement_created.txt",
                     template_context=context,
-                    sender=self.request.user.email,
                     receiver_list=[mailing_list.value],
+                    sender=self.request.user.email,
                 )
 
         return super().form_valid(form)

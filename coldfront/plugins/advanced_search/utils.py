@@ -12,32 +12,140 @@ from django.urls import reverse
 from coldfront.core.allocation.models import (
     Allocation,
     AllocationAttribute,
+    AllocationAttributeType,
     AllocationAttributeUsage,
+    AllocationStatusChoice,
     AllocationUser,
 )
 from coldfront.core.project.models import (
     Project,
     ProjectAttribute,
+    ProjectAttributeType,
     ProjectAttributeUsage,
+    ProjectStatusChoice,
+    ProjectTypeChoice,
     ProjectUser,
 )
-from coldfront.core.resource.models import Resource
+from coldfront.core.resource.models import Resource, ResourceType
 from coldfront.core.user.models import UserProfile
-from coldfront.plugins.advanced_search.models import SavedSearch
+
+# Maps a search type to the model used to resolve each foreign-key field's pk
+# into a human-readable name for display in the search criteria summary.
+FK_FIELD_MODELS = {
+    "project": {
+        "status__name": ProjectStatusChoice,
+        "type__name": ProjectTypeChoice,
+        "project__status__name": ProjectStatusChoice,
+        "project__type__name": ProjectTypeChoice,
+        "resources__name": Resource,
+        "resources__resource_type__name": ResourceType,
+        "attribute__name": ProjectAttributeType,
+    },
+    "allocation": {
+        "status__name": AllocationStatusChoice,
+        "project__status__name": ProjectStatusChoice,
+        "project__type__name": ProjectTypeChoice,
+        "resources__name": Resource,
+        "resources__resource_type__name": ResourceType,
+        "attribute__name": AllocationAttributeType,
+    },
+}
+
+# Maps non-FK ChoiceField field names to a {value: display_text} dict so the
+# detail-view summary shows the same human-readable labels as the on-page form.
+CHOICE_FIELD_DISPLAY = {
+    "attribute__equality": {"lt": "<", "gt": ">"},
+    "attribute__usage_format": {"whole": ".00", "percent": "%"},
+    "type": {"all": "All", "project": "Project", "allocation": "Allocation"},
+}
 
 
-def check_saved_search_access(pk, user):
-    """Check if user has access to a saved search. Returns False if the search
-    does not exist or the user lacks permission."""
-    saved_search = SavedSearch.objects.filter(pk=pk).first()
-    if not saved_search:
-        return False
+def resolve_pks(model, value):
+    """Resolve a pk (str/int) or list of pks to a comma-joined string of
+    human-readable model names, preserving input order. Falls back to the
+    raw value(s) on any error or if no objects are found.
+    """
+    raw = value if isinstance(value, list) else [value]
+    raw = [v for v in raw if v not in (None, "")]
+    fallback = ", ".join(str(v) for v in raw) if raw else ""
+    try:
+        objs = {obj.pk: str(obj) for obj in model.objects.filter(pk__in=raw)}
+        names = [objs[int(pk)] for pk in raw if int(pk) in objs]
+        return ", ".join(names) if names else fallback
+    except (ValueError, TypeError):
+        return fallback
 
-    return (
-        saved_search.owner == user
-        or saved_search.shared_with_users.filter(pk=user.pk).exists()
-        or saved_search.shared_with_groups.filter(pk__in=user.groups.values_list("pk", flat=True)).exists()
-    )
+
+def build_structured_fields(query_data):
+    """Build a flat list of {name, value} fields for display from a saved
+    search's query_data.
+
+    Mirrors the on-page form: display fields render as True/False, the
+    submit button value and select_all_* UI helpers are omitted, and
+    attribute usage fields (equality, usage, usage_format) plus
+    has_usage itself are only surfaced when has_usage is enabled.
+    Foreign-key pks are resolved to human-readable names via FK_FIELD_MODELS.
+    """
+    structured_fields = []
+    if not query_data:
+        return structured_fields
+
+    search_type = next(iter(query_data)).split("_")[0]
+    fk_models = FK_FIELD_MODELS.get(search_type, {})
+
+    for section_key, section_values in query_data.items():
+        if not isinstance(section_values, dict):
+            continue
+
+        if section_key.endswith("_attributes"):
+            by_index = {}
+            for field_name, field_value in section_values.items():
+                parts = field_name.split("-")
+                if len(parts) < 3:
+                    continue
+                idx = parts[1]
+                attr_field = "-".join(parts[2:])
+                by_index.setdefault(idx, {})[attr_field] = field_value
+            for idx in sorted(by_index, key=int):
+                attr = by_index[idx]
+                if not attr.get("attribute__name"):
+                    continue
+                attr_name = attr["attribute__name"]
+                if "attribute__name" in fk_models:
+                    attr_name = resolve_pks(fk_models["attribute__name"], attr_name)
+                structured_fields.append({"name": "attribute__name", "value": str(attr_name)})
+                if attr.get("attribute__value"):
+                    structured_fields.append({"name": "attribute__value", "value": str(attr["attribute__value"])})
+                if str(attr.get("attribute__has_usage", "")) == "1":
+                    structured_fields.append({"name": "attribute__has_usage", "value": "True"})
+                    for usage_field in (
+                        "attribute__equality",
+                        "attribute__usage",
+                        "attribute__usage_format",
+                    ):
+                        if attr.get(usage_field) not in (None, ""):
+                            value = str(attr[usage_field])
+                            if usage_field in CHOICE_FIELD_DISPLAY:
+                                value = CHOICE_FIELD_DISPLAY[usage_field].get(value, value)
+                            structured_fields.append({"name": usage_field, "value": value})
+        else:
+            for field_name, field_value in section_values.items():
+                clean_name = field_name.split("-")[-1]
+                if clean_name == "submit" or clean_name.startswith("select_all"):
+                    continue
+                if not field_value or (isinstance(field_value, list) and len(field_value) == 0):
+                    continue
+                if clean_name in fk_models:
+                    field_value = resolve_pks(fk_models[clean_name], field_value)
+                elif isinstance(field_value, list):
+                    field_value = ", ".join(str(v) for v in field_value)
+                if clean_name in CHOICE_FIELD_DISPLAY:
+                    field_value = CHOICE_FIELD_DISPLAY[clean_name].get(str(field_value), str(field_value))
+                if clean_name.startswith("display__"):
+                    field_value = "True" if str(field_value) == "1" else "False"
+                structured_fields.append({"name": clean_name, "value": str(field_value)})
+
+    return structured_fields
 
 
 class SearchFilterBuilder:
@@ -587,46 +695,6 @@ class BaseSearchTable(ABC):
                         return attribute_usage.value
 
         return ""
-
-    def get_total_users(self, users: QuerySet, statuses: List[str]) -> int:
-        """
-        Count users with status in the provided list.
-
-        Args:
-            users: Prefetched queryset of users
-            statuses: List of status names to include
-
-        Returns:
-            Count of users with matching status
-
-        Note:
-            A filter isn't used because the queryset is prefetched earlier.
-        """
-        filtered_users_count = 0
-        for user in users:
-            if user.status.name in statuses:
-                filtered_users_count += 1
-        return filtered_users_count
-
-    def get_user_list(self, users: QuerySet, statuses: List[str]) -> str:
-        """
-        Get comma-separated list of usernames with status in the provided list.
-
-        Args:
-            users: Prefetched queryset of users
-            statuses: List of status names to include
-
-        Returns:
-            Comma-separated string of usernames with matching status
-
-        Note:
-            A filter isn't used because the queryset is prefetched earlier.
-        """
-        filtered_users = []
-        for user in users:
-            if user.status.name in statuses:
-                filtered_users.append(user.user.username)
-        return ", ".join(filtered_users)
 
     def get_resource_list(self, allocations: QuerySet) -> str:
         """

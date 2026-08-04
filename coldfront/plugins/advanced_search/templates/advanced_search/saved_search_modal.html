@@ -16,6 +16,9 @@
     margin-bottom: 0.5rem;
     font-weight: 500;
   }
+  .summary-field-col {
+    width: 40%;
+  }
 </style>
 
 <div
@@ -34,17 +37,17 @@
 >
   <div class="modal-dialog" role="document">
     <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title" id="savedSearchModalLabel">Modal Title</h2>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body"></div>
-      <div class="modal-footer" style="flex-wrap: nowrap;">
-        <div class="d-none alert flex-grow-1" id="modal-message" role="alert"></div>
-        <div class="d-flex justify-content-end" id="modal-buttons"></div>
-      </div>
+      <form id="saveSearchForm" method="post" action="">
+        <div class="modal-header">
+          <h2 class="modal-title" id="savedSearchModalLabel">Modal Title</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body"></div>
+        <div class="modal-footer flex-nowrap">
+          <div class="d-none alert flex-grow-1" id="modal-message" role="alert"></div>
+          <div class="d-flex justify-content-end" id="modal-buttons"></div>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -53,6 +56,7 @@
   function initSelect2() {
     $(".multiselect-wrapper select").select2({
       width: "100%",
+      dropdownParent: $("#savedSearchModal")
     });
   }
 
@@ -68,47 +72,48 @@
     'user': 'User Search'
   };
 
-  $(document).ready(function () {
+  document.addEventListener('DOMContentLoaded', function() {
     let currentModalType = null;
-    let currentSearchId = null;
 
     function getUrl(name, id) {
       const template = $("#savedSearchModal").data("url-" + name);
-      return id != null ? template.replace("0", String(id)) : template;
+      if (id == null) return template;
+      // Replace the trailing <pk> segment. Anchoring to the end avoids
+      // corrupting a "0" that may appear elsewhere in the URL prefix.
+      return template.replace(/\/0\/$/, "/" + String(id) + "/");
     }
 
     const modalConfig = {
       save: {
         title: "Save Search",
         footerButtons:
-          '<button type="submit" id="btn-submit-save-search" class="btn btn-primary mr-2">Save</button>' +
-          '<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>',
+          '<button type="submit" id="btn-submit-save-search" class="btn btn-primary me-2">Save</button>' +
+          '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>',
       },
       modify: {
         title: "Modify Search",
         footerButtons:
-          '<button type="submit" id="btn-submit-save-search" class="btn btn-primary mr-2">Save</button>' +
-          '<button type="button" id="btn-delete-search" class="btn btn-danger mr-2">Delete</button>' +
-          '<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>',
+          '<button type="submit" id="btn-submit-save-search" class="btn btn-primary me-2">Save</button>' +
+          '<button type="button" id="btn-delete-search" class="btn btn-danger me-2">Delete</button>' +
+          '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>',
       },
       update: {
         title: "Update Search",
         footerButtons:
-          '<button type="submit" id="btn-submit-save-search" class="btn btn-primary mr-2">Save</button>' +
-          '<button type="button" id="btn-delete-search" class="btn btn-danger mr-2">Delete</button>' +
-          '<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>',
+          '<button type="submit" id="btn-submit-save-search" class="btn btn-primary me-2">Save</button>' +
+          '<button type="button" id="btn-delete-search" class="btn btn-danger me-2">Delete</button>' +
+          '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>',
       },
       details: {
         title: "Search Details",
         footerButtons:
-          '<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>',
+          '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>',
       },
     };
 
     function showModal(type, searchId = null) {
       const config = modalConfig[type];
       currentModalType = type;
-      currentSearchId = searchId;
 
       const $modal = $("#savedSearchModal");
       const $modalTitle = $("#savedSearchModalLabel");
@@ -130,7 +135,7 @@
         loadSaveForm($modalBody, $modalContent, searchId);
       }
 
-      $modal.modal("show");
+      bootstrap.Modal.getOrCreateInstance($modal[0]).show();
     }
 
     function getSearchData() {
@@ -226,11 +231,103 @@
       return queryData;
     }
 
-    function loadSaveForm($modalBody, $modalContent, searchId) {
-      if (!$("#saveSearchForm").length) {
-        $modalContent.wrapInner($(`<form id="saveSearchForm" method="post" action=""></form>`));
-      }
+    function renderSearchSummary(queryData) {
+      const fields = [];
+      const isEmpty = function (v) {
+        return v === '' || v === null || v === undefined ||
+          (Array.isArray(v) && v.length === 0);
+      };
+      const pushField = function (name, value) {
+        if (isEmpty(value)) return;
 
+        const displayValue = Array.isArray(value) ? value.join(', ') : String(value);
+        fields.push({ name: name, value: displayValue });
+      };
+      // Resolve a <select> field's value to the selected option text(s)
+      // by reading from the on-page form (still in the DOM behind the modal).
+      // Falls back to the raw value when the element is missing or not a
+      // select.
+      const resolveSelect = function (fullName, fallbackValue) {
+        const $el = $('#id_' + fullName);
+        if ($el.length && $el.is('select')) {
+          const texts = $el.find('option:selected').map(function () {
+            return $(this).text();
+          }).get();
+          if (texts.length) return texts.join(', ');
+        }
+        return fallbackValue;
+      };
+
+      Object.keys(queryData).forEach(function (sectionKey) {
+        const section = queryData[sectionKey];
+        if (!section || typeof section !== 'object' || Array.isArray(section)) return;
+
+        if (sectionKey.endsWith('_attributes')) {
+          // Group attribute fields by formset index and mirror the on-page
+          // form: only surface usage fields when has_usage is enabled.
+          const searchType = sectionKey.slice(0, -11); // strip '_attributes'
+          const attrPrefix = (SEARCH_TYPE_PREFIXES[searchType] || {}).attr;
+          const byIndex = {};
+          Object.keys(section).forEach(function (name) {
+            const parts = name.split('-');
+            if (parts.length < 3) return;
+
+            const idx = parts[1];
+            const fieldName = parts.slice(2).join('-');
+            if (!byIndex[idx]) byIndex[idx] = {};
+            byIndex[idx][fieldName] = section[name];
+          });
+          Object.keys(byIndex).forEach(function (idx) {
+            const attr = byIndex[idx];
+            if (isEmpty(attr['attribute__name'])) return;
+
+            let attrName = attr['attribute__name'];
+            if (attrPrefix) {
+              attrName = resolveSelect(attrPrefix + '-' + idx + '-attribute__name', attrName);
+            }
+            pushField('attribute__name', attrName);
+            pushField('attribute__value', attr['attribute__value']);
+            if (String(attr['attribute__has_usage']) === '1') {
+              fields.push({ name: 'attribute__has_usage', value: 'True' });
+              pushField('attribute__equality', attr['attribute__equality']);
+              pushField('attribute__usage', attr['attribute__usage']);
+              pushField('attribute__usage_format', attr['attribute__usage_format']);
+            }
+          });
+        } else {
+          Object.keys(section).forEach(function (name) {
+            if (name.endsWith('-submit')) return;
+            if (name.split('-').pop().indexOf('select_all') === 0) return;
+
+            let value = section[name];
+            if (isEmpty(value)) return;
+
+            const cleanName = name.split('-').pop();
+            if (cleanName.indexOf('display__') === 0) {
+              value = String(value) === '1' ? 'True' : 'False';
+            } else {
+              value = resolveSelect(name, value);
+            }
+            pushField(cleanName, value);
+          });
+        }
+      });
+
+      if (fields.length === 0) return '';
+      const escapeHtml = function (s) { return $('<div>').text(s).html(); };
+      const rows = fields.map(function (f) {
+        return '<tr><td><code>' + escapeHtml(f.name) + '</code></td><td>' + escapeHtml(f.value) + '</td></tr>';
+      }).join('');
+      return '<div class="mb-3">' +
+        '<span class="fw-bold d-block mb-1">Search criteria being saved</span>' +
+        '<div class="scrollable-box">' +
+        '<table class="table table-sm table-bordered mb-0"><thead class="table-light"><tr><th class="summary-field-col">Field</th><th>Value</th></tr></thead>' +
+        '<tbody>' + rows + '</tbody></table>' +
+        '</div>' +
+        '</div>';
+    }
+
+    function loadSaveForm($modalBody, $modalContent, searchId) {
       let url = ""
       if (searchId) {
         url = getUrl("modify", searchId)
@@ -265,7 +362,7 @@
               const $messageContainer = $("#modal-message");
               const $btnContainer = $("#modal-buttons");
               $messageContainer.removeClass("d-none").addClass("alert-success").text(data.message);
-              $btnContainer.addClass("d-none")
+              $btnContainer.html('<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Done</button>')
               $.ajax({
                 type: "GET",
                 url: getUrl("saved-list"),
@@ -290,8 +387,8 @@
               errorMessage = xhr.responseJSON.message;
             } else if (xhr.responseJSON && xhr.responseJSON.errors) {
               errorMessage = Object.values(xhr.responseJSON.errors).flat().join(', ');
-              $messageContainer.removeClass("d-none").addClass("alert-danger").text(errorMessage);
             }
+            $messageContainer.removeClass("d-none").addClass("alert-danger").text(errorMessage);
           },
         });
       });
@@ -303,7 +400,12 @@
           $modalBody.html(data);
           initSelect2();
           if (currentModalType !== "modify") {
-            $("#hidden-query-data").val(JSON.stringify(getSearchData()));
+            const queryData = getSearchData();
+            $("#hidden-query-data").val(JSON.stringify(queryData));
+            const summaryHtml = renderSearchSummary(queryData);
+            if (summaryHtml) {
+              $modalBody.prepend(summaryHtml);
+            }
           }
           const modifySearchName = $("#modify-search-name").text();
           if (modifySearchName && currentModalType === "modify") {
@@ -319,11 +421,6 @@
     }
 
     function loadDetailsContent($modalBody, $modalContent, searchId) {
-      $form = $("#saveSearchForm");
-      if ($form.length) {
-        $modalBody.unwrap();
-      }
-
       $.ajax({
         url: getUrl("details", searchId),
         type: "GET",
@@ -340,34 +437,53 @@
 
     window.showSavedSearchModal = showModal;
 
-    $(document).on("click", "#btn-delete-search", function () {
+    function showDeleteConfirmation() {
+      $("#modal-message")
+        .removeClass("d-none alert-success alert-danger")
+        .addClass("alert-warning")
+        .text("Are you sure you want to delete this saved search? This action cannot be undone.");
+      $("#modal-buttons").html(
+        '<button type="button" id="btn-confirm-delete-search" class="btn btn-danger me-2">Yes, delete</button>' +
+        '<button type="button" id="btn-cancel-delete-search" class="btn btn-secondary">Cancel</button>'
+      );
+    }
+
+    function restoreModalFooter() {
+      const config = modalConfig[currentModalType];
+      $("#modal-message")
+        .addClass("d-none")
+        .removeClass("alert-warning alert-success alert-danger")
+        .text("");
+      $("#modal-buttons").html(config.footerButtons);
+    }
+
+    function performDelete() {
       const $form = $("#saveSearchForm");
       const actionUrl = $form.attr("action");
       if (!actionUrl) return;
-      const searchId = actionUrl.split("/").at(-2);
-      if (!confirm("Are you sure you want to delete this saved search?")) {
-        return;
-      }
 
+      const searchId = actionUrl.split("/").at(-2);
       const $msg = $("#modal-message");
+      $("#btn-confirm-delete-search").prop("disabled", true).text("Deleting...");
+      $("#btn-cancel-delete-search").prop("disabled", true);
 
       $.ajax({
         url: getUrl("delete", searchId),
         type: "POST",
         headers: { "X-CSRFToken": "{{ csrf_token }}" },
         success: function (data) {
-          $("#savedSearchModal").modal("hide");
+          bootstrap.Modal.getInstance(document.getElementById("savedSearchModal")).hide();
           $.ajax({
             type: "GET",
             url: getUrl("saved-list"),
             success: function (data) {
               $("#saved-searches").html(data);
               const $banner = $("<div class='alert alert-success alert-dismissible fade show mb-3' role='alert'>" +
-                "<i class='fas fa-check-circle mr-2'></i>Search deleted successfully." +
-                "<button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button></div>"
+                "<i class='fas fa-check-circle me-2'></i>Search deleted successfully." +
+                "<button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button></div>"
               );
               $("#accordion").before($banner);
-              setTimeout(function() { $banner.alert("close"); }, 4000);
+              setTimeout(function() { $banner.fadeOut(400, function() { $banner.remove(); }); }, 4000);
             },
             error: function (xhr) {
               console.error('Failed to reload saved searches:', xhr);
@@ -375,10 +491,14 @@
           });
         },
         error: function () {
-          $msg.removeClass("d-none").addClass("alert-danger");
-          $msg.text("Failed to delete saved search.");
+          restoreModalFooter();
+          $msg.removeClass("d-none").addClass("alert-danger").text("Failed to delete saved search.");
         },
       });
-    });
+    }
+
+    $(document).on("click", "#btn-delete-search", showDeleteConfirmation);
+    $(document).on("click", "#btn-cancel-delete-search", restoreModalFooter);
+    $(document).on("click", "#btn-confirm-delete-search", performDelete);
   });
 </script>

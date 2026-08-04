@@ -54,6 +54,10 @@ Allocation Change Detail
               <td><a href="{% url 'project-detail' allocation_change.allocation.project.pk %}">{{ allocation_change.allocation.project }}</a></td>
             </tr>
             <tr>
+              <th scope="row" class="text-nowrap">Allocation ID:</th>
+              <td><a href="{% url 'allocation-detail' allocation_change.allocation.pk %}">{{ allocation_change.allocation.pk }}</a></td>
+            </tr>
+            <tr>
               <th scope="row" class="text-nowrap">Resource{{ allocation_change.allocation.resources.all|pluralize }} in allocation:</th>
               <td>{{ allocation_change.allocation.get_resources_as_string }}</td>
             </tr>
@@ -74,7 +78,7 @@ Allocation Change Detail
                 <td>
                   {{ allocation_change.allocation.end_date }}
                   {% if allocation_change.allocation.is_locked and allocation_change.allocation.status.name == 'Approved' and allocation_change.allocation.expires_in <= 60 and allocation_change.allocation.expires_in >= 0 %}
-                  <span class="badge badge-warning"><i class="far fa-clock" aria-hidden="true"></i>
+                  <span class="badge bg-warning"><i class="far fa-clock" aria-hidden="true"></i>
                     Expires in {{allocation_change.allocation.expires_in}} day{{allocation_change.allocation.expires_in|pluralize}} - Not renewable
                   </span>
                   {% endif %}
@@ -114,7 +118,7 @@ Allocation Change Detail
     </div>
   </div>
 
-  
+
   <div class="card mb-3">
     <div class="card-header">
       <h3 class="d-inline"><i class="fas fa-info-circle" aria-hidden="true"></i> Allocation Attributes</h3>
@@ -141,7 +145,7 @@ Allocation Change Detail
                     {% if request.user.is_superuser %}
                       <td>
                         {{form.new_value}}
-                        <a href="{% url 'allocation-attribute-change-delete' form.change_pk.value %}" class="float-right confirm-delete">
+                        <a href="{% url 'allocation-attribute-change-delete' form.change_pk.value %}" class="float-end confirm-delete">
                           <i class="far fa-trash-alt fa-lg"></i>
                         </a>
                       </td>
@@ -170,7 +174,7 @@ Allocation Change Detail
     </div>
   </div>
 
-  <p class="card-text text-justify">{{allocation_change_form.justification | as_crispy_field}}</p>
+  <p class="card-text">{{allocation_change_form.justification | as_crispy_field}}</p>
 
   <hr/>
 
@@ -180,20 +184,17 @@ Allocation Change Detail
         <h3 class="d-inline"><i class="fas fa-info-circle" aria-hidden="true"></i> Actions</h3>
       </div>
       <div class="card-body">
-
-          
-            {% csrf_token %}
-            {{note_form.notes | as_crispy_field}}
-            <div style="float: right;">
-              {% if allocation_change.status.name == 'Pending' %}
-                <button type="submit" name="action" value="approve" class="btn btn-success mr-1">Approve</button>
-                <button type="submit" name="action" value="deny" class="btn btn-danger mr-1">Deny</button>
-              {% endif %}
-                <button type="submit" name="action" value="update" class="btn btn-primary float-right">
-                <i class="fas fa-sync" aria-hidden="true"></i> Update
-              </button>
-            </div>
-        </div>   
+        {% csrf_token %}
+        {{note_form.notes | as_crispy_field}}
+        <div class="d-inline float-end">
+          {% if allocation_change.status.name == 'Pending' %}
+            <button type="submit" name="action" value="approve" class="btn btn-success float-end ms-1">Approve</button>
+            <button type="submit" name="action" value="deny" class="btn btn-danger float-end ms-1">Deny</button>
+          {% endif %}
+            <button type="submit" name="action" value="update" class="btn btn-primary float-end">
+              <i class="fas fa-sync" aria-hidden="true"></i> Update
+            </button>
+        </div>
       </div>
     </div>
   {% endif %}
@@ -210,10 +211,15 @@ Allocation Change Detail
   {% endif %}
   <br>
 
+{% endblock %}
+
+{% block javascript %}
+{{ block.super }}
 <script>
+document.addEventListener('DOMContentLoaded', function() {
   $(document).on('click', '.confirm-delete', function(){
       return confirm('Are you sure you want to delete this requested allocation attribute change?');
   })
+});
 </script>
 {% endblock %}
-

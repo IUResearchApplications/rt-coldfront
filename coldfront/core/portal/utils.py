@@ -97,35 +97,18 @@ def generate_allocations_chart_data():
 
 def generate_project_type_chart_data():
     num_research_projects_count = Project.objects.filter(
-        status__name__in=[
-            "Active",
-            "Waiting For Admin Approval",
-            "Review Pending",
-            "Contacted By Admin",
-        ],
+        status__name__in=["Active", "Waiting For Admin Approval", "Review Pending", "Contacted By Admin"],
         type__name="Research",
     ).count()
     num_class_projects_count = Project.objects.filter(
-        status__name__in=[
-            "Active",
-            "Waiting For Admin Approval",
-            "Review Pending",
-            "Contacted By Admin",
-        ],
+        status__name__in=["Active", "Waiting For Admin Approval", "Review Pending", "Contacted By Admin"],
         type__name="Class",
     ).count()
 
-    research_projects_count_label = f"Research: {num_research_projects_count}"
-    class_projects_count_label = f"Class: {num_class_projects_count}"
-
-    project_type_chart_data = {
-        "columns": [
-            [research_projects_count_label, num_research_projects_count],
-            [class_projects_count_label, num_class_projects_count],
-        ],
-        "type": "donut",
-        "colors": {research_projects_count_label: "#673ab7", class_projects_count_label: "#e27602"},
-    }
+    project_type_chart_data = [
+        {"name": "Research", "total": num_research_projects_count},
+        {"name": "Class", "total": num_class_projects_count},
+    ]
 
     return project_type_chart_data
 
@@ -148,20 +131,10 @@ def generate_project_user_chart_data():
         )
     )
 
-    active_research_users_label = f"Research: {num_active_research_users}"
-    active_class_users_label = f"Class: {num_active_class_users}"
-    project_user_chart_data = {
-        "columns": [
-            [active_research_users_label, num_active_research_users],
-            [active_class_users_label, num_active_class_users],
-        ],
-        "type": "donut",
-        "colors": {
-            active_class_users_label: "#e27602",
-            active_research_users_label: "#673ab7",
-        },
-    }
-
+    project_user_chart_data = [
+        {"name": "Research", "total": num_active_research_users},
+        {"name": "Class", "total": num_active_class_users},
+    ]
     return project_user_chart_data
 
 
@@ -247,12 +220,7 @@ def generate_class_project_status_columns():
 
 
 def generate_user_counts():
-    project_statuses = [
-        "Active",
-        "Waiting For Admin Approval",
-        "Review Pending",
-        "Contacted By Admin",
-    ]
+    project_statuses = ["Active", "Waiting For Admin Approval", "Review Pending", "Contacted By Admin"]
     num_unique_active_users = len(
         set(
             ProjectUser.objects.filter(status__name="Active", project__status__name__in=project_statuses).values_list(
@@ -262,47 +230,18 @@ def generate_user_counts():
     )
     num_unique_active_pis = len({project.pi for project in Project.objects.filter(status__name__in=project_statuses)})
 
-    unique_user_label = f"Unique Active Users: {num_unique_active_users}"
-    unique_pi_label = f"Unique Active PIs: {num_unique_active_pis}"
-
-    user_counts_chart_data = {
-        "columns": [
-            [unique_user_label, num_unique_active_users],
-            [unique_pi_label, num_unique_active_pis],
-        ],
-        "type": "bar",
-        "colors": {unique_pi_label: "#2f9fd0", unique_user_label: "#6da04b"},
-    }
+    user_counts_chart_data = [
+        {"name": "Unique Active Users", "total": num_unique_active_users},
+        {"name": "Unique Active PIs", "total": num_unique_active_pis},
+    ]
 
     return user_counts_chart_data
-
-
-def create_months():
-    months = {
-        "1": 0,
-        "2": 0,
-        "3": 0,
-        "4": 0,
-        "5": 0,
-        "6": 0,
-        "7": 0,
-        "8": 0,
-        "9": 0,
-        "10": 0,
-        "11": 0,
-        "12": 0,
-    }
-
-    return months
 
 
 def create_years(start, stop):
     years = {}
     for year in range(start, stop + 1):
-        years[str(year)] = {
-            "months": create_months(),
-            "total_new_users": 0,
-        }
+        years[str(year)] = 0
 
     return years
 
@@ -312,48 +251,14 @@ def generate_user_timeline():
     start_year = unique_users[0].date_joined.year
     stop_years = unique_users[unique_users.count() - 1].date_joined.year
     years = create_years(start_year, stop_years)
-    for count, user in enumerate(unique_users, start=1):
+    for user in unique_users:
         date_joined = user.date_joined
         year = str(date_joined.year)
-        month = str(date_joined.month)
-        years[year]["months"][month] = count
-        years[year]["total_new_users"] = count
+        years[year] += 1
 
-    year_list = [year + "-01-01" for year in years.keys()]
-    year_list = [f"{start_year - 1}-01-01"] + year_list
-    year_label = "Years"
-    year_new_users_list = [values["total_new_users"] for values in years.values()]
-    year_new_users_list = [0] + year_new_users_list
-    year_new_users_label = "Total Unique Users"
+    user_timeline_chart_data = [{"name": year, "total": total} for year, total in years.items()]
 
-    years_to_months_labels = {}
-    years_to_months_values = {}
-    total_users = 0
-    current_date = datetime.datetime.today()
-    current_month = current_date.month
-    current_year = current_date.year
-    for year, months_and_total in years.items():
-        months = months_and_total["months"]
-        years_to_months_labels[year] = ["Months"]
-        years_to_months_values[year] = [f"Total Unique Users ({year})"]
-        for month, users in months.items():
-            if int(year) == current_year and int(month) > current_month:
-                continue
-            years_to_months_labels[year].append(year + "-" + month + "-01")
-            if users < 1:
-                users = total_users
-            years_to_months_values[year].append(users)
-            total_users = users
-
-    user_timeline_chart_data = {
-        "x": year_label,
-        "columns": [
-            [year_label] + year_list,
-            [year_new_users_label] + year_new_users_list,
-        ],
-    }
-
-    return user_timeline_chart_data, years_to_months_labels, years_to_months_values
+    return user_timeline_chart_data
 
 
 def get_home_page_slurm_info(user):

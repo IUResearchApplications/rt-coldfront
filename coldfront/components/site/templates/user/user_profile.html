@@ -15,7 +15,7 @@ User Profile{% if not user == viewed_user %}: {{ viewed_user.username }}{% endif
       <i class="fas fa-user" aria-hidden="true"></i>
       {{ viewed_user.username }}
     </h2>
-    <div class="float-right">
+    <div class="float-end">
       <a class="btn btn-primary" href="{% url 'user-projects-managers' viewed_user %}"><i class="far fa-user-circle" aria-hidden="true"></i> View user projects and managers</a>
     </div>
   </div>
@@ -25,7 +25,7 @@ User Profile{% if not user == viewed_user %}: {{ viewed_user.username }}{% endif
     </div>
     <div class="table-responsive">
       <table class="table">
-        <caption class="sr-only">User details</caption>
+        <caption class="visually-hidden">User details</caption>
         <tbody>
           <tr>
             <th scope="row" class="text-nowrap">University Role(s):</th>
@@ -57,30 +57,4 @@ User Profile{% if not user == viewed_user %}: {{ viewed_user.username }}{% endif
   {% include "storage/slate_project/slate_project_info_div.html" %}
 {% endif %}
 
-{{ viewed_username|json_script:"viewed_username" }}
-
-<script>
-  var viewed_username = JSON.parse(document.getElementById('viewed_username').textContent);
-
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-user").addClass("active");
-  $("#navbar-user-user-profile").addClass("active");
-
-  function getCookie(name) {
-    var cookieValue = null;
-    if (document.cookie && document.cookie != '') {
-      var cookies = document.cookie.split(';');
-      for (var i = 0; i < cookies.length; i++) {
-        var cookie = jQuery.trim(cookies[i]);
-        // Does this cookie string begin with the name we want?
-        if (cookie.substring(0, name.length + 1) == (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
-        }
-      }
-    }
-    return cookieValue;
-  }
-
-</script>
 {% endblock %}

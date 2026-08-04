@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: (C) ColdFront Authors
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
 import json
 
 from django import template
@@ -33,23 +36,25 @@ def get_icon(expand_accordion):
 @register.filter
 def convert_boolean_to_icon(boolean):
     if boolean is False:
-        return mark_safe('<span class="badge badge-success"><i class="fas fa-check"></i></span>')
+        return mark_safe('<span class="badge bg-success"><i class="fas fa-check"></i></span>')
     else:
-        return mark_safe('<span class="badge badge-danger"><i class="fas fa-times"></i></span>')
+        return mark_safe('<span class="badge bg-danger"><i class="fas fa-times"></i></span>')
 
 
 @register.filter
 def convert_status_to_icon(project):
-    if project.last_project_review:
-        status = project.last_project_review.status.name
+    last_project_review = project.last_project_review
+    needs_review = project.needs_review
+    if last_project_review:
+        status = last_project_review.status.name
         if status == "Pending":
-            return mark_safe('<h4><span class="badge badge-info"><i class="fas fa-exclamation-circle"></i></span></h4>')
+            return mark_safe('<h4><span class="badge bg-info"><i class="fas fa-exclamation-circle"></i></span></h4>')
         elif status == "Completed":
-            return mark_safe('<h4><span class="badge badge-success"><i class="fas fa-check-circle"></i></span></h4>')
-    elif project.needs_review and not project.last_project_review:
-        return mark_safe('<h4><span class="badge badge-danger"><i class="fas fa-question-circle"></i></span></h4>')
-    elif not project.needs_review:
-        return mark_safe('<h4><span class="badge badge-success"><i class="fas fa-check-circle"></i></span></h4>')
+            return mark_safe('<h4><span class="badge bg-success"><i class="fas fa-check-circle"></i></span></h4>')
+    elif needs_review and not last_project_review:
+        return mark_safe('<h4><span class="badge bg-danger"><i class="fas fa-question-circle"></i></span></h4>')
+    elif not needs_review:
+        return mark_safe('<h4><span class="badge bg-success"><i class="fas fa-check-circle"></i></span></h4>')
 
 
 @register.filter()
@@ -88,6 +93,91 @@ def get_value_by_index(array, index):
     usage example {{ your_list|get_value_by_index:your_index }}
     """
     return array[index]
+
+
+@register.simple_tag
+def navbar_active_item(menu_item, request):
+    view_map = {
+        "center-summary": ["center-summary"],
+        "home": ["home", "request_forms:software-request", "request_forms:stats-request"],
+        "invoice": [
+            "allocation-invoice-list",
+            "allocation-invoice-detail",
+            "allocation-add-invoice-note",
+            "allocation-update-invoice-note",
+            "allocation-delete-invoice-note",
+        ],
+        "project": [
+            "project-list",
+            "project-detail",
+            "project-archive",
+            "project-archived-list",
+            "project-create",
+            "project-update",
+            "project-add-users-search",
+            "project-remove-users",
+            "project-user-detail",
+            "project-review",
+            "project-note-add",
+            "project-attribute-create",
+            "project-attribute-delete",
+            "project-attribute-update",
+            "project-denied-list",
+            "allocation-detail",
+            "allocation-list",
+            "allocation-account-list",
+            "allocation-create",
+            "allocation-change-detail",
+            "allocation-add-users",
+            "allocation-remove-users",
+            "allocation-renew",
+            "allocation-attribute-add",
+            "allocation-change",
+            "allocation-attribute-edit",
+            "allocation-attribute-delete",
+            "allocation-note-add",
+            "allocation-note-update",
+            "allocation-user-detail",
+            "allocation-review-eula",
+            "resource-list",
+            "user-list-allocations",
+            "publication-search",
+            "add-publication-manually",
+            "publication-delete-publications",
+            "publication-export-publications",
+            "allocation_removal_requests:allocation-removal-request",
+            "move-allocation",
+            "custom-allocation-create",
+        ],
+        "admin": [
+            "user-search-home",
+            "project-review-list",
+            "allocation-request-list",
+            "allocation-change-list",
+            "grant-report",
+            "advanced-search",
+            "project-review-info",
+            "allocation_removal_requests:allocation-removal-request-list",
+        ],
+        "staff": [
+            "user-search-home",
+            "project-review-list",
+            "allocation-request-list",
+            "grant-report",
+            "project-review-info",
+            "allocation_removal_requests:allocation-removal-request-list",
+        ],
+        "director": ["project-review-list", "grant-report"],
+        "publications": ["publication_catalogue", "publication_gallery"],
+        "help": ["get-help"],
+        "user": ["user-profile", "user-projects-managers"],
+    }
+    if request != "" and request.resolver_match is not None:
+        view_name = request.resolver_match.view_name
+        if menu_item in view_map:
+            if view_name in view_map[menu_item]:
+                return "active"
+    return ""
 
 
 @register.filter

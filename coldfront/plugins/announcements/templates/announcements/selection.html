@@ -13,11 +13,11 @@
     {% for key, value in selection.items %}
       {% if key in initial_selected %}
         <a id="id_{{ name }}_{{ key }}" name="{{ value }}" href="#", title="Add tag">
-          <span class="badge badge-pill badge-danger">{{ value }}</span>
+          <span class="badge rounded-pill text-bg-danger">{{ value }}</span>
         </a>
       {% else %}
         <a id="id_{{ name }}_{{ key }}" name="{{ value }}" href="#", title="Remove tag">
-          <span class="badge badge-pill badge-secondary">{{ value }}</span>
+          <span class="badge rounded-pill text-bg-secondary">{{ value }}</span>
         </a>
       {% endif %}
     {% endfor %}

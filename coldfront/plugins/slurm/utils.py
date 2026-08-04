@@ -13,6 +13,7 @@ from coldfront.core.utils.common import import_from_settings
 SLURM_DUMP_TASK_BASE_DIR = import_from_settings("SLURM_DUMP_TASK_BASE_DIR", "")
 SLURM_CLUSTER_ATTRIBUTE_NAME = import_from_settings("SLURM_CLUSTER_ATTRIBUTE_NAME", "slurm_cluster")
 SLURM_ACCOUNT_ATTRIBUTE_NAME = import_from_settings("SLURM_ACCOUNT_ATTRIBUTE_NAME", "slurm_account_name")
+SLURM_PARENT_ATTRIBUTE_NAME = import_from_settings("SLURM_PARENT_ATTRIBUTE_NAME", "slurm_parent")
 SLURM_SPECS_ATTRIBUTE_NAME = import_from_settings("SLURM_SPECS_ATTRIBUTE_NAME", "slurm_specs")
 SLURM_USER_SPECS_ATTRIBUTE_NAME = import_from_settings("SLURM_USER_SPECS_ATTRIBUTE_NAME", "slurm_user_specs")
 SLURM_SACCTMGR_PATH = import_from_settings("SLURM_SACCTMGR_PATH", "/usr/bin/sacctmgr")
@@ -152,3 +153,21 @@ def slurm_check_assoc(user, cluster, account):
 def slurm_dump_cluster(cluster, fname, noop=False):
     cmd = SLURM_CMD_DUMP_CLUSTER.format(shlex.quote(cluster), shlex.quote(fname))
     _run_slurm_cmd(cmd, noop=noop)
+
+
+def parse_qos(qos: str) -> list[str]:
+    """Parses QOS spec string into a list of QOSes"""
+    if qos.startswith("QOS+="):
+        qos = qos.replace("QOS+=", "")
+        qos = qos.replace("'", "")
+        return qos.split(",")
+    elif qos.startswith("QOS="):
+        qos = qos.replace("QOS=", "")
+        qos = qos.replace("'", "")
+        lst = []
+        for q in qos.split(","):
+            if q.startswith("+"):
+                lst.append(q.replace("+", ""))
+        return lst
+
+    return []
