@@ -1,0 +1,114 @@
+.fakeimg {
+    height: 77px;
+    background: #e2e2e2;
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+main {
+    padding-top: 40px;
+    padding-bottom: 40px;
+}
+
+.banner-name {
+    padding-top: 25px;
+}
+
+.banner-logo {
+    margin-top: 5px;
+    max-height: 75px !important;
+    margin-bottom: 5px;
+}
+
+body > main > form > div.alert.alert-block.alert-danger > ul > li {
+    list-style: none;
+    margin-top: 14px;
+}
+
+body
+    > main
+    > div
+    > div.card.border-primary
+    > div.card-body
+    > form
+    > div.alert.alert-block.alert-danger
+    > ul
+    > li {
+    list-style: none;
+    margin-top: 14px;
+}
+
+.form-control[readonly] {
+    background-color: #ffffff;
+    opacity: 1;
+}
+
+.bg-primary {
+    background-color: #990000 !important;
+}
+
+.border-primary {
+    border-color: #990000 !important;
+}
+
+.dropdown-submenu {
+    position: relative;
+}
+
+.dropdown-submenu .dropdown-menu {
+    top: 0;
+    left: 100%;
+    padding-top: 0;
+    margin-top: 0;
+    margin-left: 0.1rem;
+    margin-right: 0.1rem;
+}
+
+.dropdown-submenu a::after {
+    transform: rotate(-90deg);
+}
+
+.navbar-nav .nav-link {
+    position: relative;
+    color: white !important;
+}
+
+/* Can't use ::after because it clashes with bootstraps dropdown-toggle::after */
+.navbar-nav .nav-item.active .nav-link::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    height: 2px;
+    background-color: white;
+}
+
+.dropdown-submenu > a:focus {
+    outline: 2px solid #990000;
+}
+
+#branding-bar {
+    position: relative !important;
+}
+
+.form-label {
+    font-weight: bold;
+}
+
+.validating-feedback {
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 80%;
+    color: #006298;
+}
+
+.chart-container {
+    height: 300px;
+    position: relative;
+    text-align: center;
+}

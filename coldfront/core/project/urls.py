@@ -62,4 +62,23 @@ urlpatterns = [
         project_views.ProjectAdminCommentCreateView.as_view(),
         name="project-admin-comment-create",
     ),
+    path(
+        "project-request/<int:pk>/email", project_views.ProjectRequestEmailView.as_view(), name="project-request-email"
+    ),
+    path(
+        "<int:pk>/project-activate-request/",
+        project_views.ProjectActivateRequestView.as_view(),
+        name="project-activate-request",
+    ),
+    path("<int:pk>/project-deny-request/", project_views.ProjectDenyRequestView.as_view(), name="project-deny-request"),
+    path(
+        "project-review-approve/<int:pk>/",
+        project_views.ProjectReviewApproveView.as_view(),
+        name="project-review-approve",
+    ),
+    path("project-review-deny/<int:pk>/", project_views.ProjectReviewDenyView.as_view(), name="project-review-deny"),
+    path("project-review-info/<int:pk>/", project_views.ProjectReviewInfoView.as_view(), name="project-review-info"),
+    path("denied/", project_views.ProjectDeniedListView.as_view(), name="project-denied-list"),
+    path('pi-projects-modal-content/', project_views.PiProjectsPartialView.as_view(), name='pi-projects-modal-content'),
+    path('projects-review-stats/', project_views.project_review_stats, name='project-review-stats'),
 ]

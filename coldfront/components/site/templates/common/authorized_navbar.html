@@ -1,0 +1,134 @@
+{% include 'common/navbar_brand.html' %}
+{% load common_tags %}
+
+<nav class="navbar navbar-expand-md navbar-dark bg-primary">
+  <div class="container">
+    <a class="navbar-brand d-block d-sm-none text-primary" href="#">RT Projects</a>
+
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbar-main"
+      aria-controls="navbar-main"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="navbar-collapse collapse" id="navbar-main">
+      <ul class="navbar-nav">
+        <li id="navbar-home" class="nav-item {% navbar_active_item 'home' request %}">
+          <a class="nav-link" href="{% url 'home' %}">Home</a>
+        </li>
+        <li id="navbar-center-summary" class="nav-item {% navbar_active_item 'center-summary' request %}">
+          <a class="nav-link" href="{% url 'center-summary' %}">Center Summary</a>
+        </li>
+        <li id="navbar-publications" class="nav-item dropdown {% navbar_active_item 'publications' request %}">
+          <a
+            id="navbarPublicationsToggle"
+            class="nav-link dropdown-toggle"
+            href="#"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-haspopup="true"
+            aria-controls="publications-submenu"
+            aria-expanded="false"
+            title="Publications menu"
+          >Publications</a>
+          <ul id="publications-submenu" class="dropdown-menu" role="menu" aria-labelledby="navbarPublicationsToggle">
+            <li><a class="dropdown-item" href="{% url 'publication_gallery' %}" role="menuitem">Publication Gallery</a></li>
+            <li><a class="dropdown-item" href="{% url 'publication_catalogue' %}" role="menuitem">Publication Catalog</a></li>
+          </ul>
+        </li>
+        <li id="navbar-project-menu" class="nav-item dropdown {% navbar_active_item 'project' request %}">
+          <a 
+            id="navbarProjectToggle"
+            class="nav-link dropdown-toggle"
+            href="#"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-haspopup="true"
+            aria-controls="project-submenu"
+            aria-expanded="false"
+            title="Project menu"
+          >Project</a>
+          <ul id="project-submenu" class="dropdown-menu" role="menu" aria-labelledby="navbarProjectToggle">
+            <li>
+              <a id="navbar-project" class="dropdown-item" href="{% url 'project-list' %}" role="menuitem">Projects</a>
+            </li>
+            <li>
+              <a id="navbar-allocation" class="dropdown-item" href="{% url 'allocation-list' %}" role="menuitem">Allocations</a>
+            </li>
+            <li>
+              <a id="navbar-resource" class="dropdown-item" href="{% url 'resource-list' %}" role="menuitem">Resources</a>
+            </li>
+            {% if settings.ALLOCATION_ACCOUNT_ENABLED  %}
+              <li>
+                <a class="dropdown-item" href="{% url 'allocation-account-list' %}" role="menuitem">Allocation Accounts</a>
+              </li>
+            {% endif %}
+            {% if request.user.userprofile.is_pi  %}
+              <li>
+                <a id="navbar-user-allocation" class="dropdown-item" href="{% url 'user-list-allocations' %}" role="menuitem">User Allocations</a>
+              </li>
+            {% endif %}
+          </ul>
+        </li>
+        {% if request.user.is_superuser %}
+          {% include 'common/navbar_admin.html' %}
+        {% elif request.user.is_staff %}
+          {% include 'common/navbar_nonadmin_staff.html' %}
+        {% elif perms.project.can_review_pending_project_reviews or perms.grant.can_view_all_grants %}
+          {% include 'common/navbar_director.html' %}
+        {% endif %}
+        {% if settings.INVOICE_ENABLED %}
+          {% if request.user.is_superuser or perms.allocation.can_manage_invoice %}
+            {% include 'common/navbar_invoice.html' %}
+          {% endif %}
+        {% endif %}
+        {% if settings.CENTER_HELP_URL %}
+          {% include 'common/navbar_help.html' %}
+        {% endif %}
+        {% if 'announcements/navbar_announcements.html'|template_exists %}
+          {% include 'announcements/navbar_announcements.html' %}
+        {% endif %}
+      </ul>
+
+      <ul class="navbar-nav ms-auto">
+        {% include 'common/navbar_login.html' %}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    $('.dropdown-menu a.dropdown-toggle').on('click', function() {
+      const ele = $(this)
+      const menu = ele.next('.dropdown-menu');
+
+      if (!menu.hasClass('show')) {
+        ele.parents('.dropdown-menu')
+                .first()
+                .find('.show')
+                .removeClass('show')
+                .prev('a.dropdown-toggle')
+                .attr('aria-expanded', 'false');
+      }
+
+      menu.toggleClass('show');
+      ele.attr('aria-expanded', menu.hasClass('show'));
+      
+      return false;
+    });
+
+    $('li.nav-item.dropdown').on('hidden.bs.dropdown', function () {
+      $('.dropdown-submenu .show')
+        .removeClass('show')
+        .prev('a.dropdown-toggle')
+        .attr('aria-expanded', 'false');
+    });
+  })
+</script>

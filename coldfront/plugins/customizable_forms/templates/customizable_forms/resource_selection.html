@@ -1,0 +1,75 @@
+{% extends "common/base.html" %}
+{% load common_tags %}
+
+{% block title %}
+Choose a Resource for Your Allocation
+{% endblock %}
+
+{% block content %}
+  <h1>Available Resources</h1>
+  <p class="h2">Project: {{ project_obj.title }}</p>
+  <hr>
+  {% for resource_type, resources in resource_types.items %}
+    <div class="card mb-3">
+      <div class="card-header">
+        <h2 id="resource_type_{{ forloop.counter }}">{{ resource_type }}s</h2>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          {% for resource in resources %}
+            <div class="col-6">
+              <div class="card mb-3" role="region" aria-labelledby="resource_{{ forloop.parentloop.counter }}_{{ forloop.counter }}">
+                <div class="card-header">
+                  <h3 class="d-inline" id="resource_{{ forloop.parentloop.counter }}_{{ forloop.counter }}">{{ resource.resource.name }}</h3>
+                  <span
+                    title="Total Allocations"
+                    class="badge text-bg-secondary position-absolute py-1 px-1 top-0 start-0"
+                    style="border-top-right-radius: 0px; border-bottom-left-radius: 0px; user-select: none;"
+                    aria-label="Total allocations: {{ resource.resource_count|default_if_none:0 }}"
+                  >
+                      {{ resource.resource_count|default_if_none:0 }}
+                  </span>
+                  {% if resource.info_url %}
+                    <a href="{{ resource.info_url }}" target="_blank" title="More information (external)" rel="noopener noreferrer"><i class="fas fa-external-link-alt" aria-hidden="true"></i></a>
+                  {% endif %}
+                  <div class="float-end">
+                    {% if not resource.rule_result.passed %}
+                      {{ resource.rule_result.title|safe }}
+                      <button
+                        type="button"
+                        class="p-0 bg-transparent border-0"
+                        data-bs-toggle="popover"
+                        data-bs-trigger="focus hover"
+                        data-bs-content="{{ resource.rule_result.description }}"
+                        style="cursor: default;"
+                      >
+                        <i class="fas fa-question-circle text-primary" aria-hidden="true"></i>
+                        <span class="visually-hidden">{{ resource.rule_result.description }}</span>
+                      </button>
+                    {% else %}
+                      <a
+                        class="btn btn-primary"
+                        href="{% url 'resource-form-redirector' resource_pk=resource.resource.pk project_pk=project_obj.pk %}?after_project_creation={{after_project_creation}}"
+                        role="button"
+                        aria-label="Request form for {{ resource.resource.name }}"
+                      > Request Form</a>
+                    {% endif %}
+                  </div>
+                </div>
+                <div class="card-body overflow-auto">
+                  <details>
+                    <summary>Details</summary>
+                    <p>{{ resource.resource.description }}</p>
+                  </details>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+  {% if after_project_creation != 'true' %}
+    <a class="btn btn-secondary" href="{% url 'project-detail' project_obj.pk %}">Back to Project</a><br>
+  {% endif %}
+{% endblock %}

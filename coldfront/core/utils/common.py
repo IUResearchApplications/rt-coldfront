@@ -48,3 +48,11 @@ def su_login_callback(user):
 
     logger.warning("User {} requested to login as another user but does not have permissions", user)
     return False
+
+
+def get_users_info(usernames):
+    return dict.fromkeys(usernames, None)
+
+
+def get_users_accounts(usernames):
+    return None

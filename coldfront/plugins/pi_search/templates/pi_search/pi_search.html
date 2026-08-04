@@ -1,0 +1,108 @@
+{% load crispy_forms_tags %}
+
+<div class="mb-3">
+  <div class="card">
+    <div class="card-header">
+      <h3>PI Search</h3>
+    </div>
+    <div class="card-body">
+      <p>
+        Search for your PI's project and request to be added to it.
+      </p>
+      <form id="pi_search_form">
+        {{ form|crispy }}
+        <button id="pi_search_submit" type="submit" class="btn btn-primary">Search</button>
+        <button id="pi_search_reset" type="reset" class="btn btn-secondary">Clear</button>
+      </form>
+      <br>
+      <div class="row">
+        <div class="col" id="search_results" style="display: none;">
+          <div class="card border-light">
+            <div class="card-body">
+              <div id="search_results_inner" aria-live="polite"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(document).ready(function() {
+    let pi_last_searched = '';
+    const $searchResults = $('#search_results');
+    const $searchResultsInner = $('#search_results_inner');
+    const $form = $('#pi_search_form');
+
+    function hideResults() {
+      $searchResults.hide();
+      $searchResultsInner.html('');
+    }
+
+    function showResults() {
+      $searchResults.show();
+    }
+
+    $form.on('reset', function() {
+      pi_last_searched = '';
+      hideResults();
+      $('#pi_search_submit').prop('disabled', false);
+    });
+
+    $form.on('submit', function(event) {
+      event.preventDefault();
+      var pi_username = $('#id_pi_search').val();
+
+      if (pi_last_searched === pi_username) {
+        showResults();
+        return false;
+      }
+      
+      pi_last_searched = pi_username;
+
+      if (pi_username === '') {
+        showResults();
+        $searchResultsInner.html(
+          '<div class="alert alert-info" role="alert">Enter a PI username to search.</div>'
+        );
+        return false;
+      }
+
+      var $searchBtn = $('#pi_search_submit');
+
+      showResults();
+      $searchResultsInner.html(
+        '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Searching...'
+      );
+      $searchBtn.prop('disabled', true);
+
+      function enableSearch() {
+        $searchBtn.prop('disabled', false);
+      }
+
+      $.ajax({
+        url: "{% url 'pi-search-results' %}",
+        type: "POST",
+        data: {
+          pi_username: pi_username,
+          csrfmiddlewaretoken: "{{ csrf_token }}",
+        },
+        success: function(data) {
+          $searchResultsInner.html(data);
+          enableSearch();
+        },
+        error: function(xhr, errmsg, err) {
+          if (xhr.status == 403 || xhr.status == 401) {
+            $searchResultsInner.html("<div class='alert alert-danger' role='alert'>Your session expired. Please login again. <a href='#' class='btn-close'></a></div>");
+          } else {
+            $searchResultsInner.html("<div class='alert alert-danger' role='alert'>Oops! We have encountered an error: " + errmsg +
+              " <a href='#' class='btn-close'></a></div>");
+          }
+          console.log(xhr.status + ": " + xhr.responseText);
+          enableSearch();
+        }
+      });
+    });
+  });
+</script>

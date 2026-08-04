@@ -1,0 +1,293 @@
+{% extends "common/base.html" %}
+{% load common_tags %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+
+{% block title %}
+Project Review List
+{% endblock %}
+
+
+{% block content %}
+<h1>Pending Projects</h1>
+<hr>
+<h2>Pending Project Requests</h2>
+{% if project_requests %}
+  <div class="table-responsive">
+    <table id="project_request_table" class="table table-sm datatable">
+      <caption class="visually-hidden">Project requests</caption>
+      <thead>
+        <tr>
+          <th scope="col" class="text-nowrap">Project Title</th>
+          <th scope="col" class="text-nowrap">Date Submitted</th>
+          <th scope="col" class="text-nowrap">PI</th>
+          <th scope="col" class="text-nowrap">Requestor</th>
+          <th scope="col" class="text-nowrap">Type</th>
+          <th scope="col" class="text-nowrap">Contacted</th>
+          <th scope="col" class="nosort text-nowrap">Project Review Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for project_request in project_requests %}
+          <tr>
+            <td><a target="_target" href="{% url 'project-detail' project_request.info.pk %}">{{ project_request.info.title|truncatechars:50 }}</a></td>
+            <td>{{ project_request.info.created|date:"M. d, Y" }}</td>
+            <td>
+              <a
+                href="#"
+                data-bs-toggle="modal"
+                data-bs-target="#id_pi_projects_modal"
+                data-pi="{{project_request.info.pi.username}}"
+                data-pk="{{project_request.info.pk}}"
+              >
+                {{ project_request.info.pi.first_name }} {{project_request.info.pi.last_name}} ({{ project_request.info.pi.username }})
+              </a>
+            </td>
+            <td>{{ project_request.info.requestor.first_name }} {{ project_request.info.requestor.last_name }} ({{ project_request.info.requestor.username }})</td>
+            <td>{{ project_request.info.type.name }}</td>
+            {% if project_request.info.status.name == 'Contacted By Admin' %}
+              <td>
+                <span
+                  data-bs-toggle="popover"
+                  title="Contacted"
+                  data-bs-trigger="hover"
+                  data-bs-content="Contacted by {{ project_request.contacted_by }}"
+                  class="badge text-bg-success"
+                  aria-label="Contacted by {{ project_request.contacted_by }}"
+                >
+                  <i class="fas fa-check-circle fa-lg" aria-hidden="true"></i>
+                </span>
+              </td>
+            {% else %}
+              <td></td>
+            {% endif %}
+            <td class="no-textwrap" style="white-space: nowrap;">
+              <a href="{% url 'project-activate-request' project_request.info.pk %}" class="btn btn-success me-1">Activate</a>
+              <a href="{% url 'project-deny-request' project_request.info.pk %}" class="btn btn-danger me-1">Deny</a>
+              {% if EMAIL_ENABLED %}
+                <a href="{% url 'project-request-email' project_request.info.pk %}" class="btn btn-primary me-1">Email</a>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="alert alert-info" role="alert">
+    No pending project requests!
+  </div>
+{% endif %}
+
+<h2>
+  Pending Project Renewals
+  <a
+    href="#"
+    data-bs-toggle="modal"
+    data-bs-target="#id_project_review_stats_modal"
+    aria-labelledby="id_project_review_stats_modal_label"
+  >
+    <i class="fas fa-chart-pie" aria-hidden="true" style="font-size: 0.7em;"></i>
+  </a>
+</h2>
+{% if project_reviews %}
+  <div class="table-responsive">
+    <table id="project_review_table" class="table table-sm datatable">
+      <caption class="visually-hidden">Project reviews</caption>
+      <thead>
+        <tr>
+          <th scope="col">Project Title</th>
+          <th scope="col" class="text-nowrap">Date Submitted</th>
+          <th scope="col" class="text-nowrap">PI</th>
+          <th scope="col" class="text-nowrap">Contacted</th>
+          <th scope="col" class="text-nowrap">Contacted By</th>
+          <th scope="col" class="nosort text-nowrap">Project Review Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for project_review in project_reviews %}
+          <tr>
+            <td><a target="_blank" href="{% url 'project-detail' project_review.info.project.pk %}">{{ project_review.info.project.title|truncatechars:50 }}</a></td>
+            <td>{{ project_review.info.created|date:"M. d, Y" }}</td>
+            <td>
+              <a
+                href="#"
+                data-bs-toggle="modal"
+                data-bs-target="#id_pi_projects_modal"
+                data-pi="{{project_review.info.project.pi.username}}"
+                data-pk="{{project_review.info.project.pk}}"
+                data-eligible="{{pi_eligibilities|get_value_from_dict:project_review.info.project.pi.username}}"
+                aria-labelledby="id_pi_projects_modal_label"
+              >
+                {{ project_review.info.project.pi.first_name }} {{ project_review.info.project.pi.last_name }} ({{ project_review.info.project.pi.username }})
+              </a>
+              {% if not pi_eligibilities|get_value_from_dict:project_review.info.project.pi.username %}
+                <span
+                  data-bs-toggle="popover"
+                  title="Not Eligible"
+                  data-bs-trigger="hover"
+                  data-bs-content="This user is not eligible to be a PI!"
+                  class="badge text-bg-danger"
+                  aria-label="User {{project_review.info.project.pi.username}} is not eligible to be a PI!"
+                >
+                  <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                </span>
+              {% endif %}
+            </td>
+            {% if project_review.info.status.name == 'Contacted By Admin' %}
+              <td>
+                <span
+                  data-bs-toggle="popover"
+                  title="Contacted"
+                  data-bs-trigger="hover"
+                  data-bs-content="Contacted by {{ project_review.contacted_by }}"
+                  class="badge text-bg-success"
+                  aria-label="Contacted by {{ project_review.contacted_by }}"
+                >
+                  <i class="fas fa-check-circle fa-lg" aria-hidden="true"></i>
+                </span>
+              </td>
+              <td>{{ project_review.contacted_by }}</td>
+            {% else %}
+              {% if contacted_pis|get_value_from_dict:project_review.info.project.pi.username %}
+                <td>
+                  <span
+                    data-bs-toggle="popover"
+                    title="PI Already Contacted"
+                    data-bs-trigger="hover"
+                    data-bs-content="PI already contacted"
+                    class="badge text-bg-warning"
+                    aria-label="PI already contacted"
+                  >
+                    <i class="fas fa-info-circle fa-lg" aria-hidden="true"></i>
+                  </span>
+                </td>
+              {% else %}
+                <td></td>
+              {% endif %}
+              <td></td>
+            {% endif %}
+            <td class="text-nowrap">
+              <a href="{% url 'project-review-approve' project_review.info.pk %}" class="btn btn-success me-1">Approve</a>
+              <a href="{% url 'project-review-deny' project_review.info.pk %}" class="btn btn-danger me-1">Deny</a>
+              <a href="{% url 'project-review-info' project_review.info.pk %}" class="btn btn-primary me-1">Info</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="alert alert-info" role="alert">
+    No pending project reviews!
+  </div>
+{% endif %}
+
+<div id="id_pi_projects_modal"
+  class="modal fade bd-example-modal-lg"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="id_pi_projects_modal_label"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="id_pi_projects_modal_label" style="display: flex; align-items: center; gap: 10px;">
+          PI Projects
+          <span
+            id="id_project_count"
+            title="Projects"
+            style="border-top-right-radius: 0px; border-bottom-left-radius: 0px; top: 0; left: 0; font-size: 0.5em;"
+            class="badge text-bg-secondary position-absolute"
+          >
+          </span>
+          <span
+            style="font-size: 0.6em;"
+            id="id_ineligible_modal"
+            class="badge text-bg-danger"
+            data-bs-toggle="popover"
+            title="Not Eligible"
+            data-bs-trigger="hover"
+            data-bs-content="This user is not eligible to be a PI!"
+          >
+            <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+          </span>
+        </h3>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+        </button>
+      </div>
+      <div class="modal-body"></div>
+    </div>
+  </div>
+</div>
+
+<div id="id_project_review_stats_modal"
+  class="modal fade bd-example-modal-lg"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="id_project_review_stats_modal_label"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="id_project_review_stats_modal_label">Project Review Stats</h3>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="chart-container">
+          <canvas id="project-review-stats-chart" data-url="{% url 'project-review-stats' %}"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ pi_projects|json_script:"pi_projects" }}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var pi_projects = JSON.parse(document.getElementById('pi_projects').textContent);
+  
+    $('#id_pi_projects_modal').on('show.bs.modal', function (event) {
+      $('#id_pi_projects_modal .modal-body').html('')
+      var link = $(event.relatedTarget);
+      var pi = link.data('pi');
+      var pk = link.data('pk');
+      var eligible = link.data('eligible');
+      if (eligible === 'False') {
+        $('#id_ineligible_modal').show();
+      } else {
+        $('#id_ineligible_modal').hide();
+      }
+      var modal = $(this);
+      $.ajax({
+        url: '{% url "pi-projects-modal-content" %}',
+        data: { pi: pi },
+        success: function(data) {
+          $('#id_pi_projects_modal .modal-body').html(data);
+        },
+        error: function() {
+          $('#id_pi_projects_modal .modal-body').html('<p class="text-danger">Error loading projects.</p>');
+        }
+      });
+  
+      let project_count = 0;
+      for (let i = 0; i < pi_projects.length; i++) {
+        project = pi_projects[i]
+        if (project.pi === pi) {
+          project_count++;
+        }
+      }
+      $('#id_project_count').text(project_count)
+    })
+
+    $('#id_project_review_stats_modal').on('show.bs.modal', function () {
+      let canvas = document.getElementById('project-review-stats-chart');
+      if (canvas && canvas.projectReviewChart) canvas.projectReviewChart.resize(350, 350);
+    });
+  });
+</script>
+{% endblock %}

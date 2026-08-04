@@ -1,0 +1,18 @@
+{% load common_tags %}
+
+<li id="navbar-invoice" class="nav-item dropdown {% navbar_active_item 'invoice' request %}">
+  <a
+    class="nav-link dropdown-toggle"
+    href="#"
+    role="button"
+    data-bs-toggle="dropdown"
+    aria-haspopup="true"
+    aria-expanded="false"
+    aria-controls="admin-submenu"
+    title="Invoice menu"
+  >Invoice</a>
+  <div class="dropdown-menu">
+    <a id="navbar-allocation-invoice-list" class="dropdown-item" href="{% url 'allocation-invoice-list' %}" role="menuitem">Allocations
+      Invoice List</a>
+  </div>
+</li>

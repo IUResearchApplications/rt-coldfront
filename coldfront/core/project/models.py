@@ -21,6 +21,11 @@ from coldfront.core.utils.mail import send_email_template
 from coldfront.core.utils.validate import AttributeValidator
 
 PROJECT_ENABLE_PROJECT_REVIEW = import_from_settings("PROJECT_ENABLE_PROJECT_REVIEW", False)
+PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings("PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING", 60)
+PROJECT_DAYS_TO_REVIEW_BEFORE_EXPIRING = import_from_settings("PROJECT_DAYS_TO_REVIEW_BEFORE_EXPIRING", 30)
+PROJECT_ENABLE_PERMISSIONS_PER_TYPE = import_from_settings("PROJECT_ENABLE_PERMISSIONS_PER_TYPE", False)
+if PROJECT_ENABLE_PERMISSIONS_PER_TYPE:
+    PROJECT_PERMISSIONS_PER_TYPE = import_from_settings("PROJECT_PERMISSIONS_PER_TYPE")
 
 
 class ProjectPermission(Enum):
@@ -56,57 +61,95 @@ class ProjectStatusChoice(TimeStampedModel):
         return (self.name,)
 
 
+class ProjectTypeChoice(TimeStampedModel):
+    """A project type choice indicates the type of project. Examples include Research and Class.
+    This can effect the projects end date.
+
+    Attributes:
+        name (str): name of project type
+    """
+
+    name = models.CharField(max_length=64)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        ordering = ("name",)
+
+
 class Project(TimeStampedModel):
     """A project is a container that includes users, allocations, publications, grants, and other research output.
 
     Attributes:
         title (str): name of the project
         pi (User): represents the User object of the project's PI
+        requestor (User): represents the User object of the project's requestor
         description (str): description of the project
+        slurm_account_name (str): slurm account assigned to the project
         field_of_science (FieldOfScience): represents the field of science for this project
+        type (ProjectTypeChoice): respresents the ProjectTypeChoice of this project
+        private (bool): indicates if the project should be found in the PI search function
         status (ProjectStatusChoice): represents the ProjectStatusChoice of this project
         force_review (bool): indicates whether or not to force a review for the project
         requires_review (bool): indicates whether or not the project requires review
+        max_managers (int): maximum managers allowed in the project
     """
 
     class Meta:
         ordering = ["title"]
-        unique_together = ("title", "pi")
+        # unique_together = ("title", "pi")
 
         permissions = (
             ("can_view_all_projects", "Can view all projects"),
-            ("can_review_pending_project_reviews", "Can review pending project reviews"),
+            ("can_review_pending_projects", "Can review pending project requests/reviews"),
         )
 
     class ProjectManager(models.Manager):
         def get_by_natural_key(self, title, pi_username):
             return self.get(title=title, pi__username=pi_username)
 
-    DEFAULT_DESCRIPTION = """
-We do not have information about your research. Please provide a detailed description of your work and update your field of science. Thank you!
-        """
+    DEFAULT_DESCRIPTION = ""
+    DESCRIPTION_HELP_TEXT = """
+Please provide a brief description or abstract about your project including any applications or
+workflows you intend to use, and how you primarily intend to use the system, including if PHI will
+be stored. Please include your area of research and your department. If this is for a class please
+put the approximate class size.
+"""
 
-    title = models.CharField(
-        max_length=255,
-    )
+    title = models.CharField(max_length=255, db_collation="utf8mb4_unicode_ci")
     pi = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
     )
+    requestor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="requestor_user")
     description = models.TextField(
         default=DEFAULT_DESCRIPTION,
+        help_text=DESCRIPTION_HELP_TEXT,
         validators=[
             MinLengthValidator(
                 10,
                 "The project description must be > 10 characters.",
             )
         ],
+        db_collation="utf8mb4_unicode_ci",
     )
 
     field_of_science = models.ForeignKey(FieldOfScience, on_delete=models.CASCADE, default=FieldOfScience.DEFAULT_PK)
+    type = models.ForeignKey(
+        ProjectTypeChoice,
+        on_delete=models.CASCADE,
+        help_text="This cannot be changed once your project is submitted. Class projects expire at the end of every semester. Research projects expire once a year.",
+    )
+    private = models.BooleanField(
+        default=False,
+        help_text="A private project will not show up in the PI search results if someone searchs for you/your PI.",
+    )
     status = models.ForeignKey(ProjectStatusChoice, on_delete=models.CASCADE)
     force_review = models.BooleanField(default=False)
     requires_review = models.BooleanField(default=True)
+    end_date = models.DateField()
+    max_managers = models.IntegerField(default=3)
     history = HistoricalRecords()
     objects = ProjectManager()
     project_code = models.CharField(max_length=10, blank=True)
@@ -119,12 +162,6 @@ We do not have information about your research. Please provide a detailed descri
             raise ValidationError(
                 'You must update the project title. You cannot have "Auto-Import Project" in the title.'
             )
-
-        if (
-            "We do not have information about your research. Please provide a detailed description of your work and update your field of science. Thank you!"
-            in self.description
-        ):
-            raise ValidationError("You must update the project description.")
 
     @property
     def last_project_review(self):
@@ -168,11 +205,11 @@ We do not have information about your research. Please provide a detailed descri
         Returns:
             bool: whether or not the project needs review
         """
-
-        if self.status.name == "Archived":
+        if not self.get_env.get("renewable"):
             return False
 
-        now = datetime.datetime.now(datetime.timezone.utc)
+        if self.status.name in ["Archived", "Denied", "Review Pending", "Renewal Denied"]:
+            return False
 
         if self.force_review is True:
             return True
@@ -183,23 +220,18 @@ We do not have information about your research. Please provide a detailed descri
         if self.requires_review is False:
             return False
 
-        if self.projectreview_set.exists():
-            last_review = self.projectreview_set.order_by("-created")[0]
-            last_review_over_365_days = (now - last_review.created).days > 365
-        else:
-            last_review = None
-
-        days_since_creation = (now - self.created).days
-
-        if days_since_creation > 365 and last_review is None:
+        if self.status.name == "Active" and self.expires_in <= PROJECT_DAYS_TO_REVIEW_BEFORE_EXPIRING:
             return True
 
-        if last_review and last_review_over_365_days:
+        if self.status.name == "Expired" and PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING < 0:
+            return True
+
+        if self.status.name == "Expired" and self.expires_in >= -PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING:
             return True
 
         return False
 
-    def user_permissions(self, user):
+    def user_permissions(self, user, permission=None):
         """
         Params:
             user (User): represents the user whose permissions are to be retrieved
@@ -211,11 +243,13 @@ We do not have information about your research. Please provide a detailed descri
         if user.is_superuser:
             return list(ProjectPermission)
 
+        permissions = [ProjectPermission.USER]
         user_conditions = models.Q(status__name__in=("Active", "New")) & models.Q(user=user)
         if not self.projectuser_set.filter(user_conditions).exists():
-            return []
-
-        permissions = [ProjectPermission.USER]
+            if permission and user.has_perm(permission):
+                permissions.append(ProjectPermission.MANAGER)
+            else:
+                return []
 
         if self.projectuser_set.filter(user_conditions & models.Q(role__name="Manager")).exists():
             permissions.append(ProjectPermission.MANAGER)
@@ -228,7 +262,7 @@ We do not have information about your research. Please provide a detailed descri
 
         return permissions
 
-    def has_perm(self, user, perm):
+    def has_perm(self, user, perm, addtl_perm=None):
         """
         Params:
             user (User): user to check permissions for
@@ -238,8 +272,39 @@ We do not have information about your research. Please provide a detailed descri
             bool: whether or not the user has the specified permission
         """
 
-        perms = self.user_permissions(user)
+        perms = self.user_permissions(user, addtl_perm)
         return perm in perms
+
+    @property
+    def expires_in(self):
+        """
+        Returns:
+            bool: number of days until the project expires
+        """
+        return (self.end_date - datetime.date.today()).days
+
+    @property
+    def list_of_manager_usernames(self):
+        """
+        Returns:
+            bool: the list of managers in the project
+        """
+        project_managers = self.projectuser_set.select_related("user").filter(role__name="Manager")
+        return [manager.user.username for manager in project_managers]
+
+    def get_current_num_managers(self):
+        """
+        Returns:
+            bool: the current number of managers
+        """
+        return self.projectuser_set.filter(role__name="Manager", status__name="Active").count()
+
+    def check_exceeds_max_managers(self, num_added_managers=0):
+        """
+        Returns:
+            bool: whether or not the number of added managers exceeds the max allowed managers
+        """
+        return (self.get_current_num_managers() + num_added_managers) > self.max_managers
 
     def __str__(self):
         return self.title
@@ -247,7 +312,12 @@ We do not have information about your research. Please provide a detailed descri
     def natural_key(self):
         return (self.title,) + self.pi.natural_key()
 
-    def add_user(self, user, role_choice, signal_sender=None):
+    def auto_disable_user_notifications(self):
+        """Return True if this project has 'Auto Disable User Notifications' set to Yes."""
+        obj = self.projectattribute_set.filter(proj_attr_type__name="Auto Disable User Notifications").first()
+        return bool(obj and obj.value == "Yes")
+
+    def add_user(self, user, role_choice, signal_sender=None, enable_notifications=None):
         """
         Adds a user to the project.
 
@@ -258,18 +328,19 @@ We do not have information about your research. Please provide a detailed descri
             user (User): User to add.
             role_choice (ProjetUserRoleChoice): Role to give the project user.
             signal_sender (str): Sender for the `project_activate_user` signal.
+            enable_notifications (bool): Whether to enable notifications for the user. When
+                None, the existing/default value is left unchanged.
         """
         user_status_obj = ProjectUserStatusChoice.objects.get(name="Active")
 
-        project_user, _created = self.projectuser_set.update_or_create(
-            user=user,
-            defaults={
-                "status": user_status_obj,
-                "role": role_choice,
-            },
-        )
+        defaults = {"status": user_status_obj, "role": role_choice}
+        if enable_notifications is not None:
+            defaults["enable_notifications"] = enable_notifications
+
+        project_user, _created = self.projectuser_set.update_or_create(user=user, defaults=defaults)
 
         project_activate_user.send(sender=signal_sender, project_user_pk=project_user.pk)
+        return project_user
 
     def remove_user(self, user, signal_sender=None):
         """
@@ -330,6 +401,14 @@ We do not have information about your research. Please provide a detailed descri
         )
 
         project_archive.send(sender=self.__class__, project_obj=self)
+
+    @property
+    def get_env(self):
+        default_env = PROJECT_PERMISSIONS_PER_TYPE.get("Default")
+        if not PROJECT_ENABLE_PERMISSIONS_PER_TYPE or PROJECT_PERMISSIONS_PER_TYPE.get(self.type.name) is None:
+            return default_env
+
+        return default_env | PROJECT_PERMISSIONS_PER_TYPE.get(self.type.name)
 
     def get_absolute_url(self):
         return reverse("project-detail", kwargs={"pk": self.pk})
@@ -416,12 +495,14 @@ class ProjectReview(TimeStampedModel):
     Attributes:
         project (Project): links the project to its review
         status (ProjectReviewStatusChoice): links the project review to its status
-        reason_for_not_updating_project (str): text input from the user indicating why the project was not updated
+        project_updates (str): text input from the user about what updates their project has
+        allocation_renewals (str): text that contains the IDs of the allocations that should be renewed
     """
 
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     status = models.ForeignKey(ProjectReviewStatusChoice, on_delete=models.CASCADE, verbose_name="Status")
-    reason_for_not_updating_project = models.TextField(blank=True, null=True)
+    project_updates = models.TextField(blank=True, null=True)
+    allocation_renewals = models.TextField(blank=True, null=True)
     history = HistoricalRecords()
 
 
@@ -617,3 +698,31 @@ class ProjectAttributeUsage(TimeStampedModel):
 
     def __str__(self):
         return "{}: {}".format(self.project_attribute.proj_attr_type.name, self.value)
+
+
+class ProjectAdminAction(TimeStampedModel):
+    """Project admin action tracks what an admin is doing on the site.
+
+    Attributes:
+        user (User): who the admin was
+        project (Project): the project the action was done on
+        action (str): what the admin did on the site
+    """
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    action = models.CharField(max_length=256)
+
+
+class ProjectDescriptionRecord(TimeStampedModel):
+    """Project description record keeps a record of previous project descriptions after they are updated.
+
+    Attributes:
+        project (project): projetc that had its description updated
+        user (user): who updated the description
+        description (str): the previous description
+    """
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    description = models.TextField()

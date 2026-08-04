@@ -18,7 +18,7 @@ class UserSearchForm(forms.Form):
         ),
     ]
     q = forms.CharField(
-        label="Search String",
+        label="Username Search String",
         min_length=2,
         widget=forms.Textarea(attrs={"rows": 4}),
         help_text="Copy paste usernames separated by space or newline for multiple username searches!",

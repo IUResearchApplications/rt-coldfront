@@ -1,0 +1,24 @@
+Dear {{center_name}} user,
+
+Your access to {{center_name}} allocated resources has expired. If you wish to continue using them, the managers responsible for the following projects must renew the expired allocations before 7/31/{% now "Y" %}, after which the allocations will be terminated and cannot be renewed.
+
+Below are your projects containing at least one expired allocation:
+{% spaceless %}
+{% for project_key, project_url in project_dict.items %}
+----------------------------------------------
+Project Title: {{project_key}}
+Project URL: {{ project_url.0 }}
+Project PI: {{ project_url.1 }} 
+Project Type: {{ project_url.3 }}
+{% spaceless %} {% for allocation_key, allocation_value in allocation_dict.items %}{% if allocation_key == project_url.0 %}Expired Allocations:{% for allocation in allocation_value %}{% for allocation_url, resource_name in allocation.items %}
+    {{ resource_name }} - {{ allocation_url }}{% endfor %}{% endfor %}{% endif %}{% endfor %}{% endspaceless %}
+{% endfor %}
+{% endspaceless %}
+
+The managers in these projects can renew the allocations. If they are not needed anymore you can safely ignore this email. For more information about the yearly renewal, visit our knowledge base: {{ project_renewal_help_url|safe }}.
+
+If you are not the PI or a manager under this project, you are receiving this notice as a courtesy.
+If you have any questions please email us at {{ help_email }}
+
+Thank you,
+{{ signature }}

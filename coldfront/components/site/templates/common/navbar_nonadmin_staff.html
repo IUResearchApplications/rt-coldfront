@@ -1,0 +1,111 @@
+{% load common_tags %}
+
+{% comment %}
+  intentionally keeping "navbar-admin" (rather than renaming to navbar-staff),
+  since existing templates use javascript to target it by ID
+{% endcomment %}
+<li id="navbar-admin" class="nav-item dropdown {% navbar_active_item 'admin' request %}">
+  <a
+    id="navbarNonadminDropdownMenuLink"
+    class="nav-link dropdown-toggle"
+    href="#"
+    data-bs-toggle="dropdown"
+    role="button"
+    aria-haspopup="true"
+    aria-expanded="false"
+    aria-controls="nonadmin-submenu"
+    title="Staff menu"
+  >Staff</a>
+  <ul id="nonadmin-submenu" class="dropdown-menu" role="menu" aria-labelledby="navbarNonadminDropdownMenuLink">
+    <li><a class="dropdown-item" href="/admin" role="menuitem">RT Projects Administration</a></li>
+    {# all staff can perform a user search #}
+    <li><a id="navbar-user-search" class="dropdown-item" href="{% url 'user-search-home' %}" role="menuitem">User Search</a></li>
+    <li class="dropdown-submenu">
+      <a
+        id="navbarProjectsToggle"
+        class="dropdown-item dropdown-toggle"
+        href="#"
+        role="button"
+        aria-haspopup="true"
+        aria-controls="projects-submenu"
+        aria-expanded="false"
+        title="Projects submenu"
+      >Projects</a>
+      <ul id="projects-submenu" class="dropdown-menu" role="menu" aria-labelledby="navbarProjectsToggle">
+        {% if perms.project.can_view_all_projects %}
+          <li><a class="dropdown-item" href="{% url 'project-list' %}?show_all_projects=on" role="menuitem">All Projects</a></li>
+        {% endif %}
+        {% if perms.project.can_review_pending_projects %}
+          <li>
+            <a id="navbar-project-reviews" class="dropdown-item" href="{% url 'project-review-list' %}" role="menuitem">
+              Project Reviews/Requests
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+    </li>
+    <li class="dropdown-submenu">
+      <a
+        id="navbarAllocationsToggle"
+        class="dropdown-item dropdown-toggle"
+        href="#"
+        role="button"
+        aria-haspopup="true"
+        aria-controls="allocation-submenu"
+        aria-expanded="false"
+        title="Allocations submenu"
+      >Allocations</a>
+      <ul id="allocation-submenu" class="dropdown-menu" role="menu" aria-labelledby="navbarAllocationsToggle">
+        {% if perms.allocation.can_view_all_allocations %}
+          <li><a class="dropdown-item" href="{% url 'allocation-list' %}?show_all_allocations=on" role="menuitem">All Allocations</a></li>
+        {% endif %}
+        {% if perms.allocation.can_review_allocation_requests %}
+          <li>
+            <a id="navbar-allocation-requests" class="dropdown-item" href="{% url 'allocation-request-list' %}" role="menuitem">
+              Allocation Requests
+            </a>
+          </li>
+        {% endif %}
+        {% if 'allocation_removal_requests/navbar_allocation_removal_requests.html'|template_exists %}
+          {% if perms.allocation_removal_requests.view_allocationremovalrequest %}
+            <li>{% include 'allocation_removal_requests/navbar_allocation_removal_requests.html' %}</li>
+          {% endif %}
+        {% endif %}
+        {% if perms.allocation.can_view_all_allocations %}
+          <li>
+            <a id="navbar-allocation-change-requests" class="dropdown-item" href="{% url 'allocation-change-list' %}" role="menuitem">
+              Allocation Change Requests
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+    </li>
+    <li><a class="dropdown-item" href="{% url 'resource-list' %}" role="menuitem">All Resources</a></li>
+    {% if perms.grant.can_view_all_grants %}
+      <li><a id="navbar-grant-report" class="dropdown-item" href="{% url 'grant-report' %}" role="menuitem">Grant Report</a></li>
+    {% endif %}
+    {% if 'advanced_search/navbar_advanced_search.html'|template_exists %}
+      {% if perms.project.can_view_all_projects and perms.allocation.can_view_all_allocations %}
+        <li>{% include 'advanced_search/navbar_advanced_search.html' %}</li>
+      {% endif %}
+    {% endif %}
+    {% if 'request_forms/software_request.html'|template_exists %}
+      <li class="dropdown-submenu">
+        <a
+          id="navbarFormsToggle"
+          class="dropdown-item dropdown-toggle"
+          href="#"
+          role="button"
+          aria-haspopup="true"
+          aria-controls="forms-submenu"
+          aria-expanded="false"
+          title="Additional Forms submenu"
+        >Additional Forms</a>
+        <ul id="forms-submenu" class="dropdown-menu" role="menu" aria-labelledby="navbarFormsToggle">
+          <li>{% include 'request_forms/navbar_software_request.html' %}</li>
+          <li>{% include 'request_forms/navbar_stats_request.html' %}</li>
+        </ul>
+      </li>
+    {% endif %}
+  </ul>
+</li>

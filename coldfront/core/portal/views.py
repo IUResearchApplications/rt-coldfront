@@ -15,15 +15,26 @@ from django.views.decorators.cache import cache_page
 
 from coldfront.core.allocation.models import Allocation, AllocationUser
 from coldfront.core.grant.models import Grant
+from coldfront.core.portal.utils import (
+    generate_project_type_chart_data,
+    generate_project_user_chart_data,
+    generate_user_counts,
+    generate_user_timeline,
+    get_home_page_slurm_info,
+)
 from coldfront.core.project.models import Project
 from coldfront.core.research_output.models import ResearchOutput
 from coldfront.core.utils.common import import_from_settings
 
 ALLOCATION_EULA_ENABLE = import_from_settings("ALLOCATION_EULA_ENABLE", False)
+PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings("PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING", 30)
+ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING = import_from_settings("ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING", 30)
+ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING = import_from_settings("ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING", 60)
 
 
 def home(request):
     context = {}
+    next_url = ""
     if request.user.is_authenticated:
         template_name = "portal/authorized_home.html"
         project_list = (
@@ -35,6 +46,10 @@ def home(request):
                         status__name__in=[
                             "New",
                             "Active",
+                            "Waiting For Admin Approval",
+                            "Contacted By Admin",
+                            "Review Pending",
+                            "Expired",
                         ]
                     )
                 )
@@ -43,6 +58,9 @@ def home(request):
                         status__name__in=[
                             "New",
                             "Active",
+                            "Waiting For Admin Approval",
+                            "Contacted By Admin",
+                            "Review Pending",
                         ]
                     )
                     & Q(projectuser__user=request.user)
@@ -54,7 +72,7 @@ def home(request):
                 )
             )
             .distinct()
-            .order_by("-created")[:5]
+            .order_by("-created")
         )
 
         allocation_list = (
@@ -65,9 +83,10 @@ def home(request):
                         "Active",
                         "New",
                         "Renewal Requested",
+                        "Billing Information Submitted",
                     ]
                 )
-                & Q(project__status__name__in=["Active", "New"])
+                & Q(project__status__name__in=["Active", "New", "Review Pending", "Expired"])
                 & Q(project__projectuser__user=request.user)
                 & Q(
                     project__projectuser__status__name__in=[
@@ -75,10 +94,19 @@ def home(request):
                     ]
                 )
                 & Q(allocationuser__user=request.user)
-                & Q(allocationuser__status__name__in=["Active", "PendingEULA"])
+                & Q(
+                    allocationuser__status__name__in=[
+                        "Active",
+                        "Invited",
+                        "Pending",
+                        "Disabled",
+                        "Retired",
+                        "PendingEULA",
+                    ]
+                )
             )
             .distinct()
-            .order_by("-created")[:5]
+            .order_by("-created")
         )
 
         if ALLOCATION_EULA_ENABLE:
@@ -88,16 +116,21 @@ def home(request):
                     user_status.append(allocation.allocationuser_set.get(user=request.user).status.name)
             context["user_status"] = user_status
 
+        context["slurm_accounts"] = get_home_page_slurm_info(request.user)
+        context["user"] = request.user
         context["project_list"] = project_list
         context["allocation_list"] = allocation_list
-
+        context["PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING"] = PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING
+        context["ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING"] = ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING
+        context["ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING"] = ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING
         try:
             context["ondemand_url"] = settings.ONDEMAND_URL
         except AttributeError:
             pass
     else:
+        next_url = request.get_full_path()[1:]
         template_name = "portal/nonauthorized_home.html"
-
+    context["next"] = next_url
     context["EXTRA_APPS"] = settings.INSTALLED_APPS
 
     if "coldfront.plugins.system_monitor" in settings.INSTALLED_APPS:
@@ -144,6 +177,9 @@ def allocation_by_fos(request):
         list(user_allocations.values_list("allocation__project__field_of_science__description", flat=True))
     )
     total_allocations_users = user_allocations.values("user").distinct().count()
+    user_allocations = AllocationUser.objects.filter(
+        status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"], allocation__status__name="Active"
+    )
 
     active_pi_count = (
         Project.objects.filter(status__name__in=["Active", "New"])
@@ -206,7 +242,27 @@ def resource_by_type(request):
     allocation_count_by_resource_type = dict(Counter([ele.resource_type.name for ele in allocation_resources]))
 
     data = []
-    for rtype in ["Cluster", "Cloud", "Server", "Storage"]:
+    for rtype in ["Cluster", "Service", "Storage"]:
         data.append({"name": rtype, "total": allocation_count_by_resource_type.get(rtype, 0)})
 
+    return JsonResponse({"data": data})
+
+
+def project_by_type(request):
+    data = generate_project_type_chart_data()
+    return JsonResponse({"data": data})
+
+
+def project_type_by_user_count(request):
+    data = generate_project_user_chart_data()
+    return JsonResponse({"data": data})
+
+
+def users_by_year(request):
+    data = generate_user_timeline()
+    return JsonResponse({"data": data})
+
+
+def users_by_active(request):
+    data = generate_user_counts()
     return JsonResponse({"data": data})

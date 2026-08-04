@@ -1,0 +1,31 @@
+{% extends "common/base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}
+HPC Software Request
+{% endblock %}
+
+{% block content %}
+<style>
+  label:not(.form-check-label) {
+    font-weight: bold;
+  }
+</style>
+
+<h1>HPC Software Request</h1>
+<hr>
+
+{% crispy form %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    $(document).ready(function () {
+      var radios = $("[type=radio]").parent();
+      for (var i = 0; i < radios.length; i++) {
+        radios[i].className = "form-check form-check-inline";
+      }
+    })
+  });
+</script>
+{% endblock content %}

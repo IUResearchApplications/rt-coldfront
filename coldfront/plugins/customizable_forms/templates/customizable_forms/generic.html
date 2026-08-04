@@ -1,0 +1,77 @@
+{% extends "common/base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}
+Request New Allocation
+{% endblock %}
+
+{% block content %}
+<style>
+  label:not(.form-check-label) {
+    font-weight: bold;
+  }
+  .horizontal-radio li {
+    display: inline-block;
+    margin-right: 10px;
+  }
+</style>
+
+<h1>Request New {{ resource_obj.name }} Allocation <br><small>Project: {{ project_obj.title }}</small></h1>
+<hr>
+
+<form method="post">
+  {% csrf_token %}
+  {% for field in form %}
+    {{ field|as_crispy_field }}
+  {% endfor %}
+  <button type="submit" class="btn btn-primary">Submit</button>
+  {% if after_project_creation == 'true' %}
+    <a
+     class="btn btn-secondary"
+     href="{% url 'custom-allocation-create' project_obj.pk %}?after_project_creation=true"
+     >Back to Resource Selection
+    </a>
+  {% else %}
+    <a
+     class="btn btn-secondary"
+     href="{% url 'custom-allocation-create' project_obj.pk %}"
+     >Back to Resource Selection
+    </a>
+  {% endif %}
+	
+  <br>
+</form>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    $(document).ready(function () {
+      var radios = $("[type=radio]").parent();
+      for (var i = 0; i < radios.length; i++) {
+        radios[i].className = "form-check form-check-inline";
+      }
+  
+      $(
+        '<br>\
+        <div class="form-check">\
+        <input id="selectAll" class="form-check-input" type="checkbox">\
+        <label class="form-check-label" for="selectAll">\
+        <strong>Select All Users</strong>\
+        </label>\
+        </div>'
+      ).insertAfter($("#div_id_users > label"))
+  
+      $("#selectAll").click(function () {
+        $("input[name^='users']").prop('checked', $(this).prop('checked'));
+      });
+  
+      $("input[name^='users']").click(function (ele) {
+        var id = $(this).attr('id');
+        if (id != "selectAll") {
+          $("#selectAll").prop('checked', false);
+        }
+      });
+    })
+  });
+</script>
+{% endblock content %}

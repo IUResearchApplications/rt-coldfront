@@ -1,0 +1,82 @@
+{% extends "common/base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+
+{% block title %}
+Add Publication to Project
+{% endblock %}
+
+
+{% block content %}
+<h1>Add publication to project: {{project.title}}</h1>
+<hr>
+
+<div class="col">
+  <a class="btn btn-primary mb-3" href="{% url 'add-publication-manually' project.pk %}"><i class="far fa-edit" aria-hidden="true"></i> Enter publication manually</a>
+
+  {% if academics_analytics_enabled %}
+    {% include "academic_analytics/academic_analytics_div.html" with project_pk=project.pk %}
+  {% endif %}
+
+  <form id="post-form">
+    {% csrf_token %}
+    {{ publication_search_form|crispy }}
+    <button id="search-button" type="submit" class="btn btn-success w-100"><i class="fas fa-search" aria-hidden="true"></i> Search</button>
+  </form>
+</div>
+
+<br>
+
+<div class="col" id="search_results">
+  <div class="card border-light">
+    <div class="card-body">
+      <div id="search_results_inner" role="region" aria-live="polite" tabindex="-1">
+        <a class="btn btn-secondary" href="{% url 'project-detail' project_pk %}" role="button">Back to Project</a></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+
+{% block javascript %}
+  {{ block.super }}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    $('#post-form').on('submit', function(event){
+      event.preventDefault();
+      $('#search_results').show();
+      $("#search_results_inner").attr('aria-busy', 'true').html('<div class="alert alert-info text-center"><i class="fas fa-sync fa-spin fa-fw" aria-hidden="true"></i> Searching</div>')
+      create_post();
+    });
+  
+    function create_post() {
+      search_id = $('#id_search_id').val().trim();
+  
+      var pk = "{{ project.pk }}"
+      $.ajax({
+          url : "/publication/publication-search-result/" + pk +"/", // the endpoint
+          type : "POST", // http method
+          data : {
+            search_id : search_id, 
+            csrfmiddlewaretoken: "{{ csrf_token }}"
+          }, // data sent with the post request
+          // handle a successful response
+          success : function(data) {
+              $('#post-text').val(''); // remove the value from the input
+              $('#search_results').show();
+              $('#search_results_inner').attr('aria-busy', 'false').html(data).focus();
+          },
+          // handle a non-successful response
+          error : function(xhr,errmsg,err) {
+              $('#search_results').show();
+              $('#search_results_inner').attr('aria-busy', 'false').html("<div class='alert-box alert radius' role='alert' data-alert>Oops! We have encountered an error: "+errmsg+
+                  " <a href='#' class='btn-close'></a></div>"); // add the error to the dom
+              console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+          }
+      });
+    };
+
+  });
+</script>
+{% endblock %}

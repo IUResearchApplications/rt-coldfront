@@ -1,0 +1,44 @@
+{% extends "common/base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+
+{% block title %}
+Archive Project
+{% endblock %}
+
+
+{% block content %}
+<h1>Archiving Project</h1>
+
+<!-- Start Project Heading -->
+<div class="card mb-3">
+  <div class="card-body">
+    <h2 class="card-title">
+      Principal Investigator:
+      {{ project.pi.first_name }}
+      {{ project.pi.last_name }}
+      ({{ project.pi.username }})
+      <a href="mailto:{{ project.pi.email }}">
+        <i class="far fa-envelope" aria-hidden="true"></i><span class="visually-hidden">Email</span>
+      </a>
+    </h2>
+    <p class="card-text text-justify"><strong>Description: </strong>{{ project.description }}</p>
+    <p class="card-text text-justify"><strong>Status: </strong>{{ project.status}}</p>
+  </div>
+</div>
+
+<div class="alert alert-danger" role="alert">
+  <form method="post">{% csrf_token %}
+    <p>Are you sure you want to archive this project? This will expire all your
+    allocations on this project, which will disable your group's access to the
+    resources in those allocations. <strong>If you have a storage allocation,
+    archiving a project has no affect on any of your files in your storage space.
+    You still need to remove those files yourself after archiving this project.
+    The allocated storage will still count towards your total allocated storage
+    until your storage space is removed.</strong></p>
+    <button type="submit" class="btn btn-danger">Yes</button>
+    <a class="btn btn-secondary" href="{% url 'project-detail' project.id %}">Cancel</a>
+  </form>
+</div>
+{% endblock %}

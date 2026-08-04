@@ -62,11 +62,18 @@ class ResourceAttributeTypeAdmin(SimpleHistoryAdmin):
 
 class ResourceAttributeInline(admin.TabularInline):
     model = ResourceAttribute
+    readonly_fields = ("resource_attribute_type_description",)
     fields_change = (
         "resource_attribute_type",
         "value",
+        "is_required",
+        "check_if_username_exists",
+        "resource_account_is_required",
     )
     extra = 0
+
+    def resource_attribute_type_description(self, obj):
+        return obj.resource_attribute_type.description
 
     def get_fields(self, request, obj):
         if obj is None:
@@ -87,6 +94,8 @@ class ResourceAdmin(SimpleHistoryAdmin):
         "is_available",
         "is_public",
         "requires_payment",
+        "requires_user_roles",
+        "review_groups",
         "allowed_groups",
         "allowed_users",
         "linked_resources",
@@ -94,7 +103,6 @@ class ResourceAdmin(SimpleHistoryAdmin):
     list_display = (
         "pk",
         "name",
-        "description",
         "parent_resource",
         "is_allocatable",
         "resource_type_name",
@@ -109,6 +117,7 @@ class ResourceAdmin(SimpleHistoryAdmin):
         ResourceAttributeInline,
     ]
     filter_horizontal = [
+        "review_groups",
         "allowed_groups",
         "allowed_users",
         "linked_resources",
@@ -131,6 +140,9 @@ class ResourceAttributeAdmin(SimpleHistoryAdmin):
         "pk",
         "resource_name",
         "value",
+        "is_required",
+        "check_if_username_exists",
+        "resource_account_is_required",
         "resource_attribute_type_name",
         "created",
         "modified",

@@ -1,0 +1,431 @@
+{% extends "common/base.html" %}
+{% load common_tags %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}
+Advanced Search
+{% endblock %}
+
+{% block content %}
+  <h1>Advanced Search</h1>
+  <hr>
+  
+  {% if loaded_search %}
+  <div class="alert alert-info d-flex align-items-center mb-3" id="loaded-search-banner" role="alert" aria-live="polite">
+    <div class="flex-grow-1">
+      <strong>Loaded Search:</strong> <span id="search_title">{{ loaded_search.name }}</span>
+      <strong>by {{ loaded_search.owner.username }}</strong>
+    </div>
+    <div>
+      {% if is_loaded_search_owner %}
+        <button type="button" class="btn btn-sm btn-primary me-2" id="btn-update-search">Update This Search</button>
+      {% elif loaded_search_is_shared %}
+        <button type="button" class="btn btn-sm btn-secondary me-2 btn-copy-search" data-url="{% url 'copy-search' pk=loaded_search.pk %}">Copy to My Searches</button>
+      {% endif %}
+      <button type="button" class="btn btn-sm btn-danger" id="btn-clear-search">Clear</button>
+    </div>
+  </div>
+  {% endif %}
+  
+  <div class="mb-3" id="accordion">
+    <div class="card">
+      <div class="card-header">
+        <a
+          id="expand_button"
+          role="button"
+          class="card-link"
+          data-bs-toggle="collapse"
+          href="#collapseOne"
+          aria-expanded="false"
+          aria-controls="collapseOne"
+          aria-label="Toggle filters"
+        >
+          <i class="fas fa-filter" aria-hidden="true"></i> Filter
+          <i id="plus_minus" class="fas fa-minus float-end"></i>
+        </a>
+      </div>
+      <div id="collapseOne" class="collapse" data-bs-parent="#accordion">
+        <div class="card-body">
+          <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <a id="project-search-tab" class="nav-link active" href="#project-search" data-bs-toggle="tab" role="tab" aria-controls="project-search" aria-selected="true">
+                Project Search
+              </a>
+            </li>
+            <li class="nav-item" role="presentation">
+              <a id="allocation-search-tab" class="nav-link" href="#allocation-search" data-bs-toggle="tab" role="tab" aria-controls="allocation-search" aria-selected="false">
+                Allocation Search
+              </a>
+            </li>
+            <li class="nav-item" role="presentation">
+              <a id="user-search-tab" class="nav-link" href="#user-search" data-bs-toggle="tab" role="tab" aria-controls="user-search" aria-selected="false">
+                User Search
+              </a>
+            </li>
+            <li class="nav-item ms-auto" role="presentation">
+              <a id="searches-tab" class="nav-link" href="#searches" data-bs-toggle="tab" role="tab" aria-controls="searches" aria-selected="false">
+                Saved Searches
+              </a>
+            </li>
+          </ul>
+          <div id="full-search" class="tab-content card-body">
+            <div id="project-search" class="tab-pane active" role="tabpanel" aria-labelledby="project-search-tab">
+              <form method="POST" action="{% url 'advanced-search' %}" autocomplete="off">
+                <input type="hidden" name="search_type" value="project">
+                {% crispy project_form %}
+              </form>
+            </div>
+            <div id="allocation-search" class="tab-pane" role="tabpanel" aria-labelledby="allocation-search-tab">
+              <form method="POST" action="{% url 'advanced-search' %}" autocomplete="off">
+                <input type="hidden" name="search_type" value="allocation">
+                {% crispy allocation_form %}
+              </form>
+            </div>
+            <div id="user-search" class="tab-pane" role="tabpanel" aria-labelledby="user-search-tab">
+              <form method="POST" action="{% url 'advanced-search' %}" autocomplete="off">
+                <input type="hidden" name="search_type" value="user">
+                {% crispy user_form %}
+              </form>
+            </div>
+            <div id="searches" class="tab-pane" role="tabpanel" aria-labelledby="searches-tab">
+              <div id="saved-searches" class="mb-2">
+                {% include "advanced_search/saved_searches.html" %}
+              </div>
+              <div id="shared-searches">
+                {% include "advanced_search/shared_searches.html" %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% include "advanced_search/saved_search_modal.html" %}
+
+<div id="no_display_alert" class="alert alert-warning d-none" role="alert" aria-live="polite">
+  <i class="fas fa-info-circle" aria-hidden="true"></i> No display option selected so no results will appear
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="row align-items-center">
+      <div class="col">
+        <h2 class="mb-0"><strong>Entries: {{ rows|length }}</strong></h2>
+      </div>
+      <div class="col text-end">
+        <form id="export_form" method="POST" action="{% url 'export' %}">
+          {% csrf_token %}
+          {% if columns %}
+            <input id="export_data" type="hidden" name="data" />
+            <button id="export_button" type="submit" class="btn btn-success" value="Export">Export to CSV</button>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="card-body">
+    {% if not rows %}
+      <div class="alert alert-info">No results yet. Open the filters above and run a search.</div>
+    {% endif %}
+    <div class="table-responsive">
+      <table id="results_table" class="table table-hover">
+        <caption class="visually-hidden">Search results</caption>
+        <thead>
+          <tr>
+            {% for column in columns %}
+              <th scope="col" class="text-nowrap">{{ column.display_name }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows.values %}
+            <tr>
+              {% for data in row %}
+                <td title="{{ data }}">
+                  {% with length=CENTER_BASE_URL|length|add:1 %}
+                    {% if CENTER_BASE_URL in data|truncatechars:length %}
+                      <a href="{{ data }}" target="_blank">
+                        <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                        <span class="visually-hidden">Open result</span>
+                      </a>
+                    {% else %}
+                      {{ data|truncatechars:30 }}
+                    {% endif %}
+                  {% endwith %}
+                </td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{{ allocation_attribute_type_ids|json_script:"allocation_attribute_type_ids" }}
+{{ project_attribute_type_ids|json_script:"project_attribute_type_ids" }}
+{{ linked_allocation_attribute_types|json_script:"linked_allocation_attribute_types" }}
+{{ active_tab|json_script:"active_tab" }} {{ rows|json_script:"rows" }}
+{{ columns|json_script:"columns" }}
+{{ filter_data|json_script:"filter_data" }}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var columns = JSON.parse(document.getElementById("columns").textContent);
+    var rows = JSON.parse(document.getElementById("rows").textContent);
+    var allocation_attribute_type_ids = JSON.parse(document.getElementById("allocation_attribute_type_ids").textContent);
+    var project_attribute_type_ids = JSON.parse(document.getElementById("project_attribute_type_ids").textContent);
+    var linked_allocation_attribute_types = JSON.parse(
+      document.getElementById("linked_allocation_attribute_types").textContent
+    );
+    var active_tab = JSON.parse(document.getElementById("active_tab").textContent);
+    var filter_data = JSON.parse(document.getElementById("filter_data").textContent);
+  
+    function toggleUsageFields(value, ele, type) {
+      const attribute_type_ids = type === 'allocation' ? allocation_attribute_type_ids : project_attribute_type_ids;
+      const element = $(ele).parents('[id*="-attribute-row"]').children('[id*="-usage-row"]');
+      attribute_type_ids.includes(value) ? element.removeClass("d-none") : element.addClass("d-none");
+    }
+  
+    function resetAttributeUsageFieldsToDefaults(base_div_id, type) {
+      $(`${base_div_id}attribute__has_usage`).val("0");
+      $(`${base_div_id}attribute__equality`).val("lt");
+      $(`${base_div_id}attribute__usage`).val("");
+      $(`${base_div_id}attribute__usage_format`).val("whole");
+    }
+  
+    function resetAttributeFieldsToDefaults(base_div_id, type) {
+      $(`${base_div_id}attribute__name`).val(null);
+      $(`${base_div_id}attribute__value`).val("");
+      resetAttributeUsageFieldsToDefaults(base_div_id, type);
+    }
+  
+    function displayOptionIsSelected(form) {
+      return $(`#${form} input[name*='display__']`).is(":checked");
+    }
+  
+    function toggleNoDisplayAlert(tab) {
+      $("#no_display_alert").toggleClass("d-none", displayOptionIsSelected(tab));
+    }
+  
+    function bindSelectAll(group_prefix, id) {
+      const select_all_id = `${group_prefix}-select_all_${id}`;
+      $(`#${select_all_id}`).on("change", function () {
+        $(`#${group_prefix}-${id}`)
+          .find(`input[name*='${group_prefix}']`)
+          .prop("checked", $(this).prop("checked"));
+      });
+  
+      $(`#${group_prefix}-${id}`)
+        .find(`input[name*='${group_prefix}']`)
+        .on("change", function (ele) {
+          if ($(this).attr("id") !== select_all_id) {
+            $(`#${select_all_id}`).prop("checked", false);
+          }
+        });
+  
+      if ($(`input[name*='${group_prefix}']:checked`).length === $(`input[name*='${group_prefix}']`).length) {
+        $(`#${select_all_id}`).prop("checked", true);
+      }
+    }
+  
+    function bindAddFormButton(group_prefix) {
+      $(`[id^="id_${group_prefix}attribute-"][id$="-attribute__name"]`).each(function () {
+        const ele = $(this);
+        ele.on("change", function (evt) {
+          toggleUsageFields(parseInt(evt.target.value), this, group_prefix);
+          const id = evt.target.id;
+          resetAttributeUsageFieldsToDefaults("#" + id.substr(0, id.lastIndexOf("-")) + "-", group_prefix);
+        });
+        toggleUsageFields(parseInt(ele[0].value), this, group_prefix);
+      });
+  
+      $(`#id_formset_add_${group_prefix}_attribute_button`).on("click", function () {
+        // The formset must have at least one initial form for this to work.
+        let form_count = $(`#id_${group_prefix}attribute-TOTAL_FORMS`).val();
+        let row = $(`#id_${group_prefix}attribute_formset > div:nth-child(3)`)[0].cloneNode(true);
+        row.innerHTML = row.innerHTML.replaceAll("-0-", "-" + form_count + "-");
+        $(`#id_${group_prefix}attribute_formset`).append(row);
+  
+        const name_field = $(`#id_${group_prefix}attribute-${form_count}-attribute__name`);
+        name_field.on("change", function (evt) {
+          toggleUsageFields(parseInt(evt.target.value), this, group_prefix);
+        });
+  
+        const base_id = `#id_${group_prefix}attribute-${form_count}-`;
+        resetAttributeFieldsToDefaults(base_id, group_prefix);
+  
+        form_count++;
+        $(`#id_${group_prefix}attribute-TOTAL_FORMS`).val(form_count);
+      });
+    }
+  
+    if (columns.length) {
+      $("#results_table").DataTable({ searching: false });
+    }
+
+    bindSelectAll("project_search", "project_displays");
+    bindSelectAll("allocation_search", "project_displays");
+    bindSelectAll("allocation_search", "allocation_displays");
+
+    toggleNoDisplayAlert(active_tab);
+    const forms = ["project-search", "allocation-search", "user-search"];
+    for (let i = 0; i < forms.length; i++) {
+      let form = forms[i];
+
+      $('[href="#' + form + '"]').on("click", function () {
+        toggleNoDisplayAlert(form);
+      });
+
+      $("#" + form + ' input[type="checkbox"]').change(function () {
+        toggleNoDisplayAlert(form);
+      });
+    }
+
+    if (active_tab === "allocation-search") {
+      $("#project-search").toggleClass("active");
+      $("#allocation-search").toggleClass("active");
+      $('[href="#project-search"]').toggleClass("active");
+      $('[href="#allocation-search"]').toggleClass("active");
+    } else if (active_tab === "user-search") {
+      $("#project-search").toggleClass("active");
+      $("#user-search").toggleClass("active");
+      $('[href="#project-search"]').toggleClass("active");
+      $('[href="#user-search"]').toggleClass("active");
+    }
+
+    $("#id_allocation_search-resources__name").on("click", function (evt) {
+      let options = [];
+      const selected_resources = $(this).val();
+      for (let i = 0; i < selected_resources.length; i++) {
+        options.push(linked_allocation_attribute_types[selected_resources[i]]);
+      }
+
+      let options_set = new Set();
+      options.flat().forEach((element) => {
+        options_set.add(element);
+      });
+      let matches = $("[id*=attribute__name]");
+      for (let i = 0; i < matches.length; i++) {
+        const id = matches[i].id;
+        if (id.includes("project")) continue;
+
+        if (!id.includes("div") && !id.includes("helptext")) {
+          let value = $("#" + id + " option:selected").val();
+          matches[i].innerHTML = '<option value="">---------</option>' + Array.from(options_set).join("");
+          $("#" + id).val(value).change();
+          value = $("#" + id + " option:selected").val();
+          if (value === undefined) {
+            $("#" + id).val("").change();
+
+            const base_id = "#" + id.slice(0, id.length - 25);
+            resetAttributeFieldsToDefaults(base_id, "allocation");
+          }
+        }
+      }
+    });
+
+    bindAddFormButton("allocation");
+    bindAddFormButton("project");
+
+    $('a[data-bs-toggle="tab"]').on("shown.bs.tab", function (e) {
+      const targetId = $(e.target).attr("href");
+      if (targetId === "searches") {
+        $(".btn-save-search").hide();
+      } else {
+        $(".btn-save-search").show();
+      }
+    });
+
+    if ($("#searches").hasClass("active")) {
+      $(".btn-save-search").hide();
+    }
+
+    $("#export_button").on("click", function () {
+      $("#export_data").val(JSON.stringify({ columns, rows }));
+    });
+
+    $('#collapseOne').on('shown.bs.collapse hidden.bs.collapse', function () {
+      $('#plus_minus').toggleClass('fa-plus fa-minus');
+    });
+
+    $(document).on("click", ".btn-save-search", function () {
+      window.showSavedSearchModal("save");
+    });
+
+    attachSavedSearchHandlers();
+
+    function showPageAlert(message, type) {
+      const icons = { success: 'fa-check-circle', danger: 'fa-exclamation-circle' };
+      const icon = icons[type] || 'fa-info-circle';
+      const $banner = $("<div class='alert alert-" + type + " alert-dismissible fade show mb-3' role='alert'>" +
+        "<i class='fas " + icon + " me-2'></i>" + message +
+        "<button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button></div>");
+      $("#accordion").before($banner);
+      setTimeout(function() { $banner.fadeOut(400, function() { $banner.remove(); }); }, 4000);
+    }
+
+    $(document).on("click", ".btn-load-search", function () {
+      window.location.href = $(this).data("url");
+    });
+
+    $(document).on("click", "#btn-clear-search", function () {
+      $.ajax({
+        type: "POST",
+        url: "{% url 'clear-search' %}",
+        headers: { "X-CSRFToken": "{{ csrf_token }}" },
+        success: function () {
+          window.location.href = "{% url 'advanced-search' %}";
+        },
+        error: function () {
+          showPageAlert("Failed to clear search. Please try again.", "danger");
+        }
+      });
+    });
+
+    $(document).on("click", "#btn-update-search", function () {
+      window.showSavedSearchModal("update", "{{ loaded_search.id }}");
+    });
+
+    $(document).on("click", ".btn-copy-search", function () {
+      const $btn = $(this);
+      $.ajax({
+        type: "POST",
+        url: $btn.data("url"),
+        headers: { "X-CSRFToken": "{{ csrf_token }}" },
+        success: function (data) {
+          if (data.success) {
+            $.ajax({
+              type: "GET",
+              url: "{% url 'saved-searches' %}",
+              success: function (data) {
+                $("#saved-searches").html(data);
+                showPageAlert("Search copied successfully.", "success");
+              },
+            });
+          }
+        },
+        error: function (xhr) {
+          if (xhr.status === 403) {
+            showPageAlert("You do not have permission to copy this search.", "danger");
+          } else {
+            showPageAlert("Failed to copy search. Please try again.", "danger");
+          }
+        }
+      });
+    });
+
+    function attachSavedSearchHandlers() {
+      $(document).on("click", ".btn-modify-search", function () {
+        window.showSavedSearchModal("modify", $(this).data("search-id"));
+      });
+
+      $(document).on("click", ".btn-details-search", function () {
+        window.showSavedSearchModal("details", $(this).data("search-id"));
+      });
+    }
+  });
+</script>
+{% endblock %}

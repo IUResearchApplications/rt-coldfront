@@ -1,0 +1,111 @@
+{% extends "common/base.html" %}
+{% load common_tags %}
+
+
+{% block content %}
+<div class="row mt-4">
+  <div class="col me-0">
+    <h1 class="text-center">Welcome to RT Projects</h1>
+
+    <p>
+      <div class="d-grid gap-2">
+        <a class="btn btn-primary" href="{% url 'login' %}{{next}}" role="button" aria-label="Log in to RT Projects">
+          <i class="fas fa-sign-in-alt" aria-hidden="true"></i> Log In
+        </a>
+      </div>
+    </p>
+
+    <hr>
+    <section class="card bg-light" aria-labelledby="resources">
+      <div class="card-body">
+        <div>
+          <h2 id="resources" class="card-title h2">What resources are available through RT Projects?</h2>
+          <section class="ms-2">
+            <h3>Computing</h3>
+            <ul>
+              <li>
+                <a
+                  href="https://servicenow.iu.edu/kb?id=kb_article_view&sysparm_article=KB0023985"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Quartz – IU HPC knowledge‑base article"
+                >Quartz</a>
+              </li>
+              <li>
+                <a
+                  href="https://servicenow.iu.edu/kb?id=kb_article_view&sysparm_article=KB0026317"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Big Red 200 – IU HPC knowledge‑base article"
+                >Big Red 200</a>
+              </li>
+            </ul>
+          </section>
+          <section class="ms-2"> 
+            <h3>Storage</h3>
+            <ul>
+              <li>
+                <a
+                  href="https://servicenow.iu.edu/kb?id=kb_article_view&sysparm_article=KB0022586"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Slate-Project – IU HPC knowledge‑base article"
+                >Slate-Project</a>
+              </li>
+              <li>
+                <a
+                  href="https://servicenow.iu.edu/kb?id=kb_article_view&sysparm_article=KB0024967"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Geode-Project – IU HPC knowledge‑base article"
+                >Geode-Project</a>
+              </li>
+            </ul>
+          </section>
+          <section class="ms-2">
+            <h3>Services</h3>
+            <ul>
+              <li>
+                <a href="https://servicenow.iu.edu/kb?id=kb_article_view&sysparm_article=KB0025370"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Posit Connect – knowledge‑base article"
+                >Posit Connect</a>
+              </li>
+              <li>
+                <a href="https://servicenow.iu.edu/kb?id=kb_article_view&sysparm_article=KB0027272"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="REALLMS API – knowledge‑base article"
+                >REALLMS API</a>
+              </li>
+            </ul>
+          </section>
+        </div>
+        <h2 class="card-title h2">What is RT Projects?</h2>
+        <p class="card-text text-justify">
+          RT Projects provides an easy platform to discover and obtain access to high performance computing systems,
+          storage, and other research resources supported by
+          <a 
+            href="https://uits.iu.edu/services/technology-for-research/index.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="RT landing page"
+          >Research Technologies</a>.
+        </p>
+        <h2 class="card-title h2">Who can use RT Projects?</h2>
+        <p class="card-text text-justify">
+          IU faculty, staff, and students are able to create and manage Projects that connect their collaborators and
+          students to the resources they need. Students will need to provide their PI's username when creating a
+          project. Creating a Project is easy - just provide a quick description detailing your research or intended
+          coursework, request the resources you need, and list participants that also need access. Students needing
+          these resources for a class are able to search for their course's Project and view Projects they have been
+          added to.
+        </p>
+      </div>
+    </section>
+  {% include "portal/extra_app_templates.html" %}
+  <br>
+  </div>
+</div>
+{% endblock %}

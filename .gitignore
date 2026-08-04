@@ -12,7 +12,6 @@ venv/
 static_root/
 db.sqlite3
 local_data/
-site/
 local_settings.py
 local_strings.py
 coldfront.db
@@ -23,3 +22,6 @@ db.json
 .devcontainer/*
 .bin/*
 node_modules
+coldfront.log
+pyrightconfig.json
+local_urls.py

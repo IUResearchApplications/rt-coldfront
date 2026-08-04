@@ -1,0 +1,83 @@
+{% extends "common/base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+
+{% block title %}
+Delete Allocation Attributes from Allocation
+{% endblock %}
+
+
+{% block content %}
+<h1>Delete allocation attributes from allocation for project: {{allocation.project.title}}</h1>
+<hr>
+
+{% if formset %}
+  <div class="card border-light">
+    <div class="card-body">
+      <form action="{% url 'allocation-attribute-delete' allocation.pk %}" method="post">
+        {% csrf_token %}
+        <fieldset>
+          <legend class="visually-hidden">Select allocation attributes to delete</legend>
+          <div class="table-responsive">
+            <table class="table table-sm table-hover">
+              <thead>
+                <tr>
+                  <th scope="col">
+                    <label for="selectAll" class="visually-hidden">Select all attributes</label>
+                    <input type="checkbox" class="check" id="selectAll">
+                  </th>
+                  <th scope="col">Name</th>
+                  <th scope="col">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for form in formset %}
+                  <tr>
+                    <td>
+                      <label for="{{ form.selected.id_for_label }}" class="visually-hidden">
+                        {{ form.selected.label }}
+                      </label>
+                      {{ form.selected }}
+                    </td>
+                    <td>{{ form.name.value }}</td>
+                    <td>{{ form.value.value }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </fieldset>
+        {{ formset.management_form }}
+        <div class="mt-1">
+          <button type="submit" class="btn btn-danger"><i class="fas fa-minus" aria-hidden="true"></i> Delete Selected Attributes from
+            Allocation</button>
+          <a class="btn btn-secondary" href="{% url 'allocation-detail' allocation.pk %}"><i
+              class="fas fa-long-arrow-left" aria-hidden="true"></i> Back to Allocation</a>
+        </div>
+      </form>
+    </div>
+  </div>
+{% else %}
+  <a class="btn btn-secondary mb-3" href="{% url 'allocation-detail' allocation.pk %}"><i
+      class="fas fa-long-arrow-left" aria-hidden="true"></i> Back to Allocation</a>
+  <div class="alert alert-info" role="alert">
+    No allocations to delete!
+  </div>
+{% endif %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    $("#selectAll").click(function () {
+      $("input[name^='attributeform-']").prop('checked', $(this).prop('checked'));
+    });
+  
+    $("input[name^='attributeform-']").click(function (ele) {
+      var id = $(this).attr('id');
+      if (id != "selectAll") {
+        $("#selectAll").prop('checked', false);
+      }
+    });
+  });
+</script>
+{% endblock %}
