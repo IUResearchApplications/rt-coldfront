@@ -198,46 +198,6 @@
   </section>
 </div>
 
-{% if slurm_accounts %}
-<section aria-labelledby="slurm_accounts">
-  <h2 id="slurm_accounts" class="visually-hidden">Slurm Account Info</h2>
-  <div class="card mt-3 mb-3">
-    <div class="card-header">
-      Submitting Slurm Jobs with your Allocation's Slurm Account
-    </div>
-    <div class="card-body">
-      <ul class="list-group list-group-flush">
-        {% for slurm_account, info in slurm_accounts.items %}
-          <li class="list-group-item">
-            <div class="container">
-              <div class="row">
-                <div class="col px-0">
-                  <strong>Project:</strong> <a href="{% url 'project-detail' info.project_pk %}">{{ info.project_title|truncatechars:50 }}</a>
-                </div>
-                <div class="col px-0">
-                  <p><strong>Account Name:</strong> {{ slurm_account }}</p>
-                </div>
-              </div>
-            </div>
-            <p>
-              <strong>Resources:</strong>
-              {% for allocation_pk, resource_name in info.allocations.items %}
-                <a href="{% url 'allocation-detail' allocation_pk %}">{{ resource_name }}</a>{% if not forloop.last %},{% endif %}
-              {% endfor %}
-            </p>
-            <p><strong>Add to Interactive Job Commands:</strong> srun -A {{ slurm_account }} &lt;commands&gt;</p>
-            <p><strong>Add to Batch Job Scripts:</strong> #SBATCH -A {{ slurm_account }}</p>
-          </li>
-        {% endfor %}
-      </ul>
-    </div>
-    <div class="card-footer">
-      Additional information on <a target="_blank" href="https://servicenow.iu.edu/kb?id=kb_article_view&sysparm_article=KB0022436">submitting jobs</a> is also available.
-    </div>
-  </div>
-</section>
-{% endif %}
-
 <div class="row">
   {% include "portal/extra_app_templates.html" %}
 </div>
