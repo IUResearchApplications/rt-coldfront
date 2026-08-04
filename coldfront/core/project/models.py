@@ -135,7 +135,6 @@ put the approximate class size.
         db_collation="utf8mb4_unicode_ci",
     )
 
-    slurm_account_name = models.CharField(max_length=15, blank=True, null=True, unique=True)
     field_of_science = models.ForeignKey(FieldOfScience, on_delete=models.CASCADE, default=FieldOfScience.DEFAULT_PK)
     type = models.ForeignKey(
         ProjectTypeChoice,
