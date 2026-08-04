@@ -38,7 +38,7 @@ def home(request):
     if request.user.is_authenticated:
         template_name = "portal/authorized_home.html"
         project_list = (
-            Project.objects.select_related("status")
+            Project.objects.select_related("status", "pi")
             .filter(
                 (
                     Q(pi=request.user)
