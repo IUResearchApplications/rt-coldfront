@@ -16,6 +16,8 @@ ORACLE_DB_QUERY = import_from_settings("ORACLE_DB_QUERY")
 
 logger = logging.getLogger(__name__)
 
+REQUIRED_PUBLICATION_FIELDS = ("title", "author", "year", "journal")
+
 
 def get_user_ids(usernames):
     """
@@ -139,6 +141,17 @@ def remove_existing_publications(project_obj, publications):
             filtered_publications.append(publication)
 
     return filtered_publications
+
+
+def remove_publications_missing_data(publications):
+    """
+    Removes publications that are missing any required form data.
+    """
+    return [
+        publication
+        for publication in publications
+        if all(publication.get(field) for field in REQUIRED_PUBLICATION_FIELDS)
+    ]
 
 
 def add_publication(project_obj, publication):

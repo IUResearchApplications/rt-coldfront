@@ -1,4 +1,4 @@
-{% extends "common/base.html" %} 
+{% extends "common/base.html" %}
 {% load crispy_forms_tags %}
 {% load static %}
 
@@ -10,17 +10,11 @@ Create Grant
 
 
 {% block content %}
+<h2>Creating grant for project: {{ project.title }}</h2>
   <form method="post">{% csrf_token %}
     {{ form|crispy }}
     <input class="btn btn-primary" type="submit" value="Save" />
     <a class="btn btn-secondary" href="{% url 'project-detail' project.pk %}" role="button">Cancel</a><br>
 </form>
 
-<script>
- $('#id_grant_start').flatpickr();
- $('#id_grant_end').flatpickr();
-</script>
-
-
 {% endblock %}
-

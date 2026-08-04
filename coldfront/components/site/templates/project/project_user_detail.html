@@ -23,7 +23,7 @@ Project User Detail
     <div class="card-body">
       <div class="table-responsive">
         <table class="table">
-          <caption class="sr-only">Project user details</caption>
+          <caption class="visually-hidden">Project user details</caption>
           <tr>
             <th scope="row">Username:</th>
             <td>{{project_user_obj.user.username}}</td>
@@ -55,7 +55,7 @@ Project User Detail
             <tr>
               <th scope="row">Role:</th>
               <td>
-                <label for="{{ project_user_update_form.role.id_for_label }}" class="sr-only">
+                <label for="{{ project_user_update_form.role.id_for_label }}" class="visually-hidden">
                   {{ project_user_update_form.role.label }}
                 </label>
                 {{project_user_update_form.role}}
@@ -72,7 +72,7 @@ Project User Detail
               <tr>
                 <th scope="row">Notifications Enabled:</th>
                 <td>
-                  <label for="{{ project_user_update_form.enable_notifications.id_for_label }}" class="sr-only">
+                  <label for="{{ project_user_update_form.enable_notifications.id_for_label }}" class="visually-hidden">
                     {{ project_user_update_form.enable_notifications.label }}
                   </label>
                   {{project_user_update_form.enable_notifications}}
@@ -93,21 +93,20 @@ Project User Detail
 </form>
 
 <script>
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-project-menu").addClass("active");
-
-  $(document).ready(function() {
-    if ($("#id_role option:selected").text() == 'Group') {
-      $("#id_role option:not(:selected)").prop('disabled', true);
-    } else {
-      var options = $("#id_role option");
-      for (let i = 0; i < options.length; i++) {
-        if (options[i].text == 'Group') {
-          options[i].disabled = true;
+  document.addEventListener('DOMContentLoaded', function() {
+    $(document).ready(function() {
+      if ($("#id_role option:selected").text() == 'Group') {
+        $("#id_role option:not(:selected)").prop('disabled', true);
+      } else {
+        var options = $("#id_role option");
+        for (let i = 0; i < options.length; i++) {
+          if (options[i].text == 'Group') {
+            options[i].disabled = true;
+          }
         }
       }
-    }
-  })
+    })
+  });
 </script>
 
 {% endblock%}

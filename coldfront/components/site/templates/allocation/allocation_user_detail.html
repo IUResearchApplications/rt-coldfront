@@ -48,7 +48,7 @@ Allocation User Detail
               <tr>
                 <th scope="row">Role:</th>
                 <td>
-                  <label for="{{ allocation_user_update_form.role.id_for_label }}" class="sr-only">
+                  <label for="{{ allocation_user_update_form.role.id_for_label }}" class="visually-hidden">
                     {{ allocation_user_update_form.role.label }}
                   </label>
                   {{allocation_user_update_form.role}}
@@ -78,20 +78,19 @@ Allocation User Detail
 </form>
 
 <script>
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-project-menu").addClass("active");
-
-  $(document).ready(function() {
-    if ($("#id_role option:selected").text() == 'Group') {
-      $("#id_role option:not(:selected)").prop('disabled', true);
-    } else {
-      let options = $("#id_role option");
-      for (let i = 0; i < options.length; i++) {
-        if (options[i].text == 'Group') {
-          options[i].disabled = true;
+  document.addEventListener('DOMContentLoaded', function() {
+    $(document).ready(function() {
+      if ($("#id_role option:selected").text() == 'Group') {
+        $("#id_role option:not(:selected)").prop('disabled', true);
+      } else {
+        let options = $("#id_role option");
+        for (let i = 0; i < options.length; i++) {
+          if (options[i].text == 'Group') {
+            options[i].disabled = true;
+          }
         }
       }
-    }
+    });
   });
 </script>
 

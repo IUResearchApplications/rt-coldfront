@@ -35,8 +35,8 @@ class SoftwareRequestView(LoginRequiredMixin, UserPassesTestMixin, FormView):
             "HPC Software Request",
             "request_forms/email/software_request.txt",
             {"user": self.request.user, **form.cleaned_data},
-            self.request.user.email,
             REQUEST_FORMS_EMAILS.get("software_form", ""),
+            self.request.user.email,
         )
         messages.success(
             self.request,
@@ -57,8 +57,8 @@ class StatsRequestView(LoginRequiredMixin, FormView):
             "Stats Request",
             "request_forms/email/stats_request.txt",
             {"user": self.request.user, **form.cleaned_data},
-            self.request.user.email,
             REQUEST_FORMS_EMAILS.get("stats_form", ""),
+            self.request.user.email,
         )
         messages.success(
             self.request,

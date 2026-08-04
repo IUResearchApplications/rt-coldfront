@@ -19,13 +19,13 @@ Remove Project Attribute
       <form action="{% url 'project-attribute-delete' project.pk %}" method="post">
         {% csrf_token %}
         <fieldset>
-          <legend class="sr-only">Select project attributes to delete</legend>
+          <legend class="visually-hidden">Select project attributes to delete</legend>
           <div class="table-responsive">
             <table class="table table-sm table-hover">
               <thead>
                 <tr>
                   <th scope="col">
-                    <label for="selectAll" class="sr-only">Select all attributes</label>
+                    <label for="selectAll" class="visually-hidden">Select all attributes</label>
                     <input type="checkbox" class="check" id="selectAll">
                   </th>
                   <th scope="col">Type</th>
@@ -36,7 +36,7 @@ Remove Project Attribute
                 {% for form in formset %}
                   <tr>
                     <td>
-                      <label for="{{ form.selected.id_for_label }}" class="sr-only">
+                      <label for="{{ form.selected.id_for_label }}" class="visually-hidden">
                         {{ form.selected.label }}
                       </label>
                       {{ form.selected }}
@@ -69,15 +69,17 @@ Remove Project Attribute
 {% endif %}
 
 <script>
-  $("#selectAll").click(function () {
-    $("input[name^='attributeform-']").prop('checked', $(this).prop('checked'));
-  });
-
-  $("input[name^='attributeform-']").click(function (ele) {
-    var id = $(this).attr('id');
-    if (id != "selectAll") {
-      $("#selectAll").prop('checked', false);
-    }
+  document.addEventListener('DOMContentLoaded', function() {
+    $("#selectAll").click(function () {
+      $("input[name^='attributeform-']").prop('checked', $(this).prop('checked'));
+    });
+  
+    $("input[name^='attributeform-']").click(function (ele) {
+      var id = $(this).attr('id');
+      if (id != "selectAll") {
+        $("#selectAll").prop('checked', false);
+      }
+    });
   });
 </script>
 {% endblock %}

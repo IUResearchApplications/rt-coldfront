@@ -4,12 +4,12 @@
   intentionally keeping "navbar-admin" (rather than renaming to navbar-staff),
   since existing templates use javascript to target it by ID
 {% endcomment %}
-<li id="navbar-admin" class="nav-item dropdown">
+<li id="navbar-admin" class="nav-item dropdown {% navbar_active_item 'admin' request %}">
   <a
     id="navbarNonadminDropdownMenuLink"
     class="nav-link dropdown-toggle"
     href="#"
-    data-toggle="dropdown"
+    data-bs-toggle="dropdown"
     role="button"
     aria-haspopup="true"
     aria-expanded="false"
@@ -26,7 +26,6 @@
         class="dropdown-item dropdown-toggle"
         href="#"
         role="button"
-        data-toggle="dropdown"
         aria-haspopup="true"
         aria-controls="projects-submenu"
         aria-expanded="false"
@@ -51,7 +50,6 @@
         class="dropdown-item dropdown-toggle"
         href="#"
         role="button"
-        data-toggle="dropdown"
         aria-haspopup="true"
         aria-controls="allocation-submenu"
         aria-expanded="false"
@@ -98,7 +96,6 @@
           class="dropdown-item dropdown-toggle"
           href="#"
           role="button"
-          data-toggle="dropdown"
           aria-haspopup="true"
           aria-controls="forms-submenu"
           aria-expanded="false"

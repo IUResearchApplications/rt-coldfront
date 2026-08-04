@@ -6,7 +6,6 @@
 from django import forms
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.validators import MinLengthValidator
 from django.db.models.functions import Lower
 from django.shortcuts import get_object_or_404
 
@@ -33,10 +32,12 @@ ADDITIONAL_USER_SEARCH_CLASSES = import_from_settings("ADDITIONAL_USER_SEARCH_CL
 class ProjectSearchForm(forms.Form):
     """Search form for the Project list page."""
 
+    TITLE = "Title"
     LAST_NAME = "Last Name"
     USERNAME = "Username"
     # FIELD_OF_SCIENCE = "Field of Science"
 
+    title = forms.CharField(label=TITLE, max_length=255, required=False)
     last_name = forms.CharField(label=LAST_NAME, max_length=100, required=False)
     username = forms.CharField(label=USERNAME, max_length=100, required=False)
     # field_of_science = forms.CharField(label=FIELD_OF_SCIENCE, max_length=100, required=False)
@@ -137,10 +138,11 @@ class ProjectAttributeAddForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(ProjectAttributeAddForm, self).__init__(*args, **kwargs)
-        user = (kwargs.get("initial")).get("user")
-        self.fields["proj_attr_type"].queryset = self.fields["proj_attr_type"].queryset.order_by(Lower("name"))
+        user = kwargs.get("initial").get("user")
+        queryset = self.fields["proj_attr_type"].queryset.select_related("attribute_type").order_by(Lower("name"))
+        self.fields["proj_attr_type"].queryset = queryset
         if not user.is_superuser and not user.has_perm("project.delete_projectattribute"):
-            self.fields["proj_attr_type"].queryset = self.fields["proj_attr_type"].queryset.filter(is_private=False)
+            self.fields["proj_attr_type"].queryset = queryset.filter(is_private=False)
 
 
 class ProjectAttributeDeleteForm(forms.Form):
@@ -236,9 +238,11 @@ class ProjectCreationForm(forms.ModelForm):
             pi_obj = User.objects.filter(username=pi_username).first()
         else:
             pi_obj = requestor
+
         if pi_obj is None:
+            # get_users_info returns None (LDAP disabled), {} (user not found), or info dict (user exists)
             user_info = get_users_info([pi_username]).get(pi_username)
-            if user_info is not None and not user_info:
+            if user_info == {}:
                 raise forms.ValidationError({"pi_username": "This PI's username does not exist."})
 
             raise forms.ValidationError(
@@ -254,10 +258,8 @@ class ProjectCreationForm(forms.ModelForm):
 
         if not check_if_pis_eligible([pi_obj.username]).get(pi_obj.username, True):
             if pi_username:
-                message = {"pi_username": "Only faculty and staff can be the PI"}
-            else:
-                message = "Only faculty and staff can be the PI"
-            raise forms.ValidationError(message)
+                raise forms.ValidationError({"pi_username": "Only faculty and staff can be the PI"})
+            raise forms.ValidationError("Only faculty and staff can be the PI")
 
         cleaned_data["pi"] = pi_obj
         return cleaned_data
@@ -286,25 +288,3 @@ class ProjectReviewAllocationForm(forms.Form):
     status = forms.CharField(max_length=50, disabled=True)
     expires_on = forms.DateField(widget=forms.DateInput(attrs={"class": "datepicker"}), disabled=True)
     renew = forms.BooleanField(initial=True, required=False)
-
-
-class ProjectUpdateForm(forms.Form):
-    title = forms.CharField(
-        max_length=255,
-    )
-    description = forms.CharField(
-        validators=[
-            MinLengthValidator(
-                10,
-                "The project description must be > 10 characters",
-            )
-        ],
-        widget=forms.Textarea,
-    )
-
-    def __init__(self, project_pk, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        project_obj = get_object_or_404(Project, pk=project_pk)
-
-        self.fields["title"].initial = project_obj.title
-        self.fields["description"].initial = project_obj.description

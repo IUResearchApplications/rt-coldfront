@@ -21,16 +21,16 @@ Resource List
           id="expand_button"
           role="button"
           class="card-link "
-          data-toggle="collapse"
+          data-bs-toggle="collapse"
           href="#collapseOne"
           aria-expanded="{{ expand_accordion|yesno:'true,false' }}"
           aria-controls="collapseOne"
         >
           <i class="fas fa-filter" aria-hidden="true"></i> Filter
-          <i id="plus_minus" class="fas {{expand_accordion|get_icon}} float-right"></i>
+          <i id="plus_minus" class="fas {{expand_accordion|get_icon}} float-end"></i>
         </a>
       </div>
-      <div id="collapseOne" class="collapse {{expand_accordion}}" data-parent="#accordion">
+      <div id="collapseOne" class="collapse {{expand_accordion}}" data-bs-parent="#accordion">
         <div class="card-body">
           <form id="filter_form" method="GET" action="{% url 'resource-list' %}" autocomplete="off">
             {{ resource_search_form|crispy }}
@@ -50,28 +50,28 @@ Resource List
   <h2>Resource{{resources_count|pluralize}}: {{resources_count}}</h2>
   <div class="table-responsive">
     <table class="table table-sm">
-      <caption class="sr-only">Resource list</caption>
+      <caption class="visually-hidden">Resource list</caption>
       <thead>
         <tr>
           <th scope="col" class="text-nowrap">
             ID
-            <a href="?order_by=id&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="sr-only">Sort ID asc</span></a>
-            <a href="?order_by=id&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="sr-only">Sort ID desc</span></a>
+            <a href="?order_by=id&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="visually-hidden">Sort ID asc</span></a>
+            <a href="?order_by=id&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="visually-hidden">Sort ID desc</span></a>
           </th>
           <th scope="col" class="text-nowrap">
             Resource Name
-            <a href="?order_by=name&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="sr-only">Sort Resource Name asc</span></a>
-            <a href="?order_by=name&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="sr-only">Sort Resource Name desc</span></a>
+            <a href="?order_by=name&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="visually-hidden">Sort Resource Name asc</span></a>
+            <a href="?order_by=name&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="visually-hidden">Sort Resource Name desc</span></a>
           </th>
           <th scope="col" class="text-nowrap">
             Parent Resource
-            <a href="?order_by=parent_resource&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="sr-only">Sort Parent Resource asc</span></a>
-            <a href="?order_by=parent_resource&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="sr-only">Sort Parent Resource desc</span></a>
+            <a href="?order_by=parent_resource&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="visually-hidden">Sort Parent Resource asc</span></a>
+            <a href="?order_by=parent_resource&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="visually-hidden">Sort Parent Resource desc</span></a>
           </th>
           <th scope="col" class="text-nowrap">
             Resource Type
-            <a href="?order_by=resource_type__name&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="sr-only">Sort Resource Type asc</span></a>
-            <a href="?order_by=resource_type__name&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="sr-only">Sort Resource Type desc</span></a>
+            <a href="?order_by=resource_type__name&direction=asc&{{filter_parameters}}"><i class="fas fa-sort-up" aria-hidden="true"></i><span class="visually-hidden">Sort Resource Type asc</span></a>
+            <a href="?order_by=resource_type__name&direction=des&{{filter_parameters}}"><i class="fas fa-sort-down" aria-hidden="true"></i><span class="visually-hidden">Sort Resource Type desc</span></a>
           </th>
           <th scope="col" class="text-nowrap">Requires Payment</th>
           <th scope="col" class="text-nowrap">Actions</th>
@@ -85,13 +85,17 @@ Resource List
             <td>{{ resource.parent_resource }}</td>
             <td>{{ resource.resource_type.name }}</td>
             <td>{{ resource.requires_payment|yesno:"Yes,No" }}</td>
-            <td><a class="btn btn-primary" href="{% url 'resource-detail' resource.id %}">Details</a></td>
+            <td>
+              <a class="btn btn-primary" href="{% url 'resource-detail' resource.id %}">
+                <i class="fa fa-folder-open" aria-hidden="true"></i> Details
+              </a>
+            </td>
           </tr>
         {% endfor %}
       </tbody>
     </table>
     {% if is_paginated %} Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-      <ul class="pagination float-right mr-3">
+      <ul class="pagination float-end me-3">
         {% if page_obj.has_previous %}
           <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{filter_parameters_with_order_by}}">Previous</a></li>
         {% else %}
@@ -116,25 +120,10 @@ Resource List
 {% endif %}
 
 <script>
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-project-menu").addClass("active");
-  $("#navbar-resource").addClass("active");
-
-  $(document).on('click', '#form_reset_button', function () {
-    resetForm($('#filter_form'));
-  });
-
-  $(".datepicker").flatpickr();
-
-  function resetForm($form) {
-    $form.find('input:text, input:password, input:file, select, textarea').val('');
-    $form.find('input:radio, input:checkbox').removeAttr('checked').removeAttr('selected');
-  };
-
-  $("#expand_button").click(function () {
-    $('#collapseOne').collapse();
-    icon = $("#plus_minus");
-    icon.toggleClass("fa-plus fa-minus");
+  document.addEventListener('DOMContentLoaded', function() {
+    $('#collapseOne').on('shown.bs.collapse hidden.bs.collapse', function () {
+      $('#plus_minus').toggleClass('fa-plus fa-minus');
+    });
   });
 </script>
 {% endblock %}

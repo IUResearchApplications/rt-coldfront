@@ -16,12 +16,7 @@ from django.urls import reverse
 from django.views.generic import ListView, TemplateView
 from django.views.generic.edit import CreateView
 
-from coldfront.config.core import ALLOCATION_EULA_ENABLE
-from coldfront.core.resource.forms import (
-    ResourceAttributeCreateForm,
-    ResourceAttributeDeleteForm,
-    ResourceSearchForm,
-)
+from coldfront.core.resource.forms import ResourceAttributeCreateForm, ResourceAttributeDeleteForm, ResourceSearchForm
 from coldfront.core.resource.models import Resource, ResourceAttribute
 from coldfront.core.utils.groups import check_if_groups_in_review_groups
 
@@ -241,22 +236,24 @@ class ResourceListView(LoginRequiredMixin, ListView):
             order_by = direction + order_by
 
         resource_search_form = ResourceSearchForm(self.request.GET)
-
+        resources = Resource.objects.select_related(
+            "parent_resource", "parent_resource__resource_type", "resource_type"
+        ).all()
         if resource_search_form.is_valid():
             data = resource_search_form.cleaned_data
             if order_by == "name":
                 direction = self.request.GET.get("direction")
                 if direction == "asc":
-                    resources = Resource.objects.all().order_by(Lower("name"))
+                    resources = resources.order_by(Lower("name"))
                 elif direction == "des":
-                    resources = Resource.objects.all().order_by(Lower("name")).reverse()
+                    resources = resources.order_by(Lower("name")).reverse()
                 else:
-                    resources = Resource.objects.all().order_by(order_by)
+                    resources = resources.order_by(order_by)
             else:
                 if self.request.user.is_staff:
-                    resources = Resource.objects.all().order_by(order_by)
+                    resources = resources.order_by(order_by)
                 else:
-                    resources = Resource.objects.filter(is_allocatable=True).order_by(order_by)
+                    resources = resources.filter(is_allocatable=True).order_by(order_by)
 
             if data.get("show_allocatable_resources"):
                 resources = resources.filter(is_allocatable=True)
@@ -299,16 +296,16 @@ class ResourceListView(LoginRequiredMixin, ListView):
             if order_by == "name":
                 direction = self.request.GET.get("direction")
                 if direction == "asc":
-                    resources = Resource.objects.all().order_by(Lower("name"))
+                    resources = resources.order_by(Lower("name"))
                 elif direction == "des":
-                    resources = Resource.objects.all().order_by(Lower("name").reverse())
+                    resources = resources.order_by(Lower("name").reverse())
                 else:
-                    resources = Resource.objects.all().order_by(order_by)
+                    resources = resources.order_by(order_by)
             else:
                 if self.request.user.is_staff:
-                    resources = Resource.objects.all().order_by(order_by)
+                    resources = resources.order_by(order_by)
                 else:
-                    resources = Resource.objects.filter(is_allocatable=True).order_by(order_by)
+                    resources = resources.filter(is_allocatable=True).order_by(order_by)
         return resources.distinct()
 
     def get_context_data(self, **kwargs):
@@ -345,7 +342,6 @@ class ResourceListView(LoginRequiredMixin, ListView):
 
         context["filter_parameters"] = filter_parameters
         context["filter_parameters_with_order_by"] = filter_parameters_with_order_by
-        context["ALLOCATION_EULA_ENABLE"] = ALLOCATION_EULA_ENABLE
 
         resource_list = context.get("resource_list")
         paginator = Paginator(resource_list, self.paginate_by)

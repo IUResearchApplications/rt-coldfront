@@ -1,6 +1,6 @@
 <div id="pi_search_inner" aria-live="polite"></div>
 <script>
-  $(document).ready(function() {
+  document.addEventListener('DOMContentLoaded', function() {
     $.ajax({
       url: "{% url 'pi-search' %}",
       method: "POST",
@@ -27,5 +27,5 @@
         );
       },
     });
-  })
+  });
 </script>

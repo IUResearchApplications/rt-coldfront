@@ -19,7 +19,7 @@ Email User
   <div class="card-body">
     <div class="table-responsive">
       <table class="table">
-        <caption class="sr-only">Project request details</caption>
+        <caption class="visually-hidden">Project request details</caption>
         <tr>
           <th scope="row" class="text-nowrap">Project:</th>
           <td><a href="{% url 'project-detail' project.pk %}">{{ project }}</a></td>
@@ -59,10 +59,4 @@ Email User
   <button class="btn btn-primary" type="submit">Email</button>
   <a class="btn btn-secondary" href="{% url 'project-review-list' %}">Cancel</a>
 </form>
-
-<script>
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-admin").addClass("active");
-  $("#navbar-project-reviews").addClass("active");
-</script>
 {% endblock %}

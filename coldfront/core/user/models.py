@@ -22,3 +22,4 @@ class UserProfile(models.Model):
     department = models.CharField(max_length=100, default="")
     division = models.CharField(max_length=100, default="")
     title = models.CharField(max_length=30, default="")
+    limit_overrides = models.JSONField(blank=True, default=dict)

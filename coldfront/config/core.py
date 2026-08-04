@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+from django.utils.safestring import mark_safe
+
 from coldfront.config.base import SETTINGS_EXPORT
 from coldfront.config.env import ENV
 
@@ -57,7 +59,7 @@ ALLOCATION_EULA_ENABLE = ENV.bool("ALLOCATION_EULA_ENABLE", default=False)
 # ------------------------------------------------------------------------------
 # Allocation related
 # ------------------------------------------------------------------------------
-ALLOCATION_ENABLE_CHANGE_REQUESTS_BY_DEFAULT = ENV.bool("ALLOCATION_ENABLE_CHANGE_REQUESTS_BY_DEFAULT", default=True)
+ALLOCATION_ENABLE_CHANGE_REQUESTS_BY_DEFAULT = ENV.bool("ALLOCATION_ENABLE_CHANGE_REQUESTS", default=True)
 ALLOCATION_CHANGE_REQUEST_EXTENSION_DAYS = ENV.list(
     "ALLOCATION_CHANGE_REQUEST_EXTENSION_DAYS", cast=int, default=[30, 60, 90]
 )
@@ -78,14 +80,22 @@ ALLOCATION_ACCOUNT_ENABLED = ENV.bool("ALLOCATION_ACCOUNT_ENABLED", default=Fals
 ALLOCATION_ACCOUNT_MAPPING = ENV.dict("ALLOCATION_ACCOUNT_MAPPING", default={})
 
 SETTINGS_EXPORT += [
+    "ACCOUNT_CREATION_TEXT",
     "ALLOCATION_ACCOUNT_ENABLED",
-    "CENTER_HELP_URL",
+    "ALLOCATION_DEFAULT_ALLOCATION_LENGTH",
+    "ALLOCATION_ENABLE_ALLOCATION_RENEWAL",
     "ALLOCATION_EULA_ENABLE",
-    "RESEARCH_OUTPUT_ENABLE",
+    "CENTER_HELP_URL",
+    "CENTER_NAME",
+    "EMAIL_PROJECT_REVIEW_CONTACT",
     "GRANT_ENABLE",
-    "PUBLICATION_ENABLE",
     "INVOICE_ENABLED",
+    "LOGIN_FAIL_MESSAGE",
     "PROJECT_ENABLE_PROJECT_REVIEW",
+    "PROJECT_INSTITUTION_EMAIL_MAP",
+    "PUBLICATION_ENABLE",
+    "RESEARCH_OUTPUT_ENABLE",
+    "DJANGO_VITE",
 ]
 
 ADMIN_COMMENTS_SHOW_EMPTY = ENV.bool("ADMIN_COMMENTS_SHOW_EMPTY", default=True)
@@ -123,7 +133,8 @@ ONDEMAND_URL = ENV.str("ONDEMAND_URL", default=None)
 # ------------------------------------------------------------------------------
 # Default Strings. Override these in local_settings.py
 # ------------------------------------------------------------------------------
-LOGIN_FAIL_MESSAGE = ENV.str("LOGIN_FAIL_MESSAGE", "")
+# FIXME: This is using mark_safe for now but settings should not contain HTML in the future
+LOGIN_FAIL_MESSAGE = mark_safe(ENV.str("LOGIN_FAIL_MESSAGE", ""))  # noqa: S308
 
 EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL = ENV.str(
     "EMAIL_DIRECTOR_PENDING_PROJECT_REVIEW_EMAIL",
@@ -142,10 +153,11 @@ Phone: (xxx) xxx-xxx
     multiline=True,
 )
 
-ACCOUNT_CREATION_TEXT = """University faculty can submit a help ticket to request an account.
+# noqa: S308
+ACCOUNT_CREATION_TEXT = mark_safe("""University faculty can submit a help ticket to request an account.
 Please see <a href="#">instructions on our website</a>. Staff, students, and external collaborators must
 request an account through a university faculty member.
-"""
+""")
 
 
 # ------------------------------------------------------------------------------
@@ -160,3 +172,22 @@ PROJECT_CODE_PADDING = ENV.int("PROJECT_CODE_PADDING", default=None)
 # ------------------------------------------------------------------------------
 
 PROJECT_INSTITUTION_EMAIL_MAP = ENV.dict("PROJECT_INSTITUTION_EMAIL_MAP", default={})
+
+# ------------------------------------------------------------------------------
+# Configure Project fields that project managers can update
+# ------------------------------------------------------------------------------
+
+PROJECT_UPDATE_FIELDS = ENV.list(
+    "PROJECT_UPDATE_FIELDS",
+    default=[
+        "title",
+        "description",
+        "field_of_science",
+    ],
+)
+
+# ------------------------------------------------------------------------------
+# Web request settings.
+# ------------------------------------------------------------------------------
+
+REQUEST_TIMEOUT = ENV.int("REQUEST_TIMEOUT", default=10)

@@ -1,4 +1,5 @@
 {% load crispy_forms_tags %}
+{% load static %}
 
 <form action="{% url 'project-add-users' pk %}" method="post" id="postForm">
   {% csrf_token %}
@@ -25,17 +26,25 @@
   {% if matches %}
     <div class="table-responsive">
       <table class="table table-sm table-hover">
-        <caption class="sr-only">Users found</caption>
+        <caption class="visually-hidden">Users found</caption>
         <thead>
           <tr>
             <th scope="col">
-              <label for="selectAll" class="sr-only">Select all users</label>
+              <label for="selectAll" class="visually-hidden">Select all users</label>
               <input type="checkbox" class="check" id="selectAll">
             <th scope="col">#</th>
             <th scope="col">
-              <a href="#" class="notnavigable" data-toggle="popover" title="Info" data-trigger="hover" data-content="Hover over an icon to see a user's account status for each selected resource">
-                <span class="badge badge-info"><i class="fas fa-question-circle"></i></span><span class="sr-only">Hover over an icon to see a user's account status for each selected resource</span>
-              </a>
+              <button
+                type="button"
+                class="p-0 bg-transparent border-0"
+                data-bs-toggle="popover"
+                title="Info"
+                data-bs-trigger="hover"
+                data-bs-content="Hover over an icon to see a user's account status for each selected resource"
+                style="cursor: default;"
+              >
+                <span class="badge text-bg-info"><i class="fas fa-question-circle"></i></span><span class="visually-hidden">Hover over an icon to see a user's account status for each selected resource</span>
+              </button>
             </th>
             <th scope="col">Username</th>
             <th scope="col">First Name</th>
@@ -48,23 +57,32 @@
           {% for form in formset %}
             <tr id="{{ form.username.value }}">
               <td>
-                <label for="{{ form.selected.id_for_label }}" class="sr-only" aria-label="Select {{ form.username.value }}">
+                <label for="{{ form.selected.id_for_label }}" class="visually-hidden" aria-label="Select {{ form.username.value }}">
                   {{ form.selected.label }}
                 </label>
                 {{ form.selected }}
               </td>
               <td>{{ forloop.counter }}</td>
               <td>
-                <a id="status-{{ forloop.counter }}" class="notnavigable" href="#" data-toggle="popover" title="No Allocations Selected" data-trigger="hover" data-content="No allocations to check accounts on">
-                  <span class="badge badge-secondary"><i class="fas fa-minus-circle"></i></span><span class="sr-only">No allocations to check accounts on</span>
-                </a>
+                <button
+                  id="status-{{ forloop.counter }}"
+                  type="button"
+                  class="p-0 bg-transparent border-0"
+                  data-bs-toggle="popover"
+                  title="No Allocations Selected"
+                  data-bs-trigger="hover"
+                  data-bs-content="No allocations to check accounts on"
+                  style="cursor: default;"
+                >
+                  <span class="badge text-bg-secondary"><i class="fas fa-minus-circle"></i></span><span class="visually-hidden">No allocations to check accounts on</span>
+                </button>
               </td>
               <td>{{ form.username.value }}</td>
               <td>{{ form.first_name.value }}</td>
               <td>{{ form.last_name.value }}</td>
               <td>{{ form.email.value }}</td>
               <td>
-                <label for="{{ form.role.id_for_label }}" class="sr-only">
+                <label for="{{ form.role.id_for_label }}" class="visually-hidden">
                   {{ form.role.label }}
                 </label>
                 {{ form.role }}
@@ -95,11 +113,11 @@
       <div class="card-body">
         <div class="table-responsive">
           <table class="table table-sm table-hover">
-            <caption class="sr-only">Available allocations</caption>
+            <caption class="visually-hidden">Available allocations</caption>
             <thead>
               <tr>
                 <th scope="col">
-                  <label for="selectAllAllocations" class="sr-only">Select all allocations</label>
+                  <label for="selectAllAllocations" class="visually-hidden">Select all allocations</label>
                   <input type="checkbox" class="check" id="selectAllAllocations">
                 </th>
                 <th scope="col">#</th>
@@ -114,7 +132,7 @@
               {% for form in allocation_form %}
                 <tr id="{{ form.resource.value }}-{{ forloop.counter }}">
                   <td>
-                    <label for="{{ form.selected.id_for_label }}" class="sr-only" aria-label="Select {{ form.resource.value }}">
+                    <label for="{{ form.selected.id_for_label }}" class="visually-hidden" aria-label="Select {{ form.resource.value }}">
                       {{ form.selected.label }}
                     </label>
                     {{ form.selected }}
@@ -125,7 +143,7 @@
                   <td>{{ form.resource_type.value }}</td>
                   <td>{{ form.status.value }}</td>
                   <td>
-                    <label for="{{ form.role.id_for_label }}" class="sr-only">
+                    <label for="{{ form.role.id_for_label }}" class="visually-hidden">
                       {{ form.role.label }}
                     </label>
                     {{ form.role }}
@@ -165,12 +183,11 @@
     <div class="modal-content">
       <div class="modal-header">
         <h3 class="modal-title col-12 text-center" id="warningLabel">
-          <span class="badge badge-warning"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span>
+          <span class="badge text-bg-warning"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span>
           Warning
-          <span class="badge badge-warning"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span>
+          <span class="badge text-bg-warning"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span>
         </h3>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
         </button>
       </div>
       <div class="modal-body">
@@ -178,7 +195,7 @@
       </div>
       <div class="modal-footer">
         <button id="id_confirm" type="button" class="btn btn-primary">Continue</button>
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Go Back</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Go Back</button>
       </div>
     </div>
   </div>
@@ -190,159 +207,174 @@
 {{ account_statuses|json_script:"account_statuses" }}
 
 <script>
-  const current_num_managers = JSON.parse(document.getElementById('current_num_managers').textContent);
-  const max_managers = JSON.parse(document.getElementById('max_managers').textContent);
-  const num_matches = JSON.parse(document.getElementById('num_matches').textContent);
-  const account_statuses = JSON.parse(document.getElementById('account_statuses').textContent);
-
-  function updateIcon(username, reason, missing_accounts) {
-    let icon = $($('#' + username)[0].childNodes[5].firstElementChild)
-    let title = "Has Accounts"
-    let content = "Can be added to all selected allocations"
-    let html = '<span class="badge badge-success"><i class="fas fa-check-circle" aria-hidden="true"></i></span><span class="sr-only"></span>'
-    if (reason == "not_selected") {
-      title = "Not Selected"
-      content = "Not selected to be added to the project"
-      html = '<span class="badge badge-secondary"><i class="fas fa-minus-circle" aria-hidden="true"></i></span><span class="sr-only">Not selected to be added to the project</span>'
-    } else if (reason == "no_selected_allocations") {
-      title = "No Allocations Selected"
-      content = "No allocations to check accounts on"
-      html = '<span class="badge badge-secondary"><i class="fas fa-minus-circle" aria-hidden="true"></i></span><span class="sr-only">No allocations to check accounts on</span>'
-    } else if (reason == "no_account") {
-      title = "No IU Account"
-      content = `Will not be added to these resources: ${Array.from(missing_accounts).join(', ')}`
-      html = `<span class="badge badge-warning"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span><span class="sr-only">${content}</span>`
-    } else if (reason == "no_resource_account") {
-      title = "Missing Resource Accounts"
-      content = `Will not be added to these resources: ${Array.from(missing_accounts).join(', ')}`
-      html = `<span class="badge badge-warning"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span><span class="sr-only">${content}</span>`
+  $(document).ready(function() {
+    if (window.initPopovers) {
+      window.initPopovers();
     }
 
-    icon.attr('data-original-title', title)
-    icon.attr('data-content', content)
-    icon.html(html)
-  }
+    const current_num_managers = JSON.parse(document.getElementById('current_num_managers').textContent);
+    const max_managers = JSON.parse(document.getElementById('max_managers').textContent);
+    const num_matches = JSON.parse(document.getElementById('num_matches').textContent);
+    const account_statuses = JSON.parse(document.getElementById('account_statuses').textContent);
+  
+    function updateIcon(username, reason, missing_accounts) {
+      const row = $('#' + username);
+      const button = row.find('button[data-bs-toggle="popover"]');
+      
+      let title = "Has Accounts"
+      let content = "Can be added to all selected allocations"
+      let html = '<span class="badge text-bg-success"><i class="fas fa-check-circle" aria-hidden="true"></i></span><span class="visually-hidden"></span>'
+      if (reason == "not_selected") {
+        title = "Not Selected"
+        content = "Not selected to be added to the project"
+        html = '<span class="badge text-bg-secondary"><i class="fas fa-minus-circle" aria-hidden="true"></i></span><span class="visually-hidden">Not selected to be added to the project</span>'
+      } else if (reason == "no_selected_allocations") {
+        title = "No Allocations Selected"
+        content = "No allocations to check accounts on"
+        html = '<span class="badge text-bg-secondary"><i class="fas fa-minus-circle" aria-hidden="true"></i></span><span class="visually-hidden">No allocations to check accounts on</span>'
+      } else if (reason == "no_account") {
+        title = "No IU Account"
+        content = `Will not be added to these resources: ${Array.from(missing_accounts).join(', ')}`
+        html = `<span class="badge text-bg-warning"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span><span class="visually-hidden">${content}</span>`
+      } else if (reason == "no_resource_account") {
+        title = "Missing Resource Accounts"
+        content = `Will not be added to these resources: ${Array.from(missing_accounts).join(', ')}`
+        html = `<span class="badge text-bg-warning"><i class="fas fa-exclamation-circle" aria-hidden="true"></i></span><span class="visually-hidden">${content}</span>`
+      }
 
-  function checkSelectedUserAccounts(user_field) {
-    const username = user_field.parentElement.parentElement.id
-    const resources_selected = $("input[name^='allocationform-']:checked")
-    if (!resources_selected.length) {
-      updateIcon(username, "no_selected_allocations", resources_selected)
-      return
-    } else if (!user_field.checked) {
-      updateIcon(username, "not_selected", resources_selected)
-      return
+      button.html(html)
+
+      // Update the popover instance dynamically
+      const popoverElement = button[0];
+      const popover = bootstrap.Popover.getInstance(popoverElement);
+      if (popover) {
+        popover.dispose();
+      }
+      new bootstrap.Popover(popoverElement, {
+        title: title,
+        content: content,
+        trigger: 'hover'
+      });
     }
   
-    let selected_resource_names = []
-    for (const resource_selected of resources_selected) {
-      const resource_name = resource_selected.parentElement.parentElement.id
-      const last_index = resource_name.lastIndexOf("-")
-      if (last_index === -1) {
-        selected_resource_names.push(resource_name)
+    function checkSelectedUserAccounts(user_field) {
+      const username = user_field.parentElement.parentElement.id
+      const resources_selected = $("input[name^='allocationform-']:checked")
+      if (!resources_selected.length) {
+        updateIcon(username, "no_selected_allocations", resources_selected)
+        return
+      } else if (!user_field.checked) {
+        updateIcon(username, "not_selected", resources_selected)
+        return
+      }
+    
+      let selected_resource_names = []
+      for (const resource_selected of resources_selected) {
+        const resource_name = resource_selected.parentElement.parentElement.id
+        const last_index = resource_name.lastIndexOf("-")
+        if (last_index === -1) {
+          selected_resource_names.push(resource_name)
+        } else {
+          selected_resource_names.push(resource_name.slice(0, last_index))
+        }
+      }
+      let missing_accounts = []
+      let reason = ""
+      for (const selected_resource_name of selected_resource_names) {
+        const resource_account_statuses = account_statuses[selected_resource_name]
+        const user_account_status = resource_account_statuses[username]
+        if (user_account_status["exists"]) { continue; }
+  
+        missing_accounts.push(selected_resource_name)
+        reason = user_account_status["reason"]
+      }
+      updateIcon(username, reason, missing_accounts);
+    }
+  
+    function checkNumManagers() {
+      const checked_users = $("input[name^='userform-']:checked");
+      let num_managers = 0;
+      for (let i = 0; i < checked_users.length; i++) {
+        const name = checked_users[i].name.slice(0, -8) + 'role';
+        const role = $("select[name='" + name + "'] option:selected").text();
+        if (role === "Manager") {
+          num_managers += 1;
+        }
+      }
+  
+      if (num_managers + current_num_managers > max_managers) {
+        $("#id_add_selected_users").prop('disabled', true).attr('aria-disabled', 'true');
+        $("#id_manager_warning").show()
       } else {
-        selected_resource_names.push(resource_name.slice(0, last_index))
+        $("#id_add_selected_users").prop('disabled', false).attr('aria-disabled', 'false');
+        $("#id_manager_warning").hide()
       }
     }
-    let missing_accounts = []
-    let reason = ""
-    for (const selected_resource_name of selected_resource_names) {
-      const resource_account_statuses = account_statuses[selected_resource_name]
-      const user_account_status = resource_account_statuses[username]
-      if (user_account_status["exists"]) { continue; }
-
-      missing_accounts.push(selected_resource_name)
-      reason = user_account_status["reason"]
-    }
-    updateIcon(username, reason, missing_accounts);
-  }
-
-  function checkNumManagers() {
-    const checked_users = $("input[name^='userform-']:checked");
-    let num_managers = 0;
-    for (let i = 0; i < checked_users.length; i++) {
-      const name = checked_users[i].name.slice(0, -8) + 'role';
-      const role = $("select[name='" + name + "'] option:selected").text();
-      if (role === "Manager") {
-        num_managers += 1;
-      }
-    }
-
-    if (num_managers + current_num_managers > max_managers) {
-      $("#id_add_selected_users").prop('disabled', true).attr('aria-disabled', 'true');
-      $("#id_manager_warning").show()
-    } else {
-      $("#id_add_selected_users").prop('disabled', false).attr('aria-disabled', 'false');
-      $("#id_manager_warning").hide()
-    }
-  }
-
-  $('document').ready(function () {
-    $('[data-toggle="popover"]').popover();
-    $('a.notnavigable').click(function(e) {e.preventDefault();});
-    $('#warning').modal({ show: false});
-    $('#id_manager_warning').hide();
-
-    for (let i = 0; i < num_matches; i++) {
-      if ($("#id_userform-" + i + "-role option:selected").text() == 'Group') {
-        $("#id_userform-" + i + "-role option:not(:selected)").prop('disabled', true);
-      }
-      else {
-        let options = $("#id_userform-" + i + "-role option");
-        for (let i = 0; i < options.length; i++) {
-          if (options[i].text == 'Group') {
-            options[i].disabled = true;
+  
+    $('document').ready(function () {;
+      $('#id_manager_warning').hide();
+  
+      for (let i = 0; i < num_matches; i++) {
+        if ($("#id_userform-" + i + "-role option:selected").text() == 'Group') {
+          $("#id_userform-" + i + "-role option:not(:selected)").prop('disabled', true);
+        }
+        else {
+          let options = $("#id_userform-" + i + "-role option");
+          for (let i = 0; i < options.length; i++) {
+            if (options[i].text == 'Group') {
+              options[i].disabled = true;
+            }
           }
         }
       }
-    }
-
-    $('#id_confirm').on("click", function() {
-      $('#postForm').submit()
-    })
-    $('#postForm').on("submit", function (e) {
-      if ($('#warning').not(':hidden').length) { return; }
-
-      const checked_users = $("input[name^='userform-']:checked");
-      if (!checked_users.length) {
-        $('#warning').modal('show');
-        e.preventDefault()
+  
+      $('#id_confirm').on("click", function() {
+        $('#postForm').submit()
+      })
+      $('#postForm').on("submit", function (e) {
+        if ($('#warning').not(':hidden').length) { return; }
+  
+        const checked_users = $("input[name^='userform-']:checked");
+        if (!checked_users.length) {
+          $('#warning').modal('show');
+          e.preventDefault()
+        }
+      })
+  
+      if ("{{ after_project_creation }}" === "true"){
+        $('#id_allocationform-0-selected').prop('checked', true);
       }
     })
-
-    if (after_project_creation){
-      $('#id_allocationform-0-selected').prop('checked', true);
-    }
-  })
-
-  $("select[name^='userform-']").on("change", function() {
-    checkNumManagers();
-  });
-
-  $("#selectAll").on("change", function () {
-    const should_check = $(this).prop("checked");
-    const targets = $("input[name^='userform-']:visible");
-    targets.prop("checked", should_check).trigger("change");
-  });
-
-  $("input[name^='userform-']:visible").on("change", function () {
-    checkNumManagers();
-    checkSelectedUserAccounts(this);
-  });
-
-  $("#selectAllAllocations").on("change", function () {
-    $("input[name^='allocationform-']").prop('checked', this.checked);
-    const selected_users = $("input[name^='userform-']:visible");
-    for (selected_user of selected_users) {
-      checkSelectedUserAccounts(selected_user);
-    }
-  });
-
-  $("input[name^='allocationform-']").on("change", function (ele) {
-    const selected_users = $("input[name^='userform-']:visible")
-    for (selected_user of selected_users) {
-      checkSelectedUserAccounts(selected_user);
-    }
+  
+    $("select[name^='userform-']").on("change", function() {
+      checkNumManagers();
+    });
+  
+    $("#selectAll").on("change", function () {
+      const should_check = $(this).prop("checked");
+      const targets = $("input[name^='userform-']:visible");
+      targets.prop("checked", should_check).trigger("change");
+    });
+  
+    $("input[name^='userform-']:visible").on("change", function () {
+      checkNumManagers();
+      checkSelectedUserAccounts(this);
+    });
+  
+    $("#selectAllAllocations").on("change", function () {
+      $("input[name^='allocationform-']").prop('checked', this.checked);
+      const selected_users = $("input[name^='userform-']:visible");
+      for (selected_user of selected_users) {
+        checkSelectedUserAccounts(selected_user);
+      }
+    });
+  
+    $("input[name^='allocationform-']").on("change", function (ele) {
+      const selected_users = $("input[name^='userform-']:visible")
+      for (selected_user of selected_users) {
+        checkSelectedUserAccounts(selected_user);
+      }
+    });
   });
 </script>
 

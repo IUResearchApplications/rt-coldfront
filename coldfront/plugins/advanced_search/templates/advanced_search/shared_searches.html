@@ -1,0 +1,34 @@
+{% load common_tags %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+<h2 class="h4">Shared Searches</h2>
+<div id="all_shared_searches" class="card">
+  <div class="card-body">
+    {% if shared_searches %}
+      <div class="row">
+        {% for shared_search in shared_searches %}
+          <div class="col-md-4 mb-3">
+            <div class="card h-100">
+              <div class="card-header">
+                <h3 class="h6 mb-0">{{ shared_search.name }}</h3>
+              </div>
+              <div class="card-body">
+                {{ shared_search.description }}
+              </div>
+              <div class="card-footer d-flex justify-content-end">
+                <button type="button" class="btn btn-success me-2 btn-load-search" data-search-id="{{ shared_search.pk }}" data-url="{% url 'apply-saved-search' pk=shared_search.pk %}">Load</button>
+                <button type="button" class="btn btn-primary me-2 btn-copy-search" data-search-id="{{ shared_search.pk }}" data-url="{% url 'copy-search' pk=shared_search.pk %}">Copy</button>
+                <button type="button" class="btn btn-secondary btn-details-search" data-search-id="{{ shared_search.pk }}">Details</button>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="alert alert-info mb-0" role="alert">
+        <i class="fas fa-info-circle" aria-hidden="true"></i> No shared searches.
+      </div>
+    {% endif %}
+  </div>
+</div>

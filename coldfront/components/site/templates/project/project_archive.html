@@ -20,7 +20,7 @@ Archive Project
       {{ project.pi.last_name }}
       ({{ project.pi.username }})
       <a href="mailto:{{ project.pi.email }}">
-        <i class="far fa-envelope" aria-hidden="true"></i><span class="sr-only">Email</span>
+        <i class="far fa-envelope" aria-hidden="true"></i><span class="visually-hidden">Email</span>
       </a>
     </h2>
     <p class="card-text text-justify"><strong>Description: </strong>{{ project.description }}</p>
@@ -41,10 +41,4 @@ Archive Project
     <a class="btn btn-secondary" href="{% url 'project-detail' project.id %}">Cancel</a>
   </form>
 </div>
-
-<script>
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-project-menu").addClass("active");
-</script>
-
 {% endblock %}

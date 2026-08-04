@@ -1,5 +1,5 @@
 {% load common_tags %}
 
-<li id="navbar-help" class="nav-item">
+<li id="navbar-help" class="nav-item {% navbar_active_item 'help' request %}">
   <a class="nav-link" href="{{ settings.CENTER_HELP_URL }}" role="menuitem">Help</a>
 </li>

@@ -3,6 +3,7 @@
 coldfront.egg-info
 dist
 build
+.zed/
 *._*
 *.DS_Store
 *.swp
@@ -20,8 +21,7 @@ db.json
 .env
 .devcontainer/*
 .bin/*
-cert.pem
-kep.pem
+node_modules
 coldfront.log
-apa.txt
 pyrightconfig.json
+local_urls.py

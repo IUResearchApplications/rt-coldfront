@@ -6,7 +6,7 @@ import logging
 from smtplib import SMTPException
 
 from django.conf import settings
-from django.core.mail import EmailMessage, send_mail
+from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
 from django.urls import reverse
 
@@ -25,7 +25,7 @@ CENTER_BASE_URL = import_from_settings("CENTER_BASE_URL")
 EMAIL_GROUP_TO_EMAIL_MAPPING = import_from_settings("EMAIL_GROUP_TO_EMAIL_MAPPING", {})
 
 
-def send_email(subject, body, sender, receiver_list, cc=[]):
+def send_email(subject, body, sender, receiver_list, cc=None):
     """Helper function for sending emails"""
 
     if not EMAIL_ENABLED:
@@ -49,21 +49,27 @@ def send_email(subject, body, sender, receiver_list, cc=[]):
         cc = EMAIL_DEVELOPMENT_EMAIL_LIST
 
     try:
-        if cc:
-            email = EmailMessage(subject, body, sender, receiver_list, cc=cc)
-            email.send(fail_silently=False)
-        else:
-            send_mail(subject, body, sender, receiver_list, fail_silently=False)
+        email = EmailMessage(subject, body, sender, receiver_list, cc=cc)
+        email.send(fail_silently=False)
     except SMTPException:
         logger.error("Failed to send email from %s to %s with subject %s", sender, ",".join(receiver_list), subject)
 
 
-def send_email_template(subject, template_name, template_context, sender, receiver_list, cc=[]):
-    """Helper function for sending emails from a template"""
-    if not EMAIL_ENABLED:
-        return
+def send_email_template(subject, template_name, template_context, receiver_list, sender=EMAIL_SENDER, cc=None):
+    """Helper function for sending emails from a template.
 
-    body = render_to_string(template_name, template_context)
+    Args:
+        subject: The email subject.
+        template_name: The name of the template to render.
+        template_context: A dict containing the context to pass into the template.
+        receiver_list: A list of recipients.
+        sender_email: The email to send from. Defaults to EMAIL_SENDER.
+        cc: Email address(es) to be cc'd. Can be a string or list.
+    """
+    ctx = email_template_context()
+    ctx.update(template_context)
+
+    body = render_to_string(template_name, ctx)
 
     return send_email(subject, body, sender, receiver_list, cc=cc)
 
@@ -74,6 +80,7 @@ def email_template_context():
         "center_name": EMAIL_CENTER_NAME,
         "signature": EMAIL_SIGNATURE,
         "opt_out_instruction_url": EMAIL_OPT_OUT_INSTRUCTION_URL,
+        "center_base_url": CENTER_BASE_URL,
     }
 
 
@@ -90,10 +97,7 @@ def send_admin_email_template(allocation_obj, subject, template_name, template_c
         subject,
         template_name,
         template_context,
-        EMAIL_SENDER,
-        [
-            email_recipient,
-        ],
+        [EMAIL_TICKET_SYSTEM_ADDRESS, email_recipient],
     )
 
 
@@ -138,7 +142,7 @@ def send_allocation_customer_email(
     ctx["project_url"] = project_url
     ctx["project_pi"] = f"{project_obj.pi.first_name} {project_obj.pi.last_name}"
     ctx["action_user"] = (f"{request.user.first_name} {request.user.last_name}",)
-    ctx["allocation_identifiers"] = allocation_obj.get_identifiers().items()
+    ctx["allocation_identifiers"] = allocation_obj.get_identifiers.items()
 
     if addtl_context:
         ctx.update(addtl_context)
@@ -149,13 +153,7 @@ def send_allocation_customer_email(
         if allocation_user.allocation.project.projectuser_set.get(user=allocation_user.user).enable_notifications:
             email_receiver_list.append(allocation_user.user.email)
 
-    send_email_template(
-        subject,
-        template_name,
-        ctx,
-        EMAIL_SENDER,
-        email_receiver_list,
-    )
+    send_email_template(subject, template_name, ctx, email_receiver_list)
 
 
 def get_email_recipient_from_groups(groups):
@@ -202,4 +200,4 @@ def send_allocation_eula_customer_email(
             if manager.enable_notifications:
                 email_cc_list.append(manager.user.email)
 
-    send_email_template(subject, template_name, ctx, EMAIL_SENDER, email_receiver_list, cc=email_cc_list)
+    send_email_template(subject, template_name, ctx, email_receiver_list, cc=email_cc_list)

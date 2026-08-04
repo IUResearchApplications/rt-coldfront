@@ -14,7 +14,7 @@ from ipalib import api
 
 from coldfront.core.allocation.models import AllocationUser
 from coldfront.core.utils.mail import build_link
-from coldfront.plugins.freeipa.utils import CLIENT_KTNAME, FREEIPA_NOOP
+from coldfront.plugins.freeipa.utils import CLIENT_KTNAME, FREEIPA_NOOP, ipa_bootstrap
 
 logger = logging.getLogger(__name__)
 
@@ -118,6 +118,8 @@ class Command(BaseCommand):
                         "expire_date": expire_date,
                         "allocation_id": allocation.id,
                     }
+
+        ipa_bootstrap()
 
         # Print users whose latest allocation expiration date GTE 365 days and active in FreeIPA
         for key in expired_allocation_users.keys():

@@ -10,7 +10,7 @@
     <div class="card-body">
         <div class="table-responsive">
           <table id="user-table" class="table table-sm table-hover">
-            <caption class="sr-only">User allocations</caption>
+            <caption class="visually-hidden">User allocations</caption>
             <thead>
               <tr>
                 <th scope="col">#</th>
@@ -60,10 +60,4 @@
     You are not a PI on any project with an allocation!
   </div>
 {% endif %}
-
-<script>
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-project-menu").addClass("active");
-  $("#navbar-user-allocation").addClass("active");
-</script>
 {% endblock %}
