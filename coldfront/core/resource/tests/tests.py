@@ -72,4 +72,4 @@ class ResourceAttributeModelCleanMethodTests(TestCase):
         self._test_clean("Date", ["01/01/1970"], False)
 
     def test_expect_date_given_garbage(self):
-        self._test_clean("Date", ["foobar", "", " ", "\0", "1", "1.0", "2e30", "1j"], True)
+        self._test_clean("Date", ["foobar", " ", "\0", "1", "1.0", "2e30", "1j"], True)

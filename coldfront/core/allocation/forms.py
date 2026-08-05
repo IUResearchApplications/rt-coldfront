@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 from django import forms
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models.functions import Lower
 from django.forms import ValidationError
@@ -22,7 +23,6 @@ from coldfront.core.user.forms import UserModelMultipleChoiceField
 from coldfront.core.utils.common import import_from_settings
 
 ALLOCATION_ACCOUNT_ENABLED = import_from_settings("ALLOCATION_ACCOUNT_ENABLED", False)
-ALLOCATION_CHANGE_REQUEST_EXTENSION_DAYS = import_from_settings("ALLOCATION_CHANGE_REQUEST_EXTENSION_DAYS", [])
 ALLOCATION_ACCOUNT_MAPPING = import_from_settings("ALLOCATION_ACCOUNT_MAPPING", {})
 ALLOCATION_ENABLE_CHANGE_REQUESTS_BY_DEFAULT = import_from_settings(
     "ALLOCATION_ENABLE_CHANGE_REQUESTS_BY_DEFAULT", True
@@ -343,13 +343,9 @@ class AllocationAttributeEditForm(forms.Form):
 
 
 class AllocationChangeForm(forms.Form):
-    EXTENSION_CHOICES = [(0, "No Extension")]
-    for choice in ALLOCATION_CHANGE_REQUEST_EXTENSION_DAYS:
-        EXTENSION_CHOICES.append((choice, "{} days".format(choice)))
-
     end_date_extension = forms.TypedChoiceField(
         label="Request End Date Extension",
-        choices=EXTENSION_CHOICES,
+        choices=[(0, "No Extension")],
         coerce=int,
         required=False,
         empty_value=0,
@@ -363,6 +359,9 @@ class AllocationChangeForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["end_date_extension"].choices = [(0, "No Extension")] + [
+            (days, "{} days".format(days)) for days in settings.ALLOCATION_CHANGE_REQUEST_EXTENSION_DAYS
+        ]
 
 
 class AllocationChangeNoteForm(forms.Form):

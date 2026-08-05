@@ -41,12 +41,11 @@ from coldfront.core.test_helpers.factories import (
     ResourceFactory,
     UserFactory,
 )
-from coldfront.core.utils.common import import_from_settings
 
 logging.disable(logging.CRITICAL)
 
 BACKEND = "django.contrib.auth.backends.ModelBackend"
-ALLOCATION_CHANGE_REQUEST_EXTENSION_DAYS = import_from_settings("ALLOCATION_CHANGE_REQUEST_EXTENSION_DAYS")
+TEST_EXTENSION_DAYS = [30, 60, 90]
 
 
 class AllocationViewBaseTest(TestCase):
@@ -149,6 +148,7 @@ class AllocationListViewTest(AllocationViewBaseTest):
         self.assertEqual(len(response.context["allocation_list"]), 1)
 
 
+@override_settings(ALLOCATION_CHANGE_REQUEST_EXTENSION_DAYS=TEST_EXTENSION_DAYS)
 class AllocationChangeDetailViewTest(AllocationViewBaseTest):
     """Tests for AllocationChangeDetailView"""
 
@@ -159,13 +159,14 @@ class AllocationChangeDetailViewTest(AllocationViewBaseTest):
         """create an AllocationChangeRequest to test"""
         self.client.force_login(self.admin_user, backend=BACKEND)
         AllocationChangeStatusChoiceFactory(name="Denied")
+        AllocationChangeStatusChoiceFactory(name="Approved")
         AllocationChangeRequestFactory(id=2, allocation=self.allocation)  # view, deny
         AllocationChangeRequestFactory(
-            id=3, allocation=self.allocation, end_date_extension=ALLOCATION_CHANGE_REQUEST_EXTENSION_DAYS[0]
+            id=3, allocation=self.allocation, end_date_extension=settings.ALLOCATION_CHANGE_REQUEST_EXTENSION_DAYS[0]
         )  # approve end date extension
         req4 = AllocationChangeRequestFactory(id=4, allocation=self.allocation)  # approve attribute change
         AllocationChangeRequestFactory(
-            id=5, allocation=self.allocation, end_date_extension=ALLOCATION_CHANGE_REQUEST_EXTENSION_DAYS[0]
+            id=5, allocation=self.allocation, end_date_extension=settings.ALLOCATION_CHANGE_REQUEST_EXTENSION_DAYS[0]
         )  # update end date extension
         AllocationAttributeChangeRequest.objects.create(
             allocation_change_request=req4, allocation_attribute=self.quota_attribute, new_value=200
@@ -240,23 +241,25 @@ class AllocationChangeDetailViewTest(AllocationViewBaseTest):
         alloc_change_req = AllocationChangeRequest.objects.get(pk=5)
         alloc_change_req.refresh_from_db()
         self.assertEqual(alloc_change_req.status.name, "Pending")
-        self.assertEqual(alloc_change_req.end_date_extension, ALLOCATION_CHANGE_REQUEST_EXTENSION_DAYS[0])
+        self.assertEqual(alloc_change_req.end_date_extension, settings.ALLOCATION_CHANGE_REQUEST_EXTENSION_DAYS[0])
         response = self.client.post(
             reverse("allocation-change-detail", kwargs={"pk": 5}),
-            {"action": "update", "end_date_extension": ALLOCATION_CHANGE_REQUEST_EXTENSION_DAYS[1]},
+            {"action": "update", "end_date_extension": settings.ALLOCATION_CHANGE_REQUEST_EXTENSION_DAYS[1]},
             follow=True,
         )
         utils.assert_response_success(self, response)
         alloc_change_req.refresh_from_db()
         self.assertEqual(alloc_change_req.status.name, "Pending")
-        self.assertEqual(alloc_change_req.end_date_extension, ALLOCATION_CHANGE_REQUEST_EXTENSION_DAYS[1])
+        self.assertEqual(alloc_change_req.end_date_extension, settings.ALLOCATION_CHANGE_REQUEST_EXTENSION_DAYS[1])
 
 
+@override_settings(ALLOCATION_CHANGE_REQUEST_EXTENSION_DAYS=TEST_EXTENSION_DAYS)
 class AllocationChangeViewTest(AllocationViewBaseTest):
     """Tests for AllocationChangeView"""
 
     def setUp(self):
         self.client.force_login(self.admin_user, backend=BACKEND)
+        AllocationChangeStatusChoiceFactory(name="Pending")
         self.post_data = {
             "justification": "just a test",
             "attributeform-0-new_value": "",
@@ -499,7 +502,8 @@ class AllocationAddUsersViewTest(AllocationViewBaseTest):
         self.assertEqual(len(self.allocation.allocationuser_set.all()), 1)
         response = self.client.post(self.url, data=self.post_data, follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Added 1 user to allocation.")
+        added_user = self.allocation.allocationuser_set.exclude(user=self.allocation_user).first().user
+        self.assertContains(response, f"User added to the allocation: {added_user.username}")
         self.assertEqual(len(self.allocation.allocationuser_set.all()), 2)
 
     def test_allocationaddusersview_post_admin(self):
@@ -508,7 +512,8 @@ class AllocationAddUsersViewTest(AllocationViewBaseTest):
         self.assertEqual(len(self.allocation.allocationuser_set.all()), 1)
         response = self.client.post(self.url, data=self.post_data, follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Added 1 user to allocation.")
+        added_user = self.allocation.allocationuser_set.exclude(user=self.allocation_user).first().user
+        self.assertContains(response, f"User added to the allocation: {added_user.username}")
         self.assertEqual(len(self.allocation.allocationuser_set.all()), 2)
 
 
@@ -559,7 +564,7 @@ class AllocationRemoveUsersViewTest(AllocationViewBaseTest):
         self.assertTrue(self.allocation.allocationuser_set.filter(status__name="Active").exists())
         response = self.client.post(self.url, data=self.post_data, follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Removed 1 user from allocation.")
+        self.assertContains(response, f"Removed user {self.allocation_user.username} from allocation.")
         self.assertEqual(len(self.allocation.allocationuser_set.filter(status__name="Removed")), 1)
 
     def test_allocationremoveusersview_post_admin(self):
@@ -568,7 +573,7 @@ class AllocationRemoveUsersViewTest(AllocationViewBaseTest):
         self.assertTrue(self.allocation.allocationuser_set.filter(status__name="Active").exists())
         response = self.client.post(self.url, data=self.post_data, follow=True)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Removed 1 user from allocation.")
+        self.assertContains(response, f"Removed user {self.allocation_user.username} from allocation.")
         self.assertEqual(len(self.allocation.allocationuser_set.filter(status__name="Removed")), 1)
 
 

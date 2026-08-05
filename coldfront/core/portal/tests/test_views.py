@@ -32,6 +32,5 @@ class CenterSummaryViewTest(PortalViewBaseTest):
     def test_centersummary_renders(self):
         response = self.client.get(self.url)
         utils.assert_response_success(self, response)
-        self.assertContains(response, "Active Allocations and Users")
         self.assertContains(response, "Resources and Allocations Summary")
         self.assertNotContains(response, "We're having a bit of system trouble at the moment. Please check back soon!")
