@@ -36,6 +36,8 @@ from coldfront.core.project.models import (
     Project,
     ProjectAttribute,
     ProjectAttributeType,
+    ProjectReview,
+    ProjectReviewStatusChoice,
     ProjectStatusChoice,
     ProjectTypeChoice,
     ProjectUser,
@@ -223,6 +225,21 @@ class ProjectAttributeFactory(DjangoModelFactory):
     proj_attr_type = SubFactory(ProjectAttributeTypeFactory)
     value = "Test attribute value"
     project = SubFactory(ProjectFactory)
+
+
+class ProjectReviewStatusChoiceFactory(DjangoModelFactory):
+    class Meta:
+        model = ProjectReviewStatusChoice
+
+    name = "Pending"
+
+
+class ProjectReviewFactory(DjangoModelFactory):
+    class Meta:
+        model = ProjectReview
+
+    project = SubFactory(ProjectFactory)
+    status = SubFactory(ProjectReviewStatusChoiceFactory)
 
 
 ### Publication factories ###
