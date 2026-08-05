@@ -20,7 +20,7 @@ from simple_history.models import HistoricalRecords
 
 import coldfront.core.attribute_expansion as attribute_expansion
 from coldfront.config.core import ALLOCATION_EULA_ENABLE
-from coldfront.core.allocation.signals import allocation_activate_user, allocation_remove_user
+from coldfront.core.allocation.signals import allocation_activate_user, allocation_expire, allocation_remove_user
 from coldfront.core.project.models import Project, ProjectPermission
 from coldfront.core.resource.models import Resource, ResourceAttribute, ResourceAttributeType
 from coldfront.core.utils.common import get_users_info, import_from_settings
@@ -555,6 +555,7 @@ class Allocation(TimeStampedModel):
         self.status = allocation_status_expired
         self.end_date = datetime.datetime.now()
         self.save()
+        allocation_expire.send(sender=self.__class__, allocation_pk=self.pk)
 
     def get_absolute_url(self):
         return reverse("allocation-detail", kwargs={"pk": self.pk})
