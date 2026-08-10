@@ -1478,7 +1478,7 @@ class AllocationRenewView(LoginRequiredMixin, UserPassesTestMixin, TemplateView)
                 for error in formset.errors:
                     messages.error(request, error)
 
-        allocation_renew.send(sender=self.__class__, allocation_user_pk=allocation_obj.pk)
+        allocation_renew.send(sender=self.__class__, allocation_pk=allocation_obj.pk)
 
         return HttpResponseRedirect(reverse("project-detail", kwargs={"pk": allocation_obj.project.pk}))
 
