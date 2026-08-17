@@ -179,9 +179,9 @@ class SearchFilterBuilder:
                 "allocation__allocationattribute__value": "Yes",
                 "allocation__status__name": "Active",
             },
-            "created_after_date": lambda data: {"created__gt": data[0]},
-            "created_before_date": lambda data: {"created__lt": data[0]},
-            "end_date": lambda data: {"end_date": data[0]},
+            "created_after_date": lambda data: {"created__gt": data},
+            "created_before_date": lambda data: {"created__lt": data},
+            "end_date": lambda data: {"end_date": data},
         },
         "allocation": {
             "user_username": lambda data: {
@@ -189,8 +189,8 @@ class SearchFilterBuilder:
                 "allocationuser__status__name__in": ["Active", "Invited", "Pending", "Disabled", "Retired"],
             },
             "status__name": lambda data: {"status__in": data},
-            "created_after_date": lambda data: {"created__gt": data[0]},
-            "created_before_date": lambda data: {"created__lt": data[0]},
+            "created_after_date": lambda data: {"created__gt": data},
+            "created_before_date": lambda data: {"created__lt": data},
         },
         "resources": {
             "name": lambda data: {"id__in": data},
