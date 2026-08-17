@@ -164,14 +164,14 @@ class SearchFilterBuilder:
 
     FILTER_MAPS: Dict[str, Dict[str, Any]] = {
         "project": {
-            "title": lambda data: {"title__icontains": data[0]},
-            "description": lambda data: {"description__icontains": data[0]},
-            "pi__username": lambda data: {"pi__username__icontains": data[0]},
-            "requestor__username": lambda data: {"requestor__username__icontains": data[0]},
+            "title": lambda data: {"title__icontains": data},
+            "description": lambda data: {"description__icontains": data},
+            "pi__username": lambda data: {"pi__username__icontains": data},
+            "requestor__username": lambda data: {"requestor__username__icontains": data},
             "status__name": lambda data: {"status__in": data},
             "type__name": lambda data: {"type__in": data},
             "user_username": lambda data: {
-                "projectuser__user__username__icontains": data[0],
+                "projectuser__user__username__icontains": data,
                 "projectuser__status__name": "Active",
             },
             "projects_using_ai": lambda data: {
@@ -185,7 +185,7 @@ class SearchFilterBuilder:
         },
         "allocation": {
             "user_username": lambda data: {
-                "allocationuser__user__username__icontains": data[0],
+                "allocationuser__user__username__icontains": data,
                 "allocationuser__status__name__in": ["Active", "Invited", "Pending", "Disabled", "Retired"],
             },
             "status__name": lambda data: {"status__in": data},
@@ -197,12 +197,12 @@ class SearchFilterBuilder:
             "resource_type__name": lambda data: {"resource_type__in": data},
         },
         "user": {
-            "first_name": lambda data: {"first_name": data[0]},
-            "last_name": lambda data: {"last_name": data[0]},
+            "first_name": lambda data: {"first_name": data},
+            "last_name": lambda data: {"last_name": data},
         },
         "userprofile": {
-            "department": lambda data: {"department__icontains": data[0]},
-            "title": lambda data: {"title__icontains": data[0]},
+            "department": lambda data: {"department__icontains": data},
+            "title": lambda data: {"title__icontains": data},
         },
     }
 
