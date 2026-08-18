@@ -511,7 +511,7 @@ class Allocation(TimeStampedModel):
                 [user.email],
             )
 
-        if self.status.name in ["Active", "Pending Renewal"] and allocation_user.status.name in [
+        if self.status.name in ["Active", "Renewal Requested"] and allocation_user.status.name in [
             "Active",
             "Invited",
             "Disabled",
