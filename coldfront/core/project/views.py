@@ -1389,7 +1389,7 @@ class ProjectRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
                             status__name="Removed"
                         ):
                             removed_users_breakdown.setdefault(allocation_user_obj.user.username, []).append(
-                                (allocation.get_parent_resource.name, allocation.get_identifiers().values())
+                                (allocation.get_parent_resource.name, allocation.get_identifiers.values())
                             )
 
                             allocation.remove_user(allocation_user_obj, signal_sender=self.__class__)
