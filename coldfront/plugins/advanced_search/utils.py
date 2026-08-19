@@ -17,6 +17,7 @@ from coldfront.core.allocation.models import (
     AllocationStatusChoice,
     AllocationUser,
 )
+from coldfront.core.allocation.utils import parent_resources_prefetch
 from coldfront.core.project.models import (
     Project,
     ProjectAttribute,
@@ -749,7 +750,8 @@ class ProjectTable(BaseSearchTable):
             prefetch.extend(["projectuser_set", "projectuser_set__status", "projectuser_set__user"])
 
         if display.get("display__resources"):
-            prefetch.extend(["allocation_set", "allocation_set__status", "allocation_set__resources"])
+            prefetch.extend(["allocation_set", "allocation_set__status"])
+            prefetch.append(parent_resources_prefetch("allocation_set__resources"))
 
         projects = (
             Project.objects.select_related("pi", "requestor", "status", "type")
@@ -872,7 +874,7 @@ class AllocationTable(BaseSearchTable):
         """
         display = self.search_data
 
-        prefetch = ["resources", "resources__resource_type"]
+        prefetch = [parent_resources_prefetch()]
         if (
             display.get("display__users")
             or display.get("display__total_users")

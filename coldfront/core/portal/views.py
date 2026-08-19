@@ -14,6 +14,7 @@ from django.shortcuts import render
 from django.views.decorators.cache import cache_page
 
 from coldfront.core.allocation.models import Allocation, AllocationUser
+from coldfront.core.allocation.utils import parent_resources_prefetch
 from coldfront.core.grant.models import Grant
 from coldfront.core.portal.utils import (
     generate_project_type_chart_data,
@@ -38,7 +39,7 @@ def home(request):
     if request.user.is_authenticated:
         template_name = "portal/authorized_home.html"
         project_list = (
-            Project.objects.select_related("status", "pi")
+            Project.objects.select_related("status", "pi", "type")
             .filter(
                 (
                     Q(pi=request.user)
@@ -107,6 +108,7 @@ def home(request):
             )
             .distinct()
             .order_by("-created")
+            .prefetch_related(parent_resources_prefetch())
         )
 
         if ALLOCATION_EULA_ENABLE:
@@ -198,7 +200,9 @@ def allocation_by_fos(request):
 @cache_page(60 * 15)
 def allocation_summary(request):
     allocation_resources = []
-    for allocation in Allocation.objects.filter(status__name="Active"):
+    for allocation in Allocation.objects.filter(status__name="Active").prefetch_related(
+        parent_resources_prefetch(extra_select_related=("parent_resource",))
+    ):
         parent_resource = allocation.get_parent_resource
         allocation_resources.append(
             parent_resource.parent_resource if parent_resource.parent_resource else parent_resource
@@ -233,7 +237,9 @@ def allocation_by_status(request):
 
 def resource_by_type(request):
     allocation_resources = []
-    for allocation in Allocation.objects.filter(status__name="Active"):
+    for allocation in Allocation.objects.filter(status__name="Active").prefetch_related(
+        parent_resources_prefetch(extra_select_related=("parent_resource", "parent_resource__resource_type"))
+    ):
         parent_resource = allocation.get_parent_resource
         allocation_resources.append(
             parent_resource.parent_resource if parent_resource.parent_resource else parent_resource

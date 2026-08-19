@@ -27,6 +27,7 @@ from coldfront.core.allocation.models import (
     AllocationUserStatusChoice,
     AttributeType,
 )
+from coldfront.core.allocation.utils import parent_resources_prefetch
 from coldfront.core.resource.models import Resource
 
 
@@ -88,7 +89,7 @@ class ResourceFilter(admin.SimpleListFilter):
     parameter_name = "resource"
 
     def lookups(self, request, model_admin):
-        resource_objs = Resource.objects.all()
+        resource_objs = Resource.objects.select_related("resource_type")
         if not request.user.is_superuser:
             resource_objs = resource_objs.filter(review_groups__in=list(request.user.groups.all()))
 
@@ -178,6 +179,14 @@ class AllocationAdmin(SimpleHistoryAdmin, ReviewGroupFilteredResourceQueryset):
         "resources",
     ]
     raw_id_fields = ("project",)
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("project", "project__pi", "status")
+            .prefetch_related(parent_resources_prefetch())
+        )
 
     def resource(self, obj):
         return obj.get_parent_resource
@@ -319,6 +328,20 @@ class AllocationAttributeAdmin(SimpleHistoryAdmin, ReviewGroupFilteredResourceQu
         "allocation__allocationuser__user__last_name",
         "allocation__allocationuser__user__username",
     )
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related(
+                "allocation",
+                "allocation__project",
+                "allocation__project__pi",
+                "allocation__status",
+                "allocation_attribute_type",
+            )
+            .prefetch_related(parent_resources_prefetch("allocation__resources"))
+        )
 
     def usage(self, obj):
         if hasattr(obj, "allocationattributeusage"):
@@ -561,6 +584,14 @@ class AllocationChangeRequestAdmin(ReviewGroupFilteredResourceQueryset):
     raw_id_fields = ("allocation",)
     list_filter = (ResourceFilter,)
 
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("allocation", "allocation__project", "allocation__project__pi")
+            .prefetch_related(parent_resources_prefetch("allocation__resources"))
+        )
+
 
 @admin.register(AllocationAttributeChangeRequest)
 class AllocationAttributeChangeRequestAdmin(admin.ModelAdmin):
@@ -602,7 +633,15 @@ class AllocationAdminActionAdmin(ReviewGroupFilteredResourceQueryset):
         "user",
         "allocation",
     )
-    list_filter = ("allocation__resources",)
+    list_filter = (ResourceFilter,)
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("allocation", "allocation__project", "allocation__project__pi", "user")
+            .prefetch_related(parent_resources_prefetch("allocation__resources"))
+        )
 
     def allocation_pk(self, obj):
         return obj.allocation.pk

@@ -83,6 +83,7 @@ from coldfront.core.allocation.utils import (
     get_user_resources,
     notify_added_users,
     notify_removed_users,
+    parent_resources_prefetch,
     user_can_move_allocation,
     user_in_review_group_with_perm,
     validate_user_accounts_to_add,
@@ -642,7 +643,7 @@ class AllocationListView(LoginRequiredMixin, ListView):
                 .order_by(order_by)
             )
 
-        return allocations.distinct()
+        return allocations.distinct().prefetch_related(parent_resources_prefetch())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1281,12 +1282,20 @@ class AllocationRequestListView(LoginRequiredMixin, UserPassesTestMixin, Templat
         ]
         excluded_project_statuses = ["Archived", "Renewal Denied"]
 
-        allocation_list = Allocation.objects.filter(
-            status__name__in=status_names,
-        ).exclude(project__status__name__in=excluded_project_statuses)
-        allocation_renewal_list = Allocation.objects.filter(
-            status__name="Renewal Requested",
-        ).exclude(project__status__name__in=excluded_project_statuses)
+        allocation_list = (
+            Allocation.objects.filter(
+                status__name__in=status_names,
+            )
+            .select_related("project", "project__pi", "project__status", "project__type", "status")
+            .exclude(project__status__name__in=excluded_project_statuses)
+        )
+        allocation_renewal_list = (
+            Allocation.objects.filter(
+                status__name="Renewal Requested",
+            )
+            .select_related("project", "project__pi", "project__status", "project__type", "status")
+            .exclude(project__status__name__in=excluded_project_statuses)
+        )
 
         if not self.request.user.is_superuser:
             review_groups = self.request.user.groups.all()
@@ -1296,6 +1305,11 @@ class AllocationRequestListView(LoginRequiredMixin, UserPassesTestMixin, Templat
             allocation_renewal_list = allocation_renewal_list.filter(
                 resources__review_groups__in=review_groups,
             ).distinct()
+
+        allocation_list = allocation_list.prefetch_related(parent_resources_prefetch(), "allocationattribute_set")
+        allocation_renewal_list = allocation_renewal_list.prefetch_related(
+            parent_resources_prefetch(), "allocationattribute_set"
+        )
 
         allocation_renewal_dates = {}
         for allocation in allocation_renewal_list:
@@ -1500,7 +1514,7 @@ class AllocationInvoiceListView(LoginRequiredMixin, UserPassesTestMixin, ListVie
         return False
 
     def get_queryset(self):
-        allocations = Allocation.objects.filter(
+        allocations = Allocation.objects.select_related("project", "project__pi", "status").filter(
             status__name="Active",
             resources__requires_payment=True,
         )
@@ -1508,7 +1522,7 @@ class AllocationInvoiceListView(LoginRequiredMixin, UserPassesTestMixin, ListVie
             allocations = allocations.filter(
                 resources__review_groups__in=self.request.user.groups.all(),
             )
-        return allocations.distinct()
+        return allocations.distinct().prefetch_related(parent_resources_prefetch())
 
 
 # this is the view class thats rendering allocation_invoice_detail.
@@ -2125,6 +2139,9 @@ class AllocationChangeListView(LoginRequiredMixin, UserPassesTestMixin, Template
             allocation_change_list = allocation_change_list.filter(
                 allocation__resources__review_groups__in=self.request.user.groups.all(),
             )
+        allocation_change_list = allocation_change_list.prefetch_related(
+            parent_resources_prefetch("allocation__resources")
+        )
         context["allocation_change_list"] = allocation_change_list
         return context
 

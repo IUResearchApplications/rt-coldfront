@@ -271,8 +271,10 @@ class Allocation(TimeStampedModel):
         Returns:
             str: the resources for the allocation
         """
-
-        return ", ".join([ele.name for ele in self.resources.all().order_by(*ALLOCATION_RESOURCE_ORDERING)])
+        resources = getattr(self, "_parent_resources", None)
+        if resources is None:
+            resources = self.resources.all().order_by(*ALLOCATION_RESOURCE_ORDERING)
+        return ", ".join([ele.name for ele in resources])
 
     @property
     def get_resources_as_list(self):
@@ -289,15 +291,12 @@ class Allocation(TimeStampedModel):
         Returns:
             Resource: the parent resource for the allocation
         """
-        resources = self.resources.select_related("resource_type")
-        if len(resources) == 1:
-            return resources.first()
-        else:
-            parent = resources.order_by(*ALLOCATION_RESOURCE_ORDERING).first()
-            if parent:
-                return parent
-            # Fallback
-            return resources.first()
+        resources = getattr(self, "_parent_resources", None)
+        if resources is None:
+            resources = list(self.resources.select_related("resource_type").order_by(*ALLOCATION_RESOURCE_ORDERING))
+        if not resources:
+            return None
+        return resources[0]
 
     @property
     def get_user_list(self):
@@ -982,10 +981,7 @@ class AllocationChangeRequest(TimeStampedModel):
             Resource: the parent resource for the allocation
         """
 
-        if self.allocation.resources.count() == 1:
-            return self.allocation.resources.first()
-        else:
-            return self.allocation.resources.filter(is_allocatable=True).first()
+        return self.allocation.get_parent_resource
 
     def __str__(self):
         return "%s (%s) Change Request" % (self.get_parent_resource.name, self.allocation.project.pi)

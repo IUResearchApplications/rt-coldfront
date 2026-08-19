@@ -6,12 +6,13 @@ import logging
 
 from django.conf import settings
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.forms.models import model_to_dict
 from django.urls import reverse
 from django.utils.html import format_html
 
 from coldfront.core.allocation.models import (
+    ALLOCATION_RESOURCE_ORDERING,
     AllocationAdminAction,
     AllocationUser,
     AllocationUserRoleChoice,
@@ -32,6 +33,26 @@ if EMAIL_ENABLED:
     EMAIL_SIGNATURE = import_from_settings("EMAIL_SIGNATURE")
     EMAIL_CENTER_NAME = import_from_settings("CENTER_NAME")
     EMAIL_RESOURCE_EMAIL_TEMPLATES = import_from_settings("EMAIL_RESOURCE_EMAIL_TEMPLATES", {})
+
+    def parent_resources_prefetch(lookup="resources", extra_select_related=()):
+        """Prefetch an allocation's resources, ordered as parent resources, with
+        resource_type joined so Allocation.get_parent_resource (and Resource.__str__)
+        can be rendered without an extra query per allocation.
+
+        The prefetched list is stored on each Allocation instance as
+        ``_parent_resources``, which Allocation.get_parent_resource /
+        get_resources_as_string consume when present.
+
+        ``extra_select_related`` adds further relations to join on the Resource
+        queryset (e.g. ``("parent_resource",)`` for callers that traverse
+        ``parent_resource.parent_resource``)."""
+        return Prefetch(
+            lookup,
+            queryset=Resource.objects.select_related("resource_type", *extra_select_related).order_by(
+                *ALLOCATION_RESOURCE_ORDERING
+            ),
+            to_attr="_parent_resources",
+        )
 
 
 # TODO - review file

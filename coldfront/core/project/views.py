@@ -17,6 +17,7 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db import transaction
 from django.db.models import Q
+from django.db.models.query import Prefetch
 from django.forms import formset_factory
 from django.http import HttpResponse, HttpResponseRedirect
 from django.http.response import JsonResponse
@@ -32,12 +33,13 @@ from django.views.generic.edit import FormView
 from coldfront.core.allocation.models import (
     Allocation,
     AllocationStatusChoice,
+    AllocationUser,
     AllocationUserRoleChoice,
 )
 from coldfront.core.allocation.signals import (
     allocation_expire,
 )
-from coldfront.core.allocation.utils import send_added_user_email
+from coldfront.core.allocation.utils import parent_resources_prefetch, send_added_user_email
 from coldfront.core.grant.models import Grant
 from coldfront.core.project.forms import (
     ProjectAddUserForm,
@@ -222,7 +224,14 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
 
         context["mailto"] = "mailto:" + ",".join([user.user.email for user in project_users])
 
-        allocations = Allocation.objects.select_related("status").prefetch_related("resources")
+        allocations = Allocation.objects.select_related("status").prefetch_related(
+            parent_resources_prefetch(),
+            Prefetch(
+                "allocationuser_set",
+                queryset=AllocationUser.objects.select_related("status").filter(user=self.request.user),
+                to_attr="request_user",
+            ),
+        )
         if (
             self.request.user.is_superuser
             or is_manager
@@ -257,9 +266,9 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
 
         user_status = []
         for allocation in allocations:
-            allocation_user = allocation.allocationuser_set.select_related("status").filter(user=self.request.user)
+            allocation_user = allocation.request_user
             if allocation_user:
-                user_status.append(allocation_user.first().status.name)
+                user_status.append(allocation_user[0].status.name)
 
         note_set = project_obj.projectusermessage_set
         if self.request.user.is_superuser or self.request.user.has_perm("project.view_projectusermessage"):
@@ -289,6 +298,7 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         context["ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING"] = ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING
         context["ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING"] = ALLOCATION_DAYS_TO_REVIEW_AFTER_EXPIRING
         context["enable_customizable_forms"] = "coldfront.plugins.customizable_forms" in settings.INSTALLED_APPS
+        context["display_pi_change_request"] = "coldfront.plugins.pi_change_request" in settings.INSTALLED_APPS
 
         try:
             context["ondemand_url"] = settings.ONDEMAND_URL
@@ -303,11 +313,7 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
 class ProjectListView(LoginRequiredMixin, ListView):
     model = Project
     template_name = "project/project_list.html"
-    prefetch_related = [
-        "pi",
-        "status",
-        "field_of_science",
-    ]
+    prefetch_related = ["pi", "status", "field_of_science"]
     context_object_name = "project_list"
     paginate_by = 25
 
@@ -331,11 +337,7 @@ class ProjectListView(LoginRequiredMixin, ListView):
                 self.request.user.is_superuser or self.request.user.has_perm("project.can_view_all_projects")
             ):
                 projects = (
-                    Project.objects.select_related(
-                        "pi",
-                        "field_of_science",
-                        "status",
-                    )
+                    Project.objects.select_related("pi", "field_of_science", "status", "type")
                     .filter(
                         status__name__in=[
                             "New",
@@ -350,11 +352,7 @@ class ProjectListView(LoginRequiredMixin, ListView):
                 )
             else:
                 projects = (
-                    Project.objects.select_related(
-                        "pi",
-                        "field_of_science",
-                        "status",
-                    )
+                    Project.objects.select_related("pi", "field_of_science", "status", "type")
                     .filter(
                         Q(
                             status__name__in=[
@@ -394,11 +392,7 @@ class ProjectListView(LoginRequiredMixin, ListView):
 
         else:
             projects = (
-                Project.objects.select_related(
-                    "pi",
-                    "field_of_science",
-                    "status",
-                )
+                Project.objects.select_related("pi", "field_of_science", "status", "type")
                 .filter(
                     Q(
                         status__name__in=[
@@ -1824,17 +1818,21 @@ class ProjectReviewListView(LoginRequiredMixin, UserPassesTestMixin, TemplateVie
         pis = {project.pi for project in project_requests} | {
             project_review.project.pi for project_review in project_review_objs
         }
-        pi_project_objs = Project.objects.filter(
-            Q(
-                pi__in=pis,
-                status__name__in=["Active", "Waiting For Admin Approval", "Contacted By Admin", "Review Pending"],
+        pi_project_objs = (
+            Project.objects.filter(
+                Q(
+                    pi__in=pis,
+                    status__name__in=["Active", "Waiting For Admin Approval", "Contacted By Admin", "Review Pending"],
+                )
+                | Q(
+                    pi__in=pis,
+                    status__name="Expired",
+                    end_date__gt=datetime.date.today() - datetime.timedelta(days=PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING),
+                )
             )
-            | Q(
-                pi__in=pis,
-                status__name="Expired",
-                end_date__gt=datetime.date.today() - datetime.timedelta(days=PROJECT_DAYS_TO_REVIEW_AFTER_EXPIRING),
-            )
-        ).order_by("status__name")
+            .select_related("status", "pi", "requestor")
+            .order_by("status__name")
+        )
         context["pi_projects"] = [
             {
                 "pk": p.pk,

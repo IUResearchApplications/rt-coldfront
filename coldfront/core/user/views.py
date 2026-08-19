@@ -20,6 +20,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import ListView, TemplateView
 
+from coldfront.core.allocation.utils import parent_resources_prefetch
 from coldfront.core.project.models import Project, ProjectUser
 from coldfront.core.user.forms import UserSearchForm
 from coldfront.core.user.utils import CombinedUserSearch
@@ -278,7 +279,9 @@ class UserListAllocations(LoginRequiredMixin, UserPassesTestMixin, TemplateView)
         user_dict = {}
 
         for project in Project.objects.filter(pi=self.request.user):
-            for allocation in project.allocation_set.filter(status__name="Active"):
+            for allocation in project.allocation_set.filter(status__name="Active").prefetch_related(
+                parent_resources_prefetch()
+            ):
                 for allocation_user in allocation.allocationuser_set.filter(
                     status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"]
                 ).order_by("user__username"):

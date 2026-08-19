@@ -12,6 +12,7 @@ from django.db.models.query import Prefetch
 
 from coldfront.core.allocation.models import Allocation, AllocationStatusChoice, AllocationUser
 from coldfront.core.allocation.signals import allocation_expire
+from coldfront.core.allocation.utils import parent_resources_prefetch
 from coldfront.core.project.models import ProjectUser
 from coldfront.core.user.models import User
 from coldfront.core.utils.common import import_from_settings
@@ -64,7 +65,7 @@ def update_statuses():
 
 
 def send_eula_reminders():
-    for allocation in Allocation.objects.all():
+    for allocation in Allocation.objects.all().prefetch_related(parent_resources_prefetch()):
         if not allocation.get_eula():
             continue
 
@@ -106,7 +107,7 @@ def send_expiry_emails():
                 "allocation__project__type",
             )
             .prefetch_related(
-                "allocation__resources",
+                parent_resources_prefetch("allocation__resources"),
                 "allocation__allocationattribute_set",
                 "allocation__allocationattribute_set__allocation_attribute_type",
             ),
