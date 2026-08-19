@@ -85,6 +85,9 @@ cas = [
 aa = [
     "oracledb>=4.0.1",
 ]
+ccr = [
+    "coldfront-custom-resources",
+]
 
 [dependency-groups]
 dev = [
@@ -116,6 +119,9 @@ explicit = true
 
 [tool.uv]
 required-version = ">=0.9.13" # Make sure this version matches what is in the Dockerfile
+
+[tool.uv.sources]
+coldfront-custom-resources = { path = "./coldfront-custom-resources" }
 
 [tool.ruff]
 line-length = 120

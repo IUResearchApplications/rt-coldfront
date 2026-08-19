@@ -311,6 +311,9 @@ aa = [
 cas = [
     { name = "django-cas-ng" },
 ]
+ccr = [
+    { name = "coldfront-custom-resources" },
+]
 freeipa = [
     { name = "cryptography" },
     { name = "dbus-python" },
@@ -358,6 +361,7 @@ docs = [
 
 [package.metadata]
 requires-dist = [
+    { name = "coldfront-custom-resources", marker = "extra == 'ccr'", directory = "coldfront-custom-resources" },
     { name = "crispy-bootstrap5", specifier = ">=2025.6" },
     { name = "cryptography", marker = "extra == 'freeipa'", specifier = ">=43.0.3" },
     { name = "dbus-python", marker = "extra == 'freeipa'", specifier = ">=1.4.0" },
@@ -391,7 +395,7 @@ requires-dist = [
     { name = "redis", specifier = ">=5.2.1" },
     { name = "setuptools", marker = "extra == 'freeipa'", specifier = ">=80.6.0" },
 ]
-provides-extras = ["ldap", "freeipa", "iquota", "oidc", "mysql", "pg", "cas", "aa"]
+provides-extras = ["ldap", "freeipa", "iquota", "oidc", "mysql", "pg", "cas", "aa", "ccr"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -414,6 +418,17 @@ docs = [
     { name = "pygments" },
     { name = "pymdown-extensions" },
 ]
+
+[[package]]
+name = "coldfront-custom-resources"
+version = "1.4.0"
+source = { directory = "coldfront-custom-resources" }
+dependencies = [
+    { name = "coldfront" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "coldfront", editable = "." }]
 
 [[package]]
 name = "colorama"
