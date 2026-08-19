@@ -23,6 +23,9 @@ Project Detail
   <div class="card-header">
     <h2 class="d-inline" id="manage-project"><i class="fas fa-cubes" aria-hidden="true"></i> Manage Project</h2>
     <div class="float-end">
+      {% if display_pi_change_request and request.user == project.pi %}
+        {% include "pi_change_request/pi_change_request_btn.html" %}
+      {% endif %}
       {% if not project.status.name in 'Archived, Denied, Expired, Renewal Denied' and is_allowed_to_update_project %}
         <a class="btn btn-primary" href="{% url 'project-update' project.pk %}"><i class="fa fa-edit" aria-hidden="true"></i> Update Project Information</a>
         {% if not project.status.name in 'Waiting For Admin Approval, Review Pending' %}

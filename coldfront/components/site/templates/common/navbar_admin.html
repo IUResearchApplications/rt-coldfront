@@ -93,5 +93,8 @@
         </ul>
       </li>
     {% endif %}
+    {% if 'pi_change_request/pi_change_request_center.html'|template_exists %}
+      <li>{% include 'pi_change_request/navbar_pi_change_request.html' %}</li>
+    {% endif %}
   </ul>
 </li>

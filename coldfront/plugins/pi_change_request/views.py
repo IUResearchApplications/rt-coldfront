@@ -1,0 +1,91 @@
+from functools import cached_property
+
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.shortcuts import get_object_or_404
+from django.urls import reverse
+from django.views.generic import CreateView, ListView, TemplateView
+
+from coldfront.core.project.models import Project
+from coldfront.core.utils.common import get_domain_url
+from coldfront.plugins.pi_change_request.forms import ProjectPiChangeRequestForm
+from coldfront.plugins.pi_change_request.models import ProjectPiChangeRequest, ProjectPiChangeRequestStatusChoice
+from coldfront.plugins.pi_change_request.utils import send_email, send_slack_message
+
+
+class ProjectPiChangeRequestView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    model = ProjectPiChangeRequest
+    template_name_suffix = "_form"
+    form_class = ProjectPiChangeRequestForm
+    success_message = "Project updated."
+
+    @cached_property
+    def project(self):
+        return get_object_or_404(Project, pk=self.kwargs.get("pk"))
+
+    def test_func(self):
+        if self.request.user.is_superuser:
+            return True
+
+        project_obj = self.project
+        if self.request.user == project_obj.pi:
+            return True
+
+    def get_form_kwargs(self, *args, **kwargs):
+        kwargs = super().get_form_kwargs(*args, **kwargs)
+        kwargs["project"] = self.project
+
+        return kwargs
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Assign the project to the form here so it exists when form_valid is called. Prevents an
+        # error in the clean method.
+        form.instance.project = self.project
+        return form
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context["project_pk"] = self.kwargs.get("pk")
+        return context
+
+    def form_valid(self, form):
+        form.instance.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("New")
+
+        response = super().form_valid(form)
+
+        request_obj = form.instance
+        request_obj.resources.set(
+            request_obj.project.allocation_set.filter(status__name="Active").values_list("resources", flat=True)
+        )
+        request_obj.create_change_request_group_approvals()
+
+        domain_url = get_domain_url(self.request)
+        project_review_url = reverse("pi-change-request-center")
+        url = "{}{}".format(domain_url, project_review_url)
+        send_slack_message(self.project, url)
+
+        template_context = {"url": url, "project_title": self.project.title, "project_id": self.project.pk}
+        send_email("New Project PI Change Request", "pi_change_request/new_pi_change_request.txt", template_context)
+
+        return response
+
+    def get_success_url(self):
+        return self.object.project.get_absolute_url()
+
+
+class ProjectPiChangeRequestCenterView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    template_name = "pi_change_request/pi_change_request_center.html"
+
+    def test_func(self):
+        if self.request.user.is_superuser:
+            return True
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        return context
+
+
+class ProjectPiChangeRequestCenterList(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    def test_func(self):
+        if self.request.user.is_superuser:
+            return True
