@@ -43,6 +43,7 @@ def parent_resources_prefetch(lookup="resources", extra_select_related=()):
     The prefetched list is stored on each Allocation instance as
     ``_parent_resources``, which Allocation.get_parent_resource /
     get_resources_as_string consume when present.
+<<<<<<< HEAD
 
     ``extra_select_related`` adds further relations to join on the Resource
     queryset (e.g. ``("parent_resource",)`` for callers that traverse
@@ -54,9 +55,19 @@ def parent_resources_prefetch(lookup="resources", extra_select_related=()):
         ),
         to_attr="_parent_resources",
     )
+=======
+>>>>>>> 4e2c1b2a (Remove indent)
 
-
-# TODO - review file
+    ``extra_select_related`` adds further relations to join on the Resource
+    queryset (e.g. ``("parent_resource",)`` for callers that traverse
+    ``parent_resource.parent_resource``)."""
+    return Prefetch(
+        lookup,
+        queryset=Resource.objects.select_related("resource_type", *extra_select_related).order_by(
+            *ALLOCATION_RESOURCE_ORDERING
+        ),
+        to_attr="_parent_resources",
+    )
 
 
 def set_allocation_user_status_to_error(allocation_user_pk):
