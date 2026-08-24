@@ -34,25 +34,26 @@ if EMAIL_ENABLED:
     EMAIL_CENTER_NAME = import_from_settings("CENTER_NAME")
     EMAIL_RESOURCE_EMAIL_TEMPLATES = import_from_settings("EMAIL_RESOURCE_EMAIL_TEMPLATES", {})
 
-    def parent_resources_prefetch(lookup="resources", extra_select_related=()):
-        """Prefetch an allocation's resources, ordered as parent resources, with
-        resource_type joined so Allocation.get_parent_resource (and Resource.__str__)
-        can be rendered without an extra query per allocation.
 
-        The prefetched list is stored on each Allocation instance as
-        ``_parent_resources``, which Allocation.get_parent_resource /
-        get_resources_as_string consume when present.
+def parent_resources_prefetch(lookup="resources", extra_select_related=()):
+    """Prefetch an allocation's resources, ordered as parent resources, with
+    resource_type joined so Allocation.get_parent_resource (and Resource.__str__)
+    can be rendered without an extra query per allocation.
 
-        ``extra_select_related`` adds further relations to join on the Resource
-        queryset (e.g. ``("parent_resource",)`` for callers that traverse
-        ``parent_resource.parent_resource``)."""
-        return Prefetch(
-            lookup,
-            queryset=Resource.objects.select_related("resource_type", *extra_select_related).order_by(
-                *ALLOCATION_RESOURCE_ORDERING
-            ),
-            to_attr="_parent_resources",
-        )
+    The prefetched list is stored on each Allocation instance as
+    ``_parent_resources``, which Allocation.get_parent_resource /
+    get_resources_as_string consume when present.
+
+    ``extra_select_related`` adds further relations to join on the Resource
+    queryset (e.g. ``("parent_resource",)`` for callers that traverse
+    ``parent_resource.parent_resource``)."""
+    return Prefetch(
+        lookup,
+        queryset=Resource.objects.select_related("resource_type", *extra_select_related).order_by(
+            *ALLOCATION_RESOURCE_ORDERING
+        ),
+        to_attr="_parent_resources",
+    )
 
 
 # TODO - review file
