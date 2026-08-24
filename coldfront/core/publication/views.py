@@ -79,7 +79,7 @@ def publication_catalogue(request):
     static_dir = settings.SITE_STATIC
 
     context = {}
-    with open(os.path.join(static_dir, "apa.txt"), "r+") as f:
+    with open(os.path.join(static_dir, "apa.txt"), "r") as f:
         temp = {}
         for line in f.readlines():
             test = line.split("(")
