@@ -16,7 +16,41 @@ Project PI Change Request Center
     <h2>Requests</h2>
   </div>
   <div class="card-body">
-    
+    {% if pending_pi_change_requests %}
+      <div class="table-responsive">
+        <table class="table table-sm datatable">
+          <caption class="visually-hidden">PI change requests</caption>
+          <thead>
+            <tr>
+              <td>Project ID</td>
+              <td>Current PI</td>
+              <td>New PI</td>
+              <td>Status</td>
+              <td></span>Actions</td>
+            </tr>
+          </thead>
+          <tbody>
+            {% for pending_pi_change_request in pending_pi_change_requests %}
+              <tr>
+                <td>{{ pending_pi_change_request.project.pk }}</td>
+                <td>{{ pending_pi_change_request.project.pi }}</td>
+                <td>{{ pending_pi_change_request.new_pi }}</td>
+                <td>{{ pending_pi_change_request.status.name }}</td>
+                <td></span>
+                  <a href="{% url 'pi-change-request-approval' pending_pi_change_request.pk %}" class="btn btn-success me-1">Activate</a>
+                  <a href="{% url 'pi-change-request-denial' pending_pi_change_request.pk %}" class="btn btn-danger me-1">Deny</a>
+                  <a href="{% url 'pi-change-request-details' pending_pi_change_request.pk %}" class="btn btn-secondary">Details</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="alert alert-info mb-0" role="alert">
+        No pending PI change requests!
+      </div>
+    {% endif %}
   </div>
 </div>
 <div class="row">
@@ -26,7 +60,13 @@ Project PI Change Request Center
         <h2>History</h2>
       </div>
       <div class="card-body">
-        
+        {% if history %}
+          
+        {% else %}
+          <div class="alert alert-info mb-0" role="alert">
+            No history available!
+          </div>
+        {% endif %}
       </div>
     </div>
   </div>
