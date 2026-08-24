@@ -3,7 +3,6 @@ FROM ubuntu:24.04 AS base
 FROM base AS cfimage
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        mariadb-client \
         libldap2 \
         libsasl2-2 \
         libmariadb3 \
@@ -11,7 +10,9 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
         libk5crypto3 \
         libgssapi-krb5-2 \
         libglib2.0-0 \
-        libdbus-1-3
+        libdbus-1-3 \
+        libaio1t64 && \
+    ln -s /usr/lib/x86_64-linux-gnu/libaio.so.1t64 /usr/lib/x86_64-linux-gnu/libaio.so.1
 
 FROM cfimage AS builder
 
@@ -82,19 +83,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 FROM cfimage
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-        libaio1t64 && \
-    ln -s /usr/lib/x86_64-linux-gnu/libaio.so.1t64 /usr/lib/x86_64-linux-gnu/libaio.so.1 && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
 COPY --from=oracle-client /opt/oracle/instantclient_23_26 /opt/oracle/instantclient_23_26
-RUN sh -c "echo /opt/oracle/instantclient_23_26 > /etc/ld.so.conf.d/oracle-instantclient.conf" && ldconfig
-RUN groupadd -g 1001 coldfrontgroup && useradd -u 1001 -g coldfrontgroup -d /app -s /bin/false coldfrontuser
+RUN sh -c "echo /opt/oracle/instantclient_23_26 > /etc/ld.so.conf.d/oracle-instantclient.conf" && ldconfig && \
+    groupadd -g 1001 coldfrontgroup && useradd -u 1001 -g coldfrontgroup -d /app -s /bin/false coldfrontuser && \
+    mkdir -p /data/static /data/slurm/slurm_dump /data/slate_projects/incoming
 COPY --from=builder --chown=1001:1001 /python /python
 COPY --from=builder --chown=1001:1001 /app /app
 ENV PATH="/app/.venv/bin:$PATH"
 ENV HOME=/app
-RUN mkdir -p /data/static /data/slurm/slurm_dump /data/slate_projects/incoming
 EXPOSE 8000
 USER coldfrontuser
 CMD ["gunicorn", "--workers", "3", "--bind", ":8000", "--control-socket", "/tmp/gunicorn.ctl", "coldfront.config.wsgi"]
