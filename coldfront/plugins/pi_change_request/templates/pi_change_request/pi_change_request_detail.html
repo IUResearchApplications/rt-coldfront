@@ -1,0 +1,55 @@
+{% extends "common/base.html" %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+
+{% block title %}
+Project PI Change Request Details
+{% endblock %}
+
+{% block content %}
+<h1>Project PI Change Request Details</h1>
+<hr>
+
+<div class="row">
+  <div class="col">
+    <div class="card">
+      <div class="card-header">
+        <h2>Details</h2>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col"><p class="card-text"><strong>Project: </strong>{{ pi_change_request.project.title }}</p></div>
+          <div class="col"><p class="card-text"><strong>Current PI: </strong>{{ pi_change_request.project.pi }}</p></div>
+        </div>
+        <div class="row">
+          <div class="col"><p class="card-text"><strong>Status: </strong>{{ pi_change_request.status }}</p></div>
+          <div class="col"><p class="card-text"><strong>New PI: </strong>{{ pi_change_request.new_pi }}</p></div>
+        </div>
+        <p class="card-text"><strong>Description: </strong>{{ pi_change_request.justification|linebreaksbr }}</p>
+      </div>
+      <div class="card-footer">
+        <a href="{% url 'pi-change-request-approval' pi_change_request.pk %}" class="btn btn-success me-1">Activate</a>
+        <a href="{% url 'pi-change-request-denial' pi_change_request.pk %}" class="btn btn-danger me-1">Deny</a>
+        <a href="{% url 'pi-change-request-center' %}" class="btn btn-secondary">Return</a>
+      </div>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card">
+      <div class="card-header">
+        <h2>Approvals</h2>
+      </div>
+      <div class="card-body">
+        {% if approvals %}
+          
+        {% else %}
+          <div class="alert alert-info mb-0" role="alert">
+            No additional approvals required!
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
