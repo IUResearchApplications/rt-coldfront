@@ -1,5 +1,4 @@
 {% extends "common/base.html" %}
-{% load crispy_forms_tags %}
 {% load static %}
 
 
@@ -26,7 +25,7 @@ Project PI Change Request Center
               <td>Current PI</td>
               <td>New PI</td>
               <td>Status</td>
-              <td></span>Actions</td>
+              <td>Actions</td>
             </tr>
           </thead>
           <tbody>
@@ -36,7 +35,7 @@ Project PI Change Request Center
                 <td>{{ pending_pi_change_request.project.pi }}</td>
                 <td>{{ pending_pi_change_request.new_pi }}</td>
                 <td>{{ pending_pi_change_request.status.name }}</td>
-                <td></span>
+                <td>
                   <a href="{% url 'pi-change-request-approval' pending_pi_change_request.pk %}" class="btn btn-success me-1">Activate</a>
                   <a href="{% url 'pi-change-request-denial' pending_pi_change_request.pk %}" class="btn btn-danger me-1">Deny</a>
                   <a href="{% url 'pi-change-request-details' pending_pi_change_request.pk %}" class="btn btn-secondary">Details</a>
@@ -73,12 +72,72 @@ Project PI Change Request Center
   <div class="col">
     <div class="card">
       <div class="card-header">
-        <h2>Resources Requiring Approval</h2>
+        <h2>Additional Approval Settings</h2>
       </div>
       <div class="card-body">
-        
+        <div class="table-responsive">
+          <table class="table table-sm datatable">
+            <caption class="visually-hidden">Additional approval settings</caption>
+            <thead>
+              <tr>
+                <td>Requires Approval</td>
+                <td>Resource</td>
+              </tr>
+            </thead>
+            <tbody>
+              {% for form in resource_approvals_formset %}
+                <tr>
+                  <td>
+                    <input
+                      type="checkbox"
+                      class="form-check-input requires-approval-checkbox"
+                      data-pk="{{ form.initial.pk }}"
+                      {% if form.initial.requires_approval %}checked{% endif %}
+                      {% if form.requires_approval.field.disabled %}disabled{% endif %}
+                    />
+                  </td>
+                  <td>{{ form.initial.resource }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <div id="requires_approval_alert_div"></div>
+        </div>
       </div>
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block javascript %}
+{{ block.super }}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    $(".requires-approval-checkbox").on("change", function() {
+      var $checkbox = $(this);
+      var checked = $checkbox.prop("checked");
+      var resource_approval_id = $checkbox.data("pk");
+      $checkbox.prop("disabled", true);
+
+      $.ajax({
+        headers: { "X-CSRFToken": "{{ csrf_token }}" },
+        type: "POST",
+        url: "{% url 'update-resource-approval' %}",
+        data: {
+          resource_approval_id: resource_approval_id,
+          checked: checked
+        },
+        success: function (data) {
+          $checkbox.prop("disabled", false);
+          $("#requires_approval_alert_div").html('<div class="alert alert-success alert-dismissible"><button type="button" class="btn-close" data-bs-dismiss="alert"></button><strong>Success!</strong> Resource approval updated.</div>')
+        },
+        error: function (xhr, status, error) {
+          $checkbox.prop("checked", !checked);
+          $checkbox.prop("disabled", false);
+          $("#requires_approval_alert_div").html('<div class="alert alert-danger alert-dismissible"><button type="button" class="btn-close" data-bs-dismiss="alert"></button><strong>Error!</strong> Failed updating resource approval.</div>')
+        }
+      });
+    });
+  });
+</script>
 {% endblock %}

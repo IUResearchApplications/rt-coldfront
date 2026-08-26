@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 
 from coldfront.core.resource.models import Resource
-from coldfront.plugins.pi_change_request.models import ProjectPiChangeRequestRequiresApprovalSetting
+from coldfront.plugins.pi_change_request.models import ProjectPiChangeRequestResourceApprovalSetting
 
 
 class Command(BaseCommand):
@@ -10,6 +10,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         resources = Resource.objects.filter(is_allocatable=True)
         for resource in resources:
-            ProjectPiChangeRequestRequiresApprovalSetting.objects.get_or_create(
+            ProjectPiChangeRequestResourceApprovalSetting.objects.get_or_create(
                 resource=resource, requires_approval=False
             )

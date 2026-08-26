@@ -4,9 +4,9 @@ from django.contrib import admin
 
 from coldfront.plugins.pi_change_request.models import (
     ProjectPiChangeRequest,
-    ProjectPiChangeRequestApproval,
-    ProjectPiChangeRequestApprovalStatusChoice,
-    ProjectPiChangeRequestRequiresApprovalSetting,
+    ProjectPiChangeRequestResourceApproval,
+    ProjectPiChangeRequestResourceApprovalSetting,
+    ProjectPiChangeRequestResourceApprovalStatusChoice,
     ProjectPiChangeRequestStatusChoice,
 )
 
@@ -30,8 +30,8 @@ class ProjectPiChangeRequestAdmin(admin.ModelAdmin):
             return self.fields_change
 
 
-@admin.register(ProjectPiChangeRequestApproval)
-class ProjectPiChangeRequestApprovalAdmin(admin.ModelAdmin):
+@admin.register(ProjectPiChangeRequestResourceApproval)
+class ProjectPiChangeRequestResourceApprovalAdmin(admin.ModelAdmin):
     fields_change = ("request", "resource", "status", "handler")
     list_display = ("pk", "resource", "status", "handler")
     list_filter = ("status", "resource")
@@ -39,13 +39,13 @@ class ProjectPiChangeRequestApprovalAdmin(admin.ModelAdmin):
     raw_id_fields = ("handler",)
 
 
-@admin.register(ProjectPiChangeRequestApprovalStatusChoice)
-class ProjectPiChangeRequestApprovalStatusChoiceAdmin(admin.ModelAdmin):
+@admin.register(ProjectPiChangeRequestResourceApprovalStatusChoice)
+class ProjectPiChangeRequestResourceApprovalStatusChoiceAdmin(admin.ModelAdmin):
     list_display = ("name",)
 
 
-@admin.register(ProjectPiChangeRequestRequiresApprovalSetting)
-class ProjectPiChangeRequestRequiresApprovalSettingAdmin(admin.ModelAdmin):
+@admin.register(ProjectPiChangeRequestResourceApprovalSetting)
+class ProjectPiChangeRequestResourceApprovalSettingAdmin(admin.ModelAdmin):
     list_display = ("resource", "requires_approval")
 
 
