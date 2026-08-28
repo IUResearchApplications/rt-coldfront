@@ -26,6 +26,10 @@ Project PI Change Request Details
           <div class="col"><p class="card-text"><strong>Status: </strong>{{ pi_change_request.status }}</p></div>
           <div class="col"><p class="card-text"><strong>New PI: </strong>{{ pi_change_request.new_pi }}</p></div>
         </div>
+        <div class="row">
+          <div class="col"><p class="card-text"><strong>Initiator: </strong>{{ pi_change_request.initiator }}</p>
+          </div>
+        </div>
         <p class="card-text"><strong>Description: </strong>{{ pi_change_request.justification|linebreaksbr }}</p>
       </div>
       <div class="card-footer">
