@@ -27,7 +27,7 @@ class ProjectPiChangeRequestView(LoginRequiredMixin, UserPassesTestMixin, Create
     model = ProjectPiChangeRequest
     template_name_suffix = "_form"
     form_class = ProjectPiChangeRequestForm
-    success_message = "Project updated."
+    success_message = "Project PI change request received."
 
     @cached_property
     def project(self):
