@@ -8,6 +8,8 @@ from coldfront.plugins.pi_change_request.models import (
     ProjectPiChangeRequestResourceApprovalSetting,
     ProjectPiChangeRequestResourceApprovalStatusChoice,
     ProjectPiChangeRequestStatusChoice,
+    ProjectPiChangeRequestUserApproval,
+    ProjectPiChangeRequestUserApprovalStatusChoice,
 )
 
 
@@ -51,4 +53,16 @@ class ProjectPiChangeRequestResourceApprovalSettingAdmin(admin.ModelAdmin):
 
 @admin.register(ProjectPiChangeRequestStatusChoice)
 class ProjectPiChangeRequestStatusChoiceAdmin(admin.ModelAdmin):
+    list_display = ("name",)
+
+
+@admin.register(ProjectPiChangeRequestUserApproval)
+class ProjectPiChangeRequestUserApprovalAdmin(admin.ModelAdmin):
+    list_display = ("pk", "request", "user", "status")
+    list_filter = ("status",)
+    search_fields = ("user__username", "user__first_name", "user__last_name")
+
+
+@admin.register(ProjectPiChangeRequestUserApprovalStatusChoice)
+class ProjectPiChangeRequestUserApprovalStatusChoiceAdmin(admin.ModelAdmin):
     list_display = ("name",)

@@ -16,7 +16,7 @@ class ProjectPiChangeRequestStatusChoice(TimeStampedModel):
         def get_by_natural_key(self, name):
             return self.get(name=name)
 
-    name = models.CharField(max_length=64)
+    name = models.CharField(max_length=64, unique=True)
     objects = ProjectPiChangeRequestStatusChoiceManager()
 
     def __str__(self):
@@ -55,6 +55,43 @@ class ProjectPiChangeRequest(TimeStampedModel):
                 status=ProjectPiChangeRequestResourceApprovalStatusChoice.objects.get_by_natural_key("Pending"),
             )
 
+    def create_user_approvals(self, users):
+        pending_status = ProjectPiChangeRequestUserApprovalStatusChoice.objects.get(name="Pending")
+        for user in users:
+            ProjectPiChangeRequestUserApproval.objects.get_or_create(
+                request=self, user=user, defaults={"status": pending_status}
+            )
+
+    def update_status_from_approvals(self):
+        """Recompute this request's status from its user and resource approvals.
+
+        Denied anywhere -> Blocked; all Approved -> Ready; otherwise Awaiting
+        Approvals. Terminal states (Complete/Rejected) are left untouched.
+        """
+        if self.status.name in ["Complete", "Rejected"]:
+            return
+
+        approvals = list(self.user_approvals.select_related("status")) + list(
+            self.resource_approvals.select_related("status")
+        )
+        if not approvals:
+            return
+
+        statuses = [approval.status.name for approval in approvals]
+        if "Denied" in statuses:
+            new_status_name = "Blocked"
+        elif all(name == "Approved" for name in statuses):
+            new_status_name = "Ready"
+        else:
+            new_status_name = "Awaiting Approvals"
+
+        if self.status.name != new_status_name:
+            self.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key(new_status_name)
+            self.save()
+
+    def __str__(self):
+        return f"{self.project.title} ({self.current_pi} -> {self.new_pi})"
+
 
 class ProjectPiChangeRequestResourceApprovalStatusChoice(TimeStampedModel):
     class Meta:
@@ -64,7 +101,7 @@ class ProjectPiChangeRequestResourceApprovalStatusChoice(TimeStampedModel):
         def get_by_natural_key(self, name):
             return self.get(name=name)
 
-    name = models.CharField(max_length=64)
+    name = models.CharField(max_length=64, unique=True)
     objects = ProjectPiChangeRequestResourceApprovalStatusChoiceManager()
 
     def __str__(self):
@@ -75,7 +112,7 @@ class ProjectPiChangeRequestResourceApprovalStatusChoice(TimeStampedModel):
 
 
 class ProjectPiChangeRequestResourceApproval(TimeStampedModel):
-    request = models.ForeignKey(ProjectPiChangeRequest, on_delete=models.CASCADE)
+    request = models.ForeignKey(ProjectPiChangeRequest, on_delete=models.CASCADE, related_name="resource_approvals")
     resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
     status = models.ForeignKey(ProjectPiChangeRequestResourceApprovalStatusChoice, on_delete=models.CASCADE)
     handler = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
@@ -101,7 +138,7 @@ class ProjectPiChangeRequestUserApprovalStatusChoice(TimeStampedModel):
         def get_by_natural_key(self, name):
             return self.get(name=name)
 
-    name = models.CharField(max_length=64)
+    name = models.CharField(max_length=64, unique=True)
     objects = ProjectPiChangeRequestUserApprovalStatusChoiceManager()
 
     def __str__(self):
@@ -112,7 +149,12 @@ class ProjectPiChangeRequestUserApprovalStatusChoice(TimeStampedModel):
 
 
 class ProjectPiChangeRequestUserApproval(TimeStampedModel):
-    request = models.ForeignKey(ProjectPiChangeRequest, on_delete=models.CASCADE)
+    request = models.ForeignKey(ProjectPiChangeRequest, on_delete=models.CASCADE, related_name="user_approvals")
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     status = models.ForeignKey(ProjectPiChangeRequestUserApprovalStatusChoice, on_delete=models.CASCADE)
     history = HistoricalRecords()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["request", "user"], name="unique_user_approval_per_request"),
+        ]

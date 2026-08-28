@@ -1,0 +1,99 @@
+{% extends "common/base.html" %}
+
+
+{% block title %}
+Project PI Change Request Details
+{% endblock %}
+
+
+{% block content %}
+<h1>Project PI Change Request Details</h1>
+<hr>
+
+<div class="card mb-4">
+  <div class="card-header">
+    <h2>Summary</h2>
+  </div>
+  <div class="card-body">
+    <div class="d-flex flex-column flex-md-row align-items-center justify-content-center gap-3 text-center mb-4 pb-3 border-bottom">
+      <div>
+        <span class="d-block text-muted small">Current PI</span>
+        <span class="fw-semibold">{{ pi_change_user_request.request.current_pi }}</span>
+      </div>
+      <span class="fs-3 text-primary" aria-hidden="true">
+        <i class="fa-solid fa-arrow-right"></i>
+      </span>
+      <div>
+        <span class="d-block text-muted small">New PI</span>
+        <span class="fw-semibold">{{ pi_change_user_request.request.new_pi }}</span>
+      </div>
+    </div>
+
+    <dl class="row mb-0">
+      <dt class="col-sm-4 col-md-3">Project</dt>
+      <dd class="col-sm-8 col-md-9">{{ pi_change_user_request.request.project }}</dd>
+
+      {% if pi_change_user_request.request.initiator %}
+      <dt class="col-sm-4 col-md-3">Initiated by</dt>
+      <dd class="col-sm-8 col-md-9">{{ pi_change_user_request.request.initiator }}</dd>
+      {% endif %}
+
+      <dt class="col-sm-4 col-md-3">Request status</dt>
+      <dd class="col-sm-8 col-md-9">
+        <span class="badge bg-secondary">{{ pi_change_user_request.request.status }}</span>
+      </dd>
+
+      <dt class="col-sm-4 col-md-3">Your response</dt>
+      <dd class="col-sm-8 col-md-9">
+        <span class="badge bg-secondary">{{ pi_change_user_request.status }}</span>
+      </dd>
+    </dl>
+  </div>
+</div>
+
+<div
+  class="card mb-4 {% if pi_change_user_request.status.name == 'Approved' %}border-success{% elif pi_change_user_request.status.name == 'Denied' %}border-danger{% else %}border-warning{% endif %}"
+>
+  <div class="card-header bg-light">
+    <h2>
+      <i
+        class="fa-solid {% if pi_change_user_request.status.name == 'Approved' %}fa-circle-check text-success{% elif pi_change_user_request.status.name == 'Denied' %}fa-circle-xmark text-danger{% else %}fa-circle-exclamation text-warning{% endif %}"
+        aria-hidden="true"
+      ></i>
+      {% if pi_change_user_request.status.name == "Approved" %}
+        Approved
+      {% elif pi_change_user_request.status.name == "Denied" %}
+        Declined
+      {% else %}
+        Action Required
+      {% endif %}
+    </h2>
+  </div>
+  <div class="card-body">
+    <p>
+      A PI change request was initiated{% if pi_change_user_request.request.initiator %} by
+      {{ pi_change_user_request.request.initiator }}{% endif %}. To complete this request, you must accept this change.
+    </p>
+    <p class="mb-0">
+      The new PI will become the owner of any Slate projects this allocation contains. The original PI will remain a
+      manager of the project.
+    </p>
+  </div>
+  {% if can_respond %}
+    <div class="card-footer d-flex gap-2">
+      <form method="post" action="{% url 'pi-change-request-user-approve' pi_change_user_request.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success">Accept</button>
+      </form>
+      <form method="post" action="{% url 'pi-change-request-user-deny' pi_change_user_request.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Decline</button>
+      </form>
+    </div>
+  {% elif pi_change_user_request.status.name != "Pending" %}
+    <div class="card-footer">
+      <span class="text-muted">You have already responded to this request ({{ pi_change_user_request.status }}).</span>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
