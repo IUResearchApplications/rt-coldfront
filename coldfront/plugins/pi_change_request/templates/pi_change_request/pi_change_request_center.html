@@ -22,6 +22,7 @@ Project PI Change Request Center
           <thead>
             <tr>
               <td>Project ID</td>
+              <td>Initiator</td>
               <td>Current PI</td>
               <td>New PI</td>
               <td>Status</td>
@@ -32,6 +33,7 @@ Project PI Change Request Center
             {% for pending_pi_change_request in pending_pi_change_requests %}
               <tr>
                 <td>{{ pending_pi_change_request.project.pk }}</td>
+                <td>{{ pending_pi_change_request.initiator }}</td>
                 <td>{{ pending_pi_change_request.project.pi }}</td>
                 <td>{{ pending_pi_change_request.new_pi }}</td>
                 <td>{{ pending_pi_change_request.status.name }}</td>

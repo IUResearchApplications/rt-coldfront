@@ -30,6 +30,7 @@ class ProjectPiChangeRequest(TimeStampedModel):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     current_pi = models.ForeignKey(User, on_delete=models.CASCADE, related_name="current_pi")
     new_pi = models.ForeignKey(User, on_delete=models.CASCADE, related_name="new_pi")
+    initiator = models.ForeignKey(User, on_delete=models.CASCADE, related_name="initiator")
     justification = models.TextField()
     status = models.ForeignKey(ProjectPiChangeRequestStatusChoice, on_delete=models.CASCADE)
     resources = models.ManyToManyField(Resource)

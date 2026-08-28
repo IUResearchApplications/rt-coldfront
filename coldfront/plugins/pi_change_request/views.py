@@ -63,6 +63,7 @@ class ProjectPiChangeRequestView(LoginRequiredMixin, UserPassesTestMixin, Create
         request_obj = form.instance
         request_obj.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("New")
         request_obj.current_pi = request_obj.project.pi
+        request_obj.initiator = self.request.user
         response = super().form_valid(form)
 
         request_obj.resources.set(
