@@ -113,7 +113,7 @@ class ProjectPiChangeRequestCenterView(LoginRequiredMixin, UserPassesTestMixin, 
                 can_edit = check_if_groups_in_review_groups(
                     setting.get("resource").review_groups.all(),
                     user_groups,
-                    "pi_change_request.change_projectpichangerequestrequiresapprovalsetting",
+                    "pi_change_request.change_projectpichangerequestresourceapprovalsetting",
                 )
             disable_selected.append(not can_edit)
 
@@ -198,7 +198,7 @@ class ProjectPiChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, Templat
         return context
 
 
-class ProjectPiChangeRequestRequiresApprovalUpdateView(LoginRequiredMixin, View):
+class ProjectPiChangeRequestResourceApprovalSettingView(LoginRequiredMixin, View):
     def dispatch(self, request, *args, **kwargs):
         self.obj = get_object_or_404(
             ProjectPiChangeRequestResourceApprovalSetting, pk=request.POST.get("resource_approval_id")
@@ -211,7 +211,7 @@ class ProjectPiChangeRequestRequiresApprovalUpdateView(LoginRequiredMixin, View)
         passed = check_if_groups_in_review_groups(
             self.obj.resource.review_groups.all(),
             user.groups.all(),
-            "pi_change_request.change_projectpichangerequestrequiresapprovalsetting",
+            "pi_change_request.change_projectpichangerequestresourceapprovalsetting",
         )
         if not passed:
             return HttpResponse("not permitted", status=403)
