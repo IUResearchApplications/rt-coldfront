@@ -112,5 +112,7 @@ class ProjectPiChangeRequestUserApprovalStatusChoice(TimeStampedModel):
 
 
 class ProjectPiChangeRequestUserApproval(TimeStampedModel):
+    request = models.ForeignKey(ProjectPiChangeRequest, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     status = models.ForeignKey(ProjectPiChangeRequestUserApprovalStatusChoice, on_delete=models.CASCADE)
+    history = HistoricalRecords()
