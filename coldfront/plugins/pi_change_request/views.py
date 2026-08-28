@@ -41,6 +41,11 @@ class ProjectPiChangeRequestView(LoginRequiredMixin, UserPassesTestMixin, Create
         if self.request.user == project_obj.pi:
             return True
 
+        if project_obj.projectuser_set.filter(
+            user=self.request.user, role__name="Manager", status__name="Active"
+        ).exists():
+            return True
+
     def get_form_kwargs(self, *args, **kwargs):
         kwargs = super().get_form_kwargs(*args, **kwargs)
         kwargs["project"] = self.project
