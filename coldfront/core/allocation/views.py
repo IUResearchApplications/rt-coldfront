@@ -368,12 +368,26 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
                 )
                 messages.success(request, "Allocation Denied!")
             elif allocation_obj.status.name == "Revoked":
+                email_template = (
+                    EMAIL_RESOURCE_EMAIL_TEMPLATES.get(allocation_obj.get_parent_resource.name, {}).get(
+                        "allocation_revoked", "email/allocation_revoked.txt"
+                    ),
+                )
+                addtl_context = {}
+                if allocation_obj.get_parent_resource.name == "Slate-Project":
+                    addtl_context = {
+                        "help_url": settings.SLATE_PROJECT_TICKET_QUEUE,
+                        "directory_path": allocation_obj.allocationattribute_set.get(
+                            allocation_attribute_type__name="slate-project Directory"
+                        ).value,
+                    }
                 send_allocation_customer_email(
                     request,
                     allocation_obj,
                     "Allocation Revoked",
-                    "email/allocation_revoked.txt",
+                    email_template,
                     domain_url=get_domain_url(self.request),
+                    addtl_context=addtl_context,
                 )
                 messages.success(request, "Allocation Revoked!")
             elif allocation_obj.status.name == "Removed":
