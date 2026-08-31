@@ -44,6 +44,15 @@ class ProjectPiChangeRequest(TimeStampedModel):
         if not project_manager:
             raise ValidationError("The new PI must be a manager in the project.")
 
+        if (
+            ProjectPiChangeRequest.objects.filter(
+                project=self.project, status__name__in=["New", "Awaiting Approvals", "Blocked", "Ready"]
+            )
+            .exclude(pk=self.pk)
+            .exists()
+        ):
+            raise ValidationError("An active PI change request already exists for this project.")
+
     def create_resource_approvals(self):
         settings = ProjectPiChangeRequestResourceApprovalSetting.objects.filter(
             resource__in=self.resources.all(), requires_approval=True
