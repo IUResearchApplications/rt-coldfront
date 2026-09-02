@@ -378,7 +378,7 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
                     addtl_context = {
                         "help_url": settings.SLATE_PROJECT_TICKET_QUEUE,
                         "directory_path": allocation_obj.allocationattribute_set.get(
-                            allocation_attribute_type__name="slate-project Directory"
+                            allocation_attribute_type__name="Slate-Project Directory"
                         ).value,
                     }
                 send_allocation_customer_email(
