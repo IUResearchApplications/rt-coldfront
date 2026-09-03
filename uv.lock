@@ -421,7 +421,7 @@ docs = [
 
 [[package]]
 name = "coldfront-custom-resources"
-version = "1.4.1"
+version = "1.4.2"
 source = { directory = "coldfront-custom-resources" }
 dependencies = [
     { name = "coldfront" },
