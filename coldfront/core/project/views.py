@@ -240,7 +240,7 @@ class ProjectDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
             allocations = allocations.filter(project=project_obj).order_by("-end_date")
         else:
             allocations = (
-                Allocation.objects.filter(
+                allocations.filter(
                     Q(project=project_obj)
                     & Q(project__projectuser__user=self.request.user)
                     & Q(
