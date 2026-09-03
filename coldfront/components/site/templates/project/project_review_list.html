@@ -15,8 +15,8 @@ Project Review List
 <h2>Pending Project Requests</h2>
 {% if project_requests %}
   <div class="table-responsive">
-    <table id="project_request_table" class="table table-sm">
-      <caption class="sr-only">Project requests</caption>
+    <table id="project_request_table" class="table table-sm datatable">
+      <caption class="visually-hidden">Project requests</caption>
       <thead>
         <tr>
           <th scope="col" class="text-nowrap">Project Title</th>
@@ -36,8 +36,8 @@ Project Review List
             <td>
               <a
                 href="#"
-                data-toggle="modal"
-                data-target="#id_pi_projects_modal"
+                data-bs-toggle="modal"
+                data-bs-target="#id_pi_projects_modal"
                 data-pi="{{project_request.info.pi.username}}"
                 data-pk="{{project_request.info.pk}}"
               >
@@ -49,11 +49,11 @@ Project Review List
             {% if project_request.info.status.name == 'Contacted By Admin' %}
               <td>
                 <span
-                  data-toggle="popover"
+                  data-bs-toggle="popover"
                   title="Contacted"
-                  data-trigger="hover"
-                  data-content="Contacted by {{ project_request.contacted_by }}"
-                  class="badge badge-success"
+                  data-bs-trigger="hover"
+                  data-bs-content="Contacted by {{ project_request.contacted_by }}"
+                  class="badge text-bg-success"
                   aria-label="Contacted by {{ project_request.contacted_by }}"
                 >
                   <i class="fas fa-check-circle fa-lg" aria-hidden="true"></i>
@@ -63,10 +63,10 @@ Project Review List
               <td></td>
             {% endif %}
             <td class="no-textwrap" style="white-space: nowrap;">
-              <a href="{% url 'project-activate-request' project_request.info.pk %}" class="btn btn-success mr-1">Activate</a>
-              <a href="{% url 'project-deny-request' project_request.info.pk %}" class="btn btn-danger mr-1">Deny</a>
+              <a href="{% url 'project-activate-request' project_request.info.pk %}" class="btn btn-success me-1">Activate</a>
+              <a href="{% url 'project-deny-request' project_request.info.pk %}" class="btn btn-danger me-1">Deny</a>
               {% if EMAIL_ENABLED %}
-                <a href="{% url 'project-request-email' project_request.info.pk %}" class="btn btn-primary mr-1">Email</a>
+                <a href="{% url 'project-request-email' project_request.info.pk %}" class="btn btn-primary me-1">Email</a>
               {% endif %}
             </td>
           </tr>
@@ -84,8 +84,8 @@ Project Review List
   Pending Project Renewals
   <a
     href="#"
-    data-toggle="modal"
-    data-target="#id_project_review_stats_modal"
+    data-bs-toggle="modal"
+    data-bs-target="#id_project_review_stats_modal"
     aria-labelledby="id_project_review_stats_modal_label"
   >
     <i class="fas fa-chart-pie" aria-hidden="true" style="font-size: 0.7em;"></i>
@@ -93,8 +93,8 @@ Project Review List
 </h2>
 {% if project_reviews %}
   <div class="table-responsive">
-    <table id="project_review_table" class="table table-sm">
-      <caption class="sr-only">Project reviews</caption>
+    <table id="project_review_table" class="table table-sm datatable">
+      <caption class="visually-hidden">Project reviews</caption>
       <thead>
         <tr>
           <th scope="col">Project Title</th>
@@ -113,8 +113,8 @@ Project Review List
             <td>
               <a
                 href="#"
-                data-toggle="modal"
-                data-target="#id_pi_projects_modal"
+                data-bs-toggle="modal"
+                data-bs-target="#id_pi_projects_modal"
                 data-pi="{{project_review.info.project.pi.username}}"
                 data-pk="{{project_review.info.project.pk}}"
                 data-eligible="{{pi_eligibilities|get_value_from_dict:project_review.info.project.pi.username}}"
@@ -124,11 +124,11 @@ Project Review List
               </a>
               {% if not pi_eligibilities|get_value_from_dict:project_review.info.project.pi.username %}
                 <span
-                  data-toggle="popover"
+                  data-bs-toggle="popover"
                   title="Not Eligible"
-                  data-trigger="hover"
-                  data-content="This user is not eligible to be a PI!"
-                  class="badge badge-danger"
+                  data-bs-trigger="hover"
+                  data-bs-content="This user is not eligible to be a PI!"
+                  class="badge text-bg-danger"
                   aria-label="User {{project_review.info.project.pi.username}} is not eligible to be a PI!"
                 >
                   <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
@@ -138,11 +138,11 @@ Project Review List
             {% if project_review.info.status.name == 'Contacted By Admin' %}
               <td>
                 <span
-                  data-toggle="popover"
+                  data-bs-toggle="popover"
                   title="Contacted"
-                  data-trigger="hover"
-                  data-content="Contacted by {{ project_review.contacted_by }}"
-                  class="badge badge-success"
+                  data-bs-trigger="hover"
+                  data-bs-content="Contacted by {{ project_review.contacted_by }}"
+                  class="badge text-bg-success"
                   aria-label="Contacted by {{ project_review.contacted_by }}"
                 >
                   <i class="fas fa-check-circle fa-lg" aria-hidden="true"></i>
@@ -153,11 +153,11 @@ Project Review List
               {% if contacted_pis|get_value_from_dict:project_review.info.project.pi.username %}
                 <td>
                   <span
-                    data-toggle="popover"
+                    data-bs-toggle="popover"
                     title="PI Already Contacted"
-                    data-trigger="hover"
-                    data-content="PI already contacted"
-                    class="badge badge-warning"
+                    data-bs-trigger="hover"
+                    data-bs-content="PI already contacted"
+                    class="badge text-bg-warning"
                     aria-label="PI already contacted"
                   >
                     <i class="fas fa-info-circle fa-lg" aria-hidden="true"></i>
@@ -169,9 +169,9 @@ Project Review List
               <td></td>
             {% endif %}
             <td class="text-nowrap">
-              <a href="{% url 'project-review-approve' project_review.info.pk %}" class="btn btn-success mr-1">Approve</a>
-              <a href="{% url 'project-review-deny' project_review.info.pk %}" class="btn btn-danger mr-1">Deny</a>
-              <a href="{% url 'project-review-info' project_review.info.pk %}" class="btn btn-primary mr-1">Info</a>
+              <a href="{% url 'project-review-approve' project_review.info.pk %}" class="btn btn-success me-1">Approve</a>
+              <a href="{% url 'project-review-deny' project_review.info.pk %}" class="btn btn-danger me-1">Deny</a>
+              <a href="{% url 'project-review-info' project_review.info.pk %}" class="btn btn-primary me-1">Info</a>
             </td>
           </tr>
         {% endfor %}
@@ -200,23 +200,22 @@ Project Review List
             id="id_project_count"
             title="Projects"
             style="border-top-right-radius: 0px; border-bottom-left-radius: 0px; top: 0; left: 0; font-size: 0.5em;"
-            class="badge badge-secondary position-absolute"
+            class="badge text-bg-secondary position-absolute"
           >
           </span>
           <span
             style="font-size: 0.6em;"
             id="id_ineligible_modal"
-            class="badge badge-danger"
-            data-toggle="popover"
+            class="badge text-bg-danger"
+            data-bs-toggle="popover"
             title="Not Eligible"
-            data-trigger="hover"
-            data-content="This user is not eligible to be a PI!"
+            data-bs-trigger="hover"
+            data-bs-content="This user is not eligible to be a PI!"
           >
             <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
           </span>
         </h3>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
         </button>
       </div>
       <div class="modal-body"></div>
@@ -235,11 +234,13 @@ Project Review List
     <div class="modal-content">
       <div class="modal-header">
         <h3 class="modal-title" id="id_project_review_stats_modal_label">Project Review Stats</h3>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body" style="max-width: 400px; margin: 0 auto;"></div>
+      <div class="modal-body">
+        <div class="chart-container">
+          <canvas id="project-review-stats-chart" data-url="{% url 'project-review-stats' %}"></canvas>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -247,78 +248,46 @@ Project Review List
 {{ pi_projects|json_script:"pi_projects" }}
 
 <script>
-  var pi_projects = JSON.parse(document.getElementById('pi_projects').textContent);
-
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-admin").addClass("active");
-  $("#navbar-director").addClass("active");
-  $("#navbar-project-reviews").addClass("active");
-
-  $('[data-toggle="popover"]').popover({ trigger: 'hover focus' });
-
-  $('#id_pi_projects_modal').on('show.bs.modal', function (event) {
-    $('#id_pi_projects_modal .modal-body').html('')
-    var link = $(event.relatedTarget);
-    var pi = link.data('pi');
-    var pk = link.data('pk');
-    var eligible = link.data('eligible');
-    if (eligible === 'False') {
-      $('#id_ineligible_modal').show();
-    } else {
-      $('#id_ineligible_modal').hide();
-    }
-    var modal = $(this);
-    $.ajax({
-      url: '{% url "pi-projects-modal-content" %}',
-      data: { pi: pi },
-      success: function(data) {
-        $('#id_pi_projects_modal .modal-body').html(data);
-      },
-      error: function() {
-        $('#id_pi_projects_modal .modal-body').html('<p class="text-danger">Error loading projects.</p>');
+  document.addEventListener('DOMContentLoaded', function() {
+    var pi_projects = JSON.parse(document.getElementById('pi_projects').textContent);
+  
+    $('#id_pi_projects_modal').on('show.bs.modal', function (event) {
+      $('#id_pi_projects_modal .modal-body').html('')
+      var link = $(event.relatedTarget);
+      var pi = link.data('pi');
+      var pk = link.data('pk');
+      var eligible = link.data('eligible');
+      if (eligible === 'False') {
+        $('#id_ineligible_modal').show();
+      } else {
+        $('#id_ineligible_modal').hide();
       }
-    });
-
-    let project_count = 0;
-    for (let i = 0; i < pi_projects.length; i++) {
-      project = pi_projects[i]
-      if (project.pi === pi) {
-        project_count++;
+      var modal = $(this);
+      $.ajax({
+        url: '{% url "pi-projects-modal-content" %}',
+        data: { pi: pi },
+        success: function(data) {
+          $('#id_pi_projects_modal .modal-body').html(data);
+        },
+        error: function() {
+          $('#id_pi_projects_modal .modal-body').html('<p class="text-danger">Error loading projects.</p>');
+        }
+      });
+  
+      let project_count = 0;
+      for (let i = 0; i < pi_projects.length; i++) {
+        project = pi_projects[i]
+        if (project.pi === pi) {
+          project_count++;
+        }
       }
-    }
-    $('#id_project_count').text(project_count)
-  })
+      $('#id_project_count').text(project_count)
+    })
 
-  $('#id_project_review_stats_modal').on('show.bs.modal', function (event) {
-    $('#id_project_review_stats_modal .modal-body').empty();
-    $.ajax({
-      url: '{% url "projects-review-stats" %}',
-      success: function(data) {
-        $('#id_project_review_stats_modal .modal-body').html(data);
-        drawStats();
-      },
-      error: function() {
-        $('#id_project_review_stats_modal .modal-body').html('<p class="text-danger">Error loading stats.</p>');
-      }
+    $('#id_project_review_stats_modal').on('show.bs.modal', function () {
+      let canvas = document.getElementById('project-review-stats-chart');
+      if (canvas && canvas.projectReviewChart) canvas.projectReviewChart.resize(350, 350);
     });
-  })
-
-  $(document).ready(function() {
-    $("#project_request_table").DataTable({
-      iDisplayLength: 15,
-      'aoColumnDefs': [{
-        'bSortable': false,
-        'aTargets': ['nosort']
-      }]
-    });
-
-    $("#project_review_table").DataTable({
-      iDisplayLength: 15,
-      'aoColumnDefs': [{
-        'bSortable': false,
-        'aTargets': ['nosort']
-      }]
-    });
-  })
+  });
 </script>
 {% endblock %}

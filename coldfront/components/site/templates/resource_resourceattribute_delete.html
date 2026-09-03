@@ -19,11 +19,11 @@ Delete Resource Attributes from Resource
         {% csrf_token %}
         <div class="table-responsive">
           <table class="table table-sm table-hover">
-            <caption class="sr-only">Resource attributes - select the ones to delete</caption>
+            <caption class="visually-hidden">Resource attributes - select the ones to delete</caption>
             <thead>
               <tr>
                 <th scope="col">
-                  <label for="selectAll" class="sr-only">Select all users</label>
+                  <label for="selectAll" class="visually-hidden">Select all users</label>
                   <input type="checkbox" class="check" id="selectAll">
                 </th>
                 <th scope="col">Name</th>
@@ -34,7 +34,7 @@ Delete Resource Attributes from Resource
               {% for form in formset %}
                 <tr>
                   <td>
-                    <label for="{{ form.selected.id_for_label }}" class="sr-only" aria-label="Select {{ form.name.value }}">
+                    <label for="{{ form.selected.id_for_label }}" class="visually-hidden" aria-label="Select {{ form.name.value }}">
                       {{ form.selected.label }}
                     </label>
                     {{ form.selected }}
@@ -66,21 +66,17 @@ Delete Resource Attributes from Resource
 {% endif %}
 
 <script>
-  $("#selectAll").click(function () {
-    $("input[name^='attributeform-']").prop('checked', $(this).prop('checked'));
+  document.addEventListener('DOMContentLoaded', function() {
+    $("#selectAll").click(function () {
+      $("input[name^='attributeform-']").prop('checked', $(this).prop('checked'));
+    });
+  
+    $("input[name^='attributeform-']").click(function (ele) {
+      var id = $(this).attr('id');
+      if (id != "selectAll") {
+        $("#selectAll").prop('checked', false);
+      }
+    });
   });
-
-  $("input[name^='attributeform-']").click(function (ele) {
-    var id = $(this).attr('id');
-    if (id != "selectAll") {
-      $("#selectAll").prop('checked', false);
-    }
-  });
-</script>
-
-<script>
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-project-menu").addClass("active");
-  $("#navbar-resource").addClass("active");
 </script>
 {% endblock %}

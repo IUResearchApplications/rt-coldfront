@@ -1,11 +1,11 @@
 {% load allocation_removal_requests_tags %}
 {% has_admin_perm allocation request.user 'add_allocationremovalrequest' as has_perm %}
 {% if has_perm and user_has_permissions %}
-  <a class="btn btn-primary mr-1" href="{% url 'allocation_removal_requests:allocation-remove' allocation.pk %}" style="float: right;">
-    Remove Allocation
+  <a class="btn btn-danger me-1" href="{% url 'allocation_removal_requests:allocation-remove' allocation.pk %}" style="float: right;">
+    <i class="fa fa-minus" aria-hidden="true"></i> Remove Allocation
   </a>
 {% elif is_allowed_to_update_project %}
-  <a class="btn btn-primary mr-1" href="{% url 'allocation_removal_requests:allocation-removal-request' allocation.pk %}" style="float: right;">
-    Request Removal
+  <a class="btn btn-danger me-1" href="{% url 'allocation_removal_requests:allocation-removal-request' allocation.pk %}" style="float: right;">
+    <i class="fa fa-minus" aria-hidden="true"></i> Request Removal
   </a>
 {% endif %}

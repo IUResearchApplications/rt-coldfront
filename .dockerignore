@@ -30,3 +30,5 @@
 .readthedocs.y*ml
 **/*.db
 **/pyrightconfig.json
+**/local_settings.py
+**/local_urls.py

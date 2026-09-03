@@ -11,11 +11,11 @@ Center Summary
 
 
 {% block content %}
-<h1 class="sr-only">{% settings_value 'CENTER_NAME' %} Overview</h1> 
+<h1 class="visually-hidden">{% settings_value 'CENTER_NAME' %} Overview</h1> 
 <hr>
 
 <!-- Start Tableau Dashboards -->
-<h2 class="sr-only">HPC Overview</h2>
+<h2 class="visually-hidden">HPC Overview</h2>
 <script type='text/javascript' src='https://tableau.bi.iu.edu/javascripts/api/viz_v1.js'></script>
 <div class='tableauPlaceholder' style='width: 80%; height: 1527px;'>
   <object class='tableauViz' width='100%' height='1100' style='display:none;'>
@@ -31,154 +31,133 @@ Center Summary
 <!-- End Tableau Dashboards -->
 
 <!-- Start Publications -->
-<h2 id="publications-summary" class="sr-only">Publications Overview</h2>
+{% if settings.PUBLICATION_ENABLE %}
+<h2 class="visually-hidden">Publications Overview</h2>
 <div class="card mt-3 mb-3 border-primary">
   <div class="card-header bg-primary text-white">
     <i class="fas fa-newspaper" aria-hidden="true"></i> User Entered Publications
   </div>
   <div class="card-body">
-    <div id="chartPublications" role="img" aria-label="Bar chart showing number of publications per year"></div>
-    <strong>Total Publications:</strong> {{total_publications_count}}
+    <div class="chart-container">
+      <canvas id="pubs-by-year-chart" data-url="{% url 'publications-by-year' %}"></canvas>
+    </div>
+    <strong>Total Publications:</strong> <span id="pubs-total">0</span>
   </div>
 </div>
- <!-- End Publications -->
+<!-- End Publications -->
+{% endif %}
+
+{% if settings.RESEARCH_OUTPUT_ENABLE %}
+<!-- Start  Research Outputs -->
+<div class="card mb-3">
+  <div class="card-header">
+    <i class="far fa-newspaper" aria-hidden="true"></i> User Entered Research Outputs
+  </div>
+  <div class="card-body">
+    <strong>Total:</strong> {{research_outputs_count}}
+  </div>
+</div>
+<!-- End Research Outputs -->
+{% endif %}
+
+{% if settings.GRANT_ENABLE %}
+<!-- Start  Grants -->
+<div class="card mb-3">
+  <div class="card-header">
+    <i class="fas fa-trophy" aria-hidden="true"></i> User Grants Summary
+  </div>
+  <div class="card-body">
+    <div class="chart-container mx-auto" style="width:60%;">
+      <canvas id="grant-summary-chart" data-url="{% url 'grant-summary-data' %}"></canvas>
+    </div>
+    <hr>
+    <strong> Grants Total:</strong> ${{grant_total}} <br>
+    <strong> Grants Total PI Only:</strong> ${{grant_total_pi_only}} <br>
+    <strong> Grants Total CoPI Only:</strong> ${{grant_total_copi_only}} <br>
+    <strong> Grants Total Senior Personnel Only:</strong> ${{grant_total_sp_only}}
+  </div>
+</div>
+<!-- End Grants -->
+{% endif %}
 
 <!-- Start Allocation Charts -->
-<h2 id="allocation-summary-header" class="sr-only">Allocation Overview</h2>
+<h2 class="visually-hidden">Allocation Overview</h2>
 <div class="card mb-3 border-primary">
-  <div class="card-header bg-primary text-white" role="heading" aria-level="3">
+  <div class="card-header bg-primary text-white">
     <i class="fas fa-trophy"></i> Resources and Allocations Summary
   </div>
-  <div id="allocation-summary" class="card-body" aria-live="polite" aria-atomic="true" aria-busy="true">
-    <div class="text-center" role="status" aria-live="polite">
-      <button type="button" class="btn btn-primary" disabled>
-        <i class="fas fa-sync fa-spin fa-fw" aria-hidden="true"></i> Loading allocation data <span class="sr-only">...</span>
-      </button>
+  <div class="card-body">
+    <div class="row">
+      <div class="col">
+        <div class="chart-container mx-auto" style="width:60%;">
+          <canvas id="allocation-summary-chart" data-url="{% url 'portal-allocation-status' %}"></canvas>
+        </div>
+        <div class="chart-container mx-auto" style="width:60%;">
+          <canvas id="resource-summary-chart" data-url="{% url 'portal-resource-type' %}"></canvas>
+        </div>
+      </div>
+      <div
+        id="allocation-summary"
+        class="col"
+        hx-get="{% url 'allocation-summary' %}"
+        hx-trigger="load"
+        aria-live="polite"
+        aria-atomic="true"
+        aria-busy="true"
+      >
+        <div class="text-center">
+          <button type="button" class="btn btn-primary">
+            <i class="fas fa-sync fa-spin fa-fw" aria-hidden="true"></i>
+            Getting Data <span class="visually-hidden">...</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 <!-- End Allocation Charts -->
 
 <!-- Start Project Charts -->
-<h2 id="project-summary-header" class="sr-only">Project Overview</h2>
+<h2 class="visually-hidden">Project Overview</h2>
 <div class="card mb-3 border-primary">
   <div class="card-header bg-primary text-white" role="heading" aria-level="3">
     <i class="fas fa-trophy"></i> Project Summary
   </div>
-  <div id="project-summary" class="card-body" aria-live="polite" aria-atomic="true" aria-busy="true">
-    <div class="text-center" role="status" aria-live="polite">
-      <button type="button" class="btn btn-primary" disabled>
-        <i class="fas fa-sync fa-spin fa-fw" aria-hidden="true"></i> Loading project data <span class="sr-only">...</span>
-      </button>
+  <div class="card-body">
+    <div class="row">
+      <div class="col">
+        <div class="chart-container mx-auto" style="width:60%;">
+          <canvas id="project-type-summary-chart" data-url="{% url 'portal-project-type' %}"></canvas>
+        </div>
+      </div>
+      <div class="col">
+        <div class="chart-container mx-auto" style="width:60%;">
+          <canvas id="project-user-summary-chart" data-url="{% url 'portal-project-user' %}"></canvas>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 <!-- End Project Charts -->
 
 <!-- Start User Charts-->
-<h2 id="user-summary-header" class="sr-only">User Overview</h2>
+<h2 id="user-summary-header" class="visually-hidden">User Overview</h2>
 <div class="card mb-3 border-primary">
   <div class="card-header bg-primary text-white" role="heading" aria-level="3">
     <i class="fas fa-trophy"></i> User Summary
   </div>
-  <div id="user-summary" class="card-body" aria-live="polite" aria-atomic="true" aria-busy="true">
-    <div class="text-center" role="status" aria-live="polite">
-      <button type="button" class="btn btn-primary" disabled>
-        <i class="fas fa-sync fa-spin fa-fw" aria-hidden="true"></i> Loading user data <span class="sr-only">...</span>
-      </button>
+  <div class="row">
+    <div class="col">
+      <div class="chart-container mx-auto">
+        <canvas id="users-by-active-chart" data-url="{% url 'portal-users-by-active' %}"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="chart-container mx-auto">
+        <canvas id="users-by-year-chart" data-url="{% url 'portal-users-by-year' %}"></canvas>
+      </div>
     </div>
   </div>
 </div>
 <!-- End User Charts -->
-
-<script>
-  $("#navbar-main > ul > li.active").removeClass("active")
-  $("#navbar-center-summary").addClass("active")
-  $("#navbar-center-summary a").attr("aria-current", "page")
-
-  $(document).ready(function () {
-    drawPublications();
-    get_allocation_summary();
-    get_project_summary();
-    get_user_summary();
-  });
-
-  function drawPublications() {
-    if (publication_by_year_bar_chart_data['columns'].length != 0) {
-      var chart = c3.generate({
-        bindto: '#chartPublications',
-        data: publication_by_year_bar_chart_data,
-        legend: {
-          show: false,
-          item: {
-            onclick: function (id) { }
-          }
-        },
-        axis: {
-          x: {
-            label: {
-              text: 'Year',
-              position: 'outer-center'
-            }
-          },
-          y: {
-            label: 'Number of Publications',
-            position: 'outer-middle'
-          }
-        }
-      });
-    };
-  }
-
-  var publication_by_year_bar_chart_data = {{ publication_by_year_bar_chart_data | safe }}
-
-  function get_allocation_summary() {
-    $.ajax({
-      headers: { 'X-CSRFToken': getCookie('csrftoken') },
-      type: "GET",
-      url: "/allocation-summary",
-      success: function (data) {
-        $('#allocation-summary').html(data);
-      }
-    });
-  };
-
-  function get_project_summary() {
-    $.ajax({
-      headers: { 'X-CSRFToken': getCookie('csrftoken') },
-      type: "GET",
-      url: "/project-summary",
-      success: function (data) {
-        $('#project-summary').html(data)
-      }
-    })
-  }
-
-  function get_user_summary() {
-    $.ajax({
-      headers: { 'X-CSRFToken': getCookie('csrftoken') },
-      type: "GET",
-      url: "/user-summary",
-      success: function (data) {
-        $("#user-summary").html(data);
-      }
-    })
-  }
-
-  function getCookie(name) {
-    var cookieValue = null;
-    if (document.cookie && document.cookie != '') {
-      var cookies = document.cookie.split(';');
-      for (var i = 0; i < cookies.length; i++) {
-        var cookie = jQuery.trim(cookies[i]);
-        // Does this cookie string begin with the name we want?
-        if (cookie.substring(0, name.length + 1) == (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
-        }
-      }
-    }
-    return cookieValue;
-  }
-</script>
 {% endblock %}

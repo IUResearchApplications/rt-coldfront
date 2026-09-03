@@ -45,5 +45,5 @@ else:
             ),
             name="login",
         ),
-        path("logout", LogoutView.as_view(next_page=reverse_lazy("login")), name="logout"),
+        path("logout", user_views.HtmxLogoutView.as_view(), name="logout"),
     ]

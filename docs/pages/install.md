@@ -8,7 +8,7 @@ releases of ColdFront may introduce breaking changes. Please refer to the
 
 ColdFront releases can be downloaded from
 [PyPI](https://pypi.org/project/coldfront/#files) or on GitHub
-[here](https://github.com/ubccr/coldfront/releases).
+[here](https://github.com/coldfront/coldfront/releases).
 
 ## Requirements
 
@@ -42,8 +42,9 @@ in a production environment, [go here](deploy.md)
 ### Install from source
 
 ```
-$ git clone https://github.com/ubccr/coldfront.git
+$ git clone https://github.com/coldfront/coldfront.git
 $ cd coldfront
+$ git checkout stable/1.1.x
 $ uv sync --group dev
 ```
 
@@ -62,8 +63,9 @@ cloning our GitHub repo and install via uv. Note the master branch is the
 bleeding edge version and may be unstable. You can also checkout one of the
 tagged releases.
 ```
-$ git clone https://github.com/ubccr/coldfront.git
+$ git clone https://github.com/coldfront/coldfront.git
 $ cd coldfront
+$ git checkout stable/1.1.x
 $ uv sync --group dev
 ```
 

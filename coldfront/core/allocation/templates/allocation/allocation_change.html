@@ -13,7 +13,7 @@ Request Allocation Change
 <h2>Request change to {{ allocation.get_parent_resource }} for project: {{ allocation.project.title }}</h2>
 <hr>
 
-<p class="text-justify">
+<p>
   Request changes to an existing allocation using the form below. For each change
   you must provide a justification.
 </p>
@@ -21,7 +21,7 @@ Request Allocation Change
 <form action="{% url 'allocation-change' allocation.pk %}" method="post">
   <div class="card mb-3">
     <div class="card-header">
-        <h3><i class="fas fa-list" aria-hidden="true"></i> Allocation Information</h3>   
+        <h3><i class="fas fa-list" aria-hidden="true"></i> Allocation Information</h3>
     </div>
 
     <div class="card-body">
@@ -53,7 +53,7 @@ Request Allocation Change
                 <td>
                   {{ allocation.end_date }}
                   {% if allocation.is_locked and allocation.status.name == 'Active' and allocation.expires_in <= 60 and allocation.expires_in >= 0 %}
-                  <span class="badge badge-warning"><i class="far fa-clock" aria-hidden="true"></i>
+                  <span class="badge bg-warning"><i class="far fa-clock" aria-hidden="true"></i>
                     Expires in {{allocation.expires_in}} day{{allocation.expires_in|pluralize}} - Not renewable
                   </span>
                   {% endif %}
@@ -132,6 +132,4 @@ Request Allocation Change
     </div>
 </form>
 
-<script>
-</script>
 {% endblock %}

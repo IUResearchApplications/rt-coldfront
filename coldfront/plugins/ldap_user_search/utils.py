@@ -7,15 +7,7 @@ import logging
 import ssl
 
 import ldap.filter
-from ldap3 import (
-    AUTO_BIND_TLS_BEFORE_BIND,
-    SASL,
-    Connection,
-    Server,
-    Tls,
-    get_config_parameter,
-    set_config_parameter,
-)
+from ldap3 import AUTO_BIND_TLS_BEFORE_BIND, SASL, Connection, Server, Tls, get_config_parameter, set_config_parameter
 
 from coldfront.core.user.utils import UserSearch
 from coldfront.core.utils.common import import_from_settings

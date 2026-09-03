@@ -8,7 +8,6 @@ Base Django settings for ColdFront project.
 
 import importlib.util
 import os
-import sys
 
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management.utils import get_random_secret_key
@@ -20,6 +19,11 @@ from coldfront.config.env import ENV, PROJECT_ROOT
 # Base Django config for ColdFront
 # ------------------------------------------------------------------------------
 VERSION = coldfront.VERSION
+
+BASE_PATH = ENV.str("BASE_PATH", default="")
+if len(BASE_PATH) > 0:
+    BASE_PATH = f"{BASE_PATH.strip('/')}/"
+
 BASE_DIR = PROJECT_ROOT()
 ALLOWED_HOSTS = ENV.list("ALLOWED_HOSTS", default=["*"])
 DEBUG = ENV.bool("DEBUG", default=False)
@@ -36,7 +40,6 @@ if len(SECRET_KEY) == 0:
 LANGUAGE_CODE = ENV.str("LANGUAGE_CODE", default="en-us")
 TIME_ZONE = ENV.str("TIME_ZONE", default="America/New_York")
 USE_I18N = True
-USE_L10N = True
 USE_TZ = True
 
 # ------------------------------------------------------------------------------
@@ -57,15 +60,13 @@ INSTALLED_APPS = [
     "django.contrib.humanize",
 ]
 
-# Additional Apps
-# Hack to fix fontawesome. Will be fixed in version 6
-sys.modules["fontawesome_free"] = __import__("fontawesome-free")
 INSTALLED_APPS += [
     "crispy_forms",
-    "crispy_bootstrap4",
+    "crispy_bootstrap5",
     "django_q",
     "simple_history",
-    "fontawesome_free",
+    "django_vite",
+    "django_htmx",
 ]
 
 if DEBUG and importlib.util.find_spec("sslserver") is not None:
@@ -99,6 +100,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "simple_history.middleware.HistoryRequestMiddleware",
+    "django_htmx.middleware.HtmxMiddleware",
 ]
 
 # ------------------------------------------------------------------------------
@@ -147,13 +149,27 @@ if len(SITE_TEMPLATES) > 0:
     else:
         raise ImproperlyConfigured("SITE_TEMPLATES should be a path to a directory")
 
-CRISPY_TEMPLATE_PACK = "bootstrap4"
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
+
 SETTINGS_EXPORT = []
 
-STATIC_URL = "/static/"
+STATIC_URL = f"/{BASE_PATH}static/"
+
+DJANGO_VITE = {
+    "default": {
+        "dev_mode": ENV.bool("DJANGO_VITE_DEV_MODE", default=False),
+        "dev_server_port": ENV.int("DJANGO_VITE_SERVER_PORT", default=5173),
+    }
+}
+
+if DEBUG and not DJANGO_VITE["default"]["dev_mode"]:
+    DJANGO_VITE["default"]["manifest_path"] = PROJECT_ROOT("coldfront/static/bundles/manifest.json")
+
 STATIC_ROOT = ENV.str("STATIC_ROOT", default=PROJECT_ROOT("static_root"))
 STATICFILES_DIRS = [
-    PROJECT_ROOT("coldfront/static"),
+    PROJECT_ROOT("coldfront/static/bundles"),
+    PROJECT_ROOT("coldfront/static/assets"),
 ]
 
 # Add local site static files if set

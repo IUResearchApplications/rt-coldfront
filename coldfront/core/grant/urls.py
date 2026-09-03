@@ -16,4 +16,5 @@ urlpatterns = [
     ),
     path("grant-report/", grant_views.GrantReportView.as_view(), name="grant-report"),
     path("grant-download/", grant_views.GrantDownloadView.as_view(), name="grant-download"),
+    path("data/summary/", grant_views.GrantSummaryDataView.as_view(), name="grant-summary-data"),
 ]

@@ -4,13 +4,14 @@
 
 import datetime
 import logging
-from ast import literal_eval
 from enum import Enum
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.urls import reverse
 from django.utils.html import escape, format_html
 from django.utils.module_loading import import_string
 from django.utils.safestring import SafeString
@@ -18,10 +19,14 @@ from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
 import coldfront.core.attribute_expansion as attribute_expansion
+from coldfront.config.core import ALLOCATION_EULA_ENABLE
+from coldfront.core.allocation.signals import allocation_activate_user, allocation_expire, allocation_remove_user
 from coldfront.core.project.models import Project, ProjectPermission
 from coldfront.core.resource.models import Resource, ResourceAttribute, ResourceAttributeType
 from coldfront.core.utils.common import get_users_info, import_from_settings
 from coldfront.core.utils.groups import check_if_groups_in_review_groups
+from coldfront.core.utils.mail import build_link, send_email_template
+from coldfront.core.utils.validate import AttributeValidator
 
 if "coldfront.plugins.ldap_misc" in settings.INSTALLED_APPS:
     from coldfront.plugins.ldap_misc.utils.ldap_user_search import get_users_info
@@ -46,7 +51,10 @@ if EMAIL_ENABLED:
 
 ADDITIONAL_USER_SEARCH_CLASSES = import_from_settings("ADDITIONAL_USER_SEARCH_CLASSES", [])
 
+EMAIL_SENDER = import_from_settings("EMAIL_SENDER")
 
+
+# TODO - review file
 class AllocationPermission(Enum):
     """An allocation permission stores the user and manager fields of a project."""
 
@@ -222,7 +230,9 @@ class Allocation(TimeStampedModel):
         """
 
         html_string = escape("")
-        for attribute in self.allocationattribute_set.all():
+        for attribute in self.allocationattribute_set.select_related(
+            "allocation_attribute_type", "allocationattributeusage"
+        ).all():
             if attribute.allocation_attribute_type.name in ALLOCATION_ATTRIBUTE_VIEW_LIST:
                 html_substring = format_html("{}: {} <br>", attribute.allocation_attribute_type.name, attribute.value)
                 html_string += html_substring
@@ -261,8 +271,10 @@ class Allocation(TimeStampedModel):
         Returns:
             str: the resources for the allocation
         """
-
-        return ", ".join([ele.name for ele in self.resources.all().order_by(*ALLOCATION_RESOURCE_ORDERING)])
+        resources = getattr(self, "_parent_resources", None)
+        if resources is None:
+            resources = self.resources.all().order_by(*ALLOCATION_RESOURCE_ORDERING)
+        return ", ".join([ele.name for ele in resources])
 
     @property
     def get_resources_as_list(self):
@@ -279,15 +291,12 @@ class Allocation(TimeStampedModel):
         Returns:
             Resource: the parent resource for the allocation
         """
-
-        if self.resources.count() == 1:
-            return self.resources.first()
-        else:
-            parent = self.resources.order_by(*ALLOCATION_RESOURCE_ORDERING).first()
-            if parent:
-                return parent
-            # Fallback
-            return self.resources.first()
+        resources = getattr(self, "_parent_resources", None)
+        if resources is None:
+            resources = list(self.resources.select_related("resource_type").order_by(*ALLOCATION_RESOURCE_ORDERING))
+        if not resources:
+            return None
+        return resources[0]
 
     @property
     def get_user_list(self):
@@ -381,6 +390,27 @@ class Allocation(TimeStampedModel):
             "allocation_attribute_type__name"
         )
 
+    def get_visible_notes(self, user):
+        """
+        Return the allocation user notes visible to the given user.
+
+        Superusers and users with the "allocation.view_allocationusernote"
+        permission see all notes; others see only non-private notes.
+        """
+        noteset = self.allocationusernote_set.select_related("author")
+        if user.is_superuser or user.has_perm("allocation.view_allocationusernote"):
+            return noteset.all()
+        return noteset.filter(is_private=False)
+
+    def has_user_in_allocation(self, user):
+        """
+        Return whether the given user is a non-removed member of this allocation.
+        """
+        return self.allocationuser_set.filter(
+            user=user,
+            status__name__in=["Active", "Invited", "Pending", "Disabled", "Retired"],
+        ).exists()
+
     def user_permissions(self, user, permission=None):
         """
         Params:
@@ -440,6 +470,121 @@ class Allocation(TimeStampedModel):
                     return res.get_attribute(name="eula")
         else:
             return None
+
+    def add_user(self, user, signal_sender=None, role=None):
+        """
+        Adds a user to the allocation.
+
+        If EULAs are enabled and this allocation has an associated EULA, marks the user
+            as "PendingEULA" and sends the user an email asking them to agree to the EULA.
+        Otherwise, marks the user as "Active." Also sends the `allocation_activate_user`
+            signal if the allocation status is "Active."
+
+        Params:
+            user (User): User to add.
+            signal_sender (str): Sender for the `allocation_activate_user` signal.
+            role (AllocationUserRoleChoice): Role to assign the user. When None, an
+                existing user's role is left unchanged.
+        """
+        user_status = "Active"
+
+        is_pending_eula = ALLOCATION_EULA_ENABLE and self.get_eula() and not user.userprofile.is_pi
+        if is_pending_eula:
+            user_status = "PendingEULA"
+        user_status_obj = AllocationUserStatusChoice.objects.get(name=user_status)
+
+        defaults = {"status": user_status_obj}
+        if role is not None:
+            defaults["role"] = role
+
+        allocation_user, _created = self.allocationuser_set.update_or_create(user=user, defaults=defaults)
+
+        if is_pending_eula:
+            send_email_template(
+                f"Agree to EULA for {self.get_parent_resource.__str__()}",
+                "email/allocation_agree_to_eula.txt",
+                {
+                    "resource": self.get_parent_resource,
+                    "url": build_link(reverse("allocation-review-eula", kwargs={"pk": self.pk})),
+                },
+                [user.email],
+            )
+
+        if self.status.name in ["Active", "Renewal Requested"] and allocation_user.status.name in [
+            "Active",
+            "Invited",
+            "Disabled",
+            "Retired",
+        ]:
+            allocation_activate_user.send(sender=signal_sender, allocation_user_pk=allocation_user.pk)
+
+    def remove_user(self, user, signal_sender=None, ignore_user_not_found=True):
+        """
+        Marks an `AllocationUser` as 'Removed' and sends the `allocation_remove_user` signal.
+
+        Params:
+            user (User|AllocationUser): User to remove.
+            signal_sender (str): Sender for the `allocation_remove_user` signal.
+            ignore_user_not_found (bool): If enabled, logs a warning that the allocation user for
+                the provded user couldn't be found and returns. Otherwise, raises `AllocationUser.DoesNotExist`.
+        """
+        if isinstance(user, AllocationUser):
+            allocation_user = user
+        elif isinstance(user, get_user_model()):
+            try:
+                allocation_user = self.allocationuser_set.get(user=user)
+            except AllocationUser.DoesNotExist:
+                if ignore_user_not_found:
+                    logger.warning(
+                        f"Cannot remove user={str(user)} for allocation pk={self.pk} - AllocationUser not found."
+                    )
+                    return
+                else:
+                    raise
+        allocation_user.status = AllocationUserStatusChoice.objects.get(name="Removed")
+        allocation_user.save()
+        allocation_remove_user.send(sender=signal_sender, allocation_user_pk=allocation_user.pk)
+
+    def expire(self):
+        """
+        Sets the allocation status to "Expired" and expires all active allocations.
+        """
+        # TODO: expiry should probably send an email... (but i think send_expiry_emails() would have to get refactored)
+        allocation_status_expired = AllocationStatusChoice.objects.get(name="Expired")
+        self.status = allocation_status_expired
+        self.end_date = datetime.datetime.now()
+        self.save()
+        allocation_expire.send(sender=self.__class__, allocation_pk=self.pk)
+
+    def get_absolute_url(self):
+        return reverse("allocation-detail", kwargs={"pk": self.pk})
+
+    def get_user_emails(self, status_name="Active", ignore_disabled_notifications=False) -> set[str]:
+        """Gets a set of user emails for notifications.
+
+        Params:
+            status_name (str): The name of the AllocationUserStatus to filter on. Defaults to "Active".
+            ignore_disabled_notifications (bool): If True, include project users
+                that have enable_notifications off.
+
+        Returns:
+            set: A set of user emails for notifications.
+        """
+        allocation_users = self.allocationuser_set.filter(status__name=status_name)
+        if ignore_disabled_notifications:
+            user_emails = set(allocation_users.values_list("user__email", flat=True))
+            return user_emails
+
+        users = allocation_users.values_list("user", flat=True)
+        filter_options = {
+            "user__in": users,
+            "status__name": "Active",
+            "enable_notifications": True,
+        }
+
+        project_users = self.project.projectuser_set.filter(**filter_options)
+        user_emails = set(project_users.values_list("user__email", flat=True))
+        return user_emails
 
 
 class AllocationAdminNote(TimeStampedModel):
@@ -573,37 +718,15 @@ class AllocationAttribute(TimeStampedModel):
 
         expected_value_type = self.allocation_attribute_type.attribute_type.name.strip()
 
+        validator = AttributeValidator(self.value)
         if expected_value_type == "Int":
-            try:
-                if not isinstance(literal_eval(self.value), int):
-                    raise TypeError
-            except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError) as e:
-                raise ValidationError(
-                    'Invalid Value "%s" for "%s". Value must be an integer.'
-                    % (self.value, self.allocation_attribute_type.name)
-                ) from e
+            validator.validate_int()
         elif expected_value_type == "Float":
-            try:
-                if not (isinstance(literal_eval(self.value), int) or isinstance(literal_eval(self.value), float)):
-                    raise TypeError
-            except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError) as e:
-                raise ValidationError(
-                    'Invalid Value "%s" for "%s". Value must be a float.'
-                    % (self.value, self.allocation_attribute_type.name)
-                ) from e
-        elif expected_value_type == "Yes/No" and self.value not in ["Yes", "No"]:
-            raise ValidationError(
-                'Invalid Value "%s" for "%s". Allowed inputs are "Yes" or "No".'
-                % (self.value, self.allocation_attribute_type.name)
-            )
+            validator.validate_float()
+        elif expected_value_type == "Yes/No":
+            validator.validate_yes_no()
         elif expected_value_type == "Date":
-            try:
-                datetime.datetime.strptime(self.value.strip(), "%Y-%m-%d")
-            except ValueError:
-                raise ValidationError(
-                    'Invalid Value "%s" for "%s". Date must be in format YYYY-MM-DD'
-                    % (self.value, self.allocation_attribute_type.name)
-                )
+            validator.validate_date()
 
         linked_attribute_type_obj = self.allocation_attribute_type.linked_resource_attribute_type
         linked_attribute_obj = ResourceAttribute.objects.filter(
@@ -858,13 +981,13 @@ class AllocationChangeRequest(TimeStampedModel):
             Resource: the parent resource for the allocation
         """
 
-        if self.allocation.resources.count() == 1:
-            return self.allocation.resources.first()
-        else:
-            return self.allocation.resources.filter(is_allocatable=True).first()
+        return self.allocation.get_parent_resource
 
     def __str__(self):
         return "%s (%s) Change Request" % (self.get_parent_resource.name, self.allocation.project.pi)
+
+    def get_absolute_url(self):
+        return reverse("allocation-change-detail", kwargs={"pk": self.pk})
 
 
 class AllocationAttributeChangeRequest(TimeStampedModel):

@@ -30,7 +30,7 @@ Request Allocation Change
         {% csrf_token %}
         <div class="table-responsive">
           <table class="table table-bordered table-sm">
-            <caption class="sr-only">Allocation details</caption>
+            <caption class="visually-hidden">Allocation details</caption>
             <tr>
               <th scope="row" class="text-nowrap">Project:</th>
               <td><a href="{% url 'project-detail' allocation.project.pk %}">{{ allocation.project }}</a></td>
@@ -56,7 +56,7 @@ Request Allocation Change
                 <td>
                   {{ allocation.end_date }}
                   {% if allocation.is_locked and allocation.status.name == 'Active' and allocation.expires_in <= 60 and allocation.expires_in >= 0 %}
-                  <span class="badge badge-warning"><i class="far fa-clock" aria-hidden="true"></i>
+                  <span class="badge text-bg-warning"><i class="far fa-clock" aria-hidden="true"></i>
                     Expires in {{allocation.expires_in}} day{{allocation.expires_in|pluralize}} - Not renewable
                   </span>
                   {% endif %}
@@ -117,7 +117,7 @@ Request Allocation Change
                       <td>{{form.name.value}}</td>
                       <td>{{form.value.value}}</td>
                       <td>
-                        <label for="{{ form.new_value.id_for_label }}" class="sr-only">
+                        <label for="{{ form.new_value.id_for_label }}" class="visually-hidden">
                           {{ form.new_value.label }}
                         </label>
                         {{form.new_value}}
@@ -139,9 +139,4 @@ Request Allocation Change
         Allocation</a><br>
     </div>
 </form>
-
-<script>
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-project-menu").addClass("active");
-</script>
 {% endblock %}

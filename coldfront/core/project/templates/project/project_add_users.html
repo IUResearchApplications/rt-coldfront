@@ -14,10 +14,12 @@ Add Users to Project
 
 <div class="row">
   <div class="col">
-    <form method="post" action="/search-ldap" id="post-form">
+    <form method="post" id="post-form">
       {% csrf_token %}
       {{ user_search_form|crispy }}
-      <button id="search-button" type="submit" class="btn btn-success btn-block"><i class="fas fa-search" aria-hidden="true"></i> Search</button>
+      <div class="d-grid gap-2">
+         <button id="search-button" type="submit" class="btn btn-success"><i class="fas fa-search" aria-hidden="true"></i> Search</button>
+      </div>
     </form>
   </div>
 </div>
@@ -44,11 +46,9 @@ Add Users to Project
 
 
 {% block javascript %}
-  {{ block.super }}
+{{ block.super }}
 <script>
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-ldap-home").addClass("active");
-
+document.addEventListener('DOMContentLoaded', function() {
   $('#post-form').on('submit', function(event){
     event.preventDefault();
     $('#search_results').show();
@@ -70,9 +70,9 @@ Add Users to Project
     $.ajax({
         url : "/project/" + pk + "/add-users-search-results/", // the endpoint
         type : "POST", // http method
-        data : { 
-          q : q, 
-          search_by : search_by, 
+        data : {
+          q : q,
+          search_by : search_by,
           csrfmiddlewaretoken: "{{ csrf_token }}"
         }, // data sent with the post request
         // handle a successful response
@@ -86,20 +86,18 @@ Add Users to Project
         // handle a non-successful response
         error : function(xhr,errmsg,err) {
             if(xhr.status == 403 || xhr.status == 401) {
-                $('#search_results_inner').html("<div class='alert alert-danger'>Your session expired. Please login again. <a href='#' class='close'>&times;</a></div>");
+                $('#search_results_inner').html("<div class='alert alert-danger'>Your session expired. Please login again. <a href='#' class='btn-close'></a></div>");
             } else {
                 $('#search_results_inner').html("<div class='alert alert-danger'>Oops! We have encountered an error: "+errmsg+
-                    " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                    " <a href='#' class='btn-close'></a></div>"); // add the error to the dom
             }
             console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
         }
     });
   };
 
-  $(document).ready(function(){
     $('#search_results').hide();
     $('#selected_users').hide();
-    $('[data-toggle="popover"]').popover(); 
-  });
+});
 </script>
 {% endblock %}

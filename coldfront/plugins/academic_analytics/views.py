@@ -11,6 +11,7 @@ from coldfront.plugins.academic_analytics.utils import (
     add_publication,
     get_publications,
     remove_existing_publications,
+    remove_publications_missing_data,
 )
 
 logger = logging.getLogger(__name__)
@@ -44,6 +45,7 @@ class AcademicAnalyticsPublications(LoginRequiredMixin, UserPassesTestMixin, Tem
         usernames = project_obj.projectuser_set.filter(status__name="Active").values_list("user__username", flat=True)
         publication_data = get_publications(usernames)
         publication_data = remove_existing_publications(project_obj, publication_data)
+        publication_data = remove_publications_missing_data(publication_data)
         if publication_data:
             publication_formset = formset_factory(PublicationForm, max_num=len(publication_data))
             publication_formset = publication_formset(initial=publication_data, prefix="publicationform")
@@ -60,6 +62,7 @@ class AcademicAnalyticsPublications(LoginRequiredMixin, UserPassesTestMixin, Tem
         usernames = project_obj.projectuser_set.filter(status__name="Active").values_list("user__username", flat=True)
         publication_data = get_publications(usernames)
         publication_data = remove_existing_publications(project_obj, publication_data)
+        publication_data = remove_publications_missing_data(publication_data)
         num_added_pubs = 0
         if publication_data:
             publication_formset = formset_factory(PublicationForm, max_num=len(publication_data))
@@ -71,6 +74,10 @@ class AcademicAnalyticsPublications(LoginRequiredMixin, UserPassesTestMixin, Tem
                         add_publication(project_obj, data)
                         num_added_pubs += 1
             else:
+                logger.error(
+                    f"Error adding publications to project (project pk={project_obj.pk})."
+                    f"Errors: {publication_formset.errors}"
+                )
                 raise Exception("Error adding publications")
 
         if num_added_pubs:

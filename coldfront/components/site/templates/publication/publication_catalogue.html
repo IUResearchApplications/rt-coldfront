@@ -110,10 +110,10 @@ Publication List
      logging into RT Projects > click on your project name > Add Publication.
 </p>
 
-<label for="myInput" class="sr-only">Search publications</label>
+<label for="myInput" class="visually-hidden">Search publications</label>
 <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search by author, publication title, journal, and more..." title="Type in a name">
 
-<p class="h5">Last Updated: August 25, 2025</p>
+<p class="h5">Last Updated: July 22, 2026</p>
 
 <ul id="myUL">
 {% for k, v in data.items %}
@@ -145,9 +145,6 @@ Publication List
 </ul>
 
 <script>
-    $("#navbar-main > ul > li.active").removeClass("active");
-    $("#navbar-publications").addClass("active");
-
     var coll = document.getElementsByClassName("collapsible hold");
     var i;
 

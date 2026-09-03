@@ -21,10 +21,9 @@ class LDAPUserSearchView(LoginRequiredMixin, View):
             "message": "Invalid username",
         }
 
-
         attributes = LDAPUserSearch(None, None).search_a_user(request.POST.get("username"), "username_only")
         if not attributes:
-            attributes =  {}
+            attributes = {}
         attributes = attributes[0]
         display_name = attributes.get("displayName")
         # If one exists so does the other

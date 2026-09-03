@@ -31,31 +31,33 @@
 </div>
 
 <script>
-  $('[name="pi_request_access"]').on('click', function(event) {
-    var pk = event.target.id;
-    $('#' + pk).html(
-      '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...'
-    );
-    $('#' + pk).prop('disabled', true);
-    $('#' + pk).blur()
-    $.ajax({
-      url: '{% url "send-access-request" %}',
-      type: 'POST',
-      data: {
-        project_pk: pk,
-        csrfmiddlewaretoken: "{{ csrf_token }}"
-      },
-      success : function () {
-        $('#' + pk).text('Sent!');
-        $('#warning_' + event.target.id).hide();
-      },
-      error : function() {
-        $('#' + pk).text(
-          'Resend'
-        );
-        $('#warning_' + event.target.id).show();
-        $('#' + pk).prop('disabled', false);
-      }
-    })
-  })
+  $(document).ready(function() {
+    $('[name="pi_request_access"]').on('click', function() {
+      const $btn = $(this);
+      const pk = $btn.attr('id');
+      const $warning = $('#warning_' + pk);
+
+      $btn.html(
+        '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...'
+      ).prop('disabled', true);
+
+      $.ajax({
+        url: '{% url "send-access-request" %}',
+        type: 'POST',
+        data: {
+          project_pk: pk,
+          csrfmiddlewaretoken: "{{ csrf_token }}"
+        },
+        success: function() {
+          $btn.html('<i class="fas fa-check" aria-hidden="true"></i> Sent!');
+          $warning.hide();
+        },
+        error: function() {
+          $btn.html('<i class="far fa-envelope" aria-hidden="true"></i> Resend');
+          $btn.prop('disabled', false);
+          $warning.show();
+        }
+      });
+    });
+  });
 </script>

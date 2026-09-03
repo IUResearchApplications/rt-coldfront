@@ -22,9 +22,9 @@ Project Detail
 <div class="card mb-3 bg-light">
   <div class="card-header">
     <h2 class="d-inline" id="manage-project"><i class="fas fa-cubes" aria-hidden="true"></i> Manage Project</h2>
-    <div class="float-right">
+    <div class="float-end">
       {% if not project.status.name in 'Archived, Denied, Expired, Renewal Denied' and is_allowed_to_update_project %}
-        <a class="btn btn-primary" href="{% url 'project-update' project.pk %}"><i class="far fa-edit" aria-hidden="true"></i> Update Project Information</a>
+        <a class="btn btn-primary" href="{% url 'project-update' project.pk %}"><i class="fa fa-edit" aria-hidden="true"></i> Update Project Information</a>
         {% if not project.status.name in 'Waiting For Admin Approval, Review Pending' %}
           <a class="btn btn-primary" href="{% url 'project-archive' project.id %}"><i class="fas fa-file-archive" aria-hidden="true"></i> Archive Project</a>
         {% endif %}
@@ -81,7 +81,9 @@ Project Detail
         </strong>
       </div>
     {% endif %}
-    <a class="float-right btn btn-primary" href="{% url 'project-list' %}">Return to Project List</a>
+    <a class="float-end btn btn-primary" href="{% url 'project-list' %}">
+      <i class="fa fa-long-arrow-left" aria-hidden="true"></i> Return to Project List
+    </a>
   </div>
 </div>
 
@@ -97,19 +99,18 @@ Project Detail
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="modal-title" id="project_created_response_modal_label">We have received your project request.</h2>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
+        <h2 class="modal-title h4" id="project_created_response_modal_label">We have received your project request.</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
         </button>
       </div>
       <div class="modal-body" id="project_created_response_modal_body">
         <p>You will receive an email from us shortly. If you need assistance, please contact
           RT Projects at
-          <a href="mailto:{% settings_value 'EMAIL_TICKET_SYSTEM_ADDRESS' %}" target = "_blank">{% settings_value 'EMAIL_TICKET_SYSTEM_ADDRESS' %}</a>.
+          <a href="mailto:{% settings_value 'EMAIL_TICKET_SYSTEM_ADDRESS' %}" target="_blank">{% settings_value 'EMAIL_TICKET_SYSTEM_ADDRESS' %}</a>.
         </p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -128,19 +129,18 @@ Project Detail
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 class="modal-title" id="allocation_response_modal_label">We have received your allocation request.</h2>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
+        <h2 class="modal-title h4" id="allocation_response_modal_label">We have received your allocation request.</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
         </button>
       </div>
       <div class="modal-body" id="allocation_response_modal_body">
         <p>You will receive an email from us shortly. If you need assistance, please contact
           RT Projects at
-          <a href="mailto:{% settings_value 'EMAIL_TICKET_SYSTEM_ADDRESS' %}" target = "_blank">{% settings_value 'EMAIL_TICKET_SYSTEM_ADDRESS' %}</a>.
+          <a href="mailto:{% settings_value 'EMAIL_TICKET_SYSTEM_ADDRESS' %}" target="_blank">{% settings_value 'EMAIL_TICKET_SYSTEM_ADDRESS' %}</a>.
         </p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -154,7 +154,7 @@ Project Detail
       {{ project.pi.first_name }}
       {{ project.pi.last_name }}
       ({{ project.pi.username }})
-      <a href="mailto:{{ project.pi.email }} "><i class="far fa-envelope" aria-hidden="true"></i><span class="sr-only">Email PI</span></a>
+      <a href="mailto:{{ project.pi.email }} "><i class="far fa-envelope" aria-hidden="true"></i><span class="visually-hidden">Email PI</span></a>
     </h2>
     {% if project.pi.pk != project.requestor.pk %}
       <p class="card-text">
@@ -163,7 +163,7 @@ Project Detail
         {{ project.requestor.last_name }}
         ({{ project.requestor.username }})
         <a href="mailto:{{ project.requestor.email }}?cc={{ project.pi.email }}">
-          <i class="far fa-envelope" aria-hidden="true"></i><span class="sr-only">Email Requestor</span>
+          <i class="far fa-envelope" aria-hidden="true"></i><span class="visually-hidden">Email Requestor</span>
         </a>
       </p>
     {% endif %}
@@ -196,12 +196,12 @@ Project Detail
 <!-- Start Project Users -->
 <div class="card mb-3" id="accordion">
   <div class="card-header">
-    <h2 class="d-inline" id="users"><i class="fas fa-users" aria-hidden="true"></i> Users</h2> <span class="badge badge-secondary">{{project_users.count}}</span>
+    <h2 class="d-inline" id="users"><i class="fas fa-users" aria-hidden="true"></i> Users</h2> <span class="badge text-bg-secondary">{{project_users.count}}</span>
     <a
       id="expand_button"
       role="button"
       class="card-link "
-      data-toggle="collapse"
+      data-bs-toggle="collapse"
       href="#user_collapse"
       aria-expanded="{{expand_accordion|yesno:'true, false'}}"
       aria-controls="user_collapse"
@@ -209,7 +209,7 @@ Project Detail
     >
       <i id="plus_minus" class="fas {{ expand_accordion|get_icon }}"></i>
     </a>
-    <div class="float-right">
+    <div class="float-end">
       {% if not project.status.name in 'Archived, Denied, Expired, Renewal Denied' and is_allowed_to_update_project %}
         <a class="btn btn-primary" href="{{mailto}}" role="button"><i class="far fa-envelope" aria-hidden="true"></i> Email Project Users</a>
         <a class="btn btn-success" href="{% url 'project-add-users-search' project.id %}"><i class="fas fa-user-plus" aria-hidden="true"></i> Add Users</a>
@@ -220,7 +220,7 @@ Project Detail
   <div
     id="user_collapse"
     class="collapse {{expand_accordion}}"
-    data-parent="#accordion"
+    data-bs-parent="#accordion"
     role="region"
     aria-labelledby="expand_button"
   >
@@ -230,8 +230,8 @@ Project Detail
         Resource access is not automatically granted to project users, you must be added to an allocation as well.
       </div>
       <div class="table-responsive">
-        <table id="projectuser_table" class="table table-hover">
-          <caption class="sr-only">Project users</caption>
+        <table id="projectuser_table" class="table table-hover datatable">
+          <caption class="visually-hidden">Project users</caption>
           <thead>
             <tr>
               <th scope="col" class="text-nowrap">Username</th>
@@ -239,16 +239,19 @@ Project Detail
               <th scope="col" class="text-nowrap">Last Name</th>
               <th scope="col" class="text-nowrap">Email</th>
               <th scope="col" class="text-nowrap">Role
-                <a
-                id="popover"
-                href="#"
-                data-toggle="popover"
-                title="Role" data-trigger="hover"
-                data-content="Manager role grants user access to add/remove users and allocations in the project. Max permitted Managers: {{ project.max_managers }}"
+                <button
+                  type="button"
+                  id="popover"
+                  class="p-0 bg-transparent border-0"
+                  data-bs-toggle="popover"
+                  title="Role"
+                  data-bs-trigger="hover"
+                  data-bs-content="Manager role grants user access to add/remove users and allocations in the project. Max permitted Managers: {{ project.max_managers }}"
+                  style="cursor: default;"
                 >
-                  <i class="fas fa-info-circle" aria-hidden="true"></i>
-                  <span class="sr-only">Manager role grants user access to add/remove users and allocations in the project. Max permitted Managers: {{ project.max_managers }}</span>
-                </a>
+                  <i class="fas fa-info-circle text-primary" aria-hidden="true"></i>
+                  <span class="visually-hidden">Manager role grants user access to add/remove users and allocations in the project. Max permitted Managers: {{ project.max_managers }}</span>
+                </button>
               </th>
               <th scope="col" class="text-nowrap">Status</th>
               <th scope="col" class="nosort">Actions</th>
@@ -287,8 +290,8 @@ Project Detail
 <!-- Start Project Allocations -->
 <div class="card mb-3">
   <div class="card-header">
-    <h2 class="d-inline"><i class="fas fa-server" aria-hidden="true"></i> Allocations</h2> <span class="badge badge-secondary">{{ allocations.count }}</span>
-    <div class="float-right">
+    <h2 class="d-inline"><i class="fas fa-server" aria-hidden="true"></i> Allocations</h2> <span class="badge text-bg-secondary">{{ allocations.count }}</span>
+    <div class="float-end">
       {% if not project.status.name in 'Archived, Denied, Review Pending, Expired, Renewal Denied' and is_allowed_to_update_project %}
         {% if enable_customizable_forms %}
           <a class="btn btn-success" href="{% url 'custom-allocation-create' project.pk %}"><i class="fas fa-plus" aria-hidden="true"></i> Request Resource Allocation</a>
@@ -304,8 +307,8 @@ Project Detail
   <div class="card-body">
     {% if allocations %}
       <div class="table-responsive">
-        <table id="allocation_table" class="table table-hover">
-          <caption class="sr-only">Allocations</caption>
+        <table id="allocation_table" class="table table-hover datatable">
+          <caption class="visually-hidden">Allocations</caption>
           <thead>
             <tr>
               <th scope="col" class="text-nowrap">Resource Name</th>
@@ -316,16 +319,19 @@ Project Detail
               {% endif %}
               <th scope="col" class="text-center text-nowrap nosort">
                 Users
-              <a
+              <button
+                type="button"
                 id="popover"
-                href="#"
-                data-toggle="popover"
-                title="Users" data-trigger="hover"
-                data-content="Mouse over a number to see the list of users in the allocation."
-                >
-                  <i class="fas fa-info-circle" aria-hidden="true"></i>
-                  <span class="sr-only">Mouse over a number to see the list of users in the allocation.</span>
-                </a>
+                class="p-0 bg-transparent border-0"
+                data-bs-toggle="popover"
+                title="Users"
+                data-bs-trigger="hover"
+                data-bs-content="Mouse over a number to see the list of users in the allocation."
+                style="cursor: default;"
+              >
+                <i class="fas fa-info-circle text-primary" aria-hidden="true"></i>
+                <span class="visually-hidden">Mouse over a number to see the list of users in the allocation.</span>
+              </button>
               </th>
               <th scope="col" class="text-center nosort">Actions</th>
             </tr>
@@ -349,7 +355,7 @@ Project Detail
               {% else %}
                 <td class="text-success"><strong>{{ allocation.status.name }}</strong></td>
               {% endif %}
-              {% elif  allocation.status.name == 'Expired' or allocation.status.name == 'Denied' %}
+              {% elif  allocation.status.name in 'Expired, Denied, Removed, Revoked' %}
                 <td class="text-danger"><strong>{{ allocation.status.name }}</strong></td>
               {% else %}
                 <td class="text-primary"><strong>{{ allocation.status.name }}</strong></td>
@@ -360,17 +366,19 @@ Project Detail
               <td>
                 {% with allocation.get_user_list as allocation_users %}
                   <div class="text-center">
-                    <a
+                    <button
+                      type="button"
                       id="popover"
-                      class="badge badge-primary"
-                      href="#"
-                      data-toggle="popover"
-                      title="Users" data-trigger="hover"
-                      data-content="{{allocation_users|join:', '}}"
+                      class="badge text-bg-primary border-0"
+                      data-bs-toggle="popover"
+                      title="Users"
+                      data-bs-trigger="hover"
+                      data-bs-content="{{allocation_users|join:', '}}"
+                      style="cursor: default;"
                     >
                       {{ allocation_users|length }}
-                      <span class="sr-only">{{allocation_users|join:", "}}</span>
-                    </a>
+                      <span class="visually-hidden">{{allocation_users|join:", "}}</span>
+                    </button>
                   </div>
                 {% endwith %}
               </td>
@@ -380,7 +388,7 @@ Project Detail
                     class="btn {% if allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 and allocation.status.name == 'Active' %}btn-warning{% else %}btn-primary{% endif %}"
                     href="{% url 'allocation-detail' allocation.pk %}"
                   >
-                    <i class="far fa-folder-open" aria-hidden="true"></i> Details <br>
+                    <i class="fa fa-folder-open" aria-hidden="true"></i> Details <br>
                     {% if allocation.expires_in <= ALLOCATION_DAYS_TO_REVIEW_BEFORE_EXPIRING and allocation.expires_in >= 0 and allocation.status.name == 'Active' %}
                       <div style="margin-top: -10px;">
                         <small><small>Expires in {{allocation.expires_in}} day{{allocation.expires_in|pluralize}}</small></small>
@@ -404,7 +412,6 @@ Project Detail
     {% else %}
       <div class="alert alert-info" role="alert"><i class="fas fa-info-circle" aria-hidden="true"></i> There are no allocations to display.</div>
     {% endif %}
-    <hr>
   </div>
 </div>
 <!-- End Project Allocations -->
@@ -412,8 +419,8 @@ Project Detail
 <!-- Start Project Attributes -->
 <div class="card mb-3">
   <div class="card-header">
-    <h2 class="d-inline"><i class="fas fa-info-circle" aria-hidden="true"></i> Attributes</h2> <span class="badge badge-secondary">{{attributes.count}}</span>
-    <div class="float-right">
+    <h2 class="d-inline"><i class="fas fa-info-circle" aria-hidden="true"></i> Attributes</h2> <span class="badge text-bg-secondary">{{attributes.count}}</span>
+    <div class="float-end">
       {% if project.status.name not in 'Archived, Expired' and perms.project.add_projectattribute %}
         <a class="btn btn-success" href="{% url 'project-attribute-create' project.pk %}"><i class="fas fa-plus" aria-hidden="true"></i> Add Attribute</a>
         {% if attributes and perms.project.delete_projectattribute %}
@@ -426,7 +433,7 @@ Project Detail
     {% if attributes %}
       <div class="table-responsive">
         <table id="attribute_table" class="table table-hover">
-          <caption class="sr-only">Project attributes</caption>
+          <caption class="visually-hidden">Project attributes</caption>
           <thead>
             <tr>
               <th scope="col">Attribute Type</th>
@@ -442,7 +449,7 @@ Project Detail
                   <tr style="background-color:#eee">
                     <td><i class="fas fa-lock" aria-hidden="true"></i> {{attribute}}</td>
                     <td>{{attribute.value}}</td>
-                    <td><a href="{% url 'project-attribute-update' project.pk attribute.pk %}"><i class="far fa-edit" aria-hidden="true"></i><span class="sr-only">Edit</span></a></td>
+                    <td><a href="{% url 'project-attribute-update' project.pk attribute.pk %}"><i class="far fa-edit" aria-hidden="true"></i><span class="visually-hidden">Edit</span></a></td>
                   </tr>
                 {% else %}
                   <tr>
@@ -451,7 +458,7 @@ Project Detail
                       {{attribute.value}}
                     </td>
                     {% if perms.project.change_projectattribute %}
-                    <td><a href="{% url 'project-attribute-update' project.pk attribute.pk %}"><i class="far fa-edit" aria-hidden="true"></i><span class="sr-only">Edit</span></a></td>
+                    <td><a href="{% url 'project-attribute-update' project.pk attribute.pk %}"><i class="far fa-edit" aria-hidden="true"></i><span class="visually-hidden">Edit</span></a></td>
                     {% endif %}
                   </tr>
                 {% endif %}
@@ -462,7 +469,7 @@ Project Detail
       {% if attributes_with_usage %}
       <hr>
       {% for attribute in attributes_with_usage %}
-        <div class="card mb-3 mr-1">
+        <div class="card mb-3 me-1">
           <div class="card-body">
             <h4 class="card-title">{{attribute}}</h4>
             <div id="gauge-{{forloop.counter0}}"></div>
@@ -482,10 +489,10 @@ Project Detail
   <!-- Start Project Grants -->
   <div class="card mb-3">
     <div class="card-header">
-      <h2 class="d-inline" id="grants"><i class="fas fa-trophy" aria-hidden="true"></i> Grants</h2> <span class="badge badge-secondary">{{grants.count}}</span>
-      <div class="float-right">
+      <h2 class="d-inline" id="grants"><i class="fas fa-trophy" aria-hidden="true"></i> Grants</h2> <span class="badge text-bg-secondary">{{grants.count}}</span>
+      <div class="float-end">
         {% if project.latest_grant.modified %}
-          <span class="badge badge-info">Last Updated: {{project.latest_grant.modified|date:"M. d, Y"}}</span>
+          <span class="badge text-bg-info">Last Updated: {{project.latest_grant.modified|date:"M. d, Y"}}</span>
         {% endif %}
         {% if not project.status.name in 'Archived, Denied, Expired' and is_allowed_to_update_project %}
           <a class="btn btn-success" href="{% url 'grant-create' project.id %}"><i class="fas fa-plus" aria-hidden="true"></i> Add Grant</a>
@@ -499,7 +506,7 @@ Project Detail
       {% if grants %}
         <div class="table-responsive">
           <table id="grant_table" class="table table-hover">
-            <caption class="sr-only">Grants</caption>
+            <caption class="visually-hidden">Grants</caption>
             <thead>
               <tr>
                 <th scope="col">Title</th>
@@ -520,7 +527,7 @@ Project Detail
                 <td>{{ grant.total_amount_awarded|intcomma}}</td>
                 <td>{{ grant.grant_start|date:"Y-m-d" }}</td>
                 <td>{{ grant.grant_end|date:"Y-m-d" }}</td>
-                <td><a href="{% url 'grant-update' grant.id %}"><i class="far fa-edit" aria-hidden="true"></i><span class="sr-only">Edit</span></a></td>
+                <td><a href="{% url 'grant-update' grant.id %}"><i class="far fa-edit" aria-hidden="true"></i><span class="visually-hidden">Edit</span></a></td>
               </tr>
               {% endfor %}
             </tbody>
@@ -538,10 +545,10 @@ Project Detail
   <!-- Start Project Publications -->
   <div class="card mb-3">
     <div class="card-header">
-      <h2 class="d-inline" id="publications"><i class="fas fa-newspaper" aria-hidden="true"></i> Publications</h2> <span class="badge badge-secondary">{{publications.count}}</span>
-      <div class="float-right">
+      <h2 class="d-inline" id="publications"><i class="fas fa-newspaper" aria-hidden="true"></i> Publications</h2> <span class="badge text-bg-secondary">{{publications.count}}</span>
+      <div class="float-end">
         {% if project.latest_publication.created %}
-          <span class="badge badge-primary">Last Updated: {{project.latest_publication.created|date:"M. d, Y"}}</span>
+          <span class="badge text-bg-primary">Last Updated: {{project.latest_publication.created|date:"M. d, Y"}}</span>
         {% endif %}
         {% if not project.status.name in 'Archived, Denied, Expired, Renewal Denied' and is_allowed_to_update_project %}
           <a class="btn btn-success" href="{% url 'publication-search' project.pk %}"><i class="fas fa-plus" aria-hidden="true"></i> Add Publication</a>
@@ -556,7 +563,7 @@ Project Detail
       {% if publications %}
         <div class="table-responsive">
           <table id="publication-table" class="table table-hover">
-            <caption class="sr-only">Publications</caption>
+            <caption class="visually-hidden">Publications</caption>
             <thead>
               <tr>
                 <th scope="col">Title, Author, and Journal</th>
@@ -569,7 +576,7 @@ Project Detail
                 <td>
                   <strong>Title: </strong>{{ publication.title }}
                   {% if publication.source.url %}
-                    <a target="_blank" rel="noopener noreferrer" href="{{publication.source.url}}{{publication.unique_id}}"><i class="fas fa-external-link-alt" aria-hidden="true"></i><span class="sr-only">Visit source</span></a>
+                    <a target="_blank" rel="noopener noreferrer" href="{{publication.source.url}}{{publication.unique_id}}"><i class="fas fa-external-link-alt" aria-hidden="true"></i><span class="visually-hidden">Visit source</span></a>
                   {% endif %}
                   <br><strong>Author: </strong>{{ publication.author}}
                   <br><strong>Journal: </strong>{{ publication.journal}}
@@ -592,8 +599,8 @@ Project Detail
   <!-- Start Project ResearchOutputs -->
   <div class="card mb-3">
     <div class="card-header">
-      <h2 class="d-inline" id="research_outputs"><i class="far fa-newspaper" aria-hidden="true"></i> Research Outputs</h2> <span class="badge badge-secondary">{{ research_outputs.count}}</span>
-      <div class="float-right">
+      <h2 class="d-inline" id="research_outputs"><i class="far fa-newspaper" aria-hidden="true"></i> Research Outputs</h2> <span class="badge text-bg-secondary">{{ research_outputs.count}}</span>
+      <div class="float-end">
         {% if not project.status.name in 'Archived, Denied, Expired' and is_allowed_to_update_project %}
           <a class="btn btn-success" href="{% url 'add-research-output' project.pk %}"><i class="fas fa-plus" aria-hidden="true"></i> Add Research Output</a>
           {% if research_outputs %}
@@ -606,7 +613,7 @@ Project Detail
       {% if research_outputs %}
         <div class="table-responsive">
           <table id="research-output-table" class="table table-hover">
-            <caption class="sr-only">Research outputs</caption>
+            <caption class="visually-hidden">Research outputs</caption>
             <tbody>
               {% for research_output in research_outputs %}
               <tr>
@@ -634,8 +641,8 @@ Project Detail
 <!-- Start Admin Messages -->
 <div class="card mb-3">
   <div class="card-header">
-    <h2 class="d-inline"><i class="fas fa-users" aria-hidden="true"></i> Notifications </h2> <span class="badge badge-secondary">{{project.projectusermessage_set.count}}</span>
-    <div class="float-right">
+    <h2 class="d-inline"><i class="fas fa-users" aria-hidden="true"></i> Notifications </h2> <span class="badge text-bg-secondary">{{project.projectusermessage_set.count}}</span>
+    <div class="float-end">
       {% if request.user.is_superuser %}
         <a class="btn btn-success" href="{% url 'project-note-add' project.pk %}">
           <i class="fas fa-plus" aria-hidden="true"></i> Add Notification
@@ -647,7 +654,7 @@ Project Detail
     {% if project_messages %}
       <div class="table-responsive">
         <table class="table table-hover">
-          <caption class="sr-only">Project messages</caption>
+          <caption class="visually-hidden">Project messages</caption>
           <thead>
             <tr>
               <th scope="col">Comment</th>
@@ -676,136 +683,29 @@ Project Detail
   </div>
 </div>
 <!-- End Admin Messages -->
+{% endblock %}
 
-{{ display_modal|json_script:"display_modal" }}
-{{ display_project_created_modal|json_script:"display_project_created_modal" }}
-{{ gauge_data|json_script:"gauge_data" }}
-
+{% block javascript %}
+{{ block.super }}
+{{ request.GET.after_project_creation|json_script:"display_project_created_modal" }}
+{{ request.GET.allocation_submitted|json_script:"display_allocation_created_modal" }}
 <script>
-  var display_modal = JSON.parse(document.getElementById('display_modal').textContent) === 'true';
-  var display_project_created_modal = JSON.parse(document.getElementById('display_project_created_modal').textContent) === 'true';
-  var gauge_data = JSON.parse(document.getElementById('gauge_data').textContent);
+  document.addEventListener('DOMContentLoaded', function() {
+    var display_allocation_created_modal = JSON.parse(document.getElementById('display_allocation_created_modal').textContent) === 'true';
+    var display_project_created_modal = JSON.parse(document.getElementById('display_project_created_modal').textContent) === 'true';
 
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-project-menu").addClass("active");
-
-  function getCookie(name) {
-    var cookieValue = null;
-    if (document.cookie && document.cookie != '') {
-      var cookies = document.cookie.split(';');
-      for (var i = 0; i < cookies.length; i++) {
-        var cookie = jQuery.trim(cookies[i]);
-        // Does this cookie string begin with the name we want?
-        if (cookie.substring(0, name.length + 1) == (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
-        }
-      }
-    }
-    return cookieValue;
-  }
-
-  $(document).ready(function(){
-    $("a[id*=popover]").click(function(e) {
-      e.preventDefault();
-    })
-
-    $("#expand_button").click(function () {
-      $('#user_collapse').collapse();
-      icon = $("#plus_minus");
-      icon.toggleClass("fa-plus fa-minus");
+    $('#user_collapse').on('shown.bs.collapse hidden.bs.collapse', function () {
+      $('#plus_minus').toggleClass('fa-plus fa-minus');
     });
-
-    $('[data-toggle="tooltip"]').tooltip()
-
-    drawGauges(gauge_data);
-
-    if (display_modal) {
-      $('#allocation_response_modal').modal('show');
-    }
 
     if (display_project_created_modal) {
-      $('#project_created_response_modal').modal('show');
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('project_created_response_modal')).show();
+      return;
     }
 
-    $('#user_table').DataTable({
-      'aoColumnDefs': [{
-        'bSortable': false,
-        'aTargets': ['nosort']
-      }]
-    });
-
-    $('#publication-table').DataTable({
-      "aLengthMenu": [
-        [10, 25, 50, 100, -1],
-        [10, 25, 50, 100, "All"]],
-      "iDisplayLength": 25,
-      "bSortClasses": false,
-      "order": [[ 1, "desc" ]]
-    });
-
-    $('[data-toggle="popover"]').popover();
-
-    $('#allocation_table').DataTable({
-      'aoColumnDefs': [{
-        'bSortable': false,
-        'aTargets': ['nosort']
-      }]
-    });
-
-    $('#grant_table').DataTable({
-      'aoColumnDefs': [{
-        'bSortable': false,
-        'aTargets': ['nosort']
-      }]
-    });
-
-    $('#projectuser_table').DataTable({
-      'aoColumnDefs': [{
-        'bSortable': false,
-        'aTargets': ['nosort']
-      }]
-    });
-
-    $("#selectAll").click(function () {
-      $("input[id^='email_notifications_for_user_id_']").not(":disabled").prop('checked', $(this).prop('checked')).change();
-    });
-
-    $("[id^=email_notifications_for_user_id_]").change(function() {
-      var checked = $(this).prop('checked');
-      var user_project_id = Number($(this).attr('id').split("_").pop());
-
-      $.ajax({
-        headers: { 'X-CSRFToken': getCookie('csrftoken') },
-        type: "POST",
-        url: "/project/project-user-update-email-notification/",
-        data: {
-          user_project_id: user_project_id,
-          checked: checked
-        },
-        success: function (data) {
-          $("#alert_div").html('<div class="alert alert-success alert-dismissible"><button type="button" class="close" data-dismiss="alert">&times;</button><strong>Success!</strong> Email notification updated.</div>')
-        },
-        error: function (xhr, status, error) {
-          $("#alert_div").html('<div class="alert alert-danger alert-dismissible"><button type="button" class="close" data-dismiss="alert">&times;</button><strong>Error!</strong> Failed updating email notification.</div>')
-        }
-      });
-    });
+    if (display_allocation_created_modal) {
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('allocation_response_modal')).show();
+    }
   });
-
-  function drawGauges(guage_data) {
-    var arrayLength = guage_data.length;
-    for (var i = 0; i < arrayLength; i++) {
-      c3.generate({
-        bindto: '#gauge-' + i,
-        data: guage_data[i],
-        legend: {
-          item: {
-            onclick: function (id) { }
-          }
-        }
-      });
-    }
-  }
 </script>
 {% endblock %}

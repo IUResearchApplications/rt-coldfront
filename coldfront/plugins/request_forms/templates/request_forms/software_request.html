@@ -8,7 +8,7 @@ HPC Software Request
 
 {% block content %}
 <style>
-  label:not(.custom-control-label) {
+  label:not(.form-check-label) {
     font-weight: bold;
   }
 </style>
@@ -19,11 +19,13 @@ HPC Software Request
 {% crispy form %}
 
 <script>
-  $(document).ready(function () {
-    var radios = $("[type=radio]").parent();
-    for (var i = 0; i < radios.length; i++) {
-      radios[i].className = "custom-control custom-radio custom-control-inline";
-    }
-  })
+  document.addEventListener('DOMContentLoaded', function() {
+    $(document).ready(function () {
+      var radios = $("[type=radio]").parent();
+      for (var i = 0; i < radios.length; i++) {
+        radios[i].className = "form-check form-check-inline";
+      }
+    })
+  });
 </script>
 {% endblock content %}

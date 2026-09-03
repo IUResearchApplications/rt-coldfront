@@ -41,7 +41,7 @@ Remove Allocation
   <form method="post">
     {% csrf_token %}
     <fieldset>
-      <legend class="sr-only">Removal confirmation</legend>
+      <legend class="visually-hidden">Removal confirmation</legend>
       <p>
         Are you sure you want to request to remove this allocation? Anything associated with it will be deleted
         and everyone in it will lose access to its resource if it is approved. If this is a storage allocation you
@@ -53,10 +53,4 @@ Remove Allocation
     </fieldset>
   </form>
 </div>
-
-<script>
-  $("#navbar-main > ul > li.active").removeClass("active");
-  $("#navbar-project-menu").addClass("active");
-  $("#navbar-allocation").addClass("active");
-</script>
 {% endblock %}

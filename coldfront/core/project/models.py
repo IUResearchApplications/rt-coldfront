@@ -5,15 +5,19 @@
 import datetime
 from enum import Enum
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import MinLengthValidator
 from django.db import models
+from django.urls import reverse
 from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
 from coldfront.core.field_of_science.models import FieldOfScience
+from coldfront.core.project.signals import project_activate_user, project_archive, project_remove_user
 from coldfront.core.utils.common import import_from_settings
+from coldfront.core.utils.mail import send_email_template
 from coldfront.core.utils.validate import AttributeValidator
 
 PROJECT_ENABLE_PROJECT_REVIEW = import_from_settings("PROJECT_ENABLE_PROJECT_REVIEW", False)
@@ -131,7 +135,6 @@ put the approximate class size.
         db_collation="utf8mb4_unicode_ci",
     )
 
-    slurm_account_name = models.CharField(max_length=15, blank=True, null=True, unique=True)
     field_of_science = models.ForeignKey(FieldOfScience, on_delete=models.CASCADE, default=FieldOfScience.DEFAULT_PK)
     type = models.ForeignKey(
         ProjectTypeChoice,
@@ -166,9 +169,9 @@ put the approximate class size.
         Returns:
             ProjectReview: the last project review that was created for this project
         """
-
-        if self.projectreview_set.exists():
-            return self.projectreview_set.order_by("-created")[0]
+        project_review_query = self.projectreview_set.order_by("-created")
+        if project_review_query:
+            return project_review_query.first()
         else:
             return None
 
@@ -178,9 +181,9 @@ put the approximate class size.
         Returns:
             Grant: the most recent grant for this project, or None if there are no grants
         """
-
-        if self.grant_set.exists():
-            return self.grant_set.order_by("-modified")[0]
+        grant_query = self.grant_set.order_by("-modified")
+        if grant_query:
+            return grant_query.first()
         else:
             return None
 
@@ -190,9 +193,9 @@ put the approximate class size.
         Returns:
             Publication: the most recent publication for this project, or None if there are no publications
         """
-
-        if self.publication_set.exists():
-            return self.publication_set.order_by("-created")[0]
+        publication_query = self.publication_set.order_by("-created")
+        if publication_query:
+            return publication_query.first()
         else:
             return None
 
@@ -205,12 +208,7 @@ put the approximate class size.
         if not self.get_env.get("renewable"):
             return False
 
-        if self.status.name in [
-            "Archived",
-            "Denied",
-            "Review Pending",
-            "Renewal Denied",
-        ]:
+        if self.status.name in ["Archived", "Denied", "Review Pending", "Renewal Denied"]:
             return False
 
         if self.force_review is True:
@@ -291,7 +289,7 @@ put the approximate class size.
         Returns:
             bool: the list of managers in the project
         """
-        project_managers = self.projectuser_set.filter(role=ProjectUserRoleChoice.objects.get(name="Manager"))
+        project_managers = self.projectuser_set.select_related("user").filter(role__name="Manager")
         return [manager.user.username for manager in project_managers]
 
     def get_current_num_managers(self):
@@ -299,10 +297,7 @@ put the approximate class size.
         Returns:
             bool: the current number of managers
         """
-        return self.projectuser_set.filter(
-            role=ProjectUserRoleChoice.objects.get(name="Manager"),
-            status=ProjectUserStatusChoice.objects.get(name="Active"),
-        ).count()
+        return self.projectuser_set.filter(role__name="Manager", status__name="Active").count()
 
     def check_exceeds_max_managers(self, num_added_managers=0):
         """
@@ -317,6 +312,96 @@ put the approximate class size.
     def natural_key(self):
         return (self.title,) + self.pi.natural_key()
 
+    def auto_disable_user_notifications(self):
+        """Return True if this project has 'Auto Disable User Notifications' set to Yes."""
+        obj = self.projectattribute_set.filter(proj_attr_type__name="Auto Disable User Notifications").first()
+        return bool(obj and obj.value == "Yes")
+
+    def add_user(self, user, role_choice, signal_sender=None, enable_notifications=None):
+        """
+        Adds a user to the project.
+
+        If a ProjectUser already exists, its role will be set to "Active" and its role updated.
+        Otherwise, creates a new ProjectUser.
+
+        Params:
+            user (User): User to add.
+            role_choice (ProjetUserRoleChoice): Role to give the project user.
+            signal_sender (str): Sender for the `project_activate_user` signal.
+            enable_notifications (bool): Whether to enable notifications for the user. When
+                None, the existing/default value is left unchanged.
+        """
+        user_status_obj = ProjectUserStatusChoice.objects.get(name="Active")
+
+        defaults = {"status": user_status_obj, "role": role_choice}
+        if enable_notifications is not None:
+            defaults["enable_notifications"] = enable_notifications
+
+        project_user, _created = self.projectuser_set.update_or_create(user=user, defaults=defaults)
+
+        project_activate_user.send(sender=signal_sender, project_user_pk=project_user.pk)
+        return project_user
+
+    def remove_user(self, user, signal_sender=None):
+        """
+        Marks a `ProjectUser` and any associated `AllocationUser`s as 'Removed'.
+
+        Params:
+            user (User|ProjectUser): User to remove.
+            signal_sender (str): Sender for the `project_remove_user` and `allocation_remove_user` signals.
+
+        Raises:
+            ProjectUser.DoesNotExist: If `user` is a `User` and that user is not found in the Project.
+
+        """
+        if isinstance(user, ProjectUser):
+            project_user = user
+        elif isinstance(user, get_user_model()):
+            project_user = self.projectuser_set.get(user=user)
+
+        for active_allocation in self.allocation_set.filter(
+            status__name__in=(
+                "Active",
+                "Denied",
+                "New",
+                "Paid",
+                "Payment Pending",
+                "Payment Requested",
+                "Payment Declined",
+                "Renewal Requested",
+                "Unpaid",
+            )
+        ):
+            active_allocation.remove_user(project_user.user, signal_sender)
+
+        project_user.status = ProjectUserStatusChoice.objects.get(name="Removed")
+        project_user.save()
+        project_remove_user.send(sender=signal_sender, project_user_pk=project_user.pk)
+
+    def archive(self):
+        """
+        Sets the project status to "Archived" and expires all active allocations.
+        Sends project archive email to project users.
+        """
+        # set project status
+        project_status_archive = ProjectStatusChoice.objects.get(name="Archived")
+        self.status = project_status_archive
+        self.save()
+
+        # expire allocations
+        for allocation in self.allocation_set.filter(status__name="Active"):
+            allocation.expire()
+
+        # send project archived email
+        send_email_template(
+            subject="Project has been archived",
+            template_name="email/project_archived.txt",
+            template_context={"project": self},
+            receiver_list=self.get_user_emails(),
+        )
+
+        project_archive.send(sender=self.__class__, project_obj=self)
+
     @property
     def get_env(self):
         default_env = PROJECT_PERMISSIONS_PER_TYPE.get("Default")
@@ -324,6 +409,30 @@ put the approximate class size.
             return default_env
 
         return default_env | PROJECT_PERMISSIONS_PER_TYPE.get(self.type.name)
+
+    def get_absolute_url(self):
+        return reverse("project-detail", kwargs={"pk": self.pk})
+
+    def get_user_emails(self, ignore_disabled_notifications=False) -> set[str]:
+        """Gets a set of user emails for notifications.
+
+        Params:
+            ignore_disabled_notifications (bool): If True, include project users
+                that have enable_notifications off.
+
+        Returns:
+            set: A set of user emails for notifications.
+        """
+        filter_options = {
+            "status__name": "Active",
+        }
+        if not ignore_disabled_notifications:
+            filter_options["enable_notifications"] = True
+
+        project_users = self.projectuser_set.filter(**filter_options)
+        user_emails = set(project_users.values_list("user__email", flat=True))
+        user_emails.add(self.pi.email)
+        return user_emails
 
 
 class ProjectAdminComment(TimeStampedModel):
@@ -552,7 +661,9 @@ class ProjectAttribute(TimeStampedModel):
         """Validates the project and raises errors if the project is invalid."""
         if (
             self.proj_attr_type.is_unique
-            and self.project.projectattribute_set.filter(proj_attr_type=self.proj_attr_type).exists()
+            and self.project.projectattribute_set.filter(proj_attr_type=self.proj_attr_type)
+            .exclude(pk=self.pk)
+            .exists()
         ):
             raise ValidationError("'{}' attribute already exists for this project.".format(self.proj_attr_type))
 

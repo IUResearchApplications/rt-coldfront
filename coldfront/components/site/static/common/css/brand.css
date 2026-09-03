@@ -98,6 +98,14 @@
   width: 100%;
 }
 
+#footer .row > * {
+  width: auto; /* Fixes signature and copyright not being inline */
+}
+
+#branding-bar .row > * {
+  --bs-gutter-x: 0; /* Fixes IU icon shrinking */
+}
+
 #branding-bar {
   position: fixed;
   line-height: 1.5;
