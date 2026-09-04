@@ -50,7 +50,6 @@ def home(request):
                             "Waiting For Admin Approval",
                             "Contacted By Admin",
                             "Review Pending",
-                            "Expired",
                         ]
                     )
                 )
