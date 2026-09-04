@@ -2358,7 +2358,7 @@ class AllocationChangeView(LoginRequiredMixin, UserPassesTestMixin, FormView):
         )
         send_allocation_admin_email(
             allocation_obj,
-            f"New Allocation Change Request: {pi_name} - {resource_name}",
+            "New Allocation Change Request",
             "email/new_allocation_change_request.txt",
             url_path=reverse("allocation-change-list"),
             domain_url=get_domain_url(self.request),
