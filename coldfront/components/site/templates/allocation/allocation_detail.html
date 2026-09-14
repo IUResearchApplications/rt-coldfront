@@ -55,7 +55,7 @@ Allocation Detail
   </div>
   <div class="card-body">
     {% if not allocation.status.name in 'Denied, Expired, Renewal Denied, Removed, Revoked' and is_allowed_to_update_project %}
-      {% if not allocation.get_parent_resource.name in 'Geode-Project, ResDB' %}
+      {% if not allocation.get_parent_resource.name in 'Geode-Project, ResDB Account' %}
         <a class="btn btn-success" href="{% url 'allocation-add-users' allocation.pk %}" aria-label="Add users to this allocation">
           <i class="fas fa-user-plus" aria-hidden="true"></i> Add Users
         </a>

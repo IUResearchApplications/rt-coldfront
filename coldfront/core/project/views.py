@@ -1009,7 +1009,7 @@ class ProjectAddUsersSearchResultsView(LoginRequiredMixin, UserPassesTestMixin, 
 
         status_list = ["Active", "New", "Renewal Requested", "Billing Information Submitted"]
         allocations = project_obj.allocation_set.filter(status__name__in=status_list, is_locked=False).exclude(
-            resources__name__=["Geode-Project", "ResDB"]
+            resources__name__=["Geode-Project", "ResDB Account"]
         )
         initial_data = self.get_initial_data(allocations)
         allocation_formset = formset_factory(
