@@ -396,7 +396,7 @@ Project Detail
                     {% endif %}
                   </a>
                   {% if is_allowed_to_update_project and allocation.status.name in 'Active, New, Renewal Requested, Billing Information Submitted' and not allocation.is_locked %}
-                    {% if not allocation.get_parent_resource.name == 'Geode-Project' %}
+                    {% if not allocation.get_parent_resource.name in 'Geode-Project, ResDB Account' %}
                       <a class="btn btn-success" href="{% url 'allocation-add-users' allocation.pk %}">
                         <i class="fas fa-user-plus" aria-hidden="true"></i> Add Users
                       </a>

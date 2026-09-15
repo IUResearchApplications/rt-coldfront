@@ -412,7 +412,7 @@ Allocation Detail
     <span class="badge text-bg-secondary">{{allocation_users.count}}</span>
     <div class="float-end">
       {% if is_allowed_to_update_project and not allocation.status.name in 'Denied, Expired, Renewal Denied, Removed, Revoked' %}
-        {% if not allocation.get_parent_resource.name == 'Geode-Project' %}
+        {% if not allocation.get_parent_resource.name in 'Geode-Project, ResDB Account' %}
           <a class="btn btn-success" href="{% url 'allocation-add-users' allocation.pk %}">
             <i class="fas fa-user-plus" aria-hidden="true"></i> Add Users
           </a>
