@@ -850,8 +850,8 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
             "Paid",
         ]:
             message = f"You cannot add users to an allocation with status {allocation_obj.status.name}."
-        elif allocation_obj.get_parent_resource.name == "Geode-Project":
-            message = "You cannot add users to a Geode-Project allocation."
+        elif allocation_obj.get_parent_resource.name in ["Geode-Project", "ResDB Account"]:
+            message = f"You cannot add users to a {allocation_obj.get_parent_resource.name} allocation."
         if message:
             messages.error(request, message)
             return redirect(allocation_obj)
@@ -1011,8 +1011,8 @@ class AllocationRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, Templat
             "Renewal Requested",
         ]:
             message = f"You cannot remove users from a allocation with status {allocation_obj.status.name}."
-        elif allocation_obj.get_parent_resource.name == "Geode-Project":
-            message = "You cannot remove users from a Geode-Project allocation."
+        elif allocation_obj.get_parent_resource.name in ["Geode-Project", "ResDB Account"]:
+            message = f"You cannot remove users from a {allocation_obj.get_parent_resource.name} allocation."
         if message:
             messages.error(request, message)
             return redirect(allocation_obj)
@@ -2358,7 +2358,7 @@ class AllocationChangeView(LoginRequiredMixin, UserPassesTestMixin, FormView):
         )
         send_allocation_admin_email(
             allocation_obj,
-            f"New Allocation Change Request: {pi_name} - {resource_name}",
+            "New Allocation Change Request",
             "email/new_allocation_change_request.txt",
             url_path=reverse("allocation-change-list"),
             domain_url=get_domain_url(self.request),

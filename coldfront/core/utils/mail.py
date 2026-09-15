@@ -97,7 +97,7 @@ def send_admin_email_template(allocation_obj, subject, template_name, template_c
         subject,
         template_name,
         template_context,
-        [EMAIL_TICKET_SYSTEM_ADDRESS, email_recipient],
+        [email_recipient],
     )
 
 

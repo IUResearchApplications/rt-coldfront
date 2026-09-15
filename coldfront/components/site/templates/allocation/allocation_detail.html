@@ -55,7 +55,7 @@ Allocation Detail
   </div>
   <div class="card-body">
     {% if not allocation.status.name in 'Denied, Expired, Renewal Denied, Removed, Revoked' and is_allowed_to_update_project %}
-      {% if not allocation.get_parent_resource.name == 'Geode-Project' %}
+      {% if not allocation.get_parent_resource.name in 'Geode-Project, ResDB Account' %}
         <a class="btn btn-success" href="{% url 'allocation-add-users' allocation.pk %}" aria-label="Add users to this allocation">
           <i class="fas fa-user-plus" aria-hidden="true"></i> Add Users
         </a>
@@ -412,16 +412,20 @@ Allocation Detail
     <span class="badge text-bg-secondary">{{allocation_users.count}}</span>
     <div class="float-end">
       {% if is_allowed_to_update_project and not allocation.status.name in 'Denied, Expired, Renewal Denied, Removed, Revoked' %}
-        {% if not allocation.get_parent_resource.name == 'Geode-Project' %}
+        {% if not allocation.get_parent_resource.name in 'Geode-Project, ResDB Account' %}
           <a class="btn btn-success" href="{% url 'allocation-add-users' allocation.pk %}">
             <i class="fas fa-user-plus" aria-hidden="true"></i> Add Users
           </a>
           <a class="btn btn-danger" href="{% url 'allocation-remove-users' allocation.pk %}">
             <i class="fas fa-user-times" aria-hidden="true"></i> Remove Users
           </a>
-        {% else %}
+        {% elif allocation.get_parent_resource.name == 'Geode-Project' %}
           <div class="alert alert-warning mb-0" role="alert">
             Membership management for this allocation is handled via AD groups.
+          </div>
+        {% else %}
+          <div class="alert alert-warning mb-0" role="alert">
+            Membership management is not permitted for this resource.
           </div>
         {% endif %}
       {% endif %}
