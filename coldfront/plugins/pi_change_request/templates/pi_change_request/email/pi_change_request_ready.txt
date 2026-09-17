@@ -1,0 +1,4 @@
+The PI change request for project "{{ project_title }}" (Project ID: {{ project_id }}) has received all
+approvals and is ready to be activated.
+
+You can review this request at the PI Change Request Center: {{ url }}

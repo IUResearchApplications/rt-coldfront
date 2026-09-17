@@ -1,5 +1,6 @@
 from functools import cached_property
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db import transaction
@@ -9,7 +10,7 @@ from django.urls import reverse
 from django.views.generic import CreateView, TemplateView, View
 
 from coldfront.core.project.models import Project
-from coldfront.core.utils.common import get_domain_url, import_from_settings
+from coldfront.core.utils.common import get_domain_url
 from coldfront.core.utils.groups import check_if_groups_in_review_groups
 from coldfront.plugins.pi_change_request.forms import (
     ProjectPiChangeRequestForm,
@@ -25,11 +26,10 @@ from coldfront.plugins.pi_change_request.models import (
     ProjectPiChangeRequestUserApproval,
     ProjectPiChangeRequestUserApprovalStatusChoice,
 )
-from coldfront.plugins.pi_change_request.utils import send_email, send_slack_message
+from coldfront.plugins.pi_change_request.utils import send_email, send_ready_email, send_slack_message
 
 RESOURCE_APPROVAL_SETTING_PERMISSION = "pi_change_request.change_projectpichangerequestresourceapprovalsetting"
 RESOURCE_APPROVAL_PERMISSION = "pi_change_request.change_projectpichangerequestresourceapproval"
-EMAIL_TICKET_SYSTEM_ADDRESS = import_from_settings("EMAIL_TICKET_SYSTEM_ADDRESS")
 
 
 class ProjectPiChangeRequestView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
@@ -99,13 +99,13 @@ class ProjectPiChangeRequestView(LoginRequiredMixin, UserPassesTestMixin, Create
             "initiator": request_obj.initiator,
             "current_pi": request_obj.current_pi,
             "new_pi": request_obj.new_pi,
-            "help_email": EMAIL_TICKET_SYSTEM_ADDRESS,
+            "help_email": settings.EMAIL_TICKET_SYSTEM_ADDRESS,
         }
         send_email(
             "New Project PI Change Request",
             "pi_change_request/email/new_pi_change_request.txt",
             template_context,
-            EMAIL_TICKET_SYSTEM_ADDRESS,
+            settings.EMAIL_TICKET_SYSTEM_ADDRESS,
         )
 
         return response
@@ -231,7 +231,7 @@ class ProjectPiChangeApprovalView(LoginRequiredMixin, UserPassesTestMixin, View)
             "project_id": pi_change_request.project.pk,
             "new_pi": pi_change_request.new_pi,
             "project_url": project_url,
-            "help_email": EMAIL_TICKET_SYSTEM_ADDRESS,
+            "help_email": settings.EMAIL_TICKET_SYSTEM_ADDRESS,
         }
         receivers = set()
         for user in (pi_change_request.current_pi, pi_change_request.new_pi, pi_change_request.initiator):
@@ -284,7 +284,7 @@ class ProjectPiChangeDenialView(LoginRequiredMixin, UserPassesTestMixin, View):
             "project_id": pi_change_request.project.pk,
             "current_pi": pi_change_request.current_pi,
             "project_url": project_url,
-            "help_email": EMAIL_TICKET_SYSTEM_ADDRESS,
+            "help_email": settings.EMAIL_TICKET_SYSTEM_ADDRESS,
         }
         receivers = set()
         for user in (pi_change_request.current_pi, pi_change_request.new_pi, pi_change_request.initiator):
@@ -423,13 +423,16 @@ class ProjectPiChangeRequestUserResponseView(LoginRequiredMixin, UserPassesTestM
             "user": approval.user,
             "response": self.response_status,
             "url": url,
-            "help_email": EMAIL_TICKET_SYSTEM_ADDRESS,
+            "help_email": settings.EMAIL_TICKET_SYSTEM_ADDRESS,
         }
         send_email(
             "PI Change Request User Response",
             "pi_change_request/email/pi_change_request_user_response.txt",
             template_context,
         )
+
+        if approval.request.status.name == "Ready":
+            send_ready_email(approval.request, url)
 
         messages.success(request, self.success_message)
         return redirect("pi-change-request-user", pk=pk)
@@ -497,13 +500,16 @@ class ProjectPiChangeRequestResourceResponseView(LoginRequiredMixin, UserPassesT
             "handler": request.user,
             "response": self.response_status,
             "url": url,
-            "help_email": EMAIL_TICKET_SYSTEM_ADDRESS,
+            "help_email": settings.EMAIL_TICKET_SYSTEM_ADDRESS,
         }
         send_email(
             "PI Change Request Resource Response",
             "pi_change_request/email/pi_change_request_resource_response.txt",
             template_context,
         )
+
+        if approval.request.status.name == "Ready":
+            send_ready_email(approval.request, url)
 
         messages.success(request, self.success_message)
         return redirect("pi-change-request-center")
