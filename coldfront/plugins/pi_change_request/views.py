@@ -180,17 +180,37 @@ class ProjectPiChangeApprovalView(LoginRequiredMixin, UserPassesTestMixin, View)
 
     def dispatch(self, request, *args, **kwargs):
         self.pi_change_request = get_object_or_404(
-            ProjectPiChangeRequest.objects.select_related("status"), pk=self.kwargs.get("pk")
+            ProjectPiChangeRequest.objects.select_related("project", "current_pi", "new_pi", "status"),
+            pk=self.kwargs.get("pk"),
         )
-        if self.pi_change_request.status.name not in ["Ready", "New"]:
+        if not self.pi_change_request.status.name == "Ready":
             messages.error(
                 request, f"Cannot approve a PI change request with status {self.pi_change_request.status.name}."
+            )
+            return redirect("pi-change-request-center")
+
+        new_pi_is_active_manager = self.pi_change_request.project.projectuser_set.filter(
+            user=self.pi_change_request.new_pi, status__name="Active", role__name="Manager"
+        ).exists()
+        if not new_pi_is_active_manager:
+            messages.error(
+                request,
+                "Cannot approve a PI change request whose new PI is no longer an active manager on the project.",
             )
             return redirect("pi-change-request-center")
 
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, pk):
+        return redirect("pi-change-request-center")
+
+    def post(self, request, pk):
+        with transaction.atomic():
+            self.pi_change_request.apply_pi_change()
+            self.pi_change_request.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("Complete")
+            self.pi_change_request.save()
+
+        messages.success(request, "The PI change request has been approved.")
         return redirect("pi-change-request-center")
 
 
@@ -212,6 +232,14 @@ class ProjectPiChangeDenialView(LoginRequiredMixin, UserPassesTestMixin, View):
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, pk):
+        return redirect("pi-change-request-center")
+
+    def post(self, request, pk):
+        with transaction.atomic():
+            self.pi_change_request.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("Rejected")
+            self.pi_change_request.save()
+
+        messages.success(request, "The PI change request has been denied.")
         return redirect("pi-change-request-center")
 
 

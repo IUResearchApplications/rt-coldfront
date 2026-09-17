@@ -98,6 +98,11 @@ class ProjectPiChangeRequest(TimeStampedModel):
             self.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key(new_status_name)
             self.save()
 
+    def apply_pi_change(self):
+        """Switch the project's PI to the new PI."""
+        self.project.pi = self.new_pi
+        self.project.save()
+
     def __str__(self):
         return f"{self.project.title} ({self.current_pi} -> {self.new_pi})"
 
