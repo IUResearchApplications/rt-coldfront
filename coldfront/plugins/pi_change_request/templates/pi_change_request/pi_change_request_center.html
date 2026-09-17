@@ -39,8 +39,8 @@ Project PI Change Request Center
                 <td>{{ pending_pi_change_request.new_pi }}</td>
                 <td>{{ pending_pi_change_request.status.name }}</td>
                 <td>
-                  <a href="{% url 'pi-change-request-approval' pending_pi_change_request.pk %}" class="btn btn-success me-1">Activate</a>
-                  <a href="{% url 'pi-change-request-denial' pending_pi_change_request.pk %}" class="btn btn-danger me-1">Deny</a>
+                  <a href="{% url 'pi-change-request-approval' pending_pi_change_request.pk %}" class="btn btn-success me-1 post-link">Activate</a>
+                  <a href="{% url 'pi-change-request-denial' pending_pi_change_request.pk %}" class="btn btn-danger me-1 post-link">Deny</a>
                   <a href="{% url 'pi-change-request-details' pending_pi_change_request.pk %}" class="btn btn-secondary">Details</a>
                 </td>
               </tr>
