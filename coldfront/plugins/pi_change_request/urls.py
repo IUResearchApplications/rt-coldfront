@@ -5,6 +5,7 @@ from coldfront.plugins.pi_change_request.views import (
     ProjectPiChangeDenialView,
     ProjectPiChangeDetailView,
     ProjectPiChangeRequestCenterView,
+    ProjectPiChangeRequestResourceApprovalSettingsView,
     ProjectPiChangeRequestResourceApprovalSettingView,
     ProjectPiChangeRequestResourceApprovedView,
     ProjectPiChangeRequestResourceDeniedView,
@@ -24,6 +25,11 @@ urlpatterns = [
         "center/update-resource-approval",
         ProjectPiChangeRequestResourceApprovalSettingView.as_view(),
         name="update-resource-approval",
+    ),
+    path(
+        "settings",
+        ProjectPiChangeRequestResourceApprovalSettingsView.as_view(),
+        name="pi-change-request-settings",
     ),
     path("<int:pk>/user/detail", ProjectPiChangeRequestUserApprovalView.as_view(), name="pi-change-request-user"),
     path(

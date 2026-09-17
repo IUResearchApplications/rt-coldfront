@@ -1,0 +1,99 @@
+{% extends "common/base.html" %}
+{% load static %}
+
+
+{% block title %}
+Resource Approval Settings
+{% endblock %}
+
+
+{% block content %}
+<h1>Resource Approval Settings</h1>
+<hr>
+
+<div class="card mb-4">
+  <div class="card-header">
+    <h2>Additional Approval Settings</h2>
+  </div>
+  <div class="card-body">
+    <p>
+      Resources listed below can require additional approval before a PI change request can be activated. When
+      "Requires Approval" is checked for a resource, reviewers in its review groups must approve the resource
+      allocation for each PI change request that includes it.
+    </p>
+    <div class="table-responsive">
+      <table class="table table-sm datatable">
+        <caption class="visually-hidden">Additional approval settings</caption>
+        <thead>
+          <tr>
+            <th scope="col">Resource</th>
+            <th scope="col">Review Groups</th>
+            <th scope="col">Requires Approval</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for form in resource_approvals_formset %}
+            <tr>
+              <td>{{ form.initial.resource }}</td>
+              <td>
+                {% if form.initial.review_groups %}
+                  {{ form.initial.review_groups|join:", " }}
+                {% else %}
+                  &mdash;
+                {% endif %}
+              </td>
+              <td>
+                {% if form.requires_approval.field.disabled %}
+                  <span class="badge bg-secondary">{{ form.initial.requires_approval|yesno:"Yes,No" }}</span>
+                {% else %}
+                  <input
+                    type="checkbox"
+                    class="form-check-input requires-approval-checkbox"
+                    data-pk="{{ form.initial.pk }}"
+                    {% if form.initial.requires_approval %}checked{% endif %}
+                    aria-label="Requires approval for {{ form.initial.resource }}"
+                  />
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div id="requires_approval_alert_div"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+{{ block.super }}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    $(".requires-approval-checkbox").on("change", function() {
+      var $checkbox = $(this);
+      var checked = $checkbox.prop("checked");
+      var resource_approval_id = $checkbox.data("pk");
+      $checkbox.prop("disabled", true);
+
+      $.ajax({
+        headers: { "X-CSRFToken": "{{ csrf_token }}" },
+        type: "POST",
+        url: "{% url 'update-resource-approval' %}",
+        data: {
+          resource_approval_id: resource_approval_id,
+          checked: checked
+        },
+        success: function (data) {
+          $checkbox.prop("disabled", false);
+          $("#requires_approval_alert_div").html('<div class="alert alert-success alert-dismissible"><button type="button" class="btn-close" data-bs-dismiss="alert"></button><strong>Success!</strong> Resource approval updated.</div>')
+        },
+        error: function (xhr, status, error) {
+          $checkbox.prop("checked", !checked);
+          $checkbox.prop("disabled", false);
+          $("#requires_approval_alert_div").html('<div class="alert alert-danger alert-dismissible"><button type="button" class="btn-close" data-bs-dismiss="alert"></button><strong>Error!</strong> Failed updating resource approval.</div>')
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

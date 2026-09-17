@@ -8,7 +8,14 @@ Project PI Change Request Center
 
 
 {% block content %}
-<h1>Project PI Change Request Center</h1>
+<div class="d-flex justify-content-between align-items-center">
+  <h1>Project PI Change Request Center</h1>
+  {% if show_settings_link %}
+    <a href="{% url 'pi-change-request-settings' %}" class="btn btn-outline-secondary">
+      <i class="fa-solid fa-gear me-1" aria-hidden="true"></i>Approval Settings
+    </a>
+  {% endif %}
+</div>
 <hr>
 {% if is_superuser %}
 <div class="card mb-4">
@@ -99,59 +106,38 @@ Project PI Change Request Center
     {% endif %}
   </div>
 </div>
-<div class="row">
-  <div class="col">
-    <div class="card">
-      <div class="card-header">
-        <h2>History</h2>
-      </div>
-      <div class="card-body">
-        {% if history %}
-          
-        {% else %}
-          <div class="alert alert-info mb-0" role="alert">
-            No history available!
-          </div>
-        {% endif %}
-      </div>
-    </div>
+<div class="card mb-4">
+  <div class="card-header">
+    <h2>History</h2>
   </div>
-  <div class="col">
-    <div class="card">
-      <div class="card-header">
-        <h2>Additional Approval Settings</h2>
-      </div>
-      <div class="card-body">
-        <div class="table-responsive">
-          <table class="table table-sm datatable">
-            <caption class="visually-hidden">Additional approval settings</caption>
-            <thead>
+  <div class="card-body">
+    {% if history %}
+      <div class="table-responsive">
+        <table class="table table-sm datatable" data-order='[[0, "desc"]]'>
+          <caption class="visually-hidden">PI change request history</caption>
+          <thead>
+            <tr>
+              <th scope="col">Date</th>
+              <th scope="col">Event</th>
+              <th scope="col">Changed By</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for record in history %}
               <tr>
-                <td>Requires Approval</td>
-                <td>Resource</td>
+                <td>{{ record.date|date:"Y-m-d H:i" }}</td>
+                <td>{{ record.description }}</td>
+                <td>{{ record.user|default_if_none:"&mdash;" }}</td>
               </tr>
-            </thead>
-            <tbody>
-              {% for form in resource_approvals_formset %}
-                <tr>
-                  <td>
-                    <input
-                      type="checkbox"
-                      class="form-check-input requires-approval-checkbox"
-                      data-pk="{{ form.initial.pk }}"
-                      {% if form.initial.requires_approval %}checked{% endif %}
-                      {% if form.requires_approval.field.disabled %}disabled{% endif %}
-                    />
-                  </td>
-                  <td>{{ form.initial.resource }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-          <div id="requires_approval_alert_div"></div>
-        </div>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
-    </div>
+    {% else %}
+      <div class="alert alert-info mb-0" role="alert">
+        No history available!
+      </div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}
@@ -167,32 +153,6 @@ Project PI Change Request Center
       $form.append($("<input>", { type: "hidden", name: "csrfmiddlewaretoken", value: "{{ csrf_token }}" }));
       $("body").append($form);
       $form.submit();
-    });
-
-    $(".requires-approval-checkbox").on("change", function() {
-      var $checkbox = $(this);
-      var checked = $checkbox.prop("checked");
-      var resource_approval_id = $checkbox.data("pk");
-      $checkbox.prop("disabled", true);
-
-      $.ajax({
-        headers: { "X-CSRFToken": "{{ csrf_token }}" },
-        type: "POST",
-        url: "{% url 'update-resource-approval' %}",
-        data: {
-          resource_approval_id: resource_approval_id,
-          checked: checked
-        },
-        success: function (data) {
-          $checkbox.prop("disabled", false);
-          $("#requires_approval_alert_div").html('<div class="alert alert-success alert-dismissible"><button type="button" class="btn-close" data-bs-dismiss="alert"></button><strong>Success!</strong> Resource approval updated.</div>')
-        },
-        error: function (xhr, status, error) {
-          $checkbox.prop("checked", !checked);
-          $checkbox.prop("disabled", false);
-          $("#requires_approval_alert_div").html('<div class="alert alert-danger alert-dismissible"><button type="button" class="btn-close" data-bs-dismiss="alert"></button><strong>Error!</strong> Failed updating resource approval.</div>')
-        }
-      });
     });
   });
 </script>

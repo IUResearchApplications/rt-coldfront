@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.views.generic import CreateView, TemplateView, View
 
 from coldfront.core.project.models import Project
+from coldfront.core.resource.models import Resource
 from coldfront.core.utils.common import get_domain_url
 from coldfront.core.utils.groups import check_if_groups_in_review_groups
 from coldfront.plugins.pi_change_request.forms import (
@@ -120,34 +121,111 @@ class ProjectPiChangeRequestCenterView(LoginRequiredMixin, UserPassesTestMixin, 
     def test_func(self):
         return True
 
+    @cached_property
+    def managed_resource_ids(self):
+        """Return ids of resources this user may manage approvals for, or None for all resources."""
+        user = self.request.user
+        if user.is_superuser:
+            return None
+
+        user_groups = user.groups.all()
+        managed_resource_ids = []
+        for resource in Resource.objects.prefetch_related("review_groups"):
+            if check_if_groups_in_review_groups(
+                resource.review_groups.all(), user_groups, RESOURCE_APPROVAL_PERMISSION
+            ):
+                managed_resource_ids.append(resource.id)
+        return managed_resource_ids
+
     def get_actionable_resource_approvals(self):
         """Return pending resource approvals this user may respond to."""
         approvals = ProjectPiChangeRequestResourceApproval.objects.filter(
             status__name="Pending", request__status__name__in=["New", "Awaiting Approvals"]
-        ).select_related("resource", "request", "request__project", "request__status", "status")
+        ).select_related(
+            "resource", "resource__resource_type", "request", "request__project", "request__status", "status"
+        )
 
-        user = self.request.user
-        if user.is_superuser:
-            return approvals
+        managed_resource_ids = self.managed_resource_ids
+        if managed_resource_ids is not None:
+            approvals = approvals.filter(resource_id__in=managed_resource_ids)
 
-        user_groups = user.groups.all()
-        actionable_pks = [
-            approval.pk
-            for approval in approvals.prefetch_related("resource__review_groups")
-            if check_if_groups_in_review_groups(
-                approval.resource.review_groups.all(), user_groups, RESOURCE_APPROVAL_PERMISSION
-            )
-        ]
-        return approvals.filter(pk__in=actionable_pks)
+        return approvals
+
+    def get_history(self):
+        """Combine request, resource approval, and user approval status changes into one list.
+
+        Only records where a status was changed are included, plus request creation records so the
+        initiator of a request is visible. Request and user approval history is shown to everyone;
+        resource approval history is limited for non-superusers to resources they manage.
+        """
+        request_history = ProjectPiChangeRequest.history.select_related("project", "status", "history_user").filter(
+            history_type__in=["+", "~"]
+        )
+        approval_history = ProjectPiChangeRequestResourceApproval.history.select_related(
+            "resource", "request", "request__project", "status", "history_user"
+        ).filter(history_type="~")
+        user_approval_history = ProjectPiChangeRequestUserApproval.history.select_related(
+            "request", "request__project", "status", "user", "history_user"
+        ).filter(history_type="~")
+
+        managed_resource_ids = self.managed_resource_ids
+        if managed_resource_ids is not None:
+            approval_history = approval_history.filter(resource_id__in=managed_resource_ids)
+
+        entries = [self.get_request_history_entry(record) for record in request_history]
+        entries += [self.get_approval_history_entry(record) for record in approval_history]
+        entries += [self.get_user_approval_history_entry(record) for record in user_approval_history]
+        entries.sort(key=lambda entry: entry["date"], reverse=True)
+        return entries
+
+    def get_request_history_entry(self, record):
+        project_title = record.project.title if record.project else "Unknown project"
+        if record.history_type == "+":
+            description = f'PI change request for "{project_title}" created'
+        else:
+            description = f'PI change request for "{project_title}" status changed to {record.status}'
+        return {"date": record.history_date, "description": description, "user": record.history_user}
+
+    def get_approval_history_entry(self, record):
+        resource_name = record.resource.name if record.resource else "Unknown resource"
+        project_title = record.request.project.title if record.request else "Unknown project"
+        description = f'Resource approval for "{resource_name}" on "{project_title}" status changed to {record.status}'
+        return {"date": record.history_date, "description": description, "user": record.history_user}
+
+    def get_user_approval_history_entry(self, record):
+        project_title = record.request.project.title if record.request else "Unknown project"
+        user = record.user if record.user else "Unknown user"
+        description = f'User approval for {user} on "{project_title}" status changed to {record.status}'
+        return {"date": record.history_date, "description": description, "user": record.history_user}
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context["is_superuser"] = self.request.user.is_superuser
+        context["pending_pi_change_requests"] = ProjectPiChangeRequest.objects.filter(
+            status__name__in=["Awaiting Approvals", "Blocked", "Ready", "New"]
+        ).select_related("project", "project__pi", "status", "new_pi")
+        context["show_settings_link"] = self.request.user.is_superuser or bool(self.managed_resource_ids)
+        context["pending_resource_approvals"] = self.get_actionable_resource_approvals()
+        context["history"] = self.get_history()
+        return context
+
+
+class ProjectPiChangeRequestResourceApprovalSettingsView(LoginRequiredMixin, TemplateView):
+    template_name = "pi_change_request/pi_change_request_resource_approval_settings.html"
 
     def get_resource_approvals_formset(self):
         settings = (
-            ProjectPiChangeRequestResourceApprovalSetting.objects.select_related("resource")
+            ProjectPiChangeRequestResourceApprovalSetting.objects.select_related("resource", "resource__resource_type")
             .prefetch_related("resource__review_groups")
             .all()
         )
         settings = [
-            {"pk": setting.pk, "resource": setting.resource, "requires_approval": setting.requires_approval}
+            {
+                "pk": setting.pk,
+                "resource": setting.resource,
+                "requires_approval": setting.requires_approval,
+                "review_groups": setting.resource.review_groups.all(),
+            }
             for setting in settings
         ]
         user = self.request.user
@@ -176,12 +254,7 @@ class ProjectPiChangeRequestCenterView(LoginRequiredMixin, UserPassesTestMixin, 
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        context["is_superuser"] = self.request.user.is_superuser
-        context["pending_pi_change_requests"] = ProjectPiChangeRequest.objects.filter(
-            status__name__in=["Awaiting Approvals", "Blocked", "Ready", "New"]
-        ).select_related("project", "project__pi", "status", "new_pi")
         context["resource_approvals_formset"] = self.get_resource_approvals_formset()
-        context["pending_resource_approvals"] = self.get_actionable_resource_approvals()
         return context
 
 
