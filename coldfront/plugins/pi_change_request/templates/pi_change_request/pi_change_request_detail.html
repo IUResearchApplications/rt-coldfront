@@ -33,8 +33,12 @@ Project PI Change Request Details
         <p class="card-text"><strong>Description: </strong>{{ pi_change_request.justification|linebreaksbr }}</p>
       </div>
       <div class="card-footer">
-        <a href="{% url 'pi-change-request-approval' pi_change_request.pk %}" class="btn btn-success me-1">Activate</a>
-        <a href="{% url 'pi-change-request-denial' pi_change_request.pk %}" class="btn btn-danger me-1">Deny</a>
+        {% if can_activate %}
+          <a href="{% url 'pi-change-request-approval' pi_change_request.pk %}" class="btn btn-success me-1 post-link">Activate</a>
+        {% endif %}
+        {% if can_deny %}
+          <a href="{% url 'pi-change-request-denial' pi_change_request.pk %}" class="btn btn-danger me-1 post-link">Deny</a>
+        {% endif %}
         <a href="{% url 'pi-change-request-center' %}" class="btn btn-secondary">Return</a>
       </div>
     </div>
@@ -77,4 +81,20 @@ Project PI Change Request Details
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block javascript %}
+{{ block.super }}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    $(".post-link").on("click", function(event) {
+      event.preventDefault();
+
+      var $form = $("<form>", { method: "post", action: $(this).attr("href") });
+      $form.append($("<input>", { type: "hidden", name: "csrfmiddlewaretoken", value: "{{ csrf_token }}" }));
+      $("body").append($form);
+      $form.submit();
+    });
+  });
+</script>
 {% endblock %}

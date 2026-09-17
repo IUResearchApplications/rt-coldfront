@@ -29,8 +29,12 @@ from coldfront.plugins.pi_change_request.models import (
 )
 from coldfront.plugins.pi_change_request.utils import send_email, send_ready_email, send_slack_message
 
-RESOURCE_APPROVAL_SETTING_PERMISSION = "pi_change_request.change_projectpichangerequestresourceapprovalsetting"
-RESOURCE_APPROVAL_PERMISSION = "pi_change_request.change_projectpichangerequestresourceapproval"
+RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION = "pi_change_request.change_projectpichangerequestresourceapprovalsetting"
+RESOURCE_APPROVAL_CHANGE_PERMISSION = "pi_change_request.change_projectpichangerequestresourceapproval"
+PI_CHANGE_REQUEST_VIEW_PERMISSION = "pi_change_request.view_projectpichangerequest"
+PI_CHANGE_REQUEST_CHANGE_PERMISSION = "pi_change_request.change_projectpichangerequest"
+
+DENIABLE_REQUEST_STATUSES = ["New", "Awaiting Approvals", "Blocked", "Ready"]
 
 
 class ProjectPiChangeRequestView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
@@ -48,9 +52,6 @@ class ProjectPiChangeRequestView(LoginRequiredMixin, UserPassesTestMixin, Create
             return True
 
         project_obj = self.project
-        if self.request.user == project_obj.pi:
-            return True
-
         if project_obj.projectuser_set.filter(
             user=self.request.user, role__name="Manager", status__name="Active"
         ).exists():
@@ -119,7 +120,11 @@ class ProjectPiChangeRequestCenterView(LoginRequiredMixin, UserPassesTestMixin, 
     template_name = "pi_change_request/pi_change_request_center.html"
 
     def test_func(self):
-        return True
+        if self.request.user.is_superuser:
+            return True
+
+        if self.request.user.has_perm(PI_CHANGE_REQUEST_VIEW_PERMISSION):
+            return True
 
     @cached_property
     def managed_resource_ids(self):
@@ -132,7 +137,7 @@ class ProjectPiChangeRequestCenterView(LoginRequiredMixin, UserPassesTestMixin, 
         managed_resource_ids = []
         for resource in Resource.objects.prefetch_related("review_groups"):
             if check_if_groups_in_review_groups(
-                resource.review_groups.all(), user_groups, RESOURCE_APPROVAL_PERMISSION
+                resource.review_groups.all(), user_groups, RESOURCE_APPROVAL_CHANGE_PERMISSION
             ):
                 managed_resource_ids.append(resource.id)
         return managed_resource_ids
@@ -200,18 +205,29 @@ class ProjectPiChangeRequestCenterView(LoginRequiredMixin, UserPassesTestMixin, 
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        context["is_superuser"] = self.request.user.is_superuser
         context["pending_pi_change_requests"] = ProjectPiChangeRequest.objects.filter(
             status__name__in=["Awaiting Approvals", "Blocked", "Ready", "New"]
         ).select_related("project", "project__pi", "status", "new_pi")
-        context["show_settings_link"] = self.request.user.is_superuser or bool(self.managed_resource_ids)
+        context["show_settings_link"] = self.request.user.is_superuser or self.request.user.has_perm(
+            RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION
+        )
+        context["can_change_requests"] = self.request.user.is_superuser or self.request.user.has_perm(
+            PI_CHANGE_REQUEST_CHANGE_PERMISSION
+        )
         context["pending_resource_approvals"] = self.get_actionable_resource_approvals()
         context["history"] = self.get_history()
         return context
 
 
-class ProjectPiChangeRequestResourceApprovalSettingsView(LoginRequiredMixin, TemplateView):
+class ProjectPiChangeRequestResourceApprovalSettingsView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     template_name = "pi_change_request/pi_change_request_resource_approval_settings.html"
+
+    def test_func(self):
+        if self.request.user.is_superuser:
+            return True
+
+        if self.request.user.has_perm(RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION):
+            return True
 
     def get_resource_approvals_formset(self):
         settings = (
@@ -236,7 +252,9 @@ class ProjectPiChangeRequestResourceApprovalSettingsView(LoginRequiredMixin, Tem
                 can_edit = True
             else:
                 can_edit = check_if_groups_in_review_groups(
-                    setting.get("resource").review_groups.all(), user_groups, RESOURCE_APPROVAL_SETTING_PERMISSION
+                    setting.get("resource").review_groups.all(),
+                    user_groups,
+                    RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION,
                 )
             disable_selected.append(not can_edit)
 
@@ -261,6 +279,9 @@ class ProjectPiChangeRequestResourceApprovalSettingsView(LoginRequiredMixin, Tem
 class ProjectPiChangeApprovalView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
         if self.request.user.is_superuser:
+            return True
+
+        if self.request.user.has_perm(PI_CHANGE_REQUEST_CHANGE_PERMISSION):
             return True
 
     def dispatch(self, request, *args, **kwargs):
@@ -327,12 +348,15 @@ class ProjectPiChangeDenialView(LoginRequiredMixin, UserPassesTestMixin, View):
         if self.request.user.is_superuser:
             return True
 
+        if self.request.user.has_perm(PI_CHANGE_REQUEST_CHANGE_PERMISSION):
+            return True
+
     def dispatch(self, request, *args, **kwargs):
         self.pi_change_request = get_object_or_404(
             ProjectPiChangeRequest.objects.select_related("project", "current_pi", "initiator", "status"),
             pk=self.kwargs.get("pk"),
         )
-        if self.pi_change_request.status.name not in ["Awaiting Approvals", "Blocked", "Ready", "New"]:
+        if self.pi_change_request.status.name not in DENIABLE_REQUEST_STATUSES:
             messages.error(
                 request, f"Cannot deny a PI change request with status {self.pi_change_request.status.name}."
             )
@@ -382,6 +406,9 @@ class ProjectPiChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, Templat
         if self.request.user.is_superuser:
             return True
 
+        if self.request.user.has_perm(PI_CHANGE_REQUEST_VIEW_PERMISSION):
+            return True
+
     def get_context_data(self, *args, **kwargs):
         pi_change_request = get_object_or_404(
             ProjectPiChangeRequest.objects.select_related("project", "project__pi", "status", "new_pi"),
@@ -391,11 +418,25 @@ class ProjectPiChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, Templat
         context = super().get_context_data(*args, **kwargs)
         context["pi_change_request"] = pi_change_request
         context["user_approvals"] = pi_change_request.user_approvals.select_related("user", "status")
-        context["resource_approvals"] = pi_change_request.resource_approvals.select_related("resource", "status")
+        context["resource_approvals"] = pi_change_request.resource_approvals.select_related(
+            "resource", "resource__resource_type", "status"
+        )
+        can_change_requests = self.request.user.is_superuser or self.request.user.has_perm(
+            PI_CHANGE_REQUEST_CHANGE_PERMISSION
+        )
+        context["can_activate"] = can_change_requests and pi_change_request.status.name == "Ready"
+        context["can_deny"] = can_change_requests and pi_change_request.status.name in DENIABLE_REQUEST_STATUSES
         return context
 
 
-class ProjectPiChangeRequestResourceApprovalSettingView(LoginRequiredMixin, View):
+class ProjectPiChangeRequestResourceApprovalSettingView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        if self.request.user.is_superuser:
+            return True
+
+        if self.request.user.has_perm(RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION):
+            return True
+
     def dispatch(self, request, *args, **kwargs):
         self.obj = get_object_or_404(
             ProjectPiChangeRequestResourceApprovalSetting, pk=request.POST.get("resource_approval_id")
@@ -406,7 +447,7 @@ class ProjectPiChangeRequestResourceApprovalSettingView(LoginRequiredMixin, View
             return super().dispatch(request, *args, **kwargs)
 
         passed = check_if_groups_in_review_groups(
-            self.obj.resource.review_groups.all(), user.groups.all(), RESOURCE_APPROVAL_SETTING_PERMISSION
+            self.obj.resource.review_groups.all(), user.groups.all(), RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION
         )
         if not passed:
             return HttpResponse("not permitted", status=403)
@@ -440,8 +481,7 @@ class ProjectPiChangeRequestUserApprovalView(LoginRequiredMixin, UserPassesTestM
         if self.request.user.is_superuser:
             return True
 
-        if self.request.user == self.pi_change_user_request.user:
-            return True
+        return self.request.user == self.pi_change_user_request.user
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
@@ -541,7 +581,7 @@ class ProjectPiChangeRequestResourceResponseView(LoginRequiredMixin, UserPassesT
         return check_if_groups_in_review_groups(
             self.resource_approval.resource.review_groups.all(),
             self.request.user.groups.all(),
-            RESOURCE_APPROVAL_PERMISSION,
+            RESOURCE_APPROVAL_CHANGE_PERMISSION,
         )
 
     def get(self, request, pk):

@@ -17,7 +17,7 @@ Project PI Change Request Center
   {% endif %}
 </div>
 <hr>
-{% if is_superuser %}
+
 <div class="card mb-4">
   <div class="card-header">
     <h2>Requests</h2>
@@ -46,8 +46,12 @@ Project PI Change Request Center
                 <td>{{ pending_pi_change_request.new_pi }}</td>
                 <td>{{ pending_pi_change_request.status.name }}</td>
                 <td>
-                  <a href="{% url 'pi-change-request-approval' pending_pi_change_request.pk %}" class="btn btn-success me-1 post-link">Activate</a>
-                  <a href="{% url 'pi-change-request-denial' pending_pi_change_request.pk %}" class="btn btn-danger me-1 post-link">Deny</a>
+                  {% if can_change_requests %}
+                    {% if pending_pi_change_request.status.name == "Ready" %}
+                      <a href="{% url 'pi-change-request-approval' pending_pi_change_request.pk %}" class="btn btn-success me-1 post-link">Activate</a>
+                    {% endif %}
+                    <a href="{% url 'pi-change-request-denial' pending_pi_change_request.pk %}" class="btn btn-danger me-1 post-link">Deny</a>
+                  {% endif %}
                   <a href="{% url 'pi-change-request-details' pending_pi_change_request.pk %}" class="btn btn-secondary">Details</a>
                 </td>
               </tr>
@@ -62,7 +66,7 @@ Project PI Change Request Center
     {% endif %}
   </div>
 </div>
-{% endif %}
+
 <div class="card mb-4">
   <div class="card-header">
     <h2>Resource Approvals Awaiting Action</h2>
