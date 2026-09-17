@@ -56,7 +56,7 @@ Project PI Change Request Details
               {% for approval in user_approvals %}
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                   {{ approval.user }}
-                  <span class="badge bg-secondary">{{ approval.status }}</span>
+                  <span class="badge {% if approval.status.name == "Approved" %}bg-success{% elif approval.status.name == "Denied" %}bg-danger{% else %}bg-secondary{% endif %}">{{ approval.status }}</span>
                 </li>
               {% endfor %}
             </ul>
@@ -67,7 +67,7 @@ Project PI Change Request Details
               {% for approval in resource_approvals %}
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                   {{ approval.resource }}
-                  <span class="badge bg-secondary">{{ approval.status }}</span>
+                  <span class="badge {% if approval.status.name == "Approved" %}bg-success{% elif approval.status.name == "Denied" %}bg-danger{% else %}bg-secondary{% endif %}">{{ approval.status }}</span>
                 </li>
               {% endfor %}
             </ul>
