@@ -93,6 +93,7 @@ Project PI Change Request Center
                 <td>
                   <a href="{% url 'pi-change-request-resource-approve' approval.pk %}" class="btn btn-success me-1 post-link">Approve</a>
                   <a href="{% url 'pi-change-request-resource-deny' approval.pk %}" class="btn btn-danger post-link">Deny</a>
+                  <a href="{% url 'pi-change-request-details' approval.request.pk %}" class="btn btn-secondary">Details</a>
                 </td>
               </tr>
             {% endfor %}
