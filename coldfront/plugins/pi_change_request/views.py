@@ -18,12 +18,17 @@ from coldfront.plugins.pi_change_request.forms import (
 )
 from coldfront.plugins.pi_change_request.models import (
     ProjectPiChangeRequest,
+    ProjectPiChangeRequestResourceApproval,
     ProjectPiChangeRequestResourceApprovalSetting,
+    ProjectPiChangeRequestResourceApprovalStatusChoice,
     ProjectPiChangeRequestStatusChoice,
     ProjectPiChangeRequestUserApproval,
     ProjectPiChangeRequestUserApprovalStatusChoice,
 )
 from coldfront.plugins.pi_change_request.utils import send_email, send_slack_message
+
+RESOURCE_APPROVAL_SETTING_PERMISSION = "pi_change_request.change_projectpichangerequestresourceapprovalsetting"
+RESOURCE_APPROVAL_PERMISSION = "pi_change_request.change_projectpichangerequestresourceapproval"
 
 
 class ProjectPiChangeRequestView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
@@ -101,8 +106,27 @@ class ProjectPiChangeRequestCenterView(LoginRequiredMixin, UserPassesTestMixin, 
     template_name = "pi_change_request/pi_change_request_center.html"
 
     def test_func(self):
-        if self.request.user.is_superuser:
-            return True
+        return True
+
+    def get_actionable_resource_approvals(self):
+        """Return pending resource approvals this user may respond to."""
+        approvals = ProjectPiChangeRequestResourceApproval.objects.filter(
+            status__name="Pending", request__status__name__in=["New", "Awaiting Approvals"]
+        ).select_related("resource", "request", "request__project", "request__status", "status")
+
+        user = self.request.user
+        if user.is_superuser:
+            return approvals
+
+        user_groups = user.groups.all()
+        actionable_pks = [
+            approval.pk
+            for approval in approvals.prefetch_related("resource__review_groups")
+            if check_if_groups_in_review_groups(
+                approval.resource.review_groups.all(), user_groups, RESOURCE_APPROVAL_PERMISSION
+            )
+        ]
+        return approvals.filter(pk__in=actionable_pks)
 
     def get_resource_approvals_formset(self):
         settings = (
@@ -122,9 +146,7 @@ class ProjectPiChangeRequestCenterView(LoginRequiredMixin, UserPassesTestMixin, 
                 can_edit = True
             else:
                 can_edit = check_if_groups_in_review_groups(
-                    setting.get("resource").review_groups.all(),
-                    user_groups,
-                    "pi_change_request.change_projectpichangerequestresourceapprovalsetting",
+                    setting.get("resource").review_groups.all(), user_groups, RESOURCE_APPROVAL_SETTING_PERMISSION
                 )
             disable_selected.append(not can_edit)
 
@@ -142,10 +164,12 @@ class ProjectPiChangeRequestCenterView(LoginRequiredMixin, UserPassesTestMixin, 
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
+        context["is_superuser"] = self.request.user.is_superuser
         context["pending_pi_change_requests"] = ProjectPiChangeRequest.objects.filter(
             status__name__in=["Awaiting Approvals", "Blocked", "Ready", "New"]
         ).select_related("project", "project__pi", "status", "new_pi")
         context["resource_approvals_formset"] = self.get_resource_approvals_formset()
+        context["pending_resource_approvals"] = self.get_actionable_resource_approvals()
         return context
 
 
@@ -222,9 +246,7 @@ class ProjectPiChangeRequestResourceApprovalSettingView(LoginRequiredMixin, View
             return super().dispatch(request, *args, **kwargs)
 
         passed = check_if_groups_in_review_groups(
-            self.obj.resource.review_groups.all(),
-            user.groups.all(),
-            "pi_change_request.change_projectpichangerequestresourceapprovalsetting",
+            self.obj.resource.review_groups.all(), user.groups.all(), RESOURCE_APPROVAL_SETTING_PERMISSION
         )
         if not passed:
             return HttpResponse("not permitted", status=403)
@@ -296,6 +318,10 @@ class ProjectPiChangeRequestUserResponseView(LoginRequiredMixin, UserPassesTestM
             messages.error(request, "You have already responded to this PI change request.")
             return redirect("pi-change-request-user", pk=pk)
 
+        if approval.request.status.name not in ["New", "Awaiting Approvals"]:
+            messages.error(request, "This PI change request is not accepting approvals.")
+            return redirect("pi-change-request-user", pk=pk)
+
         approval.status = ProjectPiChangeRequestUserApprovalStatusChoice.objects.get_by_natural_key(
             self.response_status
         )
@@ -315,3 +341,61 @@ class ProjectPiChangeRequestUserApprovedView(ProjectPiChangeRequestUserResponseV
 class ProjectPiChangeRequestUserDeniedView(ProjectPiChangeRequestUserResponseView):
     response_status = "Denied"
     success_message = "You have declined the PI change request."
+
+
+class ProjectPiChangeRequestResourceResponseView(LoginRequiredMixin, UserPassesTestMixin, View):
+    response_status = None
+    success_message = ""
+
+    def dispatch(self, request, *args, **kwargs):
+        self.resource_approval = get_object_or_404(
+            ProjectPiChangeRequestResourceApproval.objects.select_related(
+                "resource", "request", "request__status", "status"
+            ),
+            pk=self.kwargs.get("pk"),
+        )
+        return super().dispatch(request, *args, **kwargs)
+
+    def test_func(self):
+        if self.request.user.is_superuser:
+            return True
+
+        return check_if_groups_in_review_groups(
+            self.resource_approval.resource.review_groups.all(),
+            self.request.user.groups.all(),
+            RESOURCE_APPROVAL_PERMISSION,
+        )
+
+    def get(self, request, pk):
+        return redirect("pi-change-request-center")
+
+    def post(self, request, pk):
+        approval = self.resource_approval
+        if approval.status.name != "Pending":
+            messages.error(request, "This resource approval has already been responded to.")
+            return redirect("pi-change-request-center")
+
+        if approval.request.status.name not in ["New", "Awaiting Approvals"]:
+            messages.error(request, "This PI change request is not accepting approvals.")
+            return redirect("pi-change-request-center")
+
+        approval.status = ProjectPiChangeRequestResourceApprovalStatusChoice.objects.get_by_natural_key(
+            self.response_status
+        )
+        approval.handler = request.user
+        with transaction.atomic():
+            approval.save()
+            approval.request.update_status_from_approvals()
+
+        messages.success(request, self.success_message)
+        return redirect("pi-change-request-center")
+
+
+class ProjectPiChangeRequestResourceApprovedView(ProjectPiChangeRequestResourceResponseView):
+    response_status = "Approved"
+    success_message = "You have approved the resource."
+
+
+class ProjectPiChangeRequestResourceDeniedView(ProjectPiChangeRequestResourceResponseView):
+    response_status = "Denied"
+    success_message = "You have denied the resource."

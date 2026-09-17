@@ -6,6 +6,8 @@ from coldfront.plugins.pi_change_request.views import (
     ProjectPiChangeDetailView,
     ProjectPiChangeRequestCenterView,
     ProjectPiChangeRequestResourceApprovalSettingView,
+    ProjectPiChangeRequestResourceApprovedView,
+    ProjectPiChangeRequestResourceDeniedView,
     ProjectPiChangeRequestUserApprovalView,
     ProjectPiChangeRequestUserApprovedView,
     ProjectPiChangeRequestUserDeniedView,
@@ -28,4 +30,14 @@ urlpatterns = [
         "<int:pk>/user/approve", ProjectPiChangeRequestUserApprovedView.as_view(), name="pi-change-request-user-approve"
     ),
     path("<int:pk>/user/deny", ProjectPiChangeRequestUserDeniedView.as_view(), name="pi-change-request-user-deny"),
+    path(
+        "<int:pk>/resource-approval/approve",
+        ProjectPiChangeRequestResourceApprovedView.as_view(),
+        name="pi-change-request-resource-approve",
+    ),
+    path(
+        "<int:pk>/resource-approval/deny",
+        ProjectPiChangeRequestResourceDeniedView.as_view(),
+        name="pi-change-request-resource-deny",
+    ),
 ]

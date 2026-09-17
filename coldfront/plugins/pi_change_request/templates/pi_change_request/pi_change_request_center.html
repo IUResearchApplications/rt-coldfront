@@ -10,6 +10,7 @@ Project PI Change Request Center
 {% block content %}
 <h1>Project PI Change Request Center</h1>
 <hr>
+{% if is_superuser %}
 <div class="card mb-4">
   <div class="card-header">
     <h2>Requests</h2>
@@ -21,12 +22,12 @@ Project PI Change Request Center
           <caption class="visually-hidden">PI change requests</caption>
           <thead>
             <tr>
-              <td>Project ID</td>
-              <td>Initiator</td>
-              <td>Current PI</td>
-              <td>New PI</td>
-              <td>Status</td>
-              <td>Actions</td>
+              <th scope="col">Project ID</th>
+              <th scope="col">Initiator</th>
+              <th scope="col">Current PI</th>
+              <th scope="col">New PI</th>
+              <th scope="col">Status</th>
+              <th scope="col">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -50,6 +51,50 @@ Project PI Change Request Center
     {% else %}
       <div class="alert alert-info mb-0" role="alert">
         No pending PI change requests!
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+<div class="card mb-4">
+  <div class="card-header">
+    <h2>Resource Approvals Awaiting Action</h2>
+  </div>
+  <div class="card-body">
+    {% if pending_resource_approvals %}
+      <div class="table-responsive">
+        <table class="table table-sm datatable">
+          <caption class="visually-hidden">Resource approvals awaiting action</caption>
+          <thead>
+            <tr>
+              <th scope="col">Project</th>
+              <th scope="col">Resource</th>
+              <th scope="col">Request Status</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for approval in pending_resource_approvals %}
+              <tr>
+                <td>
+                  <a href="{% url 'pi-change-request-details' approval.request.pk %}">
+                    {{ approval.request.project.title }} ({{ approval.request.project.pk }})
+                  </a>
+                </td>
+                <td>{{ approval.resource }}</td>
+                <td>{{ approval.request.status.name }}</td>
+                <td>
+                  <a href="{% url 'pi-change-request-resource-approve' approval.pk %}" class="btn btn-success me-1 post-link">Approve</a>
+                  <a href="{% url 'pi-change-request-resource-deny' approval.pk %}" class="btn btn-danger post-link">Deny</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="alert alert-info mb-0" role="alert">
+        No resource approvals awaiting your action!
       </div>
     {% endif %}
   </div>
@@ -115,6 +160,15 @@ Project PI Change Request Center
 {{ block.super }}
 <script>
   document.addEventListener("DOMContentLoaded", function() {
+    $(".post-link").on("click", function(event) {
+      event.preventDefault();
+
+      var $form = $("<form>", { method: "post", action: $(this).attr("href") });
+      $form.append($("<input>", { type: "hidden", name: "csrfmiddlewaretoken", value: "{{ csrf_token }}" }));
+      $("body").append($form);
+      $form.submit();
+    });
+
     $(".requires-approval-checkbox").on("change", function() {
       var $checkbox = $(this);
       var checked = $checkbox.prop("checked");
