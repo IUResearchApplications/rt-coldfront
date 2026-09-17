@@ -1,0 +1,4 @@
+{{ user.first_name }} {{ user.last_name }} ({{ user.username }}) has responded "{{ response }}" to the PI change
+request for project "{{ project_title }}" (Project ID: {{ project_id }}).
+
+You can review PI change requests at the PI Change Request Center: {{ url }}

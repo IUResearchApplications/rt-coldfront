@@ -1,0 +1,5 @@
+{{ handler.first_name }} {{ handler.last_name }} ({{ handler.username }}) has responded "{{ response }}" to the
+approval for resource "{{ resource }}" on the PI change request for project "{{ project_title }}"
+(Project ID: {{ project_id }}).
+
+You can review PI change requests at the PI Change Request Center: {{ url }}

@@ -16,8 +16,14 @@ def send_slack_message(project_obj, url):
     )
 
 
-def send_email(subject, template, template_context, receiver=EMAIL_ALERTS_EMAIL_ADDRESS):
+def send_email(subject, template, template_context, receiver=None):
+    """Send a template email to one or more receivers, defaulting to the center alerts address."""
     if not EMAIL_ENABLED:
         return
 
-    send_email_template(subject, template, template_context, [receiver])
+    if receiver is None:
+        receiver = [EMAIL_ALERTS_EMAIL_ADDRESS]
+    elif isinstance(receiver, str):
+        receiver = [receiver]
+
+    send_email_template(subject, template, template_context, receiver)

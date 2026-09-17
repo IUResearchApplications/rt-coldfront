@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.views.generic import CreateView, TemplateView, View
 
 from coldfront.core.project.models import Project
-from coldfront.core.utils.common import get_domain_url
+from coldfront.core.utils.common import get_domain_url, import_from_settings
 from coldfront.core.utils.groups import check_if_groups_in_review_groups
 from coldfront.plugins.pi_change_request.forms import (
     ProjectPiChangeRequestForm,
@@ -29,6 +29,7 @@ from coldfront.plugins.pi_change_request.utils import send_email, send_slack_mes
 
 RESOURCE_APPROVAL_SETTING_PERMISSION = "pi_change_request.change_projectpichangerequestresourceapprovalsetting"
 RESOURCE_APPROVAL_PERMISSION = "pi_change_request.change_projectpichangerequestresourceapproval"
+EMAIL_TICKET_SYSTEM_ADDRESS = import_from_settings("EMAIL_TICKET_SYSTEM_ADDRESS")
 
 
 class ProjectPiChangeRequestView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
@@ -91,9 +92,20 @@ class ProjectPiChangeRequestView(LoginRequiredMixin, UserPassesTestMixin, Create
         url = "{}{}".format(domain_url, project_review_url)
         send_slack_message(self.project, url)
 
-        template_context = {"url": url, "project_title": self.project.title, "project_id": self.project.pk}
+        template_context = {
+            "url": url,
+            "project_title": self.project.title,
+            "project_id": self.project.pk,
+            "initiator": request_obj.initiator,
+            "current_pi": request_obj.current_pi,
+            "new_pi": request_obj.new_pi,
+            "help_email": EMAIL_TICKET_SYSTEM_ADDRESS,
+        }
         send_email(
-            "New Project PI Change Request", "pi_change_request/email/new_pi_change_request.txt", template_context
+            "New Project PI Change Request",
+            "pi_change_request/email/new_pi_change_request.txt",
+            template_context,
+            EMAIL_TICKET_SYSTEM_ADDRESS,
         )
 
         return response
@@ -180,7 +192,7 @@ class ProjectPiChangeApprovalView(LoginRequiredMixin, UserPassesTestMixin, View)
 
     def dispatch(self, request, *args, **kwargs):
         self.pi_change_request = get_object_or_404(
-            ProjectPiChangeRequest.objects.select_related("project", "current_pi", "new_pi", "status"),
+            ProjectPiChangeRequest.objects.select_related("project", "current_pi", "new_pi", "initiator", "status"),
             pk=self.kwargs.get("pk"),
         )
         if not self.pi_change_request.status.name == "Ready":
@@ -205,10 +217,33 @@ class ProjectPiChangeApprovalView(LoginRequiredMixin, UserPassesTestMixin, View)
         return redirect("pi-change-request-center")
 
     def post(self, request, pk):
+        pi_change_request = self.pi_change_request
         with transaction.atomic():
-            self.pi_change_request.apply_pi_change()
-            self.pi_change_request.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("Complete")
-            self.pi_change_request.save()
+            pi_change_request.apply_pi_change()
+            pi_change_request.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("Complete")
+            pi_change_request.save()
+
+        project_url = "{}{}".format(
+            get_domain_url(request), reverse("project-detail", kwargs={"pk": pi_change_request.project.pk})
+        )
+        template_context = {
+            "project_title": pi_change_request.project.title,
+            "project_id": pi_change_request.project.pk,
+            "new_pi": pi_change_request.new_pi,
+            "project_url": project_url,
+            "help_email": EMAIL_TICKET_SYSTEM_ADDRESS,
+        }
+        receivers = set()
+        for user in (pi_change_request.current_pi, pi_change_request.new_pi, pi_change_request.initiator):
+            if user.email:
+                receivers.add(user.email)
+
+        send_email(
+            "Your Project PI Change Request Was Approved",
+            "pi_change_request/email/pi_change_request_approved.txt",
+            template_context,
+            receivers,
+        )
 
         messages.success(request, "The PI change request has been approved.")
         return redirect("pi-change-request-center")
@@ -221,7 +256,8 @@ class ProjectPiChangeDenialView(LoginRequiredMixin, UserPassesTestMixin, View):
 
     def dispatch(self, request, *args, **kwargs):
         self.pi_change_request = get_object_or_404(
-            ProjectPiChangeRequest.objects.select_related("status"), pk=self.kwargs.get("pk")
+            ProjectPiChangeRequest.objects.select_related("project", "current_pi", "initiator", "status"),
+            pk=self.kwargs.get("pk"),
         )
         if self.pi_change_request.status.name not in ["Awaiting Approvals", "Blocked", "Ready", "New"]:
             messages.error(
@@ -235,9 +271,32 @@ class ProjectPiChangeDenialView(LoginRequiredMixin, UserPassesTestMixin, View):
         return redirect("pi-change-request-center")
 
     def post(self, request, pk):
+        pi_change_request = self.pi_change_request
         with transaction.atomic():
-            self.pi_change_request.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("Rejected")
-            self.pi_change_request.save()
+            pi_change_request.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("Rejected")
+            pi_change_request.save()
+
+        project_url = "{}{}".format(
+            get_domain_url(request), reverse("project-detail", kwargs={"pk": pi_change_request.project.pk})
+        )
+        template_context = {
+            "project_title": pi_change_request.project.title,
+            "project_id": pi_change_request.project.pk,
+            "current_pi": pi_change_request.current_pi,
+            "project_url": project_url,
+            "help_email": EMAIL_TICKET_SYSTEM_ADDRESS,
+        }
+        receivers = set()
+        for user in (pi_change_request.current_pi, pi_change_request.new_pi, pi_change_request.initiator):
+            if user.email:
+                receivers.add(user.email)
+
+        send_email(
+            "Your Project PI Change Request Was Denied",
+            "pi_change_request/email/pi_change_request_denied.txt",
+            template_context,
+            receivers,
+        )
 
         messages.success(request, "The PI change request has been denied.")
         return redirect("pi-change-request-center")
@@ -327,7 +386,7 @@ class ProjectPiChangeRequestUserResponseView(LoginRequiredMixin, UserPassesTestM
 
     def dispatch(self, request, *args, **kwargs):
         self.user_approval = get_object_or_404(
-            ProjectPiChangeRequestUserApproval.objects.select_related("user", "request", "status"),
+            ProjectPiChangeRequestUserApproval.objects.select_related("user", "request", "request__project", "status"),
             pk=self.kwargs.get("pk"),
         )
         return super().dispatch(request, *args, **kwargs)
@@ -357,6 +416,21 @@ class ProjectPiChangeRequestUserResponseView(LoginRequiredMixin, UserPassesTestM
             approval.save()
             approval.request.update_status_from_approvals()
 
+        url = "{}{}".format(get_domain_url(request), reverse("pi-change-request-center"))
+        template_context = {
+            "project_title": approval.request.project.title,
+            "project_id": approval.request.project.pk,
+            "user": approval.user,
+            "response": self.response_status,
+            "url": url,
+            "help_email": EMAIL_TICKET_SYSTEM_ADDRESS,
+        }
+        send_email(
+            "PI Change Request User Response",
+            "pi_change_request/email/pi_change_request_user_response.txt",
+            template_context,
+        )
+
         messages.success(request, self.success_message)
         return redirect("pi-change-request-user", pk=pk)
 
@@ -378,7 +452,7 @@ class ProjectPiChangeRequestResourceResponseView(LoginRequiredMixin, UserPassesT
     def dispatch(self, request, *args, **kwargs):
         self.resource_approval = get_object_or_404(
             ProjectPiChangeRequestResourceApproval.objects.select_related(
-                "resource", "request", "request__status", "status"
+                "resource", "request", "request__project", "request__status", "status"
             ),
             pk=self.kwargs.get("pk"),
         )
@@ -414,6 +488,22 @@ class ProjectPiChangeRequestResourceResponseView(LoginRequiredMixin, UserPassesT
         with transaction.atomic():
             approval.save()
             approval.request.update_status_from_approvals()
+
+        url = "{}{}".format(get_domain_url(request), reverse("pi-change-request-center"))
+        template_context = {
+            "project_title": approval.request.project.title,
+            "project_id": approval.request.project.pk,
+            "resource": approval.resource,
+            "handler": request.user,
+            "response": self.response_status,
+            "url": url,
+            "help_email": EMAIL_TICKET_SYSTEM_ADDRESS,
+        }
+        send_email(
+            "PI Change Request Resource Response",
+            "pi_change_request/email/pi_change_request_resource_response.txt",
+            template_context,
+        )
 
         messages.success(request, self.success_message)
         return redirect("pi-change-request-center")

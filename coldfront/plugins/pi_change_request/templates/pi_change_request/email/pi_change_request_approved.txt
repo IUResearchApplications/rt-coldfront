@@ -1,0 +1,12 @@
+Dear {{ center_name }} user,
+
+The PI change request for project "{{ project_title }}" has been approved.
+{{ new_pi.first_name }} {{ new_pi.last_name }} ({{ new_pi.username }}) is now the Principal Investigator of the
+project.
+
+You can view the project here: {{ project_url }}
+
+If you have any questions please email us at {{ help_email }}
+
+Thank you,
+{{ signature }}
