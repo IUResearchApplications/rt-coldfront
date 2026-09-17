@@ -1,0 +1,14 @@
+Dear {{ user.first_name }} {{ user.last_name }} ({{ user.username }}),
+
+{{ initiator.first_name }} {{ initiator.last_name }} ({{ initiator.username }}) has submitted a PI change
+request for project "{{ project_title }}" (Project ID: {{ project_id }}).
+The project's PI will change from {{ current_pi.first_name }} {{ current_pi.last_name }}
+({{ current_pi.username }}) to {{ new_pi.first_name }} {{ new_pi.last_name }} ({{ new_pi.username }}).
+
+Your response is required in order to complete this request. You can review and respond to this
+request here: {{ url }}
+
+If you have any questions please email us at {{ help_email }}
+
+Thank you,
+{{ signature }}

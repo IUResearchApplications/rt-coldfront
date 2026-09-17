@@ -12,7 +12,7 @@ Super user can see all entries, staff can only see entries containing a resource
 * Request comes in
 * Email sent to rtprojects ticket queue
 * Request status set to New
-* Email goes to each teams ticket queue that manages a resource in the project, make this toggleable
+* Email goes to each teams ticket queue that manages a resource in the project, make this toggleable (skipped)
 * Admin can reject request or initiate it
 * Initiated request status is set to Awaiting Approvals if it contains resources that need approvals, or set to Ready if not
 * If status is awaiting approvals and one is denied then set request status to Blocked

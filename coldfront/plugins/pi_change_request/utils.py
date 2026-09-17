@@ -1,7 +1,9 @@
 from django.conf import settings
+from django.urls import reverse
 
 from coldfront.core.utils.mail import send_email_template
 from coldfront.core.utils.slack import send_message
+from coldfront.plugins.pi_change_request.models import ProjectPiChangeRequestReviewGroupTicketEmail
 
 
 def send_slack_message(project_obj, url):
@@ -39,3 +41,65 @@ def send_ready_email(pi_change_request, url):
         "pi_change_request/email/pi_change_request_ready.txt",
         template_context,
     )
+
+
+def send_user_approval_notifications(pi_change_request, user_approvals, domain_url):
+    """Email each approver that their response is needed on a new PI change request."""
+    for approval in user_approvals:
+        if not approval.user.email:
+            continue
+
+        url = "{}{}".format(domain_url, reverse("pi-change-request-user", kwargs={"pk": approval.pk}))
+        template_context = {
+            "user": approval.user,
+            "initiator": pi_change_request.initiator,
+            "current_pi": pi_change_request.current_pi,
+            "new_pi": pi_change_request.new_pi,
+            "project_title": pi_change_request.project.title,
+            "project_id": pi_change_request.project.pk,
+            "url": url,
+            "help_email": settings.EMAIL_TICKET_SYSTEM_ADDRESS,
+        }
+        send_email(
+            f'Action Required: PI Change Request for "{pi_change_request.project.title}"',
+            "pi_change_request/email/pi_change_request_user_approval.txt",
+            template_context,
+            approval.user.email,
+        )
+
+
+def send_resource_approval_notifications(pi_change_request, resource_approvals, domain_url, review_permission):
+    """Email the ticket queue of each review group that can respond to a pending resource approval.
+
+    The review_permission is a dotted "app_label.codename" string identifying the review groups
+    that may respond. Groups without a mapped ticket email are skipped; the center already
+    receives the general new request email.
+    """
+    url = "{}{}".format(domain_url, reverse("pi-change-request-center"))
+    app_label, codename = review_permission.split(".", 1)
+    for approval in resource_approvals:
+        review_groups = approval.resource.review_groups.filter(
+            permissions__codename=codename, permissions__content_type__app_label=app_label
+        )
+        receivers = [
+            ticket_email.email
+            for ticket_email in ProjectPiChangeRequestReviewGroupTicketEmail.objects.filter(group__in=review_groups)
+        ]
+        if not receivers:
+            continue
+
+        template_context = {
+            "current_pi": pi_change_request.current_pi,
+            "new_pi": pi_change_request.new_pi,
+            "project_title": pi_change_request.project.title,
+            "project_id": pi_change_request.project.pk,
+            "resource": approval.resource,
+            "url": url,
+            "help_email": settings.EMAIL_TICKET_SYSTEM_ADDRESS,
+        }
+        send_email(
+            f'Action Required: PI Change Request Resource Approval for "{pi_change_request.project.title}"',
+            "pi_change_request/email/pi_change_request_resource_approval.txt",
+            template_context,
+            receivers,
+        )
