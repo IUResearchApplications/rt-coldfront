@@ -27,7 +27,13 @@ from coldfront.plugins.pi_change_request.models import (
     ProjectPiChangeRequestUserApproval,
     ProjectPiChangeRequestUserApprovalStatusChoice,
 )
-from coldfront.plugins.pi_change_request.utils import send_email, send_ready_email, send_slack_message
+from coldfront.plugins.pi_change_request.utils import (
+    send_email,
+    send_ready_email,
+    send_resource_approval_notifications,
+    send_slack_message,
+    send_user_approval_notifications,
+)
 
 RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION = "pi_change_request.change_projectpichangerequestresourceapprovalsetting"
 RESOURCE_APPROVAL_CHANGE_PERMISSION = "pi_change_request.change_projectpichangerequestresourceapproval"
@@ -86,8 +92,8 @@ class ProjectPiChangeRequestView(LoginRequiredMixin, UserPassesTestMixin, Create
             request_obj.resources.set(
                 request_obj.project.allocation_set.filter(status__name="Active").values_list("resources", flat=True)
             )
-            request_obj.create_resource_approvals()
-            request_obj.create_user_approvals([request_obj.current_pi, request_obj.new_pi])
+            resource_approvals = request_obj.create_resource_approvals()
+            user_approvals = request_obj.create_user_approvals([request_obj.current_pi, request_obj.new_pi])
 
         domain_url = get_domain_url(self.request)
         project_review_url = reverse("pi-change-request-center")
@@ -108,6 +114,11 @@ class ProjectPiChangeRequestView(LoginRequiredMixin, UserPassesTestMixin, Create
             "pi_change_request/email/new_pi_change_request.txt",
             template_context,
             settings.EMAIL_TICKET_SYSTEM_ADDRESS,
+        )
+
+        send_user_approval_notifications(request_obj, user_approvals, domain_url)
+        send_resource_approval_notifications(
+            request_obj, resource_approvals, domain_url, RESOURCE_APPROVAL_CHANGE_PERMISSION
         )
 
         return response

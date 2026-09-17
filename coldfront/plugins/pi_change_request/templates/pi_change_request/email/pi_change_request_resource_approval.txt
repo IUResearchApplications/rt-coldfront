@@ -1,0 +1,6 @@
+A PI change request for project "{{ project_title }}" (Project ID: {{ project_id }}) requires approval
+for the resource "{{ resource }}" managed by your group.
+The project's PI will change from {{ current_pi.first_name }} {{ current_pi.last_name }}
+({{ current_pi.username }}) to {{ new_pi.first_name }} {{ new_pi.last_name }} ({{ new_pi.username }}).
+
+You can review pending approvals at the PI Change Request Center: {{ url }}

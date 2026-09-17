@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from django.core.exceptions import ValidationError
 from django.db import models
 from model_utils.models import TimeStampedModel
@@ -57,19 +57,26 @@ class ProjectPiChangeRequest(TimeStampedModel):
         settings = ProjectPiChangeRequestResourceApprovalSetting.objects.filter(
             resource__in=self.resources.all(), requires_approval=True
         ).select_related("resource")
+        approvals = []
         for setting in settings:
-            ProjectPiChangeRequestResourceApproval.objects.create(
-                request=self,
-                resource=setting.resource,
-                status=ProjectPiChangeRequestResourceApprovalStatusChoice.objects.get_by_natural_key("Pending"),
+            approvals.append(
+                ProjectPiChangeRequestResourceApproval.objects.create(
+                    request=self,
+                    resource=setting.resource,
+                    status=ProjectPiChangeRequestResourceApprovalStatusChoice.objects.get_by_natural_key("Pending"),
+                )
             )
+        return approvals
 
     def create_user_approvals(self, users):
         pending_status = ProjectPiChangeRequestUserApprovalStatusChoice.objects.get(name="Pending")
+        approvals = []
         for user in users:
-            ProjectPiChangeRequestUserApproval.objects.get_or_create(
+            approval, _ = ProjectPiChangeRequestUserApproval.objects.get_or_create(
                 request=self, user=user, defaults={"status": pending_status}
             )
+            approvals.append(approval)
+        return approvals
 
     def update_status_from_approvals(self):
         """Recompute this request's status from its user and resource approvals.
@@ -172,3 +179,13 @@ class ProjectPiChangeRequestUserApproval(TimeStampedModel):
         constraints = [
             models.UniqueConstraint(fields=["request", "user"], name="unique_user_approval_per_request"),
         ]
+
+
+class ProjectPiChangeRequestReviewGroupTicketEmail(TimeStampedModel):
+    """Maps a review group to the ticket queue email notified about pending resource approvals."""
+
+    group = models.OneToOneField(Group, on_delete=models.CASCADE)
+    email = models.EmailField()
+
+    def __str__(self):
+        return f"{self.group.name} ({self.email})"

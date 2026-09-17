@@ -7,6 +7,7 @@ from coldfront.plugins.pi_change_request.models import (
     ProjectPiChangeRequestResourceApproval,
     ProjectPiChangeRequestResourceApprovalSetting,
     ProjectPiChangeRequestResourceApprovalStatusChoice,
+    ProjectPiChangeRequestReviewGroupTicketEmail,
     ProjectPiChangeRequestStatusChoice,
     ProjectPiChangeRequestUserApproval,
     ProjectPiChangeRequestUserApprovalStatusChoice,
@@ -66,3 +67,9 @@ class ProjectPiChangeRequestUserApprovalAdmin(admin.ModelAdmin):
 @admin.register(ProjectPiChangeRequestUserApprovalStatusChoice)
 class ProjectPiChangeRequestUserApprovalStatusChoiceAdmin(admin.ModelAdmin):
     list_display = ("name",)
+
+
+@admin.register(ProjectPiChangeRequestReviewGroupTicketEmail)
+class ProjectPiChangeRequestReviewGroupTicketEmailAdmin(admin.ModelAdmin):
+    list_display = ("group", "email")
+    search_fields = ("group__name", "email")
