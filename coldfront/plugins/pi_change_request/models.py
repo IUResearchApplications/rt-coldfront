@@ -105,6 +105,20 @@ class ProjectPiChangeRequest(TimeStampedModel):
             self.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key(new_status_name)
             self.save()
 
+    def cancel_pending_approvals(self):
+        """Mark any remaining pending approvals as cancelled after the request reaches a terminal state."""
+        user_cancelled_status = ProjectPiChangeRequestUserApprovalStatusChoice.objects.get_by_natural_key("Cancelled")
+        for approval in self.user_approvals.filter(status__name="Pending"):
+            approval.status = user_cancelled_status
+            approval.save()
+
+        resource_cancelled_status = ProjectPiChangeRequestResourceApprovalStatusChoice.objects.get_by_natural_key(
+            "Cancelled"
+        )
+        for approval in self.resource_approvals.filter(status__name="Pending"):
+            approval.status = resource_cancelled_status
+            approval.save()
+
     def apply_pi_change(self):
         """Switch the project's PI to the new PI."""
         self.project.pi = self.new_pi

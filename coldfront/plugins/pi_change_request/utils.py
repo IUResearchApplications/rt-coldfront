@@ -43,6 +43,34 @@ def send_ready_email(pi_change_request, url):
     )
 
 
+def send_blocked_email(pi_change_request, url, blocker):
+    """Notify the involved parties that a denied approval has blocked a PI change request.
+
+    The blocker is a short lowercase phrase describing what was denied, formatted into a sentence by
+    the template.
+    """
+    template_context = {
+        "project_title": pi_change_request.project.title,
+        "project_id": pi_change_request.project.pk,
+        "current_pi": pi_change_request.current_pi,
+        "new_pi": pi_change_request.new_pi,
+        "blocker": blocker,
+        "url": url,
+        "help_email": settings.EMAIL_TICKET_SYSTEM_ADDRESS,
+    }
+    receivers = set()
+    for user in (pi_change_request.current_pi, pi_change_request.new_pi, pi_change_request.initiator):
+        if user.email:
+            receivers.add(user.email)
+
+    send_email(
+        "Your Project PI Change Request Was Blocked",
+        "pi_change_request/email/pi_change_request_blocked.txt",
+        template_context,
+        receivers,
+    )
+
+
 def send_user_approval_notifications(pi_change_request, user_approvals, domain_url):
     """Email each approver that their response is needed on a new PI change request."""
     for approval in user_approvals:

@@ -40,12 +40,16 @@ Project PI Change Request Details
 
       <dt class="col-sm-4 col-md-3">Request status</dt>
       <dd class="col-sm-8 col-md-9">
-        <span class="badge bg-secondary">{{ pi_change_user_request.request.status }}</span>
+        <span
+          class="badge {% if pi_change_user_request.request.status.name == 'Ready' or pi_change_user_request.request.status.name == 'Complete' %}bg-success{% elif pi_change_user_request.request.status.name == 'Blocked' or pi_change_user_request.request.status.name == 'Rejected' %}bg-danger{% else %}bg-secondary{% endif %}"
+        >{{ pi_change_user_request.request.status }}</span>
       </dd>
 
       <dt class="col-sm-4 col-md-3">Your response</dt>
       <dd class="col-sm-8 col-md-9">
-        <span class="badge bg-secondary">{{ pi_change_user_request.status }}</span>
+        <span
+          class="badge {% if pi_change_user_request.status.name == 'Approved' %}bg-success{% elif pi_change_user_request.status.name == 'Denied' %}bg-danger{% else %}bg-secondary{% endif %}"
+        >{{ pi_change_user_request.status }}</span>
       </dd>
     </dl>
   </div>

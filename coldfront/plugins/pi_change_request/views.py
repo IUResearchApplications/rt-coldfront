@@ -28,6 +28,7 @@ from coldfront.plugins.pi_change_request.models import (
     ProjectPiChangeRequestUserApprovalStatusChoice,
 )
 from coldfront.plugins.pi_change_request.utils import (
+    send_blocked_email,
     send_email,
     send_ready_email,
     send_resource_approval_notifications,
@@ -361,6 +362,7 @@ class ProjectPiChangeApprovalView(LoginRequiredMixin, UserPassesTestMixin, View)
             pi_change_request.apply_pi_change()
             pi_change_request.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("Complete")
             pi_change_request.save()
+            pi_change_request.cancel_pending_approvals()
 
         project_url = "{}{}".format(
             get_domain_url(request), reverse("project-detail", kwargs={"pk": pi_change_request.project.pk})
@@ -417,6 +419,7 @@ class ProjectPiChangeDenialView(LoginRequiredMixin, UserPassesTestMixin, View):
         with transaction.atomic():
             pi_change_request.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("Rejected")
             pi_change_request.save()
+            pi_change_request.cancel_pending_approvals()
 
         project_url = "{}{}".format(
             get_domain_url(request), reverse("project-detail", kwargs={"pk": pi_change_request.project.pk})
@@ -591,6 +594,8 @@ class ProjectPiChangeRequestUserResponseView(LoginRequiredMixin, UserPassesTestM
 
         if approval.request.status.name == "Ready":
             send_ready_email(approval.request, url)
+        elif approval.request.status.name == "Blocked":
+            send_blocked_email(approval.request, url, f"{approval.user} declined the change")
 
         messages.success(request, self.success_message)
         return redirect("pi-change-request-user", pk=pk)
@@ -668,6 +673,8 @@ class ProjectPiChangeRequestResourceResponseView(LoginRequiredMixin, UserPassesT
 
         if approval.request.status.name == "Ready":
             send_ready_email(approval.request, url)
+        elif approval.request.status.name == "Blocked":
+            send_blocked_email(approval.request, url, f'the approval for "{approval.resource}" was denied')
 
         messages.success(request, self.success_message)
         return redirect("pi-change-request-center")
