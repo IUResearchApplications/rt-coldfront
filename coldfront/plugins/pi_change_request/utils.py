@@ -97,7 +97,7 @@ def send_user_approval_notifications(pi_change_request, user_approvals, domain_u
 
 
 def send_resource_approval_notifications(pi_change_request, resource_approvals, domain_url, review_permission):
-    """Email the ticket queue of each review group that can respond to a pending resource approval.
+    """Email each mapped ticket queue once with all resources on the request its group can approve.
 
     The review_permission is a dotted "app_label.codename" string identifying the review groups
     that may respond. Groups without a mapped ticket email are skipped; the center already
@@ -105,23 +105,21 @@ def send_resource_approval_notifications(pi_change_request, resource_approvals, 
     """
     url = "{}{}".format(domain_url, reverse("pi-change-request-center"))
     app_label, codename = review_permission.split(".", 1)
+    resources_by_receiver = {}
     for approval in resource_approvals:
         review_groups = approval.resource.review_groups.filter(
             permissions__codename=codename, permissions__content_type__app_label=app_label
         )
-        receivers = [
-            ticket_email.email
-            for ticket_email in ProjectPiChangeRequestReviewGroupTicketEmail.objects.filter(group__in=review_groups)
-        ]
-        if not receivers:
-            continue
+        for ticket_email in ProjectPiChangeRequestReviewGroupTicketEmail.objects.filter(group__in=review_groups):
+            resources_by_receiver.setdefault(ticket_email.email, []).append(approval.resource)
 
+    for receiver, resources in resources_by_receiver.items():
         template_context = {
             "current_pi": pi_change_request.current_pi,
             "new_pi": pi_change_request.new_pi,
             "project_title": pi_change_request.project.title,
             "project_id": pi_change_request.project.pk,
-            "resource": approval.resource,
+            "resources": resources,
             "url": url,
             "help_email": settings.EMAIL_TICKET_SYSTEM_ADDRESS,
         }
@@ -129,5 +127,5 @@ def send_resource_approval_notifications(pi_change_request, resource_approvals, 
             f'Action Required: PI Change Request Resource Approval for "{pi_change_request.project.title}"',
             "pi_change_request/email/pi_change_request_resource_approval.txt",
             template_context,
-            receivers,
+            [receiver],
         )
