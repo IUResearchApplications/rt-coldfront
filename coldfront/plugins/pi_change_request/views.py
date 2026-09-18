@@ -88,6 +88,15 @@ class ProjectPiChangeRequestView(LoginRequiredMixin, UserPassesTestMixin, Create
         request_obj.initiator = self.request.user
 
         with transaction.atomic():
+            # clean() cannot prevent two concurrent submissions, so lock the project row and
+            # re-check for an active request after acquiring the lock.
+            Project.objects.select_for_update().get(pk=self.project.pk)
+            if ProjectPiChangeRequest.objects.filter(
+                project=self.project, status__name__in=ACTIVE_REQUEST_STATUSES
+            ).exists():
+                form.add_error(None, "An active PI change request already exists for this project.")
+                return self.form_invalid(form)
+
             response = super().form_valid(form)
             request_obj.resources.set(
                 request_obj.project.allocation_set.filter(status__name="Active").values_list("resources", flat=True)
@@ -357,8 +366,14 @@ class ProjectPiChangeApprovalView(LoginRequiredMixin, UserPassesTestMixin, View)
         return redirect("pi-change-request-center")
 
     def post(self, request, pk):
-        pi_change_request = self.pi_change_request
         with transaction.atomic():
+            pi_change_request = ProjectPiChangeRequest.objects.select_for_update().get(pk=pk)
+            if not pi_change_request.is_ready:
+                messages.error(
+                    request, f"Cannot approve a PI change request with status {pi_change_request.status.name}."
+                )
+                return redirect("pi-change-request-center")
+
             pi_change_request.apply_pi_change()
             pi_change_request.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("Complete")
             pi_change_request.save()
@@ -415,8 +430,12 @@ class ProjectPiChangeDenialView(LoginRequiredMixin, UserPassesTestMixin, View):
         return redirect("pi-change-request-center")
 
     def post(self, request, pk):
-        pi_change_request = self.pi_change_request
         with transaction.atomic():
+            pi_change_request = ProjectPiChangeRequest.objects.select_for_update().get(pk=pk)
+            if not pi_change_request.is_denyable:
+                messages.error(request, f"Cannot deny a PI change request with status {pi_change_request.status.name}.")
+                return redirect("pi-change-request-center")
+
             pi_change_request.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("Rejected")
             pi_change_request.save()
             pi_change_request.cancel_pending_approvals()
@@ -562,25 +581,28 @@ class ProjectPiChangeRequestUserResponseView(LoginRequiredMixin, UserPassesTestM
 
     def post(self, request, pk):
         approval = self.user_approval
-        if approval.status.name != "Pending":
-            messages.error(request, "You have already responded to this PI change request.")
-            return redirect("pi-change-request-user", pk=pk)
-
-        if approval.request.status.name not in ["New", "Awaiting Approvals"]:
-            messages.error(request, "This PI change request is not accepting approvals.")
-            return redirect("pi-change-request-user", pk=pk)
-
-        approval.status = ProjectPiChangeRequestUserApprovalStatusChoice.objects.get_by_natural_key(
-            self.response_status
-        )
         with transaction.atomic():
+            pi_change_request = ProjectPiChangeRequest.objects.select_for_update().get(pk=approval.request_id)
+            approval.refresh_from_db()
+
+            if approval.status.name != "Pending":
+                messages.error(request, "You have already responded to this PI change request.")
+                return redirect("pi-change-request-user", pk=pk)
+
+            if pi_change_request.status.name not in ["New", "Awaiting Approvals"]:
+                messages.error(request, "This PI change request is not accepting approvals.")
+                return redirect("pi-change-request-user", pk=pk)
+
+            approval.status = ProjectPiChangeRequestUserApprovalStatusChoice.objects.get_by_natural_key(
+                self.response_status
+            )
             approval.save()
-            approval.request.update_status_from_approvals()
+            pi_change_request.update_status_from_approvals()
 
         url = "{}{}".format(get_domain_url(request), reverse("pi-change-request-center"))
         template_context = {
-            "project_title": approval.request.project.title,
-            "project_id": approval.request.project.pk,
+            "project_title": pi_change_request.project.title,
+            "project_id": pi_change_request.project.pk,
             "user": approval.user,
             "response": self.response_status,
             "url": url,
@@ -592,10 +614,10 @@ class ProjectPiChangeRequestUserResponseView(LoginRequiredMixin, UserPassesTestM
             template_context,
         )
 
-        if approval.request.status.name == "Ready":
-            send_ready_email(approval.request, url)
-        elif approval.request.status.name == "Blocked":
-            send_blocked_email(approval.request, url, f"{approval.user} declined the change")
+        if pi_change_request.status.name == "Ready":
+            send_ready_email(pi_change_request, url)
+        elif pi_change_request.status.name == "Blocked":
+            send_blocked_email(pi_change_request, url, f"{approval.user} declined the change")
 
         messages.success(request, self.success_message)
         return redirect("pi-change-request-user", pk=pk)
@@ -639,26 +661,29 @@ class ProjectPiChangeRequestResourceResponseView(LoginRequiredMixin, UserPassesT
 
     def post(self, request, pk):
         approval = self.resource_approval
-        if approval.status.name != "Pending":
-            messages.error(request, "This resource approval has already been responded to.")
-            return redirect("pi-change-request-center")
-
-        if approval.request.status.name not in ["New", "Awaiting Approvals"]:
-            messages.error(request, "This PI change request is not accepting approvals.")
-            return redirect("pi-change-request-center")
-
-        approval.status = ProjectPiChangeRequestResourceApprovalStatusChoice.objects.get_by_natural_key(
-            self.response_status
-        )
-        approval.handler = request.user
         with transaction.atomic():
+            pi_change_request = ProjectPiChangeRequest.objects.select_for_update().get(pk=approval.request_id)
+            approval.refresh_from_db()
+
+            if approval.status.name != "Pending":
+                messages.error(request, "This resource approval has already been responded to.")
+                return redirect("pi-change-request-center")
+
+            if pi_change_request.status.name not in ["New", "Awaiting Approvals"]:
+                messages.error(request, "This PI change request is not accepting approvals.")
+                return redirect("pi-change-request-center")
+
+            approval.status = ProjectPiChangeRequestResourceApprovalStatusChoice.objects.get_by_natural_key(
+                self.response_status
+            )
+            approval.handler = request.user
             approval.save()
-            approval.request.update_status_from_approvals()
+            pi_change_request.update_status_from_approvals()
 
         url = "{}{}".format(get_domain_url(request), reverse("pi-change-request-center"))
         template_context = {
-            "project_title": approval.request.project.title,
-            "project_id": approval.request.project.pk,
+            "project_title": pi_change_request.project.title,
+            "project_id": pi_change_request.project.pk,
             "resource": approval.resource,
             "handler": request.user,
             "response": self.response_status,
@@ -671,10 +696,10 @@ class ProjectPiChangeRequestResourceResponseView(LoginRequiredMixin, UserPassesT
             template_context,
         )
 
-        if approval.request.status.name == "Ready":
-            send_ready_email(approval.request, url)
-        elif approval.request.status.name == "Blocked":
-            send_blocked_email(approval.request, url, f'the approval for "{approval.resource}" was denied')
+        if pi_change_request.status.name == "Ready":
+            send_ready_email(pi_change_request, url)
+        elif pi_change_request.status.name == "Blocked":
+            send_blocked_email(pi_change_request, url, f'the approval for "{approval.resource}" was denied')
 
         messages.success(request, self.success_message)
         return redirect("pi-change-request-center")
