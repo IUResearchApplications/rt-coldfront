@@ -25,10 +25,11 @@ Project PI Change Request Center
   <div class="card-body">
     {% if pending_pi_change_requests %}
       <div class="table-responsive">
-        <table class="table table-sm datatable">
+        <table class="table table-sm datatable" data-order='[[0, "desc"]]'>
           <caption class="visually-hidden">PI change requests</caption>
           <thead>
             <tr>
+              <th scope="col">Date</th>
               <th scope="col">Project ID</th>
               <th scope="col">Initiator</th>
               <th scope="col">Current PI</th>
@@ -40,6 +41,7 @@ Project PI Change Request Center
           <tbody>
             {% for pending_pi_change_request in pending_pi_change_requests %}
               <tr>
+                <td>{{ pending_pi_change_request.created }}</td>
                 <td>{{ pending_pi_change_request.project.pk }}</td>
                 <td>{{ pending_pi_change_request.initiator }}</td>
                 <td>{{ pending_pi_change_request.project.pi }}</td>
@@ -74,10 +76,11 @@ Project PI Change Request Center
   <div class="card-body">
     {% if pending_resource_approvals %}
       <div class="table-responsive">
-        <table class="table table-sm datatable">
+        <table class="table table-sm datatable" data-order='[[0, "desc"]]'>
           <caption class="visually-hidden">Resource approvals awaiting action</caption>
           <thead>
             <tr>
+              <th scope="col">Date</th>
               <th scope="col">Project</th>
               <th scope="col">Resource</th>
               <th scope="col">Request Status</th>
@@ -87,6 +90,7 @@ Project PI Change Request Center
           <tbody>
             {% for approval in pending_resource_approvals %}
               <tr>
+                <td>{{ approval.created }}</td>
                 <td>
                   <a href="{% url 'pi-change-request-details' approval.request.pk %}">
                     {{ approval.request.project.title }} ({{ approval.request.project.pk }})
