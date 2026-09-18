@@ -49,7 +49,7 @@ Project PI Change Request Center
                 <td>{{ pending_pi_change_request.status.name }}</td>
                 <td>
                   {% if can_change_requests %}
-                    {% if pending_pi_change_request.status.name == "Ready" %}
+                    {% if pending_pi_change_request.is_ready %}
                       <a href="{% url 'pi-change-request-approval' pending_pi_change_request.pk %}" class="btn btn-success me-1 post-link">Activate</a>
                     {% endif %}
                     <a href="{% url 'pi-change-request-denial' pending_pi_change_request.pk %}" class="btn btn-danger me-1 post-link">Deny</a>

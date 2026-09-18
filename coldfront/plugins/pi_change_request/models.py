@@ -7,6 +7,8 @@ from simple_history.models import HistoricalRecords
 from coldfront.core.project.models import Project
 from coldfront.core.resource.models import Resource
 
+ACTIVE_REQUEST_STATUSES = ["New", "Awaiting Approvals", "Blocked", "Ready"]
+
 
 class ProjectPiChangeRequestStatusChoice(TimeStampedModel):
     class Meta:
@@ -45,9 +47,7 @@ class ProjectPiChangeRequest(TimeStampedModel):
             raise ValidationError("The new PI must be a manager in the project.")
 
         if (
-            ProjectPiChangeRequest.objects.filter(
-                project=self.project, status__name__in=["New", "Awaiting Approvals", "Blocked", "Ready"]
-            )
+            ProjectPiChangeRequest.objects.filter(project=self.project, status__name__in=ACTIVE_REQUEST_STATUSES)
             .exclude(pk=self.pk)
             .exists()
         ):
@@ -69,7 +69,7 @@ class ProjectPiChangeRequest(TimeStampedModel):
         return approvals
 
     def create_user_approvals(self, users):
-        pending_status = ProjectPiChangeRequestUserApprovalStatusChoice.objects.get(name="Pending")
+        pending_status = ProjectPiChangeRequestUserApprovalStatusChoice.objects.get_by_natural_key("Pending")
         approvals = []
         for user in users:
             approval, _ = ProjectPiChangeRequestUserApproval.objects.get_or_create(
@@ -124,6 +124,15 @@ class ProjectPiChangeRequest(TimeStampedModel):
         self.project.pi = self.new_pi
         self.project.save()
 
+    @property
+    def is_ready(self):
+        return self.status.name == "Ready"
+
+    @property
+    def is_denyable(self):
+        """Admins may deny a request in any active state."""
+        return self.status.name in ACTIVE_REQUEST_STATUSES
+
     def __str__(self):
         return f"{self.project.title} ({self.current_pi} -> {self.new_pi})"
 
@@ -157,6 +166,9 @@ class ProjectPiChangeRequestResourceApproval(TimeStampedModel):
         super().clean()
         if not self.request.resources.filter(pk=self.resource.pk).exists():
             raise ValidationError(f"Resource {self.resource} is not associated with this PI Change Request.")
+
+    def __str__(self):
+        return f"Resource approval for {self.resource} ({self.status})"
 
 
 class ProjectPiChangeRequestResourceApprovalSetting(TimeStampedModel):
@@ -193,6 +205,9 @@ class ProjectPiChangeRequestUserApproval(TimeStampedModel):
         constraints = [
             models.UniqueConstraint(fields=["request", "user"], name="unique_user_approval_per_request"),
         ]
+
+    def __str__(self):
+        return f"User approval for {self.user} ({self.status})"
 
 
 class ProjectPiChangeRequestReviewGroupTicketEmail(TimeStampedModel):

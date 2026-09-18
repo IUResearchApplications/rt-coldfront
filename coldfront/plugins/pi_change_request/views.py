@@ -19,6 +19,7 @@ from coldfront.plugins.pi_change_request.forms import (
     ResourcesRequiringApprovalFormset,
 )
 from coldfront.plugins.pi_change_request.models import (
+    ACTIVE_REQUEST_STATUSES,
     ProjectPiChangeRequest,
     ProjectPiChangeRequestResourceApproval,
     ProjectPiChangeRequestResourceApprovalSetting,
@@ -40,8 +41,6 @@ RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION = "pi_change_request.change_projectp
 RESOURCE_APPROVAL_CHANGE_PERMISSION = "pi_change_request.change_projectpichangerequestresourceapproval"
 PI_CHANGE_REQUEST_VIEW_PERMISSION = "pi_change_request.view_projectpichangerequest"
 PI_CHANGE_REQUEST_CHANGE_PERMISSION = "pi_change_request.change_projectpichangerequest"
-
-DENIABLE_REQUEST_STATUSES = ["New", "Awaiting Approvals", "Blocked", "Ready"]
 
 
 class ProjectPiChangeRequestView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
@@ -108,6 +107,7 @@ class ProjectPiChangeRequestView(LoginRequiredMixin, UserPassesTestMixin, Create
             "initiator": request_obj.initiator,
             "current_pi": request_obj.current_pi,
             "new_pi": request_obj.new_pi,
+            "justification": request_obj.justification,
             "help_email": settings.EMAIL_TICKET_SYSTEM_ADDRESS,
         }
         send_email(
@@ -252,7 +252,7 @@ class ProjectPiChangeRequestCenterView(LoginRequiredMixin, UserPassesTestMixin, 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         context["pending_pi_change_requests"] = ProjectPiChangeRequest.objects.filter(
-            status__name__in=["Awaiting Approvals", "Blocked", "Ready", "New"]
+            status__name__in=ACTIVE_REQUEST_STATUSES
         ).select_related("project", "project__pi", "status", "new_pi")
         context["show_settings_link"] = self.request.user.is_superuser or self.request.user.has_perm(
             RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION
@@ -335,7 +335,7 @@ class ProjectPiChangeApprovalView(LoginRequiredMixin, UserPassesTestMixin, View)
             ProjectPiChangeRequest.objects.select_related("project", "current_pi", "new_pi", "initiator", "status"),
             pk=self.kwargs.get("pk"),
         )
-        if not self.pi_change_request.status.name == "Ready":
+        if not self.pi_change_request.is_ready:
             messages.error(
                 request, f"Cannot approve a PI change request with status {self.pi_change_request.status.name}."
             )
@@ -403,7 +403,7 @@ class ProjectPiChangeDenialView(LoginRequiredMixin, UserPassesTestMixin, View):
             ProjectPiChangeRequest.objects.select_related("project", "current_pi", "initiator", "status"),
             pk=self.kwargs.get("pk"),
         )
-        if self.pi_change_request.status.name not in DENIABLE_REQUEST_STATUSES:
+        if not self.pi_change_request.is_denyable:
             messages.error(
                 request, f"Cannot deny a PI change request with status {self.pi_change_request.status.name}."
             )
@@ -472,8 +472,8 @@ class ProjectPiChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, Templat
         can_change_requests = self.request.user.is_superuser or self.request.user.has_perm(
             PI_CHANGE_REQUEST_CHANGE_PERMISSION
         )
-        context["can_activate"] = can_change_requests and pi_change_request.status.name == "Ready"
-        context["can_deny"] = can_change_requests and pi_change_request.status.name in DENIABLE_REQUEST_STATUSES
+        context["can_activate"] = can_change_requests and pi_change_request.is_ready
+        context["can_deny"] = can_change_requests and pi_change_request.is_denyable
         return context
 
 
