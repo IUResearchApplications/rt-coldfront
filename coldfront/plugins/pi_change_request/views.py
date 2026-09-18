@@ -170,29 +170,63 @@ class ProjectPiChangeRequestCenterView(LoginRequiredMixin, UserPassesTestMixin, 
     def get_history(self):
         """Combine request, resource approval, and user approval status changes into one list.
 
-        Only records where a status was changed are included, plus request creation records so the
-        initiator of a request is visible. Request and user approval history is shown to everyone;
-        resource approval history is limited for non-superusers to resources they manage.
+        Only records where a status was actually changed are included, plus request creation records
+        so the initiator of a request is visible. Request and user approval history is shown to
+        everyone; resource approval history is limited for non-superusers to resources they manage.
         """
-        request_history = ProjectPiChangeRequest.history.select_related("project", "status", "history_user").filter(
-            history_type__in=["+", "~"]
+        request_history = (
+            ProjectPiChangeRequest.history.select_related("project", "status", "history_user")
+            .filter(history_type__in=["+", "~"])
+            .order_by("id", "history_id")
         )
-        approval_history = ProjectPiChangeRequestResourceApproval.history.select_related(
-            "resource", "request", "request__project", "status", "history_user"
-        ).filter(history_type="~")
-        user_approval_history = ProjectPiChangeRequestUserApproval.history.select_related(
-            "request", "request__project", "status", "user", "history_user"
-        ).filter(history_type="~")
+        approval_history = (
+            ProjectPiChangeRequestResourceApproval.history.select_related(
+                "resource", "request", "request__project", "status", "history_user"
+            )
+            .filter(history_type="~")
+            .order_by("id", "history_id")
+        )
+        user_approval_history = (
+            ProjectPiChangeRequestUserApproval.history.select_related(
+                "request", "request__project", "status", "user", "history_user"
+            )
+            .filter(history_type="~")
+            .order_by("id", "history_id")
+        )
 
         managed_resource_ids = self.managed_resource_ids
         if managed_resource_ids is not None:
             approval_history = approval_history.filter(resource_id__in=managed_resource_ids)
 
-        entries = [self.get_request_history_entry(record) for record in request_history]
-        entries += [self.get_approval_history_entry(record) for record in approval_history]
-        entries += [self.get_user_approval_history_entry(record) for record in user_approval_history]
+        entries = [
+            self.get_request_history_entry(record) for record in self.get_status_changed_records(request_history)
+        ]
+        entries += [
+            self.get_approval_history_entry(record) for record in self.get_status_changed_records(approval_history)
+        ]
+        entries += [
+            self.get_user_approval_history_entry(record)
+            for record in self.get_status_changed_records(user_approval_history)
+        ]
         entries.sort(key=lambda entry: entry["date"], reverse=True)
         return entries
+
+    def get_status_changed_records(self, records):
+        """Yield creation records and records where the status differs from the object's previous state.
+
+        simple_history writes a "~" record on every save, even when only an unrelated field was
+        edited, so each record is compared with the previous one for the same object. The record's id
+        field holds the original object's pk, so records must be ordered by id and history id.
+        """
+        previous_object_id = None
+        previous_status_id = None
+        for record in records:
+            if record.id != previous_object_id:
+                previous_object_id = record.id
+                previous_status_id = None
+            if record.history_type == "+" or record.status_id != previous_status_id:
+                yield record
+            previous_status_id = record.status_id
 
     def get_request_history_entry(self, record):
         project_title = record.project.title if record.project else "Unknown project"
@@ -422,7 +456,7 @@ class ProjectPiChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, Templat
 
     def get_context_data(self, *args, **kwargs):
         pi_change_request = get_object_or_404(
-            ProjectPiChangeRequest.objects.select_related("project", "project__pi", "status", "new_pi"),
+            ProjectPiChangeRequest.objects.select_related("project", "status", "current_pi", "new_pi"),
             pk=self.kwargs.get("pk"),
         )
 
