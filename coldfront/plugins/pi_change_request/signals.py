@@ -6,6 +6,8 @@ from coldfront.plugins.pi_change_request.models import ProjectPiChangeRequestRes
 
 
 @receiver(post_save, sender=Resource)
-def create_pi_change_request_setting(sender, instance, created, **kwargs):
-    if created and instance.is_allocatable:
-        ProjectPiChangeRequestResourceApprovalSetting.objects.get_or_create(resource=instance, requires_approval=False)
+def create_pi_change_request_setting(sender, instance, **kwargs):
+    if instance.is_allocatable:
+        ProjectPiChangeRequestResourceApprovalSetting.objects.get_or_create(
+            resource=instance, defaults={"requires_approval": False}
+        )
