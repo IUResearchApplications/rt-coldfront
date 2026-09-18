@@ -16,6 +16,7 @@ from coldfront.plugins.pi_change_request.models import (
 
 @admin.register(ProjectPiChangeRequest)
 class ProjectPiChangeRequestAdmin(admin.ModelAdmin):
+    fields_add = ("project", "new_pi", "justification")
     fields_change = ("project", "new_pi", "justification", "status", "resources")
     list_display = ("pk", "project_title", "new_pi", "status")
     list_filter = ("status", "resources")
@@ -26,11 +27,26 @@ class ProjectPiChangeRequestAdmin(admin.ModelAdmin):
     def project_title(self, obj):
         return textwrap.shorten(obj.project.title, width=50)
 
-    def get_fields(self, request, obj):
+    def get_fields(self, request, obj=None):
         if obj is None:
-            return super().get_fields(request)
-        else:
-            return self.fields_change
+            return self.fields_add
+        return self.fields_change
+
+    def save_model(self, request, obj, form, change):
+        """Mirror the center page creation flow: derive what an admin should not type by hand."""
+        if not change:
+            obj.current_pi = obj.project.pi
+            obj.initiator = request.user
+            obj.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("New")
+
+        super().save_model(request, obj, form, change)
+
+        if not change:
+            obj.resources.set(
+                obj.project.allocation_set.filter(status__name="Active").values_list("resources", flat=True)
+            )
+            obj.create_resource_approvals()
+            obj.create_user_approvals([obj.current_pi, obj.new_pi])
 
 
 @admin.register(ProjectPiChangeRequestResourceApproval)
