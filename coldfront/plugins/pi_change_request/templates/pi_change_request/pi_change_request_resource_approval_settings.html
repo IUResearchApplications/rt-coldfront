@@ -64,7 +64,7 @@ Resource Approval Settings
           {% endfor %}
         </tbody>
       </table>
-      <div id="requires_approval_alert_div"></div>
+      <div id="requires_approval_alert_div" role="status"></div>
     </div>
   </div>
 </div>
@@ -90,12 +90,12 @@ Resource Approval Settings
         },
         success: function (data) {
           $checkbox.prop("disabled", false);
-          $("#requires_approval_alert_div").html('<div class="alert alert-success alert-dismissible"><button type="button" class="btn-close" data-bs-dismiss="alert"></button><strong>Success!</strong> Resource approval updated.</div>')
+          $("#requires_approval_alert_div").html('<div class="alert alert-success alert-dismissible"><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button><strong>Success!</strong> Resource approval updated.</div>')
         },
         error: function (xhr, status, error) {
           $checkbox.prop("checked", !checked);
           $checkbox.prop("disabled", false);
-          $("#requires_approval_alert_div").html('<div class="alert alert-danger alert-dismissible"><button type="button" class="btn-close" data-bs-dismiss="alert"></button><strong>Error!</strong> Failed updating resource approval.</div>')
+          $("#requires_approval_alert_div").html('<div class="alert alert-danger alert-dismissible"><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button><strong>Error!</strong> Failed updating resource approval.</div>')
         }
       });
     });
