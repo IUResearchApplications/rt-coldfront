@@ -40,6 +40,9 @@ class ProjectPiChangeRequest(TimeStampedModel):
 
     def clean(self):
         super().clean()
+        if not (self.project_id and self.new_pi_id):
+            return
+
         project_manager = self.project.projectuser_set.filter(
             user=self.new_pi, status__name="Active", role__name="Manager"
         ).first()
@@ -164,6 +167,9 @@ class ProjectPiChangeRequestResourceApproval(TimeStampedModel):
 
     def clean(self):
         super().clean()
+        if not (self.request_id and self.resource_id):
+            return
+
         if not self.request.resources.filter(pk=self.resource.pk).exists():
             raise ValidationError(f"Resource {self.resource} is not associated with this PI Change Request.")
 
