@@ -333,6 +333,8 @@ class PiChangeRequestUserResponseViewTests(PiChangeRequestTestBase):
         self.assertTrue(any("not accepting approvals" in message.message for message in response.context["messages"]))
         self.new_pi_approval.refresh_from_db()
         self.assertEqual(self.new_pi_approval.status.name, "Pending")
+        # the closed request should not offer the still-pending user a way to respond
+        self.assertFalse(response.context["can_respond"])
 
     def test_cannot_respond_twice(self):
         self.client.force_login(self.project.pi)
@@ -476,6 +478,14 @@ class PiChangeRequestActivationViewTests(PiChangeRequestTestBase):
         self.assertEqual(self.request_obj.user_approvals.filter(status__name="Cancelled").count(), 2)
         self.project.refresh_from_db()
         self.assertNotEqual(self.project.pi, self.new_pi)
+
+    def test_cancelled_approval_page_offers_no_action(self):
+        self.client.force_login(self.superuser)
+        self.client.post(self.deny_url)
+        cancelled_approval = self.request_obj.user_approvals.get(user=self.new_pi)
+        response = self.client.get(reverse("pi-change-request-user", kwargs={"pk": cancelled_approval.pk}))
+        self.assertContains(response, "This request closed before a response was submitted")
+        self.assertNotContains(response, "Action Required")
 
     def test_deny_after_complete_is_blocked(self):
         self.mark_ready()

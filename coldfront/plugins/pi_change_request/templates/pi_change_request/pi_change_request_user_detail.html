@@ -56,32 +56,43 @@ Project PI Change Request Details
 </div>
 
 <div
-  class="card mb-4 {% if pi_change_user_request.status.name == 'Approved' %}border-success{% elif pi_change_user_request.status.name == 'Denied' %}border-danger{% else %}border-warning{% endif %}"
+  class="card mb-4 {% if pi_change_user_request.status.name == 'Approved' %}border-success{% elif pi_change_user_request.status.name == 'Denied' %}border-danger{% elif can_respond %}border-warning{% else %}border-secondary{% endif %}"
 >
   <div class="card-header bg-light">
     <h2>
       <i
-        class="fa-solid {% if pi_change_user_request.status.name == 'Approved' %}fa-circle-check text-success{% elif pi_change_user_request.status.name == 'Denied' %}fa-circle-xmark text-danger{% else %}fa-circle-exclamation text-warning{% endif %}"
+        class="fa-solid {% if pi_change_user_request.status.name == 'Approved' %}fa-circle-check text-success{% elif pi_change_user_request.status.name == 'Denied' %}fa-circle-xmark text-danger{% elif can_respond %}fa-circle-exclamation text-warning{% else %}fa-circle-info text-secondary{% endif %}"
         aria-hidden="true"
       ></i>
       {% if pi_change_user_request.status.name == "Approved" %}
         Approved
       {% elif pi_change_user_request.status.name == "Denied" %}
         Declined
-      {% else %}
+      {% elif can_respond %}
         Action Required
+      {% else %}
+        No Action Needed
       {% endif %}
     </h2>
   </div>
   <div class="card-body">
     <p>
       A PI change request was initiated{% if pi_change_user_request.request.initiator %} by
-      {{ pi_change_user_request.request.initiator }}{% endif %}. To complete this request, you must accept this change.
+      {{ pi_change_user_request.request.initiator }}{% endif %}.
+      {% if can_respond %}To complete this request, you must accept this change.{% endif %}
     </p>
-    <p class="mb-0">
-      The new PI will become the owner of any Slate projects this allocation contains. The original PI will remain a
-      manager of the project.
-    </p>
+    {% if pi_change_user_request.status.name == "Cancelled" %}
+      <p class="mb-0">This request closed before a response was submitted, so no further action is needed.</p>
+    {% elif pi_change_user_request.status.name == "Pending" and not can_respond and not request_open %}
+      <p class="mb-0">This request is no longer accepting responses.</p>
+    {% elif pi_change_user_request.status.name == "Pending" and not can_respond %}
+      <p class="mb-0">The assigned user has not responded to this request yet.</p>
+    {% else %}
+      <p class="mb-0">
+        The new PI will become the owner of any Slate projects this allocation contains. The original PI will remain a
+        manager of the project.
+      </p>
+    {% endif %}
   </div>
   {% if can_respond %}
     <div class="card-footer d-flex gap-2">
@@ -94,7 +105,7 @@ Project PI Change Request Details
         <button type="submit" class="btn btn-danger">Decline</button>
       </form>
     </div>
-  {% elif pi_change_user_request.status.name != "Pending" %}
+  {% elif pi_change_user_request.status.name == "Approved" or pi_change_user_request.status.name == "Denied" %}
     <div class="card-footer">
       <span class="text-muted">You have already responded to this request ({{ pi_change_user_request.status }}).</span>
     </div>

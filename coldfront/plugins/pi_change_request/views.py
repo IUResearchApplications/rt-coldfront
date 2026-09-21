@@ -42,6 +42,10 @@ RESOURCE_APPROVAL_CHANGE_PERMISSION = "pi_change_request.change_projectpichanger
 PI_CHANGE_REQUEST_VIEW_PERMISSION = "pi_change_request.view_projectpichangerequest"
 PI_CHANGE_REQUEST_CHANGE_PERMISSION = "pi_change_request.change_projectpichangerequest"
 
+# check_if_groups_in_review_groups matches bare codenames, unlike has_perm which takes the dotted form.
+RESOURCE_APPROVAL_SETTING_CHANGE_CODENAME = RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION.rpartition(".")[2]
+RESOURCE_APPROVAL_CHANGE_CODENAME = RESOURCE_APPROVAL_CHANGE_PERMISSION.rpartition(".")[2]
+
 
 class ProjectPiChangeRequestView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = ProjectPiChangeRequest
@@ -158,7 +162,7 @@ class ProjectPiChangeRequestCenterView(LoginRequiredMixin, UserPassesTestMixin, 
         managed_resource_ids = []
         for resource in Resource.objects.prefetch_related("review_groups"):
             if check_if_groups_in_review_groups(
-                resource.review_groups.all(), user_groups, RESOURCE_APPROVAL_CHANGE_PERMISSION
+                resource.review_groups.all(), user_groups, RESOURCE_APPROVAL_CHANGE_CODENAME
             ):
                 managed_resource_ids.append(resource.id)
         return managed_resource_ids
@@ -309,7 +313,7 @@ class ProjectPiChangeRequestResourceApprovalSettingsView(LoginRequiredMixin, Use
                 can_edit = check_if_groups_in_review_groups(
                     setting.get("resource").review_groups.all(),
                     user_groups,
-                    RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION,
+                    RESOURCE_APPROVAL_SETTING_CHANGE_CODENAME,
                 )
             disable_selected.append(not can_edit)
 
@@ -350,10 +354,7 @@ class ProjectPiChangeApprovalView(LoginRequiredMixin, UserPassesTestMixin, View)
             )
             return redirect("pi-change-request-center")
 
-        new_pi_is_active_manager = self.pi_change_request.project.projectuser_set.filter(
-            user=self.pi_change_request.new_pi, status__name="Active", role__name="Manager"
-        ).exists()
-        if not new_pi_is_active_manager:
+        if not self.pi_change_request.is_new_pi_active_manager:
             messages.error(
                 request,
                 "Cannot approve a PI change request whose new PI is no longer an active manager on the project.",
@@ -371,6 +372,13 @@ class ProjectPiChangeApprovalView(LoginRequiredMixin, UserPassesTestMixin, View)
             if not pi_change_request.is_ready:
                 messages.error(
                     request, f"Cannot approve a PI change request with status {pi_change_request.status.name}."
+                )
+                return redirect("pi-change-request-center")
+
+            if not pi_change_request.is_new_pi_active_manager:
+                messages.error(
+                    request,
+                    "Cannot approve a PI change request whose new PI is no longer an active manager on the project.",
                 )
                 return redirect("pi-change-request-center")
 
@@ -514,7 +522,7 @@ class ProjectPiChangeRequestResourceApprovalSettingView(LoginRequiredMixin, User
             return super().dispatch(request, *args, **kwargs)
 
         passed = check_if_groups_in_review_groups(
-            self.obj.resource.review_groups.all(), user.groups.all(), RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION
+            self.obj.resource.review_groups.all(), user.groups.all(), RESOURCE_APPROVAL_SETTING_CHANGE_CODENAME
         )
         if not passed:
             return HttpResponse("not permitted", status=403)
@@ -542,7 +550,8 @@ class ProjectPiChangeRequestUserApprovalView(LoginRequiredMixin, UserPassesTestM
 
     def test_func(self):
         self.pi_change_user_request = get_object_or_404(
-            ProjectPiChangeRequestUserApproval.objects.select_related("user", "request"), pk=self.kwargs.get("pk")
+            ProjectPiChangeRequestUserApproval.objects.select_related("user", "request", "request__status"),
+            pk=self.kwargs.get("pk"),
         )
 
         if self.request.user.is_superuser:
@@ -551,11 +560,13 @@ class ProjectPiChangeRequestUserApprovalView(LoginRequiredMixin, UserPassesTestM
         return self.request.user == self.pi_change_user_request.user
 
     def get_context_data(self, *args, **kwargs):
+        approval = self.pi_change_user_request
+        request_open = approval.request.status.name in ["New", "Awaiting Approvals"]
         context = super().get_context_data(*args, **kwargs)
-        context["pi_change_user_request"] = self.pi_change_user_request
+        context["pi_change_user_request"] = approval
+        context["request_open"] = request_open
         context["can_respond"] = (
-            self.request.user == self.pi_change_user_request.user
-            and self.pi_change_user_request.status.name == "Pending"
+            self.request.user == approval.user and approval.status.name == "Pending" and request_open
         )
         return context
 
@@ -653,7 +664,7 @@ class ProjectPiChangeRequestResourceResponseView(LoginRequiredMixin, UserPassesT
         return check_if_groups_in_review_groups(
             self.resource_approval.resource.review_groups.all(),
             self.request.user.groups.all(),
-            RESOURCE_APPROVAL_CHANGE_PERMISSION,
+            RESOURCE_APPROVAL_CHANGE_CODENAME,
         )
 
     def get(self, request, pk):

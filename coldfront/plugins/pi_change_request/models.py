@@ -128,6 +128,13 @@ class ProjectPiChangeRequest(TimeStampedModel):
         self.project.save()
 
     @property
+    def is_new_pi_active_manager(self):
+        """The change is only valid while the new PI remains an active manager on the project."""
+        return self.project.projectuser_set.filter(
+            user=self.new_pi, status__name="Active", role__name="Manager"
+        ).exists()
+
+    @property
     def is_ready(self):
         return self.status.name == "Ready"
 
