@@ -27,17 +27,17 @@ Project PI Change Request Details
           <div class="col"><p class="card-text"><strong>New PI: </strong>{{ pi_change_request.new_pi }}</p></div>
         </div>
         <div class="row">
-          <div class="col"><p class="card-text"><strong>Initiator: </strong>{{ pi_change_request.initiator }}</p>
-          </div>
+          <div class="col"><p class="card-text"><strong>Initiator: </strong>{{ pi_change_request.initiator }}</p></div>
+          <div class="col"><p class="card-text"><strong>Submitted: </strong>{{ pi_change_request.created }}</p></div>
         </div>
-        <p class="card-text"><strong>Description: </strong>{{ pi_change_request.justification|linebreaksbr }}</p>
+        <p class="card-text"><strong>Justification: </strong>{{ pi_change_request.justification|linebreaksbr }}</p>
       </div>
       <div class="card-footer">
         {% if can_activate %}
-          <a href="{% url 'pi-change-request-approval' pi_change_request.pk %}" class="btn btn-success me-1 post-link">Activate</a>
+          <a href="{% url 'pi-change-request-approval' pi_change_request.pk %}" class="btn btn-success me-1 post-link" data-confirm="Are you sure you want to activate this PI change request? The project's PI will be changed immediately.">Activate</a>
         {% endif %}
         {% if can_deny %}
-          <a href="{% url 'pi-change-request-denial' pi_change_request.pk %}" class="btn btn-danger me-1 post-link">Deny</a>
+          <a href="{% url 'pi-change-request-denial' pi_change_request.pk %}" class="btn btn-danger me-1 post-link" data-confirm="Are you sure you want to deny this PI change request?">Deny</a>
         {% endif %}
         <a href="{% url 'pi-change-request-center' %}" class="btn btn-secondary">Return</a>
       </div>
@@ -89,6 +89,11 @@ Project PI Change Request Details
   document.addEventListener("DOMContentLoaded", function() {
     $(".post-link").on("click", function(event) {
       event.preventDefault();
+
+      var confirmMessage = $(this).data("confirm");
+      if (confirmMessage && !confirm(confirmMessage)) {
+        return;
+      }
 
       var $form = $("<form>", { method: "post", action: $(this).attr("href") });
       $form.append($("<input>", { type: "hidden", name: "csrfmiddlewaretoken", value: "{{ csrf_token }}" }));

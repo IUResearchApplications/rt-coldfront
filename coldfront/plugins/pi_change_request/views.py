@@ -107,6 +107,7 @@ class ProjectPiChangeRequestView(SuccessMessageMixin, LoginRequiredMixin, UserPa
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
+        context["project"] = self.project
         context["project_pk"] = self.kwargs.get("pk")
         return context
 

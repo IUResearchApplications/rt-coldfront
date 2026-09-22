@@ -74,7 +74,7 @@ Resource Approval Settings
 {{ block.super }}
 <script>
   document.addEventListener("DOMContentLoaded", function() {
-    $(".requires-approval-checkbox").on("change", function() {
+    $(document).on("change", ".requires-approval-checkbox", function() {
       var $checkbox = $(this);
       var checked = $checkbox.prop("checked");
       var resource_approval_id = $checkbox.data("pk");

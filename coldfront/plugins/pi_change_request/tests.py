@@ -382,6 +382,14 @@ class PiChangeRequestCreationViewTests(PiChangeRequestTestBase):
         utils.test_user_cannot_access(self, self.project_user.user, self.url)
         utils.test_user_cannot_access(self, self.outsider, self.url)
 
+    def test_form_lists_next_steps(self):
+        self.client.force_login(self.project.pi)
+        response = self.client.get(self.url)
+        self.assertContains(response, self.project.title)
+        self.assertContains(response, "What happens next?")
+        self.assertContains(response, "recorded automatically when you submit")
+        self.assertContains(response, "remains a manager of the project")
+
     def test_creates_request_with_approvals(self):
         self.set_requires_approval(self.resource, True)
         response = self.post_creation(self.project.pi, self.new_pi)
@@ -461,9 +469,24 @@ class PiChangeRequestUserResponseViewTests(PiChangeRequestTestBase):
         response = self.client.get(self.pi_detail_url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Back to Project")
+        self.assertContains(response, "Justification")
+        self.assertContains(response, self.request_obj.justification)
+        self.assertContains(response, "user-response-form")
         self.assertEqual(response.context["help_email"], settings.EMAIL_TICKET_SYSTEM_ADDRESS)
         utils.test_user_can_access(self, self.superuser, self.pi_detail_url)
         utils.test_user_cannot_access(self, self.outsider, self.pi_detail_url)
+
+    def test_initiator_sees_auto_approval_note(self):
+        # On a PI-initiated request the PI's approval is recorded at submission time, so the
+        # page explains that instead of claiming a manual response was made.
+        request_obj = self.create_request()
+        pi_approval = request_obj.user_approvals.get(user=self.project.pi)
+        url = reverse("pi-change-request-user", kwargs={"pk": pi_approval.pk})
+
+        self.client.force_login(self.project.pi)
+        response = self.client.get(url)
+        self.assertContains(response, "Your approval was recorded automatically when you submitted this request.")
+        self.assertNotContains(response, "You have already responded")
 
     def test_approvals_take_request_to_ready(self):
         self.client.force_login(self.project.pi)
@@ -746,6 +769,25 @@ class PiChangeRequestCenterViewTests(PiChangeRequestTestBase):
         self.client.force_login(staff_viewer)
         self.assertEqual(self.client.get(self.center_url).context["pending_resource_approvals"].count(), 1)
 
+    def test_requests_table_links_project_and_renders_status_badges(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.center_url)
+        self.assertContains(response, f"{self.project.title} ({self.project.pk})")
+        self.assertContains(response, 'badge bg-secondary">New</span>')
+        self.assertNotContains(response, "Project ID")
+
+    def test_history_without_user_renders_em_dash(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.center_url)
+        self.assertContains(response, ">—</td>")
+        self.assertNotContains(response, "&amp;mdash;")
+
+    def test_deny_button_requests_confirmation(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.center_url)
+        self.assertContains(response, 'data-confirm="Are you sure you want to deny this PI change request?"')
+        self.assertNotContains(response, 'data-confirm="Are you sure you want to activate')
+
 
 @SILENT
 class PiChangeRequestDetailViewTests(PiChangeRequestTestBase):
@@ -781,6 +823,7 @@ class PiChangeRequestDetailViewTests(PiChangeRequestTestBase):
         self.assertContains(response, self.project.pi.username)
         self.assertContains(response, self.new_pi.username)
         self.assertContains(response, self.request_obj.justification)
+        self.assertContains(response, "Justification")
         self.assertContains(response, ">Users</h3>")
         self.assertContains(response, ">Pending</span>")
         self.assertNotContains(response, "No additional approvals required!")
@@ -815,6 +858,24 @@ class PiChangeRequestDetailViewTests(PiChangeRequestTestBase):
         response = self.client.get(self.detail_url)
         self.assertNotContains(response, ">Activate</a>")
         self.assertNotContains(response, ">Deny</a>")
+
+    def test_page_lists_submitted_date(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.detail_url)
+        self.assertContains(response, "Submitted")
+
+    def test_action_buttons_request_confirmation(self):
+        self.client.force_login(self.superuser)
+
+        # New: only Deny is offered, and it asks for confirmation.
+        response = self.client.get(self.detail_url)
+        self.assertContains(response, 'data-confirm="Are you sure you want to deny this PI change request?"')
+        self.assertNotContains(response, 'data-confirm="Are you sure you want to activate')
+
+        # Ready: Activate is offered with its own confirmation.
+        self.mark_request_ready()
+        response = self.client.get(self.detail_url)
+        self.assertContains(response, 'data-confirm="Are you sure you want to activate')
 
     def test_viewers_see_no_action_buttons(self):
         viewer = UserFactory()

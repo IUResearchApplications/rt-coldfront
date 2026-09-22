@@ -9,8 +9,22 @@ Change Project PI
 
 
 {% block content %}
-<h1>Change Project PI: {{ object.title }}</h1>
+<h1>Change Project PI: {{ project.title }}</h1>
 <p>The new PI must be a manager in the project. If their username is not in the dropdown they do not meet this requirement.</p>
+<div class="alert alert-info" role="alert">
+  <p class="mb-1"><strong>What happens next?</strong></p>
+  <ul class="mb-0">
+    <li>
+      The current PI and the new PI must each approve this request. If you are one of them, your approval is
+      recorded automatically when you submit.
+    </li>
+    <li>If the project includes resources that require additional approval, their reviewers must also approve.</li>
+    <li>
+      Once all approvals are complete, center staff activate the request: the new PI becomes the project's owner,
+      and the original PI remains a manager of the project.
+    </li>
+  </ul>
+</div>
 <form method="post">
   {% csrf_token %}
   {{ form|crispy }}

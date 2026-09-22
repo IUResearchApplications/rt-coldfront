@@ -43,6 +43,9 @@ Project PI Change Request Details
       <dd class="col-sm-8 col-md-9">{{ pi_change_user_request.request.initiator }}</dd>
       {% endif %}
 
+      <dt class="col-sm-4 col-md-3">Justification</dt>
+      <dd class="col-sm-8 col-md-9">{{ pi_change_user_request.request.justification|linebreaksbr }}</dd>
+
       <dt class="col-sm-4 col-md-3">Request status</dt>
       <dd class="col-sm-8 col-md-9">
         <span
@@ -101,14 +104,18 @@ Project PI Change Request Details
   </div>
   {% if can_respond %}
     <div class="card-footer d-flex gap-2">
-      <form method="post" action="{% url 'pi-change-request-user-approve' pi_change_user_request.pk %}">
+      <form method="post" class="user-response-form" action="{% url 'pi-change-request-user-approve' pi_change_user_request.pk %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-success">Accept</button>
       </form>
-      <form method="post" action="{% url 'pi-change-request-user-deny' pi_change_user_request.pk %}">
+      <form method="post" class="user-response-form" action="{% url 'pi-change-request-user-deny' pi_change_user_request.pk %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-danger">Decline</button>
       </form>
+    </div>
+  {% elif pi_change_user_request.status.name == "Approved" and pi_change_user_request.request.initiator == pi_change_user_request.user %}
+    <div class="card-footer">
+      <span class="text-muted">Your approval was recorded automatically when you submitted this request.</span>
     </div>
   {% elif pi_change_user_request.status.name == "Approved" or pi_change_user_request.status.name == "Denied" %}
     <div class="card-footer">
@@ -120,4 +127,17 @@ Project PI Change Request Details
 <p class="text-muted">
   Questions or concerns? Contact <a href="mailto:{{ help_email }}">{{ help_email }}</a>.
 </p>
+{% endblock %}
+
+{% block javascript %}
+  {{ block.super }}
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // Disable the response buttons once either form is submitted so the action
+      // cannot be sent twice.
+      $(".user-response-form").on("submit", function() {
+        $(".user-response-form button[type=submit]").prop("disabled", true);
+      });
+    });
+  </script>
 {% endblock %}
