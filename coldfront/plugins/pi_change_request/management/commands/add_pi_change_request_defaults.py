@@ -11,5 +11,5 @@ class Command(BaseCommand):
         resources = Resource.objects.filter(is_allocatable=True)
         for resource in resources:
             ProjectPiChangeRequestResourceApprovalSetting.objects.get_or_create(
-                resource=resource, requires_approval=False
+                resource=resource, defaults={"requires_approval": False}
             )

@@ -43,19 +43,20 @@ def send_ready_email(pi_change_request, url):
     )
 
 
-def send_blocked_email(pi_change_request, url, blocker):
+def send_blocked_email(pi_change_request, domain_url, blocker):
     """Notify the involved parties that a denied approval has blocked a PI change request.
 
     The blocker is a short lowercase phrase describing what was denied, formatted into a sentence by
-    the template.
+    the template. The email links to the project page, since the recipients cannot access the center.
     """
+    project_url = "{}{}".format(domain_url, reverse("project-detail", kwargs={"pk": pi_change_request.project.pk}))
     template_context = {
         "project_title": pi_change_request.project.title,
         "project_id": pi_change_request.project.pk,
         "current_pi": pi_change_request.current_pi,
         "new_pi": pi_change_request.new_pi,
         "blocker": blocker,
-        "url": url,
+        "project_url": project_url,
         "help_email": settings.EMAIL_TICKET_SYSTEM_ADDRESS,
     }
     receivers = set()

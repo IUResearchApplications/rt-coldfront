@@ -630,7 +630,7 @@ class ProjectPiChangeRequestUserResponseView(LoginRequiredMixin, UserPassesTestM
         if pi_change_request.status.name == "Ready":
             send_ready_email(pi_change_request, url)
         elif pi_change_request.status.name == "Blocked":
-            send_blocked_email(pi_change_request, url, f"{approval.user} declined the change")
+            send_blocked_email(pi_change_request, get_domain_url(request), f"{approval.user} declined the change")
 
         messages.success(request, self.success_message)
         return redirect("pi-change-request-user", pk=pk)
@@ -712,7 +712,9 @@ class ProjectPiChangeRequestResourceResponseView(LoginRequiredMixin, UserPassesT
         if pi_change_request.status.name == "Ready":
             send_ready_email(pi_change_request, url)
         elif pi_change_request.status.name == "Blocked":
-            send_blocked_email(pi_change_request, url, f'the approval for "{approval.resource}" was denied')
+            send_blocked_email(
+                pi_change_request, get_domain_url(request), f'the approval for "{approval.resource}" was denied'
+            )
 
         messages.success(request, self.success_message)
         return redirect("pi-change-request-center")

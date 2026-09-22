@@ -6,7 +6,7 @@ The requested PI change from {{ current_pi.first_name }} {{ current_pi.last_name
 {{ new_pi.first_name }} {{ new_pi.last_name }} ({{ new_pi.username }}) cannot proceed because {{ blocker }}. Center
 staff will review the request; once it is rejected, a new PI change request can be submitted for this project.
 
-You can review this request at the PI Change Request Center: {{ url }}
+You can view the project here: {{ project_url }}
 
 If you have any questions please email us at {{ help_email }}
 

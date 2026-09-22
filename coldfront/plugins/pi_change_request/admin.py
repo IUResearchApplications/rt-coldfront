@@ -51,7 +51,7 @@ class ProjectPiChangeRequestAdmin(admin.ModelAdmin):
 
 @admin.register(ProjectPiChangeRequestResourceApproval)
 class ProjectPiChangeRequestResourceApprovalAdmin(admin.ModelAdmin):
-    fields_change = ("request", "resource", "status", "handler")
+    fields = ("request", "resource", "status", "handler")
     list_display = ("pk", "resource", "status", "handler")
     list_filter = ("status", "resource")
     search_fields = ("handler__username", "handler__first_name", "handler__last_name", "request__project__title")

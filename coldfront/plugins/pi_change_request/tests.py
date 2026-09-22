@@ -5,6 +5,7 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.messages import get_messages
 from django.core import mail
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
@@ -130,6 +131,22 @@ class PiChangeRequestTestBase(TestCase):
             request_obj.create_resource_approvals()
             request_obj.create_user_approvals([self.project.pi, self.new_pi])
         return request_obj
+
+
+class AddPiChangeRequestDefaultsCommandTests(PiChangeRequestTestBase):
+    """The defaults command backfills settings without clobbering existing ones."""
+
+    def test_creates_missing_setting_with_default(self):
+        ProjectPiChangeRequestResourceApprovalSetting.objects.filter(resource=self.resource).delete()
+        call_command("add_pi_change_request_defaults")
+        setting = ProjectPiChangeRequestResourceApprovalSetting.objects.get(resource=self.resource)
+        self.assertFalse(setting.requires_approval)
+
+    def test_preserves_existing_requires_approval(self):
+        self.set_requires_approval(self.resource, True)
+        call_command("add_pi_change_request_defaults")
+        setting = ProjectPiChangeRequestResourceApprovalSetting.objects.get(resource=self.resource)
+        self.assertTrue(setting.requires_approval)
 
 
 class ProjectPiChangeRequestModelTests(PiChangeRequestTestBase):
@@ -680,3 +697,14 @@ class PiChangeRequestEmailTests(PiChangeRequestTestBase):
         # send_email_template prefixes the center name, so match on the subject suffix.
         subjects = [message.subject for message in mail.outbox]
         self.assertTrue(any("PI Change Request Ready for Activation" in subject for subject in subjects))
+
+    def test_blocked_email_links_to_the_project(self):
+        request_obj = self.create_request()
+        pi_approval = request_obj.user_approvals.get(user=self.project.pi)
+
+        self.client.force_login(self.project.pi)
+        self.client.post(reverse("pi-change-request-user-deny", kwargs={"pk": pi_approval.pk}))
+
+        blocked_messages = [message for message in mail.outbox if "Was Blocked" in message.subject]
+        self.assertEqual(len(blocked_messages), 1)
+        self.assertIn(reverse("project-detail", kwargs={"pk": self.project.pk}), blocked_messages[0].body)
