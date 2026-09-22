@@ -83,6 +83,9 @@ if "coldfront.plugins.allocation_removal_requests" in settings.INSTALLED_APPS:
         path("allocation_removal_requests/", include("coldfront.plugins.allocation_removal_requests.urls"))
     )
 
+if "coldfront.plugins.pi_change_request" in settings.INSTALLED_APPS:
+    _patterns.append(path("project-pi-change/", include("coldfront.plugins.pi_change_request.urls")))
+
 if "coldfront.plugins.pi_search" in settings.INSTALLED_APPS:
     _patterns.append(path("pi_search_function/", include("coldfront.plugins.pi_search.urls")))
 
