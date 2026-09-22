@@ -1,4 +1,5 @@
 import logging
+from unittest import mock
 
 from django.conf import settings
 from django.contrib.auth.models import Group, Permission
@@ -36,6 +37,7 @@ from coldfront.plugins.pi_change_request.templatetags.pi_change_request_tags imp
     active_pi_change_request,
     pi_change_user_approval,
 )
+from coldfront.plugins.pi_change_request.utils import send_email
 from coldfront.plugins.pi_change_request.views import (
     PI_CHANGE_REQUEST_VIEW_PERMISSION,
     RESOURCE_APPROVAL_CHANGE_PERMISSION,
@@ -741,6 +743,20 @@ class PiChangeRequestAdminTests(PiChangeRequestTestBase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "The new PI must be different from the current PI.")
         self.assertEqual(ProjectPiChangeRequest.objects.count(), 0)
+
+
+@override_settings(EMAIL_ENABLED=True)
+class SendEmailTests(TestCase):
+    """The plugin's send_email wrapper normalizes receivers for core's email helpers."""
+
+    def test_iterable_receivers_are_normalized_to_a_list(self):
+        receivers = {"a@example.com", "b@example.com"}
+        with mock.patch("coldfront.plugins.pi_change_request.utils.send_email_template") as mock_send:
+            send_email("Subject", "pi_change_request/email/pi_change_request_blocked.txt", {}, receivers)
+
+        normalized = mock_send.call_args[0][3]
+        self.assertIsInstance(normalized, list)
+        self.assertEqual(sorted(normalized), ["a@example.com", "b@example.com"])
 
 
 @override_settings(EMAIL_ENABLED=True, SLACK_MESSAGING_ENABLED=False)

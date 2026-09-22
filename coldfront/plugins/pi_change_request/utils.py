@@ -17,7 +17,11 @@ def send_slack_message(project_obj, url):
 
 
 def send_email(subject, template, template_context, receiver=None):
-    """Send a template email to one or more receivers, defaulting to the center alerts address."""
+    """Send a template email to one or more receivers, defaulting to the center alerts address.
+
+    A string receiver is treated as a single address; any other iterable is normalized to a list,
+    which is what core's email helpers expect.
+    """
     if not settings.EMAIL_ENABLED:
         return
 
@@ -25,6 +29,8 @@ def send_email(subject, template, template_context, receiver=None):
         receiver = [settings.EMAIL_ALERTS_EMAIL_ADDRESS]
     elif isinstance(receiver, str):
         receiver = [receiver]
+    else:
+        receiver = list(receiver)
 
     send_email_template(subject, template, template_context, receiver)
 
