@@ -5,7 +5,6 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import transaction
-from django.forms.formsets import formset_factory
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
@@ -15,11 +14,7 @@ from coldfront.core.project.models import Project
 from coldfront.core.resource.models import Resource
 from coldfront.core.utils.common import get_domain_url
 from coldfront.core.utils.groups import check_if_groups_in_review_groups
-from coldfront.plugins.pi_change_request.forms import (
-    ProjectPiChangeRequestForm,
-    ResourcesRequiringApprovalForm,
-    ResourcesRequiringApprovalFormset,
-)
+from coldfront.plugins.pi_change_request.forms import ProjectPiChangeRequestForm
 from coldfront.plugins.pi_change_request.models import (
     ACTIVE_REQUEST_STATUSES,
     PI_CHANGE_DISALLOWED_PROJECT_STATUSES,
@@ -302,50 +297,34 @@ class ProjectPiChangeRequestResourceApprovalSettingsView(SuperuserOrPermissionRe
     required_permission = RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION
     template_name = "pi_change_request/pi_change_request_resource_approval_settings.html"
 
-    def get_resource_approvals_formset(self):
-        settings = (
+    def get_resource_approval_settings(self):
+        """Return one row per resource approval setting, including whether the current user may toggle it."""
+        user = self.request.user
+        user_groups = user.groups.all()
+        rows = []
+        approval_settings = (
             ProjectPiChangeRequestResourceApprovalSetting.objects.select_related("resource", "resource__resource_type")
             .prefetch_related("resource__review_groups")
             .all()
         )
-        settings = [
-            {
-                "pk": setting.pk,
-                "resource": setting.resource,
-                "requires_approval": setting.requires_approval,
-                "review_groups": setting.resource.review_groups.all(),
-            }
-            for setting in settings
-        ]
-        user = self.request.user
-        user_groups = user.groups.all()
-        disable_selected = []
-        for setting in settings:
-            if user.is_superuser:
-                can_edit = True
-            else:
-                can_edit = check_if_groups_in_review_groups(
-                    setting.get("resource").review_groups.all(),
-                    user_groups,
-                    RESOURCE_APPROVAL_SETTING_CHANGE_CODENAME,
-                )
-            disable_selected.append(not can_edit)
-
-        formset = formset_factory(
-            ResourcesRequiringApprovalForm, max_num=len(settings), formset=ResourcesRequiringApprovalFormset
-        )
-        formset = formset(
-            initial=settings,
-            prefix="resourceapprovalform",
-            form_kwargs={
-                "disable_selected": disable_selected,
-            },
-        )
-        return formset
+        for setting in approval_settings:
+            can_edit = user.is_superuser or check_if_groups_in_review_groups(
+                setting.resource.review_groups.all(), user_groups, RESOURCE_APPROVAL_SETTING_CHANGE_CODENAME
+            )
+            rows.append(
+                {
+                    "pk": setting.pk,
+                    "resource": setting.resource,
+                    "requires_approval": setting.requires_approval,
+                    "review_groups": setting.resource.review_groups.all(),
+                    "can_edit": can_edit,
+                }
+            )
+        return rows
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        context["resource_approvals_formset"] = self.get_resource_approvals_formset()
+        context["resource_approval_settings"] = self.get_resource_approval_settings()
         return context
 
 

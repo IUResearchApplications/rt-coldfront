@@ -37,27 +37,27 @@ Resource Approval Settings
           </tr>
         </thead>
         <tbody>
-          {% for form in resource_approvals_formset %}
+          {% for setting in resource_approval_settings %}
             <tr>
-              <td>{{ form.initial.resource }}</td>
+              <td>{{ setting.resource }}</td>
               <td>
-                {% if form.initial.review_groups %}
-                  {{ form.initial.review_groups|join:", " }}
+                {% if setting.review_groups %}
+                  {{ setting.review_groups|join:", " }}
                 {% else %}
                   &mdash;
                 {% endif %}
               </td>
               <td>
-                {% if form.requires_approval.field.disabled %}
-                  <span class="badge bg-secondary">{{ form.initial.requires_approval|yesno:"Yes,No" }}</span>
-                {% else %}
+                {% if setting.can_edit %}
                   <input
                     type="checkbox"
                     class="form-check-input requires-approval-checkbox"
-                    data-pk="{{ form.initial.pk }}"
-                    {% if form.initial.requires_approval %}checked{% endif %}
-                    aria-label="Requires approval for {{ form.initial.resource }}"
+                    data-pk="{{ setting.pk }}"
+                    {% if setting.requires_approval %}checked{% endif %}
+                    aria-label="Requires approval for {{ setting.resource }}"
                   />
+                {% else %}
+                  <span class="badge bg-secondary">{{ setting.requires_approval|yesno:"Yes,No" }}</span>
                 {% endif %}
               </td>
             </tr>

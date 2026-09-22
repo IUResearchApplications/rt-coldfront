@@ -729,6 +729,56 @@ class ResourceApprovalSettingViewTests(PiChangeRequestTestBase):
 
 
 @SILENT
+class ResourceApprovalSettingsViewTests(PiChangeRequestTestBase):
+    """The settings page lists every resource approval setting, with toggles only where the user may edit."""
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.url = reverse("pi-change-request-settings")
+        cls.setting = ProjectPiChangeRequestResourceApprovalSetting.objects.get(resource=cls.resource)
+
+    def test_access(self):
+        utils.test_logged_out_redirect_to_login(self, self.url)
+        utils.test_user_cannot_access(self, self.outsider, self.url)
+        utils.test_user_can_access(self, self.superuser, self.url)
+
+    def test_permission_holder_can_access(self):
+        holder = UserFactory()
+        holder.user_permissions.add(get_permission(RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION))
+        utils.test_user_can_access(self, holder, self.url)
+
+    def test_superuser_sees_a_toggle_per_row(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.url)
+        self.assertContains(response, self.resource.name)
+        self.assertContains(response, f'data-pk="{self.setting.pk}"')
+        self.assertContains(response, "requires-approval-checkbox")
+
+    def test_review_group_member_with_permission_sees_toggles(self):
+        holder = UserFactory()
+        holder.user_permissions.add(get_permission(RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION))
+        review_group = Group.objects.create(name="Storage Reviewers")
+        review_group.permissions.add(get_permission(RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION))
+        self.resource.review_groups.add(review_group)
+        holder.groups.add(review_group)
+
+        self.client.force_login(holder)
+        response = self.client.get(self.url)
+        self.assertContains(response, f'data-pk="{self.setting.pk}"')
+
+    def test_user_outside_review_groups_sees_static_values(self):
+        holder = UserFactory()
+        holder.user_permissions.add(get_permission(RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION))
+        self.resource.review_groups.add(Group.objects.create(name="Storage Reviewers"))
+
+        self.client.force_login(holder)
+        response = self.client.get(self.url)
+        self.assertNotContains(response, "requires-approval-checkbox")
+        self.assertContains(response, "badge bg-secondary")
+
+
+@SILENT
 class PiChangeRequestAdminTests(PiChangeRequestTestBase):
     @classmethod
     def setUpTestData(cls):
