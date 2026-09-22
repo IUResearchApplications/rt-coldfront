@@ -94,6 +94,30 @@ class ResourceApprovalSettingSignalTests(TestCase):
         self.assertEqual(ProjectPiChangeRequestResourceApprovalSetting.objects.filter(resource=resource).count(), 1)
 
 
+class StatusChoiceModelTests(TestCase):
+    """All three status-choice models share natural-key behavior and ordering via the abstract base."""
+
+    def test_natural_key_behavior_and_ordering(self):
+        cases = [
+            (ProjectPiChangeRequestStatusChoice, "New"),
+            (ProjectPiChangeRequestResourceApprovalStatusChoice, "Pending"),
+            (ProjectPiChangeRequestUserApprovalStatusChoice, "Pending"),
+        ]
+        for model, name in cases:
+            with self.subTest(model=model.__name__):
+                choice = model.objects.get_by_natural_key(name)
+                self.assertEqual(choice.name, name)
+                self.assertEqual(choice.natural_key(), (name,))
+                self.assertEqual(str(choice), name)
+
+                names = list(model.objects.values_list("name", flat=True))
+                self.assertEqual(names, sorted(names))
+
+    def test_models_keep_separate_tables(self):
+        with self.assertRaises(ProjectPiChangeRequestStatusChoice.DoesNotExist):
+            ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("Pending")
+
+
 class PiChangeRequestTestBase(TestCase):
     """A project with two active managers, one allocatable resource, and an active allocation."""
 

@@ -11,22 +11,30 @@ ACTIVE_REQUEST_STATUSES = ["New", "Awaiting Approvals", "Blocked", "Ready"]
 PI_CHANGE_DISALLOWED_PROJECT_STATUSES = ["Archived", "Denied", "Expired", "Renewal Denied"]
 
 
-class ProjectPiChangeRequestStatusChoice(TimeStampedModel):
+class PiChangeRequestStatusChoiceManager(models.Manager):
+    def get_by_natural_key(self, name):
+        return self.get(name=name)
+
+
+class PiChangeRequestStatusChoiceBase(TimeStampedModel):
+    """Shared shape of the plugin's status choices: a unique name, ordered and addressable by natural key."""
+
     class Meta:
+        abstract = True
         ordering = ["name"]
 
-    class ProjectPiChangeRequestStatusChoiceManager(models.Manager):
-        def get_by_natural_key(self, name):
-            return self.get(name=name)
-
     name = models.CharField(max_length=64, unique=True)
-    objects = ProjectPiChangeRequestStatusChoiceManager()
+    objects = PiChangeRequestStatusChoiceManager()
 
     def __str__(self):
         return self.name
 
     def natural_key(self):
         return (self.name,)
+
+
+class ProjectPiChangeRequestStatusChoice(PiChangeRequestStatusChoiceBase):
+    pass
 
 
 class ProjectPiChangeRequest(TimeStampedModel):
@@ -165,22 +173,8 @@ class ProjectPiChangeRequest(TimeStampedModel):
         return f"{self.project.title} ({self.current_pi} -> {self.new_pi})"
 
 
-class ProjectPiChangeRequestResourceApprovalStatusChoice(TimeStampedModel):
-    class Meta:
-        ordering = ["name"]
-
-    class ProjectPiChangeRequestResourceApprovalStatusChoiceManager(models.Manager):
-        def get_by_natural_key(self, name):
-            return self.get(name=name)
-
-    name = models.CharField(max_length=64, unique=True)
-    objects = ProjectPiChangeRequestResourceApprovalStatusChoiceManager()
-
-    def __str__(self):
-        return self.name
-
-    def natural_key(self):
-        return (self.name,)
+class ProjectPiChangeRequestResourceApprovalStatusChoice(PiChangeRequestStatusChoiceBase):
+    pass
 
 
 class ProjectPiChangeRequestResourceApproval(TimeStampedModel):
@@ -213,22 +207,8 @@ class ProjectPiChangeRequestResourceApprovalSetting(TimeStampedModel):
     history = HistoricalRecords()
 
 
-class ProjectPiChangeRequestUserApprovalStatusChoice(TimeStampedModel):
-    class Meta:
-        ordering = ["name"]
-
-    class ProjectPiChangeRequestUserApprovalStatusChoiceManager(models.Manager):
-        def get_by_natural_key(self, name):
-            return self.get(name=name)
-
-    name = models.CharField(max_length=64, unique=True)
-    objects = ProjectPiChangeRequestUserApprovalStatusChoiceManager()
-
-    def __str__(self):
-        return self.name
-
-    def natural_key(self):
-        return (self.name,)
+class ProjectPiChangeRequestUserApprovalStatusChoice(PiChangeRequestStatusChoiceBase):
+    pass
 
 
 class ProjectPiChangeRequestUserApproval(TimeStampedModel):
