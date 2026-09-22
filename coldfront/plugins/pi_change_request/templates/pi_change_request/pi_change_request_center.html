@@ -41,7 +41,7 @@ Project PI Change Request Center
           <tbody>
             {% for pending_pi_change_request in pending_pi_change_requests %}
               <tr>
-                <td>{{ pending_pi_change_request.created }}</td>
+                <td data-order="{{ pending_pi_change_request.created|date:'Y-m-d H:i:s' }}">{{ pending_pi_change_request.created }}</td>
                 <td>{{ pending_pi_change_request.project.pk }}</td>
                 <td>{{ pending_pi_change_request.initiator }}</td>
                 <td>{{ pending_pi_change_request.project.pi }}</td>
@@ -90,7 +90,7 @@ Project PI Change Request Center
           <tbody>
             {% for approval in pending_resource_approvals %}
               <tr>
-                <td>{{ approval.created }}</td>
+                <td data-order="{{ approval.created|date:'Y-m-d H:i:s' }}">{{ approval.created }}</td>
                 <td>
                   <a href="{% url 'pi-change-request-details' approval.request.pk %}">
                     {{ approval.request.project.title }} ({{ approval.request.project.pk }})
@@ -134,7 +134,7 @@ Project PI Change Request Center
           <tbody>
             {% for record in history %}
               <tr>
-                <td>{{ record.date|date:"Y-m-d H:i" }}</td>
+                <td>{{ record.date|date:"Y-m-d H:i:s" }}</td>
                 <td>{{ record.description }}</td>
                 <td>{{ record.user|default_if_none:"&mdash;" }}</td>
               </tr>

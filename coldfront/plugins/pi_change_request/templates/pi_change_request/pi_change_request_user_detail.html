@@ -7,7 +7,12 @@ Project PI Change Request Details
 
 
 {% block content %}
-<h1>Project PI Change Request Details</h1>
+<div class="d-flex justify-content-between align-items-center">
+  <h1>Project PI Change Request Details</h1>
+  <a href="{{ pi_change_user_request.request.project.get_absolute_url }}" class="btn btn-outline-secondary">
+    <i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i>Back to Project
+  </a>
+</div>
 <hr>
 
 <div class="card mb-4">
@@ -41,7 +46,7 @@ Project PI Change Request Details
       <dt class="col-sm-4 col-md-3">Request status</dt>
       <dd class="col-sm-8 col-md-9">
         <span
-          class="badge {% if pi_change_user_request.request.status.name == 'Ready' or pi_change_user_request.request.status.name == 'Complete' %}bg-success{% elif pi_change_user_request.request.status.name == 'Blocked' or pi_change_user_request.request.status.name == 'Rejected' %}bg-danger{% else %}bg-secondary{% endif %}"
+          class="badge {% if pi_change_user_request.request.status.name in 'Ready, Complete' %}bg-success{% elif pi_change_user_request.request.status.name in 'Blocked, Rejected' %}bg-danger{% else %}bg-secondary{% endif %}"
         >{{ pi_change_user_request.request.status }}</span>
       </dd>
 
@@ -111,4 +116,8 @@ Project PI Change Request Details
     </div>
   {% endif %}
 </div>
+
+<p class="text-muted">
+  Questions or concerns? Contact <a href="mailto:{{ help_email }}">{{ help_email }}</a>.
+</p>
 {% endblock %}

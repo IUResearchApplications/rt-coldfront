@@ -1,1 +1,15 @@
-<a class="btn btn-primary" href="{% url 'pi-change-request' project.pk %}"><i class="fa fa-user-pen" aria-hidden="true"></i> Change Project PI</a>
+{% load pi_change_request_tags %}
+{% active_pi_change_request project as active_pi_request %}
+{% pi_change_user_approval project request.user as pi_request_user_approval %}
+{% if pi_request_user_approval %}
+  <a href="{% url 'pi-change-request-user' pi_request_user_approval.pk %}" class="btn btn-primary">
+    <i class="fa-solid {% if pi_request_user_approval.status.name == 'Pending' %}fa-bell{% else %}fa-circle-info{% endif %}" aria-hidden="true"></i>
+    {% if pi_request_user_approval.status.name == "Pending" %}Review PI Change Request{% else %}View PI Change Request{% endif %}
+  </a>
+{% elif active_pi_request %}
+  <button type="button" class="btn btn-primary" disabled aria-disabled="true" title="A PI change request is already in progress for this project.">
+    <i class="fa-solid fa-clock" aria-hidden="true"></i> PI Change In Progress
+  </button>
+{% else %}
+  <a class="btn btn-primary" href="{% url 'pi-change-request' project.pk %}"><i class="fa fa-user-pen" aria-hidden="true"></i> Change Project PI</a>
+{% endif %}

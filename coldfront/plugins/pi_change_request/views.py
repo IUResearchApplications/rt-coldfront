@@ -3,6 +3,7 @@ from functools import cached_property
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.messages.views import SuccessMessageMixin
 from django.db import transaction
 from django.forms.formsets import formset_factory
 from django.shortcuts import HttpResponse, get_object_or_404, redirect
@@ -47,7 +48,7 @@ RESOURCE_APPROVAL_SETTING_CHANGE_CODENAME = RESOURCE_APPROVAL_SETTING_CHANGE_PER
 RESOURCE_APPROVAL_CHANGE_CODENAME = RESOURCE_APPROVAL_CHANGE_PERMISSION.rpartition(".")[2]
 
 
-class ProjectPiChangeRequestView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+class ProjectPiChangeRequestView(SuccessMessageMixin, LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = ProjectPiChangeRequest
     template_name_suffix = "_form"
     form_class = ProjectPiChangeRequestForm
@@ -565,6 +566,7 @@ class ProjectPiChangeRequestUserApprovalView(LoginRequiredMixin, UserPassesTestM
         context = super().get_context_data(*args, **kwargs)
         context["pi_change_user_request"] = approval
         context["request_open"] = request_open
+        context["help_email"] = settings.EMAIL_TICKET_SYSTEM_ADDRESS
         context["can_respond"] = (
             self.request.user == approval.user and approval.status.name == "Pending" and request_open
         )

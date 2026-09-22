@@ -2,6 +2,7 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth.models import Group, Permission
+from django.contrib.messages import get_messages
 from django.core import mail
 from django.core.exceptions import ValidationError
 from django.test import TestCase, override_settings
@@ -26,6 +27,10 @@ from coldfront.plugins.pi_change_request.models import (
     ProjectPiChangeRequestReviewGroupTicketEmail,
     ProjectPiChangeRequestStatusChoice,
     ProjectPiChangeRequestUserApprovalStatusChoice,
+)
+from coldfront.plugins.pi_change_request.templatetags.pi_change_request_tags import (
+    active_pi_change_request,
+    pi_change_user_approval,
 )
 from coldfront.plugins.pi_change_request.views import (
     PI_CHANGE_REQUEST_VIEW_PERMISSION,
@@ -222,6 +227,21 @@ class ProjectPiChangeRequestModelTests(PiChangeRequestTestBase):
         request_obj.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("Complete")
         self.assertFalse(request_obj.is_denyable)
 
+    def test_template_tags_report_active_request_and_user_approval(self):
+        request_obj = self.create_request()
+        self.assertEqual(active_pi_change_request(self.project), request_obj)
+        self.assertIsNone(pi_change_user_approval(self.project, self.project_user.user))
+
+        approval = pi_change_user_approval(self.project, self.new_pi)
+        self.assertEqual(approval.request, request_obj)
+        resolve_user_approval(approval, "Approved")
+        self.assertEqual(pi_change_user_approval(self.project, self.new_pi).status.name, "Approved")
+
+        request_obj.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("Rejected")
+        request_obj.save()
+        self.assertIsNone(active_pi_change_request(self.project))
+        self.assertIsNone(pi_change_user_approval(self.project, self.new_pi))
+
 
 class CenterHistoryFilterTests(PiChangeRequestTestBase):
     """Only request creation and real status changes should appear in the combined history."""
@@ -262,6 +282,8 @@ class PiChangeRequestCreationViewTests(PiChangeRequestTestBase):
         self.set_requires_approval(self.resource, True)
         response = self.post_creation(self.project.pi, self.new_pi)
         self.assertRedirects(response, self.project.get_absolute_url())
+        success_messages = [message.message for message in get_messages(response.wsgi_request)]
+        self.assertIn("Project PI change request received.", success_messages)
 
         request_obj = ProjectPiChangeRequest.objects.get()
         self.assertEqual(request_obj.status.name, "New")
@@ -304,7 +326,11 @@ class PiChangeRequestUserResponseViewTests(PiChangeRequestTestBase):
         self.new_pi_approve_url = reverse("pi-change-request-user-approve", kwargs={"pk": self.new_pi_approval.pk})
 
     def test_detail_access(self):
-        utils.test_user_can_access(self, self.project.pi, self.pi_detail_url)
+        self.client.force_login(self.project.pi)
+        response = self.client.get(self.pi_detail_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Back to Project")
+        self.assertEqual(response.context["help_email"], settings.EMAIL_TICKET_SYSTEM_ADDRESS)
         utils.test_user_can_access(self, self.superuser, self.pi_detail_url)
         utils.test_user_cannot_access(self, self.outsider, self.pi_detail_url)
 
