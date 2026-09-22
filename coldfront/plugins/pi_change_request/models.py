@@ -89,11 +89,18 @@ class ProjectPiChangeRequest(TimeStampedModel):
         return approvals
 
     def create_user_approvals(self, users):
+        """Create a pending approval for each user, except the initiator, whose approval starts approved.
+
+        The initiator's consent is inherent in submitting the request, so only the other
+        parties must still respond.
+        """
         pending_status = ProjectPiChangeRequestUserApprovalStatusChoice.objects.get_by_natural_key("Pending")
+        approved_status = ProjectPiChangeRequestUserApprovalStatusChoice.objects.get_by_natural_key("Approved")
         approvals = []
         for user in users:
+            status = approved_status if user == self.initiator else pending_status
             approval, _ = ProjectPiChangeRequestUserApproval.objects.get_or_create(
-                request=self, user=user, defaults={"status": pending_status}
+                request=self, user=user, defaults={"status": status}
             )
             approvals.append(approval)
         return approvals

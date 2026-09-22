@@ -83,8 +83,15 @@ def send_blocked_email(pi_change_request, domain_url, blocker):
 
 
 def send_user_approval_notifications(pi_change_request, user_approvals, domain_url):
-    """Email each approver that their response is needed on a new PI change request."""
+    """Email each approver whose response is still needed on a new PI change request.
+
+    Approvals that already have a response, such as the initiator's own auto-approved
+    approval, are skipped.
+    """
     for approval in user_approvals:
+        if approval.status.name != "Pending":
+            continue
+
         if not approval.user.email:
             continue
 

@@ -145,13 +145,15 @@ class PiChangeRequestTestBase(TestCase):
             resource=resource, defaults={"requires_approval": requires_approval}
         )
 
-    def create_request(self, status_name="New", resources=None, with_approvals=True):
+    def create_request(self, status_name="New", resources=None, with_approvals=True, initiator=None):
         """Create a request directly, bypassing form validation like the seeded state would."""
+        if initiator is None:
+            initiator = self.project.pi
         request_obj = ProjectPiChangeRequest.objects.create(
             project=self.project,
             current_pi=self.project.pi,
             new_pi=self.new_pi,
-            initiator=self.project.pi,
+            initiator=initiator,
             justification="Test justification",
             status=ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key(status_name),
         )
@@ -238,8 +240,20 @@ class ProjectPiChangeRequestModelTests(PiChangeRequestTestBase):
         self.assertEqual([approval.pk for approval in first], [approval.pk for approval in second])
         self.assertEqual(request_obj.user_approvals.count(), 2)
 
+    def test_create_user_approvals_auto_approves_initiator(self):
+        request_obj = self.create_request(with_approvals=False)  # the project PI initiated this request
+        request_obj.create_user_approvals([self.project.pi, self.new_pi])
+        self.assertEqual(request_obj.user_approvals.get(user=self.project.pi).status.name, "Approved")
+        self.assertEqual(request_obj.user_approvals.get(user=self.new_pi).status.name, "Pending")
+
+    def test_create_user_approvals_leaves_both_pending_for_third_party_initiator(self):
+        request_obj = self.create_request(with_approvals=False, initiator=self.outsider)
+        request_obj.create_user_approvals([self.project.pi, self.new_pi])
+        self.assertEqual(request_obj.user_approvals.get(user=self.project.pi).status.name, "Pending")
+        self.assertEqual(request_obj.user_approvals.get(user=self.new_pi).status.name, "Pending")
+
     def test_update_status_flow_to_ready(self):
-        request_obj = self.create_request()
+        request_obj = self.create_request(initiator=self.outsider)
         pi_approval = request_obj.user_approvals.get(user=self.project.pi)
         new_pi_approval = request_obj.user_approvals.get(user=self.new_pi)
 
@@ -260,7 +274,7 @@ class ProjectPiChangeRequestModelTests(PiChangeRequestTestBase):
         self.assertEqual(request_obj.status.name, "Ready")
 
     def test_update_status_denied_is_blocked(self):
-        request_obj = self.create_request()
+        request_obj = self.create_request(initiator=self.outsider)
         resolve_user_approval(request_obj.user_approvals.get(user=self.project.pi), "Denied")
         request_obj.update_status_from_approvals()
         request_obj.refresh_from_db()
@@ -383,10 +397,29 @@ class PiChangeRequestCreationViewTests(PiChangeRequestTestBase):
         self.assertEqual(
             set(request_obj.user_approvals.values_list("user_id", flat=True)), {self.project.pi.pk, self.new_pi.pk}
         )
-        self.assertEqual(request_obj.user_approvals.filter(status__name="Pending").count(), 2)
+        # the initiator's approval starts approved; only the new PI must respond
+        self.assertEqual(request_obj.user_approvals.get(user=self.project.pi).status.name, "Approved")
+        self.assertEqual(request_obj.user_approvals.filter(status__name="Pending").count(), 1)
         resource_approval = request_obj.resource_approvals.get()
         self.assertEqual(resource_approval.resource, self.resource)
         self.assertEqual(resource_approval.status.name, "Pending")
+
+    def test_new_pi_initiated_request_auto_approves_new_pi_side(self):
+        self.post_creation(self.new_pi, self.new_pi)
+
+        request_obj = ProjectPiChangeRequest.objects.get()
+        self.assertEqual(request_obj.initiator, self.new_pi)
+        self.assertEqual(request_obj.user_approvals.get(user=self.new_pi).status.name, "Approved")
+        self.assertEqual(request_obj.user_approvals.get(user=self.project.pi).status.name, "Pending")
+
+    def test_third_party_manager_initiated_request_leaves_both_pending(self):
+        third_manager = UserFactory()
+        ProjectUserFactory(project=self.project, role=ProjectUserRoleChoiceFactory(name="Manager"), user=third_manager)
+        self.post_creation(third_manager, self.new_pi)
+
+        request_obj = ProjectPiChangeRequest.objects.get()
+        self.assertEqual(request_obj.initiator, third_manager)
+        self.assertEqual(request_obj.user_approvals.filter(status__name="Pending").count(), 2)
 
     def test_no_resource_approval_when_not_required(self):
         self.post_creation(self.project.pi, self.new_pi)
@@ -414,7 +447,8 @@ class PiChangeRequestCreationViewTests(PiChangeRequestTestBase):
 @SILENT
 class PiChangeRequestUserResponseViewTests(PiChangeRequestTestBase):
     def setUp(self):
-        self.request_obj = self.create_request()
+        # a third-party initiator leaves both approvals pending
+        self.request_obj = self.create_request(initiator=self.outsider)
         self.pi_approval = self.request_obj.user_approvals.get(user=self.project.pi)
         self.new_pi_approval = self.request_obj.user_approvals.get(user=self.new_pi)
         self.pi_detail_url = reverse("pi-change-request-user", kwargs={"pk": self.pi_approval.pk})
@@ -472,6 +506,18 @@ class PiChangeRequestUserResponseViewTests(PiChangeRequestTestBase):
         response = self.client.post(self.pi_approve_url)
         self.assertEqual(response.status_code, 403)
 
+    def test_initiator_approval_starts_approved(self):
+        """When the current PI initiates, the new PI's response takes the request straight to Ready."""
+        request_obj = self.create_request()  # project PI initiated; their approval starts approved
+        new_pi_approval = request_obj.user_approvals.get(user=self.new_pi)
+        self.assertEqual(request_obj.user_approvals.get(user=self.project.pi).status.name, "Approved")
+
+        self.client.force_login(self.new_pi)
+        response = self.client.post(reverse("pi-change-request-user-approve", kwargs={"pk": new_pi_approval.pk}))
+        self.assertRedirects(response, reverse("pi-change-request-user", kwargs={"pk": new_pi_approval.pk}))
+        request_obj.refresh_from_db()
+        self.assertEqual(request_obj.status.name, "Ready")
+
 
 @SILENT
 class PiChangeRequestResourceApprovalViewTests(PiChangeRequestTestBase):
@@ -500,7 +546,7 @@ class PiChangeRequestResourceApprovalViewTests(PiChangeRequestTestBase):
         self.resource_approval.refresh_from_db()
         self.assertEqual(self.resource_approval.status.name, "Approved")
         self.assertEqual(self.resource_approval.handler, self.reviewer)
-        # user approvals are still pending, so the request is not ready yet
+        # the new PI's approval is still pending, so the request is not ready yet
         self.request_obj.refresh_from_db()
         self.assertEqual(self.request_obj.status.name, "Awaiting Approvals")
 
@@ -555,7 +601,8 @@ class PiChangeRequestResourceApprovalViewTests(PiChangeRequestTestBase):
 @SILENT
 class PiChangeRequestActivationViewTests(PiChangeRequestTestBase):
     def setUp(self):
-        self.request_obj = self.create_request()
+        # a third-party initiator leaves both approvals pending, so cancellation counts hold
+        self.request_obj = self.create_request(initiator=self.outsider)
         self.activate_url = reverse("pi-change-request-approval", kwargs={"pk": self.request_obj.pk})
         self.deny_url = reverse("pi-change-request-denial", kwargs={"pk": self.request_obj.pk})
 
@@ -949,6 +996,8 @@ class PiChangeRequestAdminTests(PiChangeRequestTestBase):
         self.assertEqual(request_obj.status.name, "New")
         self.assertEqual(list(request_obj.resources.all()), [self.resource])
         self.assertEqual(request_obj.user_approvals.count(), 2)
+        # the admin is not an approval party, so both approvals stay pending
+        self.assertEqual(request_obj.user_approvals.filter(status__name="Pending").count(), 2)
         self.assertEqual(request_obj.resource_approvals.count(), 1)
 
     def test_add_blocks_duplicate_active_request(self):
@@ -1035,18 +1084,16 @@ class PiChangeRequestEmailTests(PiChangeRequestTestBase):
         self.client.post(self.create_url, {"new_pi": self.new_pi.pk, "justification": "PI is stepping down"})
 
         recipients = [address for message in mail.outbox for address in message.to]
-        self.assertIn(self.project.pi.email, recipients)
         self.assertIn(self.new_pi.email, recipients)
+        # the initiator's approval starts approved, so they get no action-required email
+        self.assertNotIn(self.project.pi.email, recipients)
         self.assertIn("queue@example.com", recipients)
         self.assertIn(settings.EMAIL_TICKET_SYSTEM_ADDRESS, recipients)
 
     def test_ready_email_sent_when_request_becomes_ready(self):
-        request_obj = self.create_request()
-        pi_approval = request_obj.user_approvals.get(user=self.project.pi)
+        request_obj = self.create_request()  # project PI initiated; their approval starts approved
         new_pi_approval = request_obj.user_approvals.get(user=self.new_pi)
 
-        self.client.force_login(self.project.pi)
-        self.client.post(reverse("pi-change-request-user-approve", kwargs={"pk": pi_approval.pk}))
         self.client.force_login(self.new_pi)
         self.client.post(reverse("pi-change-request-user-approve", kwargs={"pk": new_pi_approval.pk}))
 
@@ -1055,11 +1102,11 @@ class PiChangeRequestEmailTests(PiChangeRequestTestBase):
         self.assertTrue(any("PI Change Request Ready for Activation" in subject for subject in subjects))
 
     def test_blocked_email_links_to_the_project(self):
-        request_obj = self.create_request()
-        pi_approval = request_obj.user_approvals.get(user=self.project.pi)
+        request_obj = self.create_request()  # project PI initiated; their approval starts approved
+        new_pi_approval = request_obj.user_approvals.get(user=self.new_pi)
 
-        self.client.force_login(self.project.pi)
-        self.client.post(reverse("pi-change-request-user-deny", kwargs={"pk": pi_approval.pk}))
+        self.client.force_login(self.new_pi)
+        self.client.post(reverse("pi-change-request-user-deny", kwargs={"pk": new_pi_approval.pk}))
 
         blocked_messages = [message for message in mail.outbox if "Was Blocked" in message.subject]
         self.assertEqual(len(blocked_messages), 1)
