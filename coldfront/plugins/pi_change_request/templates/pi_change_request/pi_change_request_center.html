@@ -1,5 +1,6 @@
 {% extends "common/base.html" %}
 {% load static %}
+{% load pi_change_request_tags %}
 
 
 {% block title %}
@@ -47,18 +48,24 @@ Project PI Change Request Center
                     {{ pending_pi_change_request.project.title }} ({{ pending_pi_change_request.project.pk }})
                   </a>
                 </td>
-                <td>{{ pending_pi_change_request.initiator }}</td>
-                <td>{{ pending_pi_change_request.project.pi }}</td>
-                <td>{{ pending_pi_change_request.new_pi }}</td>
+                <td>{{ pending_pi_change_request.initiator|full_name_with_username }}</td>
+                <td>{{ pending_pi_change_request.project.pi|full_name_with_username }}</td>
+                <td>{{ pending_pi_change_request.new_pi|full_name_with_username }}</td>
                 <td>
                   <span class="badge {% if pending_pi_change_request.status.name in 'Ready, Complete' %}bg-success{% elif pending_pi_change_request.status.name in 'Blocked, Rejected' %}bg-danger{% else %}bg-secondary{% endif %}">{{ pending_pi_change_request.status.name }}</span>
                 </td>
                 <td>
                   {% if can_change_requests %}
                     {% if pending_pi_change_request.is_ready %}
-                      <a href="{% url 'pi-change-request-approval' pending_pi_change_request.pk %}" class="btn btn-success me-1 post-link" data-confirm="Are you sure you want to activate this PI change request? The project's PI will be changed immediately.">Activate</a>
+                      <form method="post" class="d-inline" action="{% url 'pi-change-request-approval' pending_pi_change_request.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success me-1" data-confirm="Are you sure you want to activate this PI change request? The project's PI will be changed immediately.">Activate</button>
+                      </form>
                     {% endif %}
-                    <a href="{% url 'pi-change-request-denial' pending_pi_change_request.pk %}" class="btn btn-danger me-1 post-link" data-confirm="Are you sure you want to deny this PI change request?">Deny</a>
+                    <form method="post" class="d-inline" action="{% url 'pi-change-request-denial' pending_pi_change_request.pk %}">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-danger me-1" data-confirm="Are you sure you want to deny this PI change request?">Deny</button>
+                    </form>
                   {% endif %}
                   <a href="{% url 'pi-change-request-details' pending_pi_change_request.pk %}" class="btn btn-secondary">Details</a>
                 </td>
@@ -107,8 +114,14 @@ Project PI Change Request Center
                   <span class="badge {% if approval.request.status.name in 'Ready, Complete' %}bg-success{% elif approval.request.status.name in 'Blocked, Rejected' %}bg-danger{% else %}bg-secondary{% endif %}">{{ approval.request.status.name }}</span>
                 </td>
                 <td>
-                  <a href="{% url 'pi-change-request-resource-approve' approval.pk %}" class="btn btn-success me-1 post-link">Approve</a>
-                  <a href="{% url 'pi-change-request-resource-deny' approval.pk %}" class="btn btn-danger post-link">Deny</a>
+                  <form method="post" class="d-inline" action="{% url 'pi-change-request-resource-approve' approval.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success me-1" data-confirm="Are you sure you want to approve this resource for this PI change request?">Approve</button>
+                  </form>
+                  <form method="post" class="d-inline" action="{% url 'pi-change-request-resource-deny' approval.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger me-1" data-confirm="Are you sure you want to deny this resource? The PI change request will be blocked.">Deny</button>
+                  </form>
                   <a href="{% url 'pi-change-request-details' approval.request.pk %}" class="btn btn-secondary">Details</a>
                 </td>
               </tr>
@@ -163,18 +176,13 @@ Project PI Change Request Center
 {{ block.super }}
 <script>
   document.addEventListener("DOMContentLoaded", function() {
-    $(".post-link").on("click", function(event) {
-      event.preventDefault();
-
-      var confirmMessage = $(this).data("confirm");
+    $("form").on("submit", function(event) {
+      var confirmMessage = $(this).find("button[data-confirm]").data("confirm");
       if (confirmMessage && !confirm(confirmMessage)) {
+        event.preventDefault();
         return;
       }
-
-      var $form = $("<form>", { method: "post", action: $(this).attr("href") });
-      $form.append($("<input>", { type: "hidden", name: "csrfmiddlewaretoken", value: "{{ csrf_token }}" }));
-      $("body").append($form);
-      $form.submit();
+      $(this).find("button[type=submit]").prop("disabled", true);
     });
   });
 </script>

@@ -35,6 +35,7 @@ from coldfront.plugins.pi_change_request.models import (
 )
 from coldfront.plugins.pi_change_request.templatetags.pi_change_request_tags import (
     active_pi_change_request,
+    full_name_with_username,
     pi_change_user_approval,
 )
 from coldfront.plugins.pi_change_request.utils import send_email
@@ -345,6 +346,29 @@ class ProjectPiChangeRequestModelTests(PiChangeRequestTestBase):
         request_obj.save()
         self.assertIsNone(active_pi_change_request(self.project))
         self.assertIsNone(pi_change_user_approval(self.project, self.new_pi))
+
+    def test_full_name_with_username_filter(self):
+        user = UserFactory()
+        self.assertEqual(full_name_with_username(user), f"{user.get_full_name()} ({user.username})")
+
+        user.first_name = ""
+        user.last_name = ""
+        self.assertEqual(full_name_with_username(user), user.username)
+
+    def test_response_property_reports_approval_record(self):
+        request_obj = self.create_request()
+        pi_approval = request_obj.user_approvals.get(user=self.project.pi)
+        new_pi_approval = request_obj.user_approvals.get(user=self.new_pi)
+
+        # A pending approval has no response yet.
+        self.assertIsNone(new_pi_approval.response)
+
+        # The PI's approval was recorded as approved when the request was created.
+        self.assertIsNotNone(pi_approval.response)
+        self.assertEqual(pi_approval.response.status.name, "Approved")
+
+        resolve_user_approval(new_pi_approval, "Denied")
+        self.assertEqual(request_obj.user_approvals.get(user=self.new_pi).response.status.name, "Denied")
 
 
 class CenterHistoryFilterTests(PiChangeRequestTestBase):
@@ -782,11 +806,30 @@ class PiChangeRequestCenterViewTests(PiChangeRequestTestBase):
         self.assertContains(response, ">—</td>")
         self.assertNotContains(response, "&amp;mdash;")
 
-    def test_deny_button_requests_confirmation(self):
+    def test_action_buttons_request_confirmation(self):
         self.client.force_login(self.superuser)
         response = self.client.get(self.center_url)
         self.assertContains(response, 'data-confirm="Are you sure you want to deny this PI change request?"')
+        self.assertContains(
+            response, 'data-confirm="Are you sure you want to approve this resource for this PI change request?"'
+        )
+        self.assertContains(response, 'data-confirm="Are you sure you want to deny this resource?')
         self.assertNotContains(response, 'data-confirm="Are you sure you want to activate')
+
+    def test_requests_table_displays_full_names(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.center_url)
+        for user in [self.request_obj.initiator, self.project.pi, self.new_pi]:
+            with self.subTest(user=user.username):
+                self.assertContains(response, f"{user.get_full_name()} ({user.username})")
+
+    def test_action_buttons_are_real_forms(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.center_url)
+        deny_url = reverse("pi-change-request-denial", kwargs={"pk": self.request_obj.pk})
+        self.assertContains(response, f'action="{deny_url}"')
+        self.assertContains(response, 'name="csrfmiddlewaretoken"')
+        self.assertNotContains(response, "post-link")
 
 
 @SILENT
@@ -843,21 +886,35 @@ class PiChangeRequestDetailViewTests(PiChangeRequestTestBase):
 
         # New: denyable, but not yet ready.
         response = self.client.get(self.detail_url)
-        self.assertNotContains(response, ">Activate</a>")
-        self.assertContains(response, ">Deny</a>")
+        self.assertNotContains(response, ">Activate</button>")
+        self.assertContains(response, ">Deny</button>")
 
         # Ready: both actions available.
         self.mark_request_ready()
         response = self.client.get(self.detail_url)
-        self.assertContains(response, ">Activate</a>")
-        self.assertContains(response, ">Deny</a>")
+        self.assertContains(response, ">Activate</button>")
+        self.assertContains(response, ">Deny</button>")
 
         # Complete: terminal, neither action available.
         self.request_obj.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("Complete")
         self.request_obj.save()
         response = self.client.get(self.detail_url)
-        self.assertNotContains(response, ">Activate</a>")
-        self.assertNotContains(response, ">Deny</a>")
+        self.assertNotContains(response, ">Activate</button>")
+        self.assertNotContains(response, ">Deny</button>")
+
+    def test_page_lists_response_dates(self):
+        # The new PI approves through the response view, recording them as the handler; the
+        # PI's approval was auto-recorded at creation (no user in thread), so it falls back
+        # to the em dash.
+        new_pi_approval = self.request_obj.user_approvals.get(user=self.new_pi)
+        self.client.force_login(self.new_pi)
+        self.client.post(reverse("pi-change-request-user-approve", kwargs={"pk": new_pi_approval.pk}))
+
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.detail_url)
+        self.assertContains(response, "Responded by")
+        self.assertContains(response, f"Responded by {self.new_pi.username}")
+        self.assertContains(response, "Responded by —")
 
     def test_page_lists_submitted_date(self):
         self.client.force_login(self.superuser)
@@ -882,8 +939,8 @@ class PiChangeRequestDetailViewTests(PiChangeRequestTestBase):
         viewer.user_permissions.add(get_permission(PI_CHANGE_REQUEST_VIEW_PERMISSION))
         self.client.force_login(viewer)
         response = self.client.get(self.detail_url)
-        self.assertNotContains(response, ">Activate</a>")
-        self.assertNotContains(response, ">Deny</a>")
+        self.assertNotContains(response, ">Activate</button>")
+        self.assertNotContains(response, ">Deny</button>")
 
 
 @SILENT

@@ -1,3 +1,5 @@
+from functools import cached_property
+
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -184,7 +186,19 @@ class ProjectPiChangeRequestResourceApprovalStatusChoice(PiChangeRequestStatusCh
     pass
 
 
-class ProjectPiChangeRequestResourceApproval(TimeStampedModel):
+class ApprovalResponseMixin(models.Model):
+    """Shared helper for approvals whose approval or denial is recorded in their history."""
+
+    class Meta:
+        abstract = True
+
+    @cached_property
+    def response(self):
+        """Return the historical record of this approval being approved or denied, or None if unanswered."""
+        return self.history.filter(status__name__in=["Approved", "Denied"]).order_by("-history_date").first()
+
+
+class ProjectPiChangeRequestResourceApproval(ApprovalResponseMixin, TimeStampedModel):
     request = models.ForeignKey(ProjectPiChangeRequest, on_delete=models.CASCADE, related_name="resource_approvals")
     resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
     status = models.ForeignKey(ProjectPiChangeRequestResourceApprovalStatusChoice, on_delete=models.CASCADE)
@@ -218,7 +232,7 @@ class ProjectPiChangeRequestUserApprovalStatusChoice(PiChangeRequestStatusChoice
     pass
 
 
-class ProjectPiChangeRequestUserApproval(TimeStampedModel):
+class ProjectPiChangeRequestUserApproval(ApprovalResponseMixin, TimeStampedModel):
     request = models.ForeignKey(ProjectPiChangeRequest, on_delete=models.CASCADE, related_name="user_approvals")
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     status = models.ForeignKey(ProjectPiChangeRequestUserApprovalStatusChoice, on_delete=models.CASCADE)

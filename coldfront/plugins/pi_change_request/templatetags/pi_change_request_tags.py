@@ -9,6 +9,13 @@ from coldfront.plugins.pi_change_request.models import (
 register = template.Library()
 
 
+@register.filter
+def full_name_with_username(user):
+    """Display a user as "First Last (username)", falling back to the username when no name is set."""
+    full_name = user.get_full_name().strip()
+    return f"{full_name} ({user.username})" if full_name else user.username
+
+
 @register.simple_tag
 def active_pi_change_request(project):
     """Return the in-progress PI change request for this project, if any."""
