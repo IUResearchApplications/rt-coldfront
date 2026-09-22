@@ -29,6 +29,12 @@ def send_email(subject, template, template_context, receiver=None):
     send_email_template(subject, template, template_context, receiver)
 
 
+def get_participant_email_addresses(pi_change_request):
+    """Return the deduplicated email addresses of the request's participants (current PI, new PI, and initiator)."""
+    users = (pi_change_request.current_pi, pi_change_request.new_pi, pi_change_request.initiator)
+    return {user.email for user in users if user.email}
+
+
 def send_ready_email(pi_change_request, url):
     """Notify the center that a PI change request has all its approvals and is ready to activate."""
     template_context = {
@@ -60,10 +66,7 @@ def send_blocked_email(pi_change_request, domain_url, blocker):
         "project_url": project_url,
         "help_email": settings.EMAIL_TICKET_SYSTEM_ADDRESS,
     }
-    receivers = set()
-    for user in (pi_change_request.current_pi, pi_change_request.new_pi, pi_change_request.initiator):
-        if user.email:
-            receivers.add(user.email)
+    receivers = get_participant_email_addresses(pi_change_request)
 
     send_email(
         "Your Project PI Change Request Was Blocked",

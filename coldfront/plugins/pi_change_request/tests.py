@@ -793,6 +793,32 @@ class PiChangeRequestEmailTests(PiChangeRequestTestBase):
         blocked_messages = [message for message in mail.outbox if "Was Blocked" in message.subject]
         self.assertEqual(len(blocked_messages), 1)
         self.assertIn(reverse("project-detail", kwargs={"pk": self.project.pk}), blocked_messages[0].body)
+        self.assertEqual(set(blocked_messages[0].to), {self.project.pi.email, self.new_pi.email})
+
+    def test_approval_email_goes_to_participants(self):
+        request_obj = self.create_request()
+        request_obj.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("Ready")
+        request_obj.save()
+
+        self.client.force_login(self.superuser)
+        self.client.post(reverse("pi-change-request-approval", kwargs={"pk": request_obj.pk}))
+
+        approved_messages = [message for message in mail.outbox if "Was Approved" in message.subject]
+        self.assertEqual(len(approved_messages), 1)
+        # current_pi and initiator are the same user, so the recipient list deduplicates them.
+        self.assertEqual(len(approved_messages[0].to), 2)
+        self.assertEqual(set(approved_messages[0].to), {self.project.pi.email, self.new_pi.email})
+
+    def test_denial_email_goes_to_participants(self):
+        request_obj = self.create_request()
+
+        self.client.force_login(self.superuser)
+        self.client.post(reverse("pi-change-request-denial", kwargs={"pk": request_obj.pk}))
+
+        denied_messages = [message for message in mail.outbox if "Was Denied" in message.subject]
+        self.assertEqual(len(denied_messages), 1)
+        self.assertEqual(len(denied_messages[0].to), 2)
+        self.assertEqual(set(denied_messages[0].to), {self.project.pi.email, self.new_pi.email})
 
     def test_resource_approval_emails_are_grouped_by_queue(self):
         self.set_requires_approval(self.resource, True)

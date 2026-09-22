@@ -31,6 +31,7 @@ from coldfront.plugins.pi_change_request.models import (
     ProjectPiChangeRequestUserApprovalStatusChoice,
 )
 from coldfront.plugins.pi_change_request.utils import (
+    get_participant_email_addresses,
     send_blocked_email,
     send_email,
     send_ready_email,
@@ -425,10 +426,7 @@ class ProjectPiChangeApprovalView(ProjectPiChangeAdminActionView):
             "project_url": project_url,
             "help_email": settings.EMAIL_TICKET_SYSTEM_ADDRESS,
         }
-        receivers = set()
-        for user in (pi_change_request.current_pi, pi_change_request.new_pi, pi_change_request.initiator):
-            if user.email:
-                receivers.add(user.email)
+        receivers = get_participant_email_addresses(pi_change_request)
 
         send_email(
             "Your Project PI Change Request Was Approved",
@@ -462,10 +460,7 @@ class ProjectPiChangeDenialView(ProjectPiChangeAdminActionView):
             "project_url": project_url,
             "help_email": settings.EMAIL_TICKET_SYSTEM_ADDRESS,
         }
-        receivers = set()
-        for user in (pi_change_request.current_pi, pi_change_request.new_pi, pi_change_request.initiator):
-            if user.email:
-                receivers.add(user.email)
+        receivers = get_participant_email_addresses(pi_change_request)
 
         send_email(
             "Your Project PI Change Request Was Denied",
