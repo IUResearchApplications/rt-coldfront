@@ -4,10 +4,11 @@ from django.db import models
 from model_utils.models import TimeStampedModel
 from simple_history.models import HistoricalRecords
 
-from coldfront.core.project.models import Project
+from coldfront.core.project.models import Project, ProjectUser, ProjectUserRoleChoice, ProjectUserStatusChoice
 from coldfront.core.resource.models import Resource
 
 ACTIVE_REQUEST_STATUSES = ["New", "Awaiting Approvals", "Blocked", "Ready"]
+PI_CHANGE_DISALLOWED_PROJECT_STATUSES = ["Archived", "Denied", "Expired", "Renewal Denied"]
 
 
 class ProjectPiChangeRequestStatusChoice(TimeStampedModel):
@@ -42,6 +43,14 @@ class ProjectPiChangeRequest(TimeStampedModel):
         super().clean()
         if not (self.project_id and self.new_pi_id):
             return
+
+        if self.project.status.name in PI_CHANGE_DISALLOWED_PROJECT_STATUSES:
+            raise ValidationError(
+                f"A PI change request is not allowed for a project with status {self.project.status.name}."
+            )
+
+        if self.new_pi_id == self.project.pi_id:
+            raise ValidationError("The new PI must be different from the current PI.")
 
         project_manager = self.project.projectuser_set.filter(
             user=self.new_pi, status__name="Active", role__name="Manager"
@@ -123,9 +132,18 @@ class ProjectPiChangeRequest(TimeStampedModel):
             approval.save()
 
     def apply_pi_change(self):
-        """Switch the project's PI to the new PI."""
+        """Switch the project's PI to the new PI.
+
+        The outgoing PI is kept on the project as an active manager.
+        """
         self.project.pi = self.new_pi
         self.project.save()
+
+        manager_role = ProjectUserRoleChoice.objects.get(name="Manager")
+        active_status = ProjectUserStatusChoice.objects.get(name="Active")
+        ProjectUser.objects.update_or_create(
+            project=self.project, user=self.current_pi, defaults={"role": manager_role, "status": active_status}
+        )
 
     @property
     def is_new_pi_active_manager(self):
@@ -171,6 +189,11 @@ class ProjectPiChangeRequestResourceApproval(TimeStampedModel):
     status = models.ForeignKey(ProjectPiChangeRequestResourceApprovalStatusChoice, on_delete=models.CASCADE)
     handler = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     history = HistoricalRecords()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["request", "resource"], name="unique_resource_approval_per_request"),
+        ]
 
     def clean(self):
         super().clean()

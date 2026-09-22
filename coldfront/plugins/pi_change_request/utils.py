@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.urls import reverse
 
+from coldfront.core.resource.models import Resource
 from coldfront.core.utils.mail import send_email_template
 from coldfront.core.utils.slack import send_message
 from coldfront.plugins.pi_change_request.models import ProjectPiChangeRequestReviewGroupTicketEmail
@@ -106,13 +107,29 @@ def send_resource_approval_notifications(pi_change_request, resource_approvals, 
     """
     url = "{}{}".format(domain_url, reverse("pi-change-request-center"))
     app_label, codename = review_permission.split(".", 1)
-    resources_by_receiver = {}
-    for approval in resource_approvals:
-        review_groups = approval.resource.review_groups.filter(
-            permissions__codename=codename, permissions__content_type__app_label=app_label
+
+    resource_by_id = {approval.resource.pk: approval.resource for approval in resource_approvals}
+    resource_group_pairs = list(
+        Resource.objects.filter(
+            pk__in=resource_by_id,
+            review_groups__permissions__codename=codename,
+            review_groups__permissions__content_type__app_label=app_label,
         )
-        for ticket_email in ProjectPiChangeRequestReviewGroupTicketEmail.objects.filter(group__in=review_groups):
-            resources_by_receiver.setdefault(ticket_email.email, []).append(approval.resource)
+        .values_list("id", "review_groups__id")
+        .distinct()
+    )
+    group_ids = {group_id for _, group_id in resource_group_pairs}
+    email_by_group_id = dict(
+        ProjectPiChangeRequestReviewGroupTicketEmail.objects.filter(group_id__in=group_ids).values_list(
+            "group_id", "email"
+        )
+    )
+
+    resources_by_receiver = {}
+    for resource_id, group_id in resource_group_pairs:
+        email = email_by_group_id.get(group_id)
+        if email:
+            resources_by_receiver.setdefault(email, []).append(resource_by_id[resource_id])
 
     for receiver, resources in resources_by_receiver.items():
         template_context = {

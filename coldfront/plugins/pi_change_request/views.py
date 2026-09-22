@@ -21,6 +21,7 @@ from coldfront.plugins.pi_change_request.forms import (
 )
 from coldfront.plugins.pi_change_request.models import (
     ACTIVE_REQUEST_STATUSES,
+    PI_CHANGE_DISALLOWED_PROJECT_STATUSES,
     ProjectPiChangeRequest,
     ProjectPiChangeRequestResourceApproval,
     ProjectPiChangeRequestResourceApprovalSetting,
@@ -59,6 +60,9 @@ class ProjectPiChangeRequestView(SuccessMessageMixin, LoginRequiredMixin, UserPa
         return get_object_or_404(Project, pk=self.kwargs.get("pk"))
 
     def test_func(self):
+        if self.project.status.name in PI_CHANGE_DISALLOWED_PROJECT_STATUSES:
+            return False
+
         if self.request.user.is_superuser:
             return True
 
@@ -154,18 +158,26 @@ class ProjectPiChangeRequestCenterView(LoginRequiredMixin, UserPassesTestMixin, 
 
     @cached_property
     def managed_resource_ids(self):
-        """Return ids of resources this user may manage approvals for, or None for all resources."""
+        """Return ids of resources this user may manage approvals for, or None for all resources.
+
+        A resource is manageable if the user belongs to one of its review groups holding the
+        resource approval change permission, or if the resource has no review groups at all.
+        """
         user = self.request.user
         if user.is_superuser:
             return None
 
-        user_groups = user.groups.all()
-        managed_resource_ids = []
-        for resource in Resource.objects.prefetch_related("review_groups"):
-            if check_if_groups_in_review_groups(
-                resource.review_groups.all(), user_groups, RESOURCE_APPROVAL_CHANGE_CODENAME
-            ):
-                managed_resource_ids.append(resource.id)
+        user_group_ids = list(user.groups.values_list("id", flat=True))
+        if not user_group_ids:
+            return []
+
+        managed_resource_ids = set(
+            Resource.objects.filter(
+                review_groups__id__in=user_group_ids,
+                review_groups__permissions__codename=RESOURCE_APPROVAL_CHANGE_CODENAME,
+            ).values_list("id", flat=True)
+        )
+        managed_resource_ids.update(Resource.objects.filter(review_groups__isnull=True).values_list("id", flat=True))
         return managed_resource_ids
 
     def get_actionable_resource_approvals(self):
@@ -514,19 +526,18 @@ class ProjectPiChangeRequestResourceApprovalSettingView(LoginRequiredMixin, User
             return True
 
     def dispatch(self, request, *args, **kwargs):
-        self.obj = get_object_or_404(
-            ProjectPiChangeRequestResourceApprovalSetting, pk=request.POST.get("resource_approval_id")
-        )
+        if request.method == "POST":
+            self.obj = get_object_or_404(
+                ProjectPiChangeRequestResourceApprovalSetting, pk=request.POST.get("resource_approval_id")
+            )
 
-        user = self.request.user
-        if user.is_superuser:
-            return super().dispatch(request, *args, **kwargs)
-
-        passed = check_if_groups_in_review_groups(
-            self.obj.resource.review_groups.all(), user.groups.all(), RESOURCE_APPROVAL_SETTING_CHANGE_CODENAME
-        )
-        if not passed:
-            return HttpResponse("not permitted", status=403)
+            user = self.request.user
+            if not user.is_superuser:
+                passed = check_if_groups_in_review_groups(
+                    self.obj.resource.review_groups.all(), user.groups.all(), RESOURCE_APPROVAL_SETTING_CHANGE_CODENAME
+                )
+                if not passed:
+                    return HttpResponse("not permitted", status=403)
 
         return super().dispatch(request, *args, **kwargs)
 
@@ -534,16 +545,12 @@ class ProjectPiChangeRequestResourceApprovalSettingView(LoginRequiredMixin, User
         obj = self.obj
 
         checked = request.POST.get("checked")
-        http_message = ""
-        if checked == "true":
-            obj.requires_approval = True
-            http_message = "checked"
-        else:
-            obj.requires_approval = False
-            http_message = "unchecked"
+        if checked not in ("true", "false"):
+            return HttpResponse("Invalid value for 'checked'.", status=400)
 
+        obj.requires_approval = checked == "true"
         obj.save()
-        return HttpResponse(http_message, status=200)
+        return HttpResponse("checked" if checked == "true" else "unchecked", status=200)
 
 
 class ProjectPiChangeRequestUserApprovalView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):

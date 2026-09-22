@@ -6,6 +6,7 @@ from django.contrib.messages import get_messages
 from django.core import mail
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
+from django.db import IntegrityError
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
@@ -24,7 +25,9 @@ from coldfront.core.test_helpers.factories import (
 )
 from coldfront.plugins.pi_change_request.models import (
     ProjectPiChangeRequest,
+    ProjectPiChangeRequestResourceApproval,
     ProjectPiChangeRequestResourceApprovalSetting,
+    ProjectPiChangeRequestResourceApprovalStatusChoice,
     ProjectPiChangeRequestReviewGroupTicketEmail,
     ProjectPiChangeRequestStatusChoice,
     ProjectPiChangeRequestUserApprovalStatusChoice,
@@ -173,6 +176,16 @@ class ProjectPiChangeRequestModelTests(PiChangeRequestTestBase):
         self.create_request(status_name="Rejected")
         self.build_request(new_pi=self.new_pi).clean()  # should not raise
 
+    def test_clean_rejects_disallowed_project_status(self):
+        self.project.status = ProjectStatusChoiceFactory(name="Archived")
+        self.project.save()
+        with self.assertRaises(ValidationError):
+            self.build_request(new_pi=self.new_pi).clean()
+
+    def test_clean_rejects_new_pi_matching_current_pi(self):
+        with self.assertRaises(ValidationError):
+            self.build_request(new_pi=self.project.pi).clean()
+
     def test_create_resource_approvals_only_for_required_resources(self):
         self.set_requires_approval(self.resource, True)
         request_obj = self.create_request(with_approvals=False)
@@ -180,6 +193,17 @@ class ProjectPiChangeRequestModelTests(PiChangeRequestTestBase):
         self.assertEqual(len(approvals), 1)
         self.assertEqual(approvals[0].resource, self.resource)
         self.assertEqual(approvals[0].status.name, "Pending")
+
+    def test_duplicate_resource_approval_blocked(self):
+        self.set_requires_approval(self.resource, True)
+        request_obj = self.create_request(with_approvals=False)
+        request_obj.create_resource_approvals()
+        with self.assertRaises(IntegrityError):
+            ProjectPiChangeRequestResourceApproval.objects.create(
+                request=request_obj,
+                resource=self.resource,
+                status=ProjectPiChangeRequestResourceApprovalStatusChoice.objects.get_by_natural_key("Pending"),
+            )
 
     def test_create_user_approvals_dedupes(self):
         request_obj = self.create_request(with_approvals=False)
@@ -234,6 +258,29 @@ class ProjectPiChangeRequestModelTests(PiChangeRequestTestBase):
         request_obj.apply_pi_change()
         self.project.refresh_from_db()
         self.assertEqual(self.project.pi, self.new_pi)
+
+    def test_apply_pi_change_keeps_outgoing_pi_as_active_manager(self):
+        membership = ProjectUser.objects.get(project=self.project, user=self.project.pi)
+        membership.role = ProjectUserRoleChoiceFactory(name="User")
+        membership.status = ProjectUserStatusChoiceFactory(name="Removed")
+        membership.save()
+
+        request_obj = self.create_request(status_name="Ready")
+        request_obj.apply_pi_change()
+
+        membership.refresh_from_db()
+        self.assertEqual(membership.role.name, "Manager")
+        self.assertEqual(membership.status.name, "Active")
+
+    def test_apply_pi_change_creates_missing_membership_for_outgoing_pi(self):
+        ProjectUser.objects.filter(project=self.project, user=self.project.pi).delete()
+
+        request_obj = self.create_request(status_name="Ready")
+        request_obj.apply_pi_change()
+
+        membership = ProjectUser.objects.get(project=self.project, user=request_obj.current_pi)
+        self.assertEqual(membership.role.name, "Manager")
+        self.assertEqual(membership.status.name, "Active")
 
     def test_is_ready_and_is_denyable(self):
         request_obj = self.create_request()
@@ -328,6 +375,13 @@ class PiChangeRequestCreationViewTests(PiChangeRequestTestBase):
 
     def test_new_pi_must_be_project_manager(self):
         self.post_creation(self.project.pi, self.project_user.user)
+        self.assertEqual(ProjectPiChangeRequest.objects.count(), 0)
+
+    def test_disallowed_project_status_rejected(self):
+        self.project.status = ProjectStatusChoiceFactory(name="Archived")
+        self.project.save()
+        response = self.post_creation(self.project.pi, self.new_pi)
+        self.assertEqual(response.status_code, 403)
         self.assertEqual(ProjectPiChangeRequest.objects.count(), 0)
 
 
@@ -579,6 +633,14 @@ class PiChangeRequestCenterViewTests(PiChangeRequestTestBase):
         reviewer.groups.add(review_group)
         self.assertEqual(self.client.get(self.center_url).context["pending_resource_approvals"].count(), 1)
 
+    def test_resource_without_review_groups_is_actionable_by_any_grouped_user(self):
+        """Mirrors check_if_groups_in_review_groups: resources without review groups are open to all."""
+        reviewer = UserFactory()
+        reviewer.user_permissions.add(self.view_permission)
+        reviewer.groups.add(Group.objects.create(name="Unrelated"))
+        self.client.force_login(reviewer)
+        self.assertEqual(self.client.get(self.center_url).context["pending_resource_approvals"].count(), 1)
+
 
 @SILENT
 class ResourceApprovalSettingViewTests(PiChangeRequestTestBase):
@@ -622,6 +684,23 @@ class ResourceApprovalSettingViewTests(PiChangeRequestTestBase):
         self.setting.refresh_from_db()
         self.assertTrue(self.setting.requires_approval)
 
+    def test_get_not_allowed(self):
+        self.client.force_login(self.superuser)
+        self.assertEqual(self.client.get(self.url).status_code, 405)
+
+    def test_invalid_checked_value_leaves_setting_unchanged(self):
+        self.client.force_login(self.superuser)
+        self.post_toggle("true")
+        self.setting.refresh_from_db()
+        self.assertTrue(self.setting.requires_approval)
+
+        response = self.client.post(self.url, {"resource_approval_id": self.setting.pk, "checked": "yes"})
+        self.assertEqual(response.status_code, 400)
+        response = self.client.post(self.url, {"resource_approval_id": self.setting.pk})
+        self.assertEqual(response.status_code, 400)
+        self.setting.refresh_from_db()
+        self.assertTrue(self.setting.requires_approval)
+
 
 @SILENT
 class PiChangeRequestAdminTests(PiChangeRequestTestBase):
@@ -656,6 +735,12 @@ class PiChangeRequestAdminTests(PiChangeRequestTestBase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "An active PI change request already exists")
         self.assertEqual(ProjectPiChangeRequest.objects.count(), 1)
+
+    def test_add_rejects_new_pi_matching_current_pi(self):
+        response = self.post_add(self.project.pi)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "The new PI must be different from the current PI.")
+        self.assertEqual(ProjectPiChangeRequest.objects.count(), 0)
 
 
 @override_settings(EMAIL_ENABLED=True, SLACK_MESSAGING_ENABLED=False)
@@ -708,3 +793,23 @@ class PiChangeRequestEmailTests(PiChangeRequestTestBase):
         blocked_messages = [message for message in mail.outbox if "Was Blocked" in message.subject]
         self.assertEqual(len(blocked_messages), 1)
         self.assertIn(reverse("project-detail", kwargs={"pk": self.project.pk}), blocked_messages[0].body)
+
+    def test_resource_approval_emails_are_grouped_by_queue(self):
+        self.set_requires_approval(self.resource, True)
+        second_resource = ResourceFactory(name="storage/b")
+        self.set_requires_approval(second_resource, True)
+        self.allocation.resources.add(second_resource)
+
+        queue_group = Group.objects.create(name="Ticket Queue")
+        queue_group.permissions.add(get_permission(RESOURCE_APPROVAL_CHANGE_PERMISSION))
+        self.resource.review_groups.add(queue_group)
+        second_resource.review_groups.add(queue_group)
+        ProjectPiChangeRequestReviewGroupTicketEmail.objects.create(group=queue_group, email="queue@example.com")
+
+        self.client.force_login(self.project.pi)
+        self.client.post(self.create_url, {"new_pi": self.new_pi.pk, "justification": "PI is stepping down"})
+
+        queue_messages = [message for message in mail.outbox if "queue@example.com" in message.to]
+        self.assertEqual(len(queue_messages), 1)
+        self.assertIn(self.resource.name, queue_messages[0].body)
+        self.assertIn(second_resource.name, queue_messages[0].body)
