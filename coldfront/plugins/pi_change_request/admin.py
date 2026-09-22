@@ -33,7 +33,10 @@ class ProjectPiChangeRequestAdmin(admin.ModelAdmin):
         return self.fields_change
 
     def save_model(self, request, obj, form, change):
-        """Mirror the center page creation flow: derive what an admin should not type by hand."""
+        """Mirror the center page creation flow: derive what an admin should not type by hand.
+
+        Unlike the center page flow, no notifications are sent.
+        """
         if not change:
             obj.current_pi = obj.project.pi
             obj.initiator = request.user
