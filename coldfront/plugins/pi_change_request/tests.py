@@ -669,6 +669,84 @@ class PiChangeRequestCenterViewTests(PiChangeRequestTestBase):
 
 
 @SILENT
+class PiChangeRequestDetailViewTests(PiChangeRequestTestBase):
+    """The detail page lists a request's approvals and gates the admin actions on status and permission."""
+
+    def setUp(self):
+        self.request_obj = self.create_request()
+        self.detail_url = reverse("pi-change-request-details", kwargs={"pk": self.request_obj.pk})
+
+    def mark_request_ready(self):
+        self.request_obj.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("Ready")
+        self.request_obj.save()
+
+    def test_access(self):
+        utils.test_logged_out_redirect_to_login(self, self.detail_url)
+        utils.test_user_cannot_access(self, self.outsider, self.detail_url)
+        utils.test_user_can_access(self, self.superuser, self.detail_url)
+
+    def test_viewer_permission_grants_access(self):
+        viewer = UserFactory()
+        viewer.user_permissions.add(get_permission(PI_CHANGE_REQUEST_VIEW_PERMISSION))
+        utils.test_user_can_access(self, viewer, self.detail_url)
+
+    def test_missing_request_returns_404(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(reverse("pi-change-request-details", kwargs={"pk": self.request_obj.pk + 100}))
+        self.assertEqual(response.status_code, 404)
+
+    def test_page_lists_request_details_and_user_approvals(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.detail_url)
+        self.assertContains(response, self.project.title)
+        self.assertContains(response, self.project.pi.username)
+        self.assertContains(response, self.new_pi.username)
+        self.assertContains(response, self.request_obj.justification)
+        self.assertContains(response, ">Users</h3>")
+        self.assertContains(response, ">Pending</span>")
+        self.assertNotContains(response, "No additional approvals required!")
+
+    def test_page_lists_resource_approvals(self):
+        self.set_requires_approval(self.resource, True)
+        request_obj = self.create_request()
+        url = reverse("pi-change-request-details", kwargs={"pk": request_obj.pk})
+
+        self.client.force_login(self.superuser)
+        response = self.client.get(url)
+        self.assertContains(response, ">Resources</h3>")
+        self.assertContains(response, self.resource.name)
+
+    def test_action_buttons_follow_status(self):
+        self.client.force_login(self.superuser)
+
+        # New: denyable, but not yet ready.
+        response = self.client.get(self.detail_url)
+        self.assertNotContains(response, ">Activate</a>")
+        self.assertContains(response, ">Deny</a>")
+
+        # Ready: both actions available.
+        self.mark_request_ready()
+        response = self.client.get(self.detail_url)
+        self.assertContains(response, ">Activate</a>")
+        self.assertContains(response, ">Deny</a>")
+
+        # Complete: terminal, neither action available.
+        self.request_obj.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("Complete")
+        self.request_obj.save()
+        response = self.client.get(self.detail_url)
+        self.assertNotContains(response, ">Activate</a>")
+        self.assertNotContains(response, ">Deny</a>")
+
+    def test_viewers_see_no_action_buttons(self):
+        viewer = UserFactory()
+        viewer.user_permissions.add(get_permission(PI_CHANGE_REQUEST_VIEW_PERMISSION))
+        self.client.force_login(viewer)
+        response = self.client.get(self.detail_url)
+        self.assertNotContains(response, ">Activate</a>")
+        self.assertNotContains(response, ">Deny</a>")
+
+
+@SILENT
 class ResourceApprovalSettingViewTests(PiChangeRequestTestBase):
     @classmethod
     def setUpTestData(cls):
@@ -817,6 +895,41 @@ class PiChangeRequestAdminTests(PiChangeRequestTestBase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "The new PI must be different from the current PI.")
         self.assertEqual(ProjectPiChangeRequest.objects.count(), 0)
+
+    def test_changelist_renders(self):
+        self.create_request()
+        self.client.force_login(self.superuser)
+        response = self.client.get(reverse("admin:pi_change_request_projectpichangerequest_changelist"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.project.title)
+        self.assertContains(response, "New")
+
+    def test_change_page_renders(self):
+        request_obj = self.create_request()
+        self.client.force_login(self.superuser)
+        response = self.client.get(
+            reverse("admin:pi_change_request_projectpichangerequest_change", args=(request_obj.pk,))
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, request_obj.justification)
+
+    def test_resource_approval_change_page_renders(self):
+        self.set_requires_approval(self.resource, True)
+        request_obj = self.create_request()
+        approval = request_obj.resource_approvals.get()
+
+        self.client.force_login(self.superuser)
+        url = reverse("admin:pi_change_request_projectpichangerequestresourceapproval_change", args=(approval.pk,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.resource.name)
+
+    @override_settings(EMAIL_ENABLED=True, SLACK_MESSAGING_ENABLED=False)
+    def test_add_sends_no_notifications(self):
+        mail.outbox = []
+        self.post_add(self.new_pi)
+        self.assertEqual(ProjectPiChangeRequest.objects.count(), 1)
+        self.assertEqual(len(mail.outbox), 0)
 
 
 @override_settings(EMAIL_ENABLED=True)
