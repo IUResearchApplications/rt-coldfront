@@ -831,7 +831,7 @@ class ResourceApprovalSettingsViewTests(PiChangeRequestTestBase):
         response = self.client.get(self.url)
         self.assertContains(response, self.resource.name)
         self.assertContains(response, f'data-pk="{self.setting.pk}"')
-        self.assertContains(response, "requires-approval-checkbox")
+        self.assertContains(response, "form-check-input requires-approval-checkbox")
 
     def test_review_group_member_with_permission_sees_toggles(self):
         holder = UserFactory()
@@ -852,7 +852,7 @@ class ResourceApprovalSettingsViewTests(PiChangeRequestTestBase):
 
         self.client.force_login(holder)
         response = self.client.get(self.url)
-        self.assertNotContains(response, "requires-approval-checkbox")
+        self.assertNotContains(response, "form-check-input requires-approval-checkbox")
         self.assertContains(response, "badge bg-secondary")
 
 
