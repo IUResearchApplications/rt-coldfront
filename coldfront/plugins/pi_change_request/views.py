@@ -46,6 +46,18 @@ RESOURCE_APPROVAL_SETTING_CHANGE_CODENAME = RESOURCE_APPROVAL_SETTING_CHANGE_PER
 RESOURCE_APPROVAL_CHANGE_CODENAME = RESOURCE_APPROVAL_CHANGE_PERMISSION.rpartition(".")[2]
 
 
+def resource_actionable_by(user, user_groups, resource, permission_codename):
+    """Whether the user may act on the resource's approvals or settings.
+
+    A resource with review groups requires the user to belong to one of them holding the permission.
+    A resource without review groups is open to staff users only.
+    """
+    review_groups = resource.review_groups.all()
+    if not review_groups.exists():
+        return user.is_staff
+    return check_if_groups_in_review_groups(review_groups, user_groups, permission_codename)
+
+
 class SuperuserOrPermissionRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     """Grant access to superusers and to users holding the dotted permission."""
 
@@ -163,23 +175,28 @@ class ProjectPiChangeRequestCenterView(SuperuserOrPermissionRequiredMixin, Templ
         """Return ids of resources this user may manage approvals for, or None for all resources.
 
         A resource is manageable if the user belongs to one of its review groups holding the
-        resource approval change permission, or if the resource has no review groups at all.
+        resource approval change permission. Resources without review groups are open to
+        staff users only.
         """
         user = self.request.user
         if user.is_superuser:
             return None
 
         user_group_ids = list(user.groups.values_list("id", flat=True))
-        if not user_group_ids:
-            return []
+        managed_resource_ids = set()
+        if user_group_ids:
+            managed_resource_ids.update(
+                Resource.objects.filter(
+                    review_groups__id__in=user_group_ids,
+                    review_groups__permissions__codename=RESOURCE_APPROVAL_CHANGE_CODENAME,
+                ).values_list("id", flat=True)
+            )
 
-        managed_resource_ids = set(
-            Resource.objects.filter(
-                review_groups__id__in=user_group_ids,
-                review_groups__permissions__codename=RESOURCE_APPROVAL_CHANGE_CODENAME,
-            ).values_list("id", flat=True)
-        )
-        managed_resource_ids.update(Resource.objects.filter(review_groups__isnull=True).values_list("id", flat=True))
+        if user.is_staff:
+            managed_resource_ids.update(
+                Resource.objects.filter(review_groups__isnull=True).values_list("id", flat=True)
+            )
+
         return managed_resource_ids
 
     def get_actionable_resource_approvals(self):
@@ -308,8 +325,8 @@ class ProjectPiChangeRequestResourceApprovalSettingsView(SuperuserOrPermissionRe
             .all()
         )
         for setting in approval_settings:
-            can_edit = user.is_superuser or check_if_groups_in_review_groups(
-                setting.resource.review_groups.all(), user_groups, RESOURCE_APPROVAL_SETTING_CHANGE_CODENAME
+            can_edit = user.is_superuser or resource_actionable_by(
+                user, user_groups, setting.resource, RESOURCE_APPROVAL_SETTING_CHANGE_CODENAME
             )
             rows.append(
                 {
@@ -485,10 +502,9 @@ class ProjectPiChangeRequestResourceApprovalSettingView(SuperuserOrPermissionReq
 
             user = self.request.user
             if not user.is_superuser:
-                passed = check_if_groups_in_review_groups(
-                    self.obj.resource.review_groups.all(), user.groups.all(), RESOURCE_APPROVAL_SETTING_CHANGE_CODENAME
-                )
-                if not passed:
+                if not resource_actionable_by(
+                    user, user.groups.all(), self.obj.resource, RESOURCE_APPROVAL_SETTING_CHANGE_CODENAME
+                ):
                     return HttpResponse("not permitted", status=403)
 
         return super().dispatch(request, *args, **kwargs)
@@ -666,9 +682,10 @@ class ProjectPiChangeRequestResourceResponseView(ProjectPiChangeRequestResponseV
         if self.request.user.is_superuser:
             return True
 
-        return check_if_groups_in_review_groups(
-            self.approval.resource.review_groups.all(),
+        return resource_actionable_by(
+            self.request.user,
             self.request.user.groups.all(),
+            self.approval.resource,
             RESOURCE_APPROVAL_CHANGE_CODENAME,
         )
 

@@ -524,6 +524,33 @@ class PiChangeRequestResourceApprovalViewTests(PiChangeRequestTestBase):
         self.client.force_login(user)
         self.assertEqual(self.client.post(self.approve_url).status_code, 403)
 
+    def test_staff_can_respond_for_resource_without_review_groups(self):
+        open_resource = ResourceFactory(name="storage/open")
+        self.set_requires_approval(open_resource, True)
+        request_obj = self.create_request(resources=[open_resource])
+        approval = request_obj.resource_approvals.get()
+
+        staff_user = UserFactory(is_staff=True)
+        self.client.force_login(staff_user)
+        response = self.client.post(reverse("pi-change-request-resource-approve", kwargs={"pk": approval.pk}))
+        self.assertEqual(response.status_code, 302)
+        approval.refresh_from_db()
+        self.assertEqual(approval.status.name, "Approved")
+
+    def test_grouped_user_cannot_respond_for_resource_without_review_groups(self):
+        open_resource = ResourceFactory(name="storage/open")
+        self.set_requires_approval(open_resource, True)
+        request_obj = self.create_request(resources=[open_resource])
+        approval = request_obj.resource_approvals.get()
+
+        grouped_user = UserFactory()
+        grouped_user.groups.add(Group.objects.create(name="Unrelated"))
+        self.client.force_login(grouped_user)
+        response = self.client.post(reverse("pi-change-request-resource-approve", kwargs={"pk": approval.pk}))
+        self.assertEqual(response.status_code, 403)
+        approval.refresh_from_db()
+        self.assertEqual(approval.status.name, "Pending")
+
 
 @SILENT
 class PiChangeRequestActivationViewTests(PiChangeRequestTestBase):
@@ -659,12 +686,17 @@ class PiChangeRequestCenterViewTests(PiChangeRequestTestBase):
         reviewer.groups.add(review_group)
         self.assertEqual(self.client.get(self.center_url).context["pending_resource_approvals"].count(), 1)
 
-    def test_resource_without_review_groups_is_actionable_by_any_grouped_user(self):
-        """Mirrors check_if_groups_in_review_groups: resources without review groups are open to all."""
+    def test_resource_without_review_groups_is_actionable_by_staff_only(self):
+        """Resources without review groups are open to staff users, not to other grouped users."""
         reviewer = UserFactory()
         reviewer.user_permissions.add(self.view_permission)
         reviewer.groups.add(Group.objects.create(name="Unrelated"))
         self.client.force_login(reviewer)
+        self.assertEqual(self.client.get(self.center_url).context["pending_resource_approvals"].count(), 0)
+
+        staff_viewer = UserFactory(is_staff=True)
+        staff_viewer.user_permissions.add(self.view_permission)
+        self.client.force_login(staff_viewer)
         self.assertEqual(self.client.get(self.center_url).context["pending_resource_approvals"].count(), 1)
 
 
@@ -788,6 +820,25 @@ class ResourceApprovalSettingViewTests(PiChangeRequestTestBase):
         self.setting.refresh_from_db()
         self.assertTrue(self.setting.requires_approval)
 
+    def test_staff_permission_holder_can_toggle_resource_without_review_groups(self):
+        staff_holder = UserFactory(is_staff=True)
+        staff_holder.user_permissions.add(get_permission(RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION))
+
+        self.client.force_login(staff_holder)
+        self.assertEqual(self.post_toggle("true").status_code, 200)
+        self.setting.refresh_from_db()
+        self.assertTrue(self.setting.requires_approval)
+
+    def test_grouped_permission_holder_cannot_toggle_resource_without_review_groups(self):
+        holder = UserFactory()
+        holder.user_permissions.add(get_permission(RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION))
+        holder.groups.add(Group.objects.create(name="Unrelated"))
+
+        self.client.force_login(holder)
+        self.assertEqual(self.post_toggle("true").status_code, 403)
+        self.setting.refresh_from_db()
+        self.assertFalse(self.setting.requires_approval)
+
     def test_get_not_allowed(self):
         self.client.force_login(self.superuser)
         self.assertEqual(self.client.get(self.url).status_code, 405)
@@ -854,6 +905,23 @@ class ResourceApprovalSettingsViewTests(PiChangeRequestTestBase):
         response = self.client.get(self.url)
         self.assertNotContains(response, "form-check-input requires-approval-checkbox")
         self.assertContains(response, "badge bg-secondary")
+
+    def test_staff_sees_toggles_for_resources_without_review_groups(self):
+        staff_holder = UserFactory(is_staff=True)
+        staff_holder.user_permissions.add(get_permission(RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION))
+
+        self.client.force_login(staff_holder)
+        response = self.client.get(self.url)
+        self.assertContains(response, f'data-pk="{self.setting.pk}"')
+
+    def test_grouped_permission_holder_sees_static_values_for_resources_without_review_groups(self):
+        holder = UserFactory()
+        holder.user_permissions.add(get_permission(RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION))
+        holder.groups.add(Group.objects.create(name="Unrelated"))
+
+        self.client.force_login(holder)
+        response = self.client.get(self.url)
+        self.assertNotContains(response, f'data-pk="{self.setting.pk}"')
 
 
 @SILENT
