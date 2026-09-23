@@ -1265,6 +1265,11 @@ class PiChangeRequestEmailTests(PiChangeRequestTestBase):
         self.assertIn("queue@example.com", recipients)
         self.assertIn(settings.EMAIL_TICKET_SYSTEM_ADDRESS, recipients)
 
+        # bodies show full names, not bare usernames
+        bodies = "\n".join(message.body for message in mail.outbox)
+        self.assertIn(f"{self.project.pi.get_full_name()} ({self.project.pi.username})", bodies)
+        self.assertIn(f"{self.new_pi.get_full_name()} ({self.new_pi.username})", bodies)
+
     def test_ready_email_sent_when_request_becomes_ready(self):
         request_obj = self.create_request()  # project PI initiated; their approval starts approved
         new_pi_approval = request_obj.user_approvals.get(user=self.new_pi)
@@ -1287,6 +1292,8 @@ class PiChangeRequestEmailTests(PiChangeRequestTestBase):
         self.assertEqual(len(blocked_messages), 1)
         self.assertIn(reverse("project-detail", kwargs={"pk": self.project.pk}), blocked_messages[0].body)
         self.assertEqual(set(blocked_messages[0].to), {self.project.pi.email, self.new_pi.email})
+        decliner = f"{self.new_pi.get_full_name()} ({self.new_pi.username})"
+        self.assertIn(f"because {decliner} declined the change", blocked_messages[0].body)
 
     def test_approval_email_goes_to_participants(self):
         request_obj = self.create_request()

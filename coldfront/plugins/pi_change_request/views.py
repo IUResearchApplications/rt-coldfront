@@ -36,6 +36,7 @@ from coldfront.plugins.pi_change_request.permissions import (
     resource_actionable_by,
 )
 from coldfront.plugins.pi_change_request.utils import (
+    full_name_with_username,
     get_participant_email_addresses,
     send_blocked_email,
     send_email,
@@ -609,7 +610,7 @@ class ProjectPiChangeRequestUserResponseView(ProjectPiChangeRequestResponseView)
         )
 
     def blocked_reason(self, approval):
-        return f"{approval.user} declined the change"
+        return f"{full_name_with_username(approval.user)} declined the change"
 
 
 class ProjectPiChangeRequestUserApprovedView(ProjectPiChangeRequestUserResponseView):

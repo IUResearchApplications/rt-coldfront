@@ -1,9 +1,8 @@
-A PI change request for project "{{ project_title }}" (Project ID: {{ project_id }}) requires approval for
+{% load pi_change_request_tags %}A PI change request for project "{{ project_title }}" (Project ID: {{ project_id }}) requires approval for
 the following resources managed by your review group:
 {% for resource in resources %}- {{ resource }}
 {% endfor %}
-The project's PI will change from {{ current_pi.first_name }} {{ current_pi.last_name }}
-({{ current_pi.username }}) to {{ new_pi.first_name }} {{ new_pi.last_name }} ({{ new_pi.username }}).
+The project's PI will change from {{ current_pi|full_name_with_username }} to {{ new_pi|full_name_with_username }}.
 
 You can review pending approvals at the PI Change Request Center: {{ url }}
 

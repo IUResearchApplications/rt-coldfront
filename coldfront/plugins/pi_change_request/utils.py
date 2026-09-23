@@ -7,6 +7,14 @@ from coldfront.core.utils.slack import send_message
 from coldfront.plugins.pi_change_request.models import ProjectPiChangeRequestReviewGroupTicketEmail
 
 
+def full_name_with_username(user):
+    """Display a user as "First Last (username)", the bare username when no name is set, or an em dash for None."""
+    if user is None:
+        return "—"
+    full_name = user.get_full_name().strip()
+    return f"{full_name} ({user.username})" if full_name else user.username
+
+
 def send_slack_message(project_obj, url):
     if not settings.SLACK_MESSAGING_ENABLED:
         return

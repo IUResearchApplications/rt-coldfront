@@ -1,8 +1,7 @@
-Dear {{ center_name }} user,
+{% load pi_change_request_tags %}Dear {{ center_name }} user,
 
 The PI change request for project "{{ project_title }}" has been approved.
-{{ new_pi.first_name }} {{ new_pi.last_name }} ({{ new_pi.username }}) is now the Principal Investigator of the
-project.
+{{ new_pi|full_name_with_username }} is now the Principal Investigator of the project.
 
 You can view the project here: {{ project_url }}
 

@@ -1,8 +1,7 @@
-Dear {{ center_name }} user,
+{% load pi_change_request_tags %}Dear {{ center_name }} user,
 
 The PI change request for project "{{ project_title }}" has been denied.
-{{ current_pi.first_name }} {{ current_pi.last_name }} ({{ current_pi.username }}) remains the Principal
-Investigator of the project.
+{{ current_pi|full_name_with_username }} remains the Principal Investigator of the project.
 
 You can view the project here: {{ project_url }}
 
