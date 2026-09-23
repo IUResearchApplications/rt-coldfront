@@ -45,9 +45,7 @@ class ProjectPiChangeRequestAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
         if not change:
-            obj.resources.set(
-                obj.project.allocation_set.filter(status__name="Active").values_list("resources", flat=True)
-            )
+            obj.set_resources_from_active_allocations()
             obj.create_resource_approvals()
             obj.create_user_approvals([obj.current_pi, obj.new_pi])
 

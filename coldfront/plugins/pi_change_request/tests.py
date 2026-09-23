@@ -472,6 +472,30 @@ class PiChangeRequestCreationViewTests(PiChangeRequestTestBase):
         self.post_creation(self.project.pi, self.new_pi)
         self.assertEqual(ProjectPiChangeRequest.objects.get().resource_approvals.count(), 0)
 
+    @mock.patch("coldfront.core.allocation.models.ALLOCATION_FUNCS_ON_EXPIRE", [])
+    def test_no_resource_approvals_without_live_allocation(self):
+        """A resource can only require approval while the project holds a live allocation on it."""
+        self.set_requires_approval(self.resource, True)
+        self.allocation.status = AllocationStatusChoiceFactory(name="Expired")
+        self.allocation.save()
+
+        self.post_creation(self.project.pi, self.new_pi)
+
+        request_obj = ProjectPiChangeRequest.objects.get()
+        self.assertEqual(list(request_obj.resources.all()), [])
+        self.assertEqual(request_obj.resource_approvals.count(), 0)
+
+    def test_renewal_requested_allocation_counts_as_live(self):
+        self.set_requires_approval(self.resource, True)
+        self.allocation.status = AllocationStatusChoiceFactory(name="Renewal Requested")
+        self.allocation.save()
+
+        self.post_creation(self.project.pi, self.new_pi)
+
+        request_obj = ProjectPiChangeRequest.objects.get()
+        self.assertEqual(list(request_obj.resources.all()), [self.resource])
+        self.assertEqual(request_obj.resource_approvals.count(), 1)
+
     def test_duplicate_active_request_blocked(self):
         self.create_request()
         response = self.post_creation(self.project.pi, self.new_pi)
@@ -1295,6 +1319,15 @@ class PiChangeRequestAdminTests(PiChangeRequestTestBase):
         self.post_add(self.new_pi)
         self.assertEqual(ProjectPiChangeRequest.objects.count(), 1)
         self.assertEqual(len(mail.outbox), 0)
+
+    def test_add_limits_resources_to_live_allocations(self):
+        """Admin-created requests carry the same resources as web-created ones."""
+        self.set_requires_approval(self.resource, True)
+        self.post_add(self.new_pi)
+
+        request_obj = ProjectPiChangeRequest.objects.get()
+        self.assertEqual(list(request_obj.resources.all()), [self.resource])
+        self.assertEqual(request_obj.resource_approvals.count(), 1)
 
 
 @override_settings(EMAIL_ENABLED=True)

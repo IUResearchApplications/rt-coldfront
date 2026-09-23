@@ -117,9 +117,7 @@ class ProjectPiChangeRequestView(SuccessMessageMixin, LoginRequiredMixin, UserPa
                 return self.form_invalid(form)
 
             response = super().form_valid(form)
-            request_obj.resources.set(
-                request_obj.project.allocation_set.filter(status__name="Active").values_list("resources", flat=True)
-            )
+            request_obj.set_resources_from_active_allocations()
             resource_approvals = request_obj.create_resource_approvals()
             user_approvals = request_obj.create_user_approvals([request_obj.current_pi, request_obj.new_pi])
 

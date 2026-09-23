@@ -10,6 +10,7 @@ from coldfront.core.project.models import Project, ProjectUser, ProjectUserRoleC
 from coldfront.core.resource.models import Resource
 
 ACTIVE_REQUEST_STATUSES = ["New", "Awaiting Approvals", "Blocked", "Ready"]
+ACTIVE_ALLOCATION_STATUSES = ["Active", "Renewal Requested"]
 PI_CHANGE_DISALLOWED_PROJECT_STATUSES = ["Archived", "Denied", "Expired", "Renewal Denied"]
 
 
@@ -74,6 +75,19 @@ class ProjectPiChangeRequest(TimeStampedModel):
             .exists()
         ):
             raise ValidationError("An active PI change request already exists for this project.")
+
+    def set_resources_from_active_allocations(self):
+        """Set the request's resources to those of the project's active allocations.
+
+        Only resources the project still holds a live allocation on can require approval;
+        "Renewal Requested" counts as live because the allocation stays usable until its
+        renewal is denied.
+        """
+        self.resources.set(
+            self.project.allocation_set.filter(status__name__in=ACTIVE_ALLOCATION_STATUSES).values_list(
+                "resources", flat=True
+            )
+        )
 
     def create_resource_approvals(self):
         settings = ProjectPiChangeRequestResourceApprovalSetting.objects.filter(
