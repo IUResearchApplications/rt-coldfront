@@ -6,7 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db import transaction
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.generic import CreateView, TemplateView, View
 
@@ -527,6 +527,10 @@ class ProjectPiChangeRequestResponseView(LoginRequiredMixin, UserPassesTestMixin
     def record_response(self, approval, request):
         raise NotImplementedError
 
+    def validate_response(self, request):
+        """Check the submitted response; return an error message, or None to record it."""
+        return None
+
     def send_response_email(self, request, pi_change_request, url):
         raise NotImplementedError
 
@@ -552,6 +556,11 @@ class ProjectPiChangeRequestResponseView(LoginRequiredMixin, UserPassesTestMixin
 
             if pi_change_request.status.name not in ["New", "Awaiting Approvals"]:
                 messages.error(request, "This PI change request is not accepting approvals.")
+                return self.approval_redirect(pk)
+
+            error_message = self.validate_response(request)
+            if error_message:
+                messages.error(request, error_message)
                 return self.approval_redirect(pk)
 
             self.record_response(approval, request)
@@ -592,6 +601,7 @@ class ProjectPiChangeRequestUserResponseView(ProjectPiChangeRequestResponseView)
         approval.status = ProjectPiChangeRequestUserApprovalStatusChoice.objects.get_by_natural_key(
             self.response_status
         )
+        approval.reason = request.POST.get("reason", "").strip()
         approval.save()
 
     def send_response_email(self, request, pi_change_request, url):
@@ -600,6 +610,7 @@ class ProjectPiChangeRequestUserResponseView(ProjectPiChangeRequestResponseView)
             "project_id": pi_change_request.project.pk,
             "user": self.approval.user,
             "response": self.response_status,
+            "reason": self.approval.reason,
             "url": url,
             "help_email": settings.EMAIL_TICKET_SYSTEM_ADDRESS,
         }
@@ -610,7 +621,8 @@ class ProjectPiChangeRequestUserResponseView(ProjectPiChangeRequestResponseView)
         )
 
     def blocked_reason(self, approval):
-        return f"{full_name_with_username(approval.user)} declined the change"
+        reason = f": {approval.reason}" if approval.reason else ""
+        return f"{full_name_with_username(approval.user)} declined the change{reason}"
 
 
 class ProjectPiChangeRequestUserApprovedView(ProjectPiChangeRequestUserResponseView):
@@ -621,6 +633,11 @@ class ProjectPiChangeRequestUserApprovedView(ProjectPiChangeRequestUserResponseV
 class ProjectPiChangeRequestUserDeniedView(ProjectPiChangeRequestUserResponseView):
     response_status = "Denied"
     success_message = "You have declined the PI change request."
+
+    def validate_response(self, request):
+        if not request.POST.get("reason", "").strip():
+            return "Please provide a reason for declining this PI change request."
+        return None
 
 
 class ProjectPiChangeRequestResourceResponseView(ProjectPiChangeRequestResponseView):
@@ -655,6 +672,7 @@ class ProjectPiChangeRequestResourceResponseView(ProjectPiChangeRequestResponseV
             self.response_status
         )
         approval.handler = request.user
+        approval.reason = request.POST.get("reason", "").strip()
         approval.save()
 
     def send_response_email(self, request, pi_change_request, url):
@@ -664,6 +682,7 @@ class ProjectPiChangeRequestResourceResponseView(ProjectPiChangeRequestResponseV
             "resource": self.approval.resource,
             "handler": request.user,
             "response": self.response_status,
+            "reason": self.approval.reason,
             "url": url,
             "help_email": settings.EMAIL_TICKET_SYSTEM_ADDRESS,
         }
@@ -674,7 +693,8 @@ class ProjectPiChangeRequestResourceResponseView(ProjectPiChangeRequestResponseV
         )
 
     def blocked_reason(self, approval):
-        return f'the approval for "{approval.resource}" was denied'
+        reason = f": {approval.reason}" if approval.reason else ""
+        return f'the approval for "{approval.resource}" was denied{reason}'
 
 
 class ProjectPiChangeRequestResourceApprovedView(ProjectPiChangeRequestResourceResponseView):
@@ -685,3 +705,8 @@ class ProjectPiChangeRequestResourceApprovedView(ProjectPiChangeRequestResourceR
 class ProjectPiChangeRequestResourceDeniedView(ProjectPiChangeRequestResourceResponseView):
     response_status = "Denied"
     success_message = "You have denied the resource."
+    template_name = "pi_change_request/pi_change_request_resource_deny.html"
+
+    def get(self, request, pk):
+        """Render a confirmation page collecting an optional denial reason."""
+        return render(request, self.template_name, {"approval": self.approval})

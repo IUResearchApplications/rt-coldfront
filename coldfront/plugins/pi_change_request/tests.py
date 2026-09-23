@@ -550,7 +550,7 @@ class PiChangeRequestUserResponseViewTests(PiChangeRequestTestBase):
 
     def test_decline_blocks_request_and_further_responses_rejected(self):
         self.client.force_login(self.project.pi)
-        self.client.post(self.pi_deny_url)
+        self.client.post(self.pi_deny_url, {"reason": "Not available to own this project"})
         self.request_obj.refresh_from_db()
         self.assertEqual(self.request_obj.status.name, "Blocked")
 
@@ -561,6 +561,35 @@ class PiChangeRequestUserResponseViewTests(PiChangeRequestTestBase):
         self.assertEqual(self.new_pi_approval.status.name, "Pending")
         # the closed request should not offer the still-pending user a way to respond
         self.assertFalse(response.context["can_respond"])
+
+    def test_decline_requires_reason(self):
+        self.client.force_login(self.project.pi)
+        response = self.client.post(self.pi_deny_url, follow=True)
+        self.assertTrue(any("provide a reason" in message.message for message in response.context["messages"]))
+        self.pi_approval.refresh_from_db()
+        self.assertEqual(self.pi_approval.status.name, "Pending")
+        self.assertEqual(self.pi_approval.reason, "")
+
+    def test_decline_records_reason(self):
+        self.client.force_login(self.project.pi)
+        self.client.post(self.pi_deny_url, {"reason": "  Stepping down unexpectedly  "})
+        self.pi_approval.refresh_from_db()
+        self.assertEqual(self.pi_approval.status.name, "Denied")
+        self.assertEqual(self.pi_approval.reason, "Stepping down unexpectedly")
+        self.request_obj.refresh_from_db()
+        self.assertEqual(self.request_obj.status.name, "Blocked")
+
+    def test_decline_form_requires_reason_input(self):
+        self.client.force_login(self.project.pi)
+        response = self.client.get(self.pi_detail_url)
+        self.assertContains(response, 'id="decline-reason"')
+        self.assertContains(response, 'name="reason"')
+
+    def test_declined_reason_shown_after_response(self):
+        self.client.force_login(self.project.pi)
+        self.client.post(self.pi_deny_url, {"reason": "Not this quarter"})
+        response = self.client.get(self.pi_detail_url)
+        self.assertContains(response, "Your reason: Not this quarter")
 
     def test_cannot_respond_twice(self):
         self.client.force_login(self.project.pi)
@@ -626,6 +655,34 @@ class PiChangeRequestResourceApprovalViewTests(PiChangeRequestTestBase):
         self.assertEqual(self.resource_approval.status.name, "Denied")
         self.request_obj.refresh_from_db()
         self.assertEqual(self.request_obj.status.name, "Blocked")
+
+    def test_deny_page_renders_for_reviewer_and_rejects_others(self):
+        utils.test_user_can_access(self, self.reviewer, self.deny_url)
+        utils.test_user_can_access(self, self.superuser, self.deny_url)
+        utils.test_user_cannot_access(self, self.outsider, self.deny_url)
+
+    def test_deny_page_shows_context(self):
+        self.client.force_login(self.reviewer)
+        response = self.client.get(self.deny_url)
+        self.assertContains(response, self.resource.name)
+        self.assertContains(response, self.project.title)
+        self.assertContains(response, 'name="reason"')
+        self.assertContains(response, "Confirm Deny")
+        self.assertContains(response, "Denying this resource will block the PI change request.")
+
+    def test_deny_without_reason_still_blocks(self):
+        self.client.force_login(self.reviewer)
+        self.client.post(self.deny_url)
+        self.resource_approval.refresh_from_db()
+        self.assertEqual(self.resource_approval.status.name, "Denied")
+        self.assertEqual(self.resource_approval.reason, "")
+
+    def test_deny_records_reason(self):
+        self.client.force_login(self.reviewer)
+        self.client.post(self.deny_url, {"reason": "Quota exceeded"})
+        self.resource_approval.refresh_from_db()
+        self.assertEqual(self.resource_approval.status.name, "Denied")
+        self.assertEqual(self.resource_approval.reason, "Quota exceeded")
 
     def test_user_outside_review_group_cannot_respond(self):
         self.client.force_login(self.outsider)
@@ -835,7 +892,12 @@ class PiChangeRequestCenterViewTests(PiChangeRequestTestBase):
         self.assertContains(
             response, 'data-confirm="Are you sure you want to approve this resource for this PI change request?"'
         )
-        self.assertContains(response, 'data-confirm="Are you sure you want to deny this resource?')
+        # the resource Deny button links to a confirmation page instead of posting directly
+        resource_deny_url = reverse(
+            "pi-change-request-resource-deny", kwargs={"pk": self.request_obj.resource_approvals.get().pk}
+        )
+        self.assertContains(response, f'href="{resource_deny_url}"')
+        self.assertNotContains(response, 'data-confirm="Are you sure you want to deny this resource?')
         self.assertNotContains(response, 'data-confirm="Are you sure you want to activate')
 
     def test_requests_table_displays_full_names(self):
@@ -972,6 +1034,17 @@ class PiChangeRequestDetailViewTests(PiChangeRequestTestBase):
         self.assertContains(response, "Responded by")
         self.assertContains(response, f"Responded by {self.new_pi.get_full_name()} ({self.new_pi.username})")
         self.assertContains(response, "Responded by —")
+
+    def test_page_lists_decline_reasons(self):
+        new_pi_approval = self.request_obj.user_approvals.get(user=self.new_pi)
+        self.client.force_login(self.new_pi)
+        self.client.post(
+            reverse("pi-change-request-user-deny", kwargs={"pk": new_pi_approval.pk}), {"reason": "Too busy"}
+        )
+
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.detail_url)
+        self.assertContains(response, "Reason: Too busy")
 
     def test_page_lists_submitted_date(self):
         self.client.force_login(self.superuser)
@@ -1286,14 +1359,33 @@ class PiChangeRequestEmailTests(PiChangeRequestTestBase):
         new_pi_approval = request_obj.user_approvals.get(user=self.new_pi)
 
         self.client.force_login(self.new_pi)
-        self.client.post(reverse("pi-change-request-user-deny", kwargs={"pk": new_pi_approval.pk}))
+        self.client.post(
+            reverse("pi-change-request-user-deny", kwargs={"pk": new_pi_approval.pk}),
+            {"reason": "Cannot take ownership this year"},
+        )
 
         blocked_messages = [message for message in mail.outbox if "Was Blocked" in message.subject]
         self.assertEqual(len(blocked_messages), 1)
         self.assertIn(reverse("project-detail", kwargs={"pk": self.project.pk}), blocked_messages[0].body)
         self.assertEqual(set(blocked_messages[0].to), {self.project.pi.email, self.new_pi.email})
         decliner = f"{self.new_pi.get_full_name()} ({self.new_pi.username})"
-        self.assertIn(f"because {decliner} declined the change", blocked_messages[0].body)
+        self.assertIn(
+            f"because {decliner} declined the change: Cannot take ownership this year", blocked_messages[0].body
+        )
+
+    def test_resource_deny_blocked_email_includes_reason(self):
+        self.set_requires_approval(self.resource, True)
+        request_obj = self.create_request()
+        approval = request_obj.resource_approvals.get()
+
+        self.client.force_login(self.superuser)
+        self.client.post(
+            reverse("pi-change-request-resource-deny", kwargs={"pk": approval.pk}), {"reason": "Quota exceeded"}
+        )
+
+        blocked_messages = [message for message in mail.outbox if "Was Blocked" in message.subject]
+        self.assertEqual(len(blocked_messages), 1)
+        self.assertIn(f'approval for "{self.resource.name}" was denied: Quota exceeded', blocked_messages[0].body)
 
     def test_approval_email_goes_to_participants(self):
         request_obj = self.create_request()

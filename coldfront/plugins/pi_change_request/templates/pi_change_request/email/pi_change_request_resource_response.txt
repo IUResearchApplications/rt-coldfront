@@ -1,4 +1,5 @@
 {% load pi_change_request_tags %}{{ handler|full_name_with_username }} has responded "{{ response }}" to the approval for resource
-"{{ resource }}" on the PI change request for project "{{ project_title }}" (Project ID: {{ project_id }}).
+"{{ resource }}" on the PI change request for project "{{ project_title }}" (Project ID: {{ project_id }}).{% if reason %}
+Reason: {{ reason }}{% endif %}
 
 You can review PI change requests at the PI Change Request Center: {{ url }}

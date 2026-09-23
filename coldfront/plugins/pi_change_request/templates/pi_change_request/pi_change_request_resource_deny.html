@@ -1,0 +1,42 @@
+{% extends "common/base.html" %}
+
+
+{% block title %}
+Deny Resource Approval
+{% endblock %}
+
+
+{% block content %}
+<h1>Deny Resource Approval</h1>
+<hr>
+
+<div class="card">
+  <div class="card-body">
+    <p>
+      Are you sure you want to deny the approval for <strong>{{ approval.resource }}</strong> on the PI change request
+      for project <strong>{{ approval.request.project.title }}</strong> (Project ID: {{ approval.request.project.pk }})?
+    </p>
+    <p class="text-muted">Denying this resource will block the PI change request.</p>
+    <form method="post" action="{% url 'pi-change-request-resource-deny' approval.pk %}">
+      {% csrf_token %}
+      <label class="form-label" for="deny-reason">Reason <span class="text-muted">(optional)</span></label>
+      <textarea class="form-control mb-3" id="deny-reason" name="reason" rows="2"
+                placeholder="If provided, the reason is shared with the project's participants."></textarea>
+      <button type="submit" class="btn btn-danger">Confirm Deny</button>
+      <a href="{% url 'pi-change-request-center' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+  {{ block.super }}
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // Disable the submit button once the form is sent so the denial cannot be posted twice.
+      $("form").on("submit", function() {
+        $(this).find("button[type=submit]").prop("disabled", true);
+      });
+    });
+  </script>
+{% endblock %}

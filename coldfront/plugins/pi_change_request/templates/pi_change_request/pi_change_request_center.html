@@ -118,10 +118,7 @@ Project PI Change Request Center
                     {% csrf_token %}
                     <button type="submit" class="btn btn-success me-1" data-confirm="Are you sure you want to approve this resource for this PI change request?">Approve</button>
                   </form>
-                  <form method="post" class="d-inline" action="{% url 'pi-change-request-resource-deny' approval.pk %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger me-1" data-confirm="Are you sure you want to deny this resource? The PI change request will be blocked.">Deny</button>
-                  </form>
+                  <a href="{% url 'pi-change-request-resource-deny' approval.pk %}" class="btn btn-danger me-1">Deny</a>
                   <a href="{% url 'pi-change-request-details' approval.request.pk %}" class="btn btn-secondary">Details</a>
                 </td>
               </tr>

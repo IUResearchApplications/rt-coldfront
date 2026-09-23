@@ -1,4 +1,5 @@
 {% load pi_change_request_tags %}{{ user|full_name_with_username }} has responded "{{ response }}" to the PI change request for project
-"{{ project_title }}" (Project ID: {{ project_id }}).
+"{{ project_title }}" (Project ID: {{ project_id }}).{% if reason %}
+Reason: {{ reason }}{% endif %}
 
 You can review PI change requests at the PI Change Request Center: {{ url }}

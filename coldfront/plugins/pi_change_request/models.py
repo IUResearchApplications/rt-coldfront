@@ -203,6 +203,7 @@ class ProjectPiChangeRequestResourceApproval(ApprovalResponseMixin, TimeStampedM
     resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
     status = models.ForeignKey(ProjectPiChangeRequestResourceApprovalStatusChoice, on_delete=models.CASCADE)
     handler = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
+    reason = models.TextField(blank=True, default="", help_text="Reason given when the approval was denied.")
     history = HistoricalRecords()
 
     class Meta:
@@ -236,6 +237,7 @@ class ProjectPiChangeRequestUserApproval(ApprovalResponseMixin, TimeStampedModel
     request = models.ForeignKey(ProjectPiChangeRequest, on_delete=models.CASCADE, related_name="user_approvals")
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     status = models.ForeignKey(ProjectPiChangeRequestUserApprovalStatusChoice, on_delete=models.CASCADE)
+    reason = models.TextField(blank=True, default="", help_text="Reason given when the approval was declined.")
     history = HistoricalRecords()
 
     class Meta:

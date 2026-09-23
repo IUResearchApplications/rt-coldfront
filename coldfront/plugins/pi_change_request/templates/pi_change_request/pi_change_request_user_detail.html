@@ -104,13 +104,16 @@ Project PI Change Request Details
     {% endif %}
   </div>
   {% if can_respond %}
-    <div class="card-footer d-flex gap-2">
-      <form method="post" class="user-response-form" action="{% url 'pi-change-request-user-approve' pi_change_user_request.pk %}">
+    <div class="card-footer">
+      <form method="post" class="user-response-form mb-3" action="{% url 'pi-change-request-user-approve' pi_change_user_request.pk %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-success">Accept</button>
       </form>
       <form method="post" class="user-response-form" action="{% url 'pi-change-request-user-deny' pi_change_user_request.pk %}">
         {% csrf_token %}
+        <label class="form-label" for="decline-reason"><strong>Reason for declining</strong></label>
+        <textarea class="form-control mb-1" id="decline-reason" name="reason" rows="2" required></textarea>
+        <p class="text-muted small mb-2">Your reason is shared with the project's participants and center staff.</p>
         <button type="submit" class="btn btn-danger">Decline</button>
       </form>
     </div>
@@ -121,6 +124,9 @@ Project PI Change Request Details
   {% elif pi_change_user_request.status.name == "Approved" or pi_change_user_request.status.name == "Denied" %}
     <div class="card-footer">
       <span class="text-muted">You have already responded to this request ({{ pi_change_user_request.status }}).</span>
+      {% if pi_change_user_request.reason %}
+        <span class="text-muted d-block">Your reason: {{ pi_change_user_request.reason }}</span>
+      {% endif %}
     </div>
   {% endif %}
 </div>
