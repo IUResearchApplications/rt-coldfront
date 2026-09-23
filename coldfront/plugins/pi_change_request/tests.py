@@ -1385,7 +1385,7 @@ class PiChangeRequestEmailTests(PiChangeRequestTestBase):
 
         blocked_messages = [message for message in mail.outbox if "Was Blocked" in message.subject]
         self.assertEqual(len(blocked_messages), 1)
-        self.assertIn(f'approval for "{self.resource.name}" was denied: Quota exceeded', blocked_messages[0].body)
+        self.assertIn(f'approval for "{self.resource}" was denied: Quota exceeded', blocked_messages[0].body)
 
     def test_approval_email_goes_to_participants(self):
         request_obj = self.create_request()

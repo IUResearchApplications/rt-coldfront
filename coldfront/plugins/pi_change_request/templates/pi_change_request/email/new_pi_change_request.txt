@@ -1,4 +1,4 @@
-{% load pi_change_request_tags %}{{ initiator|full_name_with_username }} has submitted a PI change request for project
+{% load pi_change_request_tags %}{% autoescape off %}{{ initiator|full_name_with_username }} has submitted a PI change request for project
 "{{ project_title }}" (Project ID: {{ project_id }}).
 The project's PI will change from {{ current_pi|full_name_with_username }} to {{ new_pi|full_name_with_username }}.
 
@@ -9,3 +9,4 @@ You can review this request at the PI Change Request Center: {{ url }}
 
 Thank you,
 {{ signature }}
+{% endautoescape %}

@@ -1,4 +1,4 @@
-{% load pi_change_request_tags %}Dear {{ user|full_name_with_username }},
+{% load pi_change_request_tags %}{% autoescape off %}Dear {{ user|full_name_with_username }},
 
 {{ initiator|full_name_with_username }} has submitted a PI change request for project "{{ project_title }}"
 (Project ID: {{ project_id }}).
@@ -11,3 +11,4 @@ If you have any questions please email us at {{ help_email }}
 
 Thank you,
 {{ signature }}
+{% endautoescape %}

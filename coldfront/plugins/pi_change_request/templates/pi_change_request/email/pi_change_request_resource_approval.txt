@@ -1,4 +1,4 @@
-{% load pi_change_request_tags %}A PI change request for project "{{ project_title }}" (Project ID: {{ project_id }}) requires approval for
+{% load pi_change_request_tags %}{% autoescape off %}A PI change request for project "{{ project_title }}" (Project ID: {{ project_id }}) requires approval for
 the following resources managed by your review group:
 {% for resource in resources %}- {{ resource }}
 {% endfor %}
@@ -10,3 +10,4 @@ If you have any questions please email us at {{ help_email }}
 
 Thank you,
 {{ signature }}
+{% endautoescape %}

@@ -1,4 +1,4 @@
-{% load pi_change_request_tags %}Dear {{ center_name }} user,
+{% load pi_change_request_tags %}{% autoescape off %}Dear {{ center_name }} user,
 
 The PI change request for project "{{ project_title }}" has been approved.
 {{ new_pi|full_name_with_username }} is now the Principal Investigator of the project.
@@ -9,3 +9,4 @@ If you have any questions please email us at {{ help_email }}
 
 Thank you,
 {{ signature }}
+{% endautoescape %}
