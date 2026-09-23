@@ -11,9 +11,7 @@ from django.urls import reverse
 from django.views.generic import CreateView, TemplateView, View
 
 from coldfront.core.project.models import Project
-from coldfront.core.resource.models import Resource
 from coldfront.core.utils.common import get_domain_url
-from coldfront.core.utils.groups import check_if_groups_in_review_groups
 from coldfront.plugins.pi_change_request.forms import ProjectPiChangeRequestForm
 from coldfront.plugins.pi_change_request.models import (
     ACTIVE_REQUEST_STATUSES,
@@ -26,6 +24,17 @@ from coldfront.plugins.pi_change_request.models import (
     ProjectPiChangeRequestUserApproval,
     ProjectPiChangeRequestUserApprovalStatusChoice,
 )
+from coldfront.plugins.pi_change_request.permissions import (
+    PI_CHANGE_REQUEST_CHANGE_PERMISSION,
+    PI_CHANGE_REQUEST_VIEW_PERMISSION,
+    RESOURCE_APPROVAL_CHANGE_CODENAME,
+    RESOURCE_APPROVAL_CHANGE_PERMISSION,
+    RESOURCE_APPROVAL_SETTING_CHANGE_CODENAME,
+    RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION,
+    actionable_resource_approvals,
+    managed_resource_ids,
+    resource_actionable_by,
+)
 from coldfront.plugins.pi_change_request.utils import (
     get_participant_email_addresses,
     send_blocked_email,
@@ -35,27 +44,6 @@ from coldfront.plugins.pi_change_request.utils import (
     send_slack_message,
     send_user_approval_notifications,
 )
-
-RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION = "pi_change_request.change_projectpichangerequestresourceapprovalsetting"
-RESOURCE_APPROVAL_CHANGE_PERMISSION = "pi_change_request.change_projectpichangerequestresourceapproval"
-PI_CHANGE_REQUEST_VIEW_PERMISSION = "pi_change_request.view_projectpichangerequest"
-PI_CHANGE_REQUEST_CHANGE_PERMISSION = "pi_change_request.change_projectpichangerequest"
-
-# check_if_groups_in_review_groups matches bare codenames, unlike has_perm which takes the dotted form.
-RESOURCE_APPROVAL_SETTING_CHANGE_CODENAME = RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION.rpartition(".")[2]
-RESOURCE_APPROVAL_CHANGE_CODENAME = RESOURCE_APPROVAL_CHANGE_PERMISSION.rpartition(".")[2]
-
-
-def resource_actionable_by(user, user_groups, resource, permission_codename):
-    """Whether the user may act on the resource's approvals or settings.
-
-    A resource with review groups requires the user to belong to one of them holding the permission.
-    A resource without review groups is open to staff users only.
-    """
-    review_groups = resource.review_groups.all()
-    if not review_groups.exists():
-        return user.is_staff
-    return check_if_groups_in_review_groups(review_groups, user_groups, permission_codename)
 
 
 class SuperuserOrPermissionRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -173,46 +161,14 @@ class ProjectPiChangeRequestCenterView(SuperuserOrPermissionRequiredMixin, Templ
 
     @cached_property
     def managed_resource_ids(self):
-        """Return ids of resources this user may manage approvals for, or None for all resources.
-
-        A resource is manageable if the user belongs to one of its review groups holding the
-        resource approval change permission. Resources without review groups are open to
-        staff users only.
-        """
-        user = self.request.user
-        if user.is_superuser:
-            return None
-
-        user_group_ids = list(user.groups.values_list("id", flat=True))
-        managed_resource_ids = set()
-        if user_group_ids:
-            managed_resource_ids.update(
-                Resource.objects.filter(
-                    review_groups__id__in=user_group_ids,
-                    review_groups__permissions__codename=RESOURCE_APPROVAL_CHANGE_CODENAME,
-                ).values_list("id", flat=True)
-            )
-
-        if user.is_staff:
-            managed_resource_ids.update(
-                Resource.objects.filter(review_groups__isnull=True).values_list("id", flat=True)
-            )
-
-        return managed_resource_ids
+        """Cached per-request lookup of the resources this user may manage approvals for."""
+        return managed_resource_ids(self.request.user)
 
     def get_actionable_resource_approvals(self):
         """Return pending resource approvals this user may respond to."""
-        approvals = ProjectPiChangeRequestResourceApproval.objects.filter(
-            status__name="Pending", request__status__name__in=["New", "Awaiting Approvals"]
-        ).select_related(
+        return actionable_resource_approvals(self.request.user).select_related(
             "resource", "resource__resource_type", "request", "request__project", "request__status", "status"
         )
-
-        managed_resource_ids = self.managed_resource_ids
-        if managed_resource_ids is not None:
-            approvals = approvals.filter(resource_id__in=managed_resource_ids)
-
-        return approvals
 
     def get_history(self):
         """Combine request, resource approval, and user approval status changes into one list.

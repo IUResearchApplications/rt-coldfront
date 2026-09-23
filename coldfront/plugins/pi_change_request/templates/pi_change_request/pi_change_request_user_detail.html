@@ -1,4 +1,5 @@
 {% extends "common/base.html" %}
+{% load pi_change_request_tags %}
 
 
 {% block title %}
@@ -23,14 +24,14 @@ Project PI Change Request Details
     <div class="d-flex flex-column flex-md-row align-items-center justify-content-center gap-3 text-center mb-4 pb-3 border-bottom">
       <div>
         <span class="d-block text-muted small">Current PI</span>
-        <span class="fw-semibold">{{ pi_change_user_request.request.current_pi }}</span>
+        <span class="fw-semibold">{{ pi_change_user_request.request.current_pi|full_name_with_username }}</span>
       </div>
       <span class="fs-3 text-primary" aria-hidden="true">
         <i class="fa-solid fa-arrow-right"></i>
       </span>
       <div>
         <span class="d-block text-muted small">New PI</span>
-        <span class="fw-semibold">{{ pi_change_user_request.request.new_pi }}</span>
+        <span class="fw-semibold">{{ pi_change_user_request.request.new_pi|full_name_with_username }}</span>
       </div>
     </div>
 
@@ -40,7 +41,7 @@ Project PI Change Request Details
 
       {% if pi_change_user_request.request.initiator %}
       <dt class="col-sm-4 col-md-3">Initiated by</dt>
-      <dd class="col-sm-8 col-md-9">{{ pi_change_user_request.request.initiator }}</dd>
+      <dd class="col-sm-8 col-md-9">{{ pi_change_user_request.request.initiator|full_name_with_username }}</dd>
       {% endif %}
 
       <dt class="col-sm-4 col-md-3">Justification</dt>
@@ -86,7 +87,7 @@ Project PI Change Request Details
   <div class="card-body">
     <p>
       A PI change request was initiated{% if pi_change_user_request.request.initiator %} by
-      {{ pi_change_user_request.request.initiator }}{% endif %}.
+      {{ pi_change_user_request.request.initiator|full_name_with_username }}{% endif %}.
       {% if can_respond %}To complete this request, you must accept this change.{% endif %}
     </p>
     {% if pi_change_user_request.status.name == "Cancelled" %}

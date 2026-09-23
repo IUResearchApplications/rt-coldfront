@@ -5,15 +5,29 @@ from coldfront.plugins.pi_change_request.models import (
     ProjectPiChangeRequest,
     ProjectPiChangeRequestUserApproval,
 )
+from coldfront.plugins.pi_change_request.permissions import actionable_resource_approvals
 
 register = template.Library()
 
 
 @register.filter
 def full_name_with_username(user):
-    """Display a user as "First Last (username)", falling back to the username when no name is set."""
+    """Display a user as "First Last (username)", falling back to the username when no name is set.
+
+    A missing user (None) renders as an em dash, for historical records without a handler.
+    """
+    if user is None:
+        return "—"
     full_name = user.get_full_name().strip()
     return f"{full_name} ({user.username})" if full_name else user.username
+
+
+@register.simple_tag
+def pi_change_pending_approvals_count(user):
+    """Return the number of resource approvals awaiting this user's response."""
+    if not user.is_authenticated:
+        return 0
+    return actionable_resource_approvals(user).count()
 
 
 @register.simple_tag

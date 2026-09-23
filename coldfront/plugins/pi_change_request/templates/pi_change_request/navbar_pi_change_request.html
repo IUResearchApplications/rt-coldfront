@@ -1,3 +1,8 @@
+{% load pi_change_request_tags %}
+{% pi_change_pending_approvals_count request.user as pending_approvals_count %}
 <a id="navbar-pi-change-request" class="dropdown-item" href="{% url 'pi-change-request-center' %}" role="menuitem">
   Project PI Change Center
+  {% if pending_approvals_count %}
+    <span class="badge bg-danger ms-1" title="{{ pending_approvals_count }} resource approval{{ pending_approvals_count|pluralize }} awaiting your response">{{ pending_approvals_count }}</span>
+  {% endif %}
 </a>

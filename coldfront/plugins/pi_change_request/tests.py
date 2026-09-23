@@ -2,7 +2,7 @@ import logging
 from unittest import mock
 
 from django.conf import settings
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import AnonymousUser, Group, Permission
 from django.contrib.messages import get_messages
 from django.core import mail
 from django.core.exceptions import ValidationError
@@ -33,18 +33,19 @@ from coldfront.plugins.pi_change_request.models import (
     ProjectPiChangeRequestStatusChoice,
     ProjectPiChangeRequestUserApprovalStatusChoice,
 )
-from coldfront.plugins.pi_change_request.templatetags.pi_change_request_tags import (
-    active_pi_change_request,
-    full_name_with_username,
-    pi_change_user_approval,
-)
-from coldfront.plugins.pi_change_request.utils import send_email
-from coldfront.plugins.pi_change_request.views import (
+from coldfront.plugins.pi_change_request.permissions import (
     PI_CHANGE_REQUEST_VIEW_PERMISSION,
     RESOURCE_APPROVAL_CHANGE_PERMISSION,
     RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION,
-    ProjectPiChangeRequestCenterView,
 )
+from coldfront.plugins.pi_change_request.templatetags.pi_change_request_tags import (
+    active_pi_change_request,
+    full_name_with_username,
+    pi_change_pending_approvals_count,
+    pi_change_user_approval,
+)
+from coldfront.plugins.pi_change_request.utils import send_email
+from coldfront.plugins.pi_change_request.views import ProjectPiChangeRequestCenterView
 
 logging.disable(logging.CRITICAL)
 
@@ -355,6 +356,8 @@ class ProjectPiChangeRequestModelTests(PiChangeRequestTestBase):
         user.last_name = ""
         self.assertEqual(full_name_with_username(user), user.username)
 
+        self.assertEqual(full_name_with_username(None), "—")
+
     def test_response_property_reports_approval_record(self):
         request_obj = self.create_request()
         pi_approval = request_obj.user_approvals.get(user=self.project.pi)
@@ -369,6 +372,18 @@ class ProjectPiChangeRequestModelTests(PiChangeRequestTestBase):
 
         resolve_user_approval(new_pi_approval, "Denied")
         self.assertEqual(request_obj.user_approvals.get(user=self.new_pi).response.status.name, "Denied")
+
+    def test_pi_change_pending_approvals_count(self):
+        self.set_requires_approval(self.resource, True)
+        request_obj = self.create_request()
+        self.assertEqual(pi_change_pending_approvals_count(self.superuser), 1)
+        self.assertEqual(pi_change_pending_approvals_count(UserFactory()), 0)
+        self.assertEqual(pi_change_pending_approvals_count(AnonymousUser()), 0)
+
+        approval = request_obj.resource_approvals.get()
+        approval.status = ProjectPiChangeRequestResourceApprovalStatusChoice.objects.get_by_natural_key("Approved")
+        approval.save()
+        self.assertEqual(pi_change_pending_approvals_count(self.superuser), 0)
 
 
 class CenterHistoryFilterTests(PiChangeRequestTestBase):
@@ -499,6 +514,13 @@ class PiChangeRequestUserResponseViewTests(PiChangeRequestTestBase):
         self.assertEqual(response.context["help_email"], settings.EMAIL_TICKET_SYSTEM_ADDRESS)
         utils.test_user_can_access(self, self.superuser, self.pi_detail_url)
         utils.test_user_cannot_access(self, self.outsider, self.pi_detail_url)
+
+    def test_page_displays_full_names(self):
+        self.client.force_login(self.project.pi)
+        response = self.client.get(self.pi_detail_url)
+        for user in [self.project.pi, self.new_pi, self.outsider]:
+            with self.subTest(user=user.username):
+                self.assertContains(response, f"{user.get_full_name()} ({user.username})")
 
     def test_initiator_sees_auto_approval_note(self):
         # On a PI-initiated request the PI's approval is recorded at submission time, so the
@@ -831,6 +853,34 @@ class PiChangeRequestCenterViewTests(PiChangeRequestTestBase):
         self.assertContains(response, 'name="csrfmiddlewaretoken"')
         self.assertNotContains(response, "post-link")
 
+    def test_navbar_shows_pending_approvals_count(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.center_url)
+        self.assertContains(response, 'title="1 resource approval awaiting your response"')
+
+    def test_staff_navbar_shows_center_link_and_badge(self):
+        staff_user = UserFactory(is_staff=True)
+        staff_user.user_permissions.add(self.view_permission)
+        self.client.force_login(staff_user)
+        response = self.client.get(self.center_url)
+        self.assertContains(response, 'id="navbar-pi-change-request"')
+        self.assertContains(response, 'title="1 resource approval awaiting your response"')
+
+    def test_non_staff_viewer_gets_no_navbar_center_link(self):
+        viewer = UserFactory()
+        viewer.user_permissions.add(self.view_permission)
+        self.client.force_login(viewer)
+        response = self.client.get(self.center_url)
+        self.assertNotContains(response, 'id="navbar-pi-change-request"')
+
+    def test_navbar_badge_clears_when_approvals_resolve(self):
+        approval = ProjectPiChangeRequestResourceApproval.objects.get(request=self.request_obj)
+        self.client.force_login(self.superuser)
+        self.client.post(reverse("pi-change-request-resource-approve", kwargs={"pk": approval.pk}))
+
+        response = self.client.get(self.center_url)
+        self.assertNotContains(response, "badge bg-danger ms-1")
+
 
 @SILENT
 class PiChangeRequestDetailViewTests(PiChangeRequestTestBase):
@@ -870,6 +920,13 @@ class PiChangeRequestDetailViewTests(PiChangeRequestTestBase):
         self.assertContains(response, ">Users</h3>")
         self.assertContains(response, ">Pending</span>")
         self.assertNotContains(response, "No additional approvals required!")
+
+    def test_page_displays_full_names(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.detail_url)
+        for user in [self.project.pi, self.new_pi, self.request_obj.initiator]:
+            with self.subTest(user=user.username):
+                self.assertContains(response, f"{user.get_full_name()} ({user.username})")
 
     def test_page_lists_resource_approvals(self):
         self.set_requires_approval(self.resource, True)
@@ -913,7 +970,7 @@ class PiChangeRequestDetailViewTests(PiChangeRequestTestBase):
         self.client.force_login(self.superuser)
         response = self.client.get(self.detail_url)
         self.assertContains(response, "Responded by")
-        self.assertContains(response, f"Responded by {self.new_pi.username}")
+        self.assertContains(response, f"Responded by {self.new_pi.get_full_name()} ({self.new_pi.username})")
         self.assertContains(response, "Responded by —")
 
     def test_page_lists_submitted_date(self):

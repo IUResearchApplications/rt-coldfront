@@ -157,7 +157,7 @@ Project PI Change Request Center
               <tr>
                 <td>{{ record.date|date:"Y-m-d H:i:s" }}</td>
                 <td>{{ record.description }}</td>
-                <td>{{ record.user|default_if_none:"—" }}</td>
+                <td>{{ record.user|full_name_with_username }}</td>
               </tr>
             {% endfor %}
           </tbody>

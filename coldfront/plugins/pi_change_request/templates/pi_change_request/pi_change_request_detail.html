@@ -1,5 +1,6 @@
 {% extends "common/base.html" %}
 {% load crispy_forms_tags %}
+{% load pi_change_request_tags %}
 {% load static %}
 
 
@@ -20,14 +21,14 @@ Project PI Change Request Details
       <div class="card-body">
         <div class="row">
           <div class="col"><p class="card-text"><strong>Project: </strong>{{ pi_change_request.project.title }}</p></div>
-          <div class="col"><p class="card-text"><strong>Current PI: </strong>{{ pi_change_request.current_pi }}</p></div>
+          <div class="col"><p class="card-text"><strong>Current PI: </strong>{{ pi_change_request.current_pi|full_name_with_username }}</p></div>
         </div>
         <div class="row">
           <div class="col"><p class="card-text"><strong>Status: </strong>{{ pi_change_request.status }}</p></div>
-          <div class="col"><p class="card-text"><strong>New PI: </strong>{{ pi_change_request.new_pi }}</p></div>
+          <div class="col"><p class="card-text"><strong>New PI: </strong>{{ pi_change_request.new_pi|full_name_with_username }}</p></div>
         </div>
         <div class="row">
-          <div class="col"><p class="card-text"><strong>Initiator: </strong>{{ pi_change_request.initiator }}</p></div>
+          <div class="col"><p class="card-text"><strong>Initiator: </strong>{{ pi_change_request.initiator|full_name_with_username }}</p></div>
           <div class="col"><p class="card-text"><strong>Submitted: </strong>{{ pi_change_request.created }}</p></div>
         </div>
         <p class="card-text"><strong>Justification: </strong>{{ pi_change_request.justification|linebreaksbr }}</p>
@@ -62,10 +63,10 @@ Project PI Change Request Details
               {% for approval in user_approvals %}
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                   <div>
-                    {{ approval.user }}
+                    {{ approval.user|full_name_with_username }}
                     {% if approval.response %}
                       <small class="text-muted d-block">
-                        Responded by {{ approval.response.history_user|default_if_none:"—" }} on
+                        Responded by {{ approval.response.history_user|full_name_with_username }} on
                         {{ approval.response.history_date|date:"N j, Y, g:i a" }}
                       </small>
                     {% endif %}
@@ -84,7 +85,7 @@ Project PI Change Request Details
                     {{ approval.resource }}
                     {% if approval.response %}
                       <small class="text-muted d-block">
-                        Responded by {{ approval.response.history_user|default_if_none:"—" }} on
+                        Responded by {{ approval.response.history_user|full_name_with_username }} on
                         {{ approval.response.history_date|date:"N j, Y, g:i a" }}
                       </small>
                     {% endif %}
