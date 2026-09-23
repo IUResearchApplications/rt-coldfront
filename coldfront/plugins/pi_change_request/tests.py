@@ -24,6 +24,7 @@ from coldfront.core.test_helpers.factories import (
     ResourceFactory,
     UserFactory,
 )
+from coldfront.plugins.pi_change_request.admin import ProjectPiChangeRequestAdmin
 from coldfront.plugins.pi_change_request.models import (
     ProjectPiChangeRequest,
     ProjectPiChangeRequestResourceApproval,
@@ -38,6 +39,12 @@ from coldfront.plugins.pi_change_request.permissions import (
     RESOURCE_APPROVAL_CHANGE_PERMISSION,
     RESOURCE_APPROVAL_SETTING_CHANGE_PERMISSION,
 )
+from coldfront.plugins.pi_change_request.signals import (
+    pi_change_request_completed,
+    pi_change_request_created,
+    pi_change_request_resource_response,
+    pi_change_request_user_response,
+)
 from coldfront.plugins.pi_change_request.templatetags.pi_change_request_tags import (
     active_pi_change_request,
     full_name_with_username,
@@ -45,7 +52,16 @@ from coldfront.plugins.pi_change_request.templatetags.pi_change_request_tags imp
     pi_change_user_approval,
 )
 from coldfront.plugins.pi_change_request.utils import send_email
-from coldfront.plugins.pi_change_request.views import ProjectPiChangeRequestCenterView
+from coldfront.plugins.pi_change_request.views import (
+    ProjectPiChangeApprovalView,
+    ProjectPiChangeDenialView,
+    ProjectPiChangeRequestCenterView,
+    ProjectPiChangeRequestResourceApprovedView,
+    ProjectPiChangeRequestResourceDeniedView,
+    ProjectPiChangeRequestUserApprovedView,
+    ProjectPiChangeRequestUserDeniedView,
+    ProjectPiChangeRequestView,
+)
 
 logging.disable(logging.CRITICAL)
 
@@ -1328,6 +1344,166 @@ class PiChangeRequestAdminTests(PiChangeRequestTestBase):
         request_obj = ProjectPiChangeRequest.objects.get()
         self.assertEqual(list(request_obj.resources.all()), [self.resource])
         self.assertEqual(request_obj.resource_approvals.count(), 1)
+
+
+@SILENT
+class PiChangeRequestSignalTests(PiChangeRequestTestBase):
+    """The plugin signals fire for every state transition, including auto-approvals."""
+
+    def capture(self, signal):
+        """Connect a receiver recording every send; disconnect it when the test ends."""
+        calls = []
+
+        def receiver(sender, **kwargs):
+            calls.append({"sender": sender, **kwargs})
+
+        signal.connect(receiver)
+        self.addCleanup(signal.disconnect, receiver)
+        return calls
+
+    def post_creation(self, user, new_pi):
+        self.client.force_login(user)
+        return self.client.post(
+            reverse("pi-change-request", kwargs={"pk": self.project.pk}),
+            {"new_pi": new_pi.pk, "justification": "PI is stepping down"},
+        )
+
+    def test_created_signal_fires_on_submission(self):
+        calls = self.capture(pi_change_request_created)
+
+        self.post_creation(self.project.pi, self.new_pi)
+
+        request_obj = ProjectPiChangeRequest.objects.get()
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0]["pi_change_request_pk"], request_obj.pk)
+        self.assertEqual(calls[0]["sender"], ProjectPiChangeRequestView)
+
+    def test_created_signal_fires_for_admin_created_request(self):
+        calls = self.capture(pi_change_request_created)
+
+        self.client.force_login(self.superuser)
+        self.client.post(
+            reverse("admin:pi_change_request_projectpichangerequest_add"),
+            {"project": self.project.pk, "new_pi": self.new_pi.pk, "justification": "Admin initiated"},
+        )
+
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0]["pi_change_request_pk"], ProjectPiChangeRequest.objects.get().pk)
+        self.assertEqual(calls[0]["sender"], ProjectPiChangeRequestAdmin)
+
+    def test_created_signal_fires_once_even_with_multiple_approvals(self):
+        calls = self.capture(pi_change_request_created)
+
+        self.set_requires_approval(self.resource, True)
+        self.post_creation(self.project.pi, self.new_pi)
+
+        request_obj = ProjectPiChangeRequest.objects.get()
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(request_obj.user_approvals.count(), 2)
+        self.assertEqual(request_obj.resource_approvals.count(), 1)
+
+    def test_user_response_signal_fires_for_auto_approved_initiator(self):
+        calls = self.capture(pi_change_request_user_response)
+
+        self.post_creation(self.project.pi, self.new_pi)
+
+        request_obj = ProjectPiChangeRequest.objects.get()
+        initiator_approval = request_obj.user_approvals.get(user=self.project.pi)
+        self.assertEqual(initiator_approval.status.name, "Approved")
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0]["user_approval_pk"], initiator_approval.pk)
+        self.assertEqual(calls[0]["pi_change_request_pk"], request_obj.pk)
+
+    def test_third_party_initiator_sends_no_auto_response_signal(self):
+        third_manager = UserFactory()
+        ProjectUserFactory(project=self.project, role=ProjectUserRoleChoiceFactory(name="Manager"), user=third_manager)
+        calls = self.capture(pi_change_request_user_response)
+
+        self.post_creation(third_manager, self.new_pi)
+
+        request_obj = ProjectPiChangeRequest.objects.get()
+        self.assertEqual(request_obj.user_approvals.filter(status__name="Pending").count(), 2)
+        self.assertEqual(calls, [])
+
+    def test_user_response_signal_fires_on_approval(self):
+        request_obj = self.create_request(initiator=self.outsider)
+        approval = request_obj.user_approvals.get(user=self.new_pi)
+        calls = self.capture(pi_change_request_user_response)
+
+        self.client.force_login(self.new_pi)
+        self.client.post(reverse("pi-change-request-user-approve", kwargs={"pk": approval.pk}))
+
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0]["user_approval_pk"], approval.pk)
+        self.assertEqual(calls[0]["pi_change_request_pk"], request_obj.pk)
+        self.assertEqual(calls[0]["sender"], ProjectPiChangeRequestUserApprovedView)
+
+    def test_user_response_signal_fires_on_decline(self):
+        request_obj = self.create_request(initiator=self.outsider)
+        approval = request_obj.user_approvals.get(user=self.new_pi)
+        calls = self.capture(pi_change_request_user_response)
+
+        self.client.force_login(self.new_pi)
+        self.client.post(reverse("pi-change-request-user-deny", kwargs={"pk": approval.pk}), {"reason": "Not now"})
+
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0]["user_approval_pk"], approval.pk)
+        self.assertEqual(calls[0]["sender"], ProjectPiChangeRequestUserDeniedView)
+
+    def test_resource_response_signal_fires_on_approval(self):
+        self.set_requires_approval(self.resource, True)
+        request_obj = self.create_request()
+        approval = request_obj.resource_approvals.get()
+        calls = self.capture(pi_change_request_resource_response)
+
+        self.client.force_login(self.superuser)
+        self.client.post(reverse("pi-change-request-resource-approve", kwargs={"pk": approval.pk}))
+
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0]["resource_approval_pk"], approval.pk)
+        self.assertEqual(calls[0]["pi_change_request_pk"], request_obj.pk)
+        self.assertEqual(calls[0]["sender"], ProjectPiChangeRequestResourceApprovedView)
+
+    def test_resource_response_signal_fires_on_denial(self):
+        self.set_requires_approval(self.resource, True)
+        request_obj = self.create_request()
+        approval = request_obj.resource_approvals.get()
+        calls = self.capture(pi_change_request_resource_response)
+
+        self.client.force_login(self.superuser)
+        self.client.post(reverse("pi-change-request-resource-deny", kwargs={"pk": approval.pk}), {"reason": "Quota"})
+
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0]["resource_approval_pk"], approval.pk)
+        self.assertEqual(calls[0]["sender"], ProjectPiChangeRequestResourceDeniedView)
+
+    def test_completed_signal_fires_on_activation(self):
+        request_obj = self.create_request(initiator=self.outsider)
+        request_obj.status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("Ready")
+        request_obj.save()
+        calls = self.capture(pi_change_request_completed)
+
+        self.client.force_login(self.superuser)
+        self.client.post(reverse("pi-change-request-approval", kwargs={"pk": request_obj.pk}))
+
+        request_obj.refresh_from_db()
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0]["pi_change_request_pk"], request_obj.pk)
+        self.assertEqual(calls[0]["sender"], ProjectPiChangeApprovalView)
+        self.assertEqual(request_obj.status.name, "Complete")
+
+    def test_completed_signal_fires_on_denial(self):
+        request_obj = self.create_request(initiator=self.outsider)
+        calls = self.capture(pi_change_request_completed)
+
+        self.client.force_login(self.superuser)
+        self.client.post(reverse("pi-change-request-denial", kwargs={"pk": request_obj.pk}))
+
+        request_obj.refresh_from_db()
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0]["pi_change_request_pk"], request_obj.pk)
+        self.assertEqual(calls[0]["sender"], ProjectPiChangeDenialView)
+        self.assertEqual(request_obj.status.name, "Rejected")
 
 
 @override_settings(EMAIL_ENABLED=True)

@@ -35,6 +35,12 @@ from coldfront.plugins.pi_change_request.permissions import (
     managed_resource_ids,
     resource_actionable_by,
 )
+from coldfront.plugins.pi_change_request.signals import (
+    pi_change_request_completed,
+    pi_change_request_created,
+    pi_change_request_resource_response,
+    pi_change_request_user_response,
+)
 from coldfront.plugins.pi_change_request.utils import (
     full_name_with_username,
     get_participant_email_addresses,
@@ -122,6 +128,16 @@ class ProjectPiChangeRequestView(SuccessMessageMixin, LoginRequiredMixin, UserPa
             user_approvals = request_obj.create_user_approvals([request_obj.current_pi, request_obj.new_pi])
 
         domain_url = get_domain_url(self.request)
+        pi_change_request_created.send(sender=self.__class__, pi_change_request_pk=request_obj.pk)
+        # The initiator's approval was recorded during creation; signal it like any other response.
+        for approval in user_approvals:
+            if approval.status.name == "Approved":
+                pi_change_request_user_response.send(
+                    sender=self.__class__,
+                    user_approval_pk=approval.pk,
+                    pi_change_request_pk=request_obj.pk,
+                )
+
         project_review_url = reverse("pi-change-request-center")
         url = "{}{}".format(domain_url, project_review_url)
         send_slack_message(self.project, url)
@@ -346,6 +362,7 @@ class ProjectPiChangeAdminActionView(SuperuserOrPermissionRequiredMixin, View):
                 return redirect("pi-change-request-center")
             self.perform_action(pi_change_request)
 
+        pi_change_request_completed.send(sender=self.__class__, pi_change_request_pk=pi_change_request.pk)
         self.send_notifications(request, pi_change_request)
 
         messages.success(request, self.success_message)
@@ -532,6 +549,10 @@ class ProjectPiChangeRequestResponseView(LoginRequiredMixin, UserPassesTestMixin
     def send_response_email(self, request, pi_change_request, url):
         raise NotImplementedError
 
+    def send_response_signal(self, approval, pi_change_request):
+        """Signal the recorded response so other systems can react to it."""
+        raise NotImplementedError
+
     def blocked_reason(self, approval):
         raise NotImplementedError
 
@@ -565,6 +586,7 @@ class ProjectPiChangeRequestResponseView(LoginRequiredMixin, UserPassesTestMixin
             pi_change_request.update_status_from_approvals()
 
         url = "{}{}".format(get_domain_url(request), reverse("pi-change-request-center"))
+        self.send_response_signal(approval, pi_change_request)
         self.send_response_email(request, pi_change_request, url)
 
         if pi_change_request.status.name == "Ready":
@@ -601,6 +623,13 @@ class ProjectPiChangeRequestUserResponseView(ProjectPiChangeRequestResponseView)
         )
         approval.reason = request.POST.get("reason", "").strip()
         approval.save()
+
+    def send_response_signal(self, approval, pi_change_request):
+        pi_change_request_user_response.send(
+            sender=self.__class__,
+            user_approval_pk=approval.pk,
+            pi_change_request_pk=pi_change_request.pk,
+        )
 
     def send_response_email(self, request, pi_change_request, url):
         template_context = {
@@ -672,6 +701,13 @@ class ProjectPiChangeRequestResourceResponseView(ProjectPiChangeRequestResponseV
         approval.handler = request.user
         approval.reason = request.POST.get("reason", "").strip()
         approval.save()
+
+    def send_response_signal(self, approval, pi_change_request):
+        pi_change_request_resource_response.send(
+            sender=self.__class__,
+            resource_approval_pk=approval.pk,
+            pi_change_request_pk=pi_change_request.pk,
+        )
 
     def send_response_email(self, request, pi_change_request, url):
         template_context = {

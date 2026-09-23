@@ -12,6 +12,10 @@ from coldfront.plugins.pi_change_request.models import (
     ProjectPiChangeRequestUserApproval,
     ProjectPiChangeRequestUserApprovalStatusChoice,
 )
+from coldfront.plugins.pi_change_request.signals import (
+    pi_change_request_created,
+    pi_change_request_user_response,
+)
 
 
 @admin.register(ProjectPiChangeRequest)
@@ -35,7 +39,8 @@ class ProjectPiChangeRequestAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         """Mirror the center page creation flow: derive what an admin should not type by hand.
 
-        Unlike the center page flow, no notifications are sent.
+        Unlike the center page flow, no notifications are sent, but the creation signals
+        still fire so integrations hear about admin-created requests too.
         """
         if not change:
             obj.current_pi = obj.project.pi
@@ -47,7 +52,18 @@ class ProjectPiChangeRequestAdmin(admin.ModelAdmin):
         if not change:
             obj.set_resources_from_active_allocations()
             obj.create_resource_approvals()
-            obj.create_user_approvals([obj.current_pi, obj.new_pi])
+            user_approvals = obj.create_user_approvals([obj.current_pi, obj.new_pi])
+
+            pi_change_request_created.send(sender=self.__class__, pi_change_request_pk=obj.pk)
+            # An admin is normally not an approval party, but an admin who is the current or
+            # new PI would have their approval recorded automatically, like the center flow.
+            for approval in user_approvals:
+                if approval.status.name == "Approved":
+                    pi_change_request_user_response.send(
+                        sender=self.__class__,
+                        user_approval_pk=approval.pk,
+                        pi_change_request_pk=obj.pk,
+                    )
 
 
 @admin.register(ProjectPiChangeRequestResourceApproval)
