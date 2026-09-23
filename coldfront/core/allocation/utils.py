@@ -119,7 +119,7 @@ def test_allocation_function(allocation_pk):
     print("test_allocation_function", allocation_pk)
 
 
-def send_added_user_email(request, allocation_obj, users, users_emails):
+def send_added_user_email(request, allocation_obj, users, users_emails, individual=False):
     if EMAIL_ENABLED:
         domain_url = get_domain_url(request)
         allocation_url = "{}{}".format(domain_url, reverse("allocation-detail", kwargs={"pk": allocation_obj.pk}))
@@ -139,18 +139,22 @@ def send_added_user_email(request, allocation_obj, users, users_emails):
             "allocation_status": allocation_obj.status.name,
         }
 
+        resource_templates = EMAIL_RESOURCE_EMAIL_TEMPLATES.get(allocation_obj.get_parent_resource.name, {})
+        if individual:
+            template_name = resource_templates.get("added_user", "email/allocation_added_user.txt")
+        else:
+            template_name = resource_templates.get("added_user", "email/allocation_added_users.txt")
+
         send_email_template(
             "Added to Allocation",
-            EMAIL_RESOURCE_EMAIL_TEMPLATES.get(allocation_obj.get_parent_resource.name, {}).get(
-                "added_user", "email/allocation_added_users.txt"
-            ),
+            template_name,
             template_context,
             users_emails,
             EMAIL_TICKET_SYSTEM_ADDRESS,
         )
 
 
-def send_removed_user_email(request, allocation_obj, users, users_emails):
+def send_removed_user_email(request, allocation_obj, users, users_emails, individual=False):
     domain_url = get_domain_url(request)
     project_obj = allocation_obj.project
     project_url = "{}{}".format(domain_url, reverse("project-detail", kwargs={"pk": project_obj.pk}))
@@ -167,11 +171,15 @@ def send_removed_user_email(request, allocation_obj, users, users_emails):
             "allocation_identifiers": allocation_obj.get_identifiers.items(),
         }
 
+        resource_templates = EMAIL_RESOURCE_EMAIL_TEMPLATES.get(allocation_obj.get_parent_resource.name, {})
+        if individual:
+            template_name = resource_templates.get("removed_user", "email/allocation_removed_user.txt")
+        else:
+            template_name = resource_templates.get("removed_user", "email/allocation_removed_users.txt")
+
         send_email_template(
             "Removed From Allocation",
-            EMAIL_RESOURCE_EMAIL_TEMPLATES.get(allocation_obj.get_parent_resource.name, {}).get(
-                "removed_user", "email/allocation_removed_users.txt"
-            ),
+            template_name,
             template_context,
             users_emails,
             EMAIL_TICKET_SYSTEM_ADDRESS,
@@ -382,15 +390,24 @@ def notify_added_users(request, allocation_obj, resource, selected_users, select
     Send notification emails and show a success message for the users added
     to the allocation.
     """
-    allocation_added_users_emails = list(
-        allocation_obj.project.projectuser_set.filter(
-            user__in=selected_user_objs, enable_notifications=True
-        ).values_list("user__email", flat=True)
-    )
-    if allocation_obj.project.pi.email not in allocation_added_users_emails:
-        allocation_added_users_emails.append(allocation_obj.project.pi.email)
+    project_obj = allocation_obj.project
 
-    send_added_user_email(request, allocation_obj, selected_user_objs, allocation_added_users_emails)
+    # Managers (the PI and whoever added the users) receive an email with all added users.
+    manager_emails = [project_obj.pi.email]
+    if request.user.email and request.user.email not in manager_emails:
+        manager_emails.append(request.user.email)
+
+    send_added_user_email(request, allocation_obj, selected_user_objs, manager_emails)
+
+    # Each added user receives an individual email with only their own information.
+    enabled_user_emails = set(
+        project_obj.projectuser_set.filter(user__in=selected_user_objs, enable_notifications=True).values_list(
+            "user__email", flat=True
+        )
+    )
+    for user_obj in selected_user_objs:
+        if user_obj.email in enabled_user_emails:
+            send_added_user_email(request, allocation_obj, [user_obj], [user_obj.email], individual=True)
 
     is_plural = len(selected_users.keys()) > 1
     messages.success(
@@ -411,16 +428,24 @@ def notify_removed_users(request, allocation_obj, removed_user_objs, remove_user
     from the allocation.
     """
     removed_users = [user_obj.username for user_obj in removed_user_objs]
+    project_obj = allocation_obj.project
 
-    allocation_removed_users_emails = list(
-        allocation_obj.project.projectuser_set.filter(
-            user__in=removed_user_objs, enable_notifications=True
-        ).values_list("user__email", flat=True)
+    # Managers (the PI and whoever did the removing) receive an email with all removed users.
+    manager_emails = [project_obj.pi.email]
+    if request.user.email and request.user.email not in manager_emails:
+        manager_emails.append(request.user.email)
+
+    send_removed_user_email(request, allocation_obj, removed_user_objs, manager_emails)
+
+    # Each removed user receives an individual email with only their own information.
+    enabled_user_emails = set(
+        project_obj.projectuser_set.filter(user__in=removed_user_objs, enable_notifications=True).values_list(
+            "user__email", flat=True
+        )
     )
-    if allocation_obj.project.pi.email not in allocation_removed_users_emails:
-        allocation_removed_users_emails.append(allocation_obj.project.pi.email)
-
-    send_removed_user_email(request, allocation_obj, removed_user_objs, allocation_removed_users_emails)
+    for user_obj in removed_user_objs:
+        if user_obj.email in enabled_user_emails:
+            send_removed_user_email(request, allocation_obj, [user_obj], [user_obj.email], individual=True)
 
     user_plural = "user" if remove_users_count == 1 else "users"
     messages.success(request, f"Removed {user_plural} {', '.join(removed_users)} from allocation.")

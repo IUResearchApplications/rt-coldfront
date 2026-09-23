@@ -1151,11 +1151,9 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
                         if project_obj.check_exceeds_max_managers(1):
                             role_choice = ProjectUserRoleChoice.objects.get(name="User")
 
-                    # Disable notifications for group accounts, or for user accounts
-                    # when the project has "Auto Disable User Notifications" set.
-                    enable_notifications = not (
-                        role_choice.name == "Group" or (role_choice.name == "User" and auto_disable_notifications)
-                    )
+                    # Disable notifications for user accounts when the project has
+                    # "Auto Disable User Notifications" set.
+                    enable_notifications = not (role_choice.name in ["User", "Group"] and auto_disable_notifications)
 
                     project_user_obj = project_obj.add_user(
                         user_obj, role_choice, signal_sender=self.__class__, enable_notifications=enable_notifications
@@ -1249,37 +1247,63 @@ class ProjectAddUsersView(LoginRequiredMixin, UserPassesTestMixin, View):
     def send_add_users_emails(self, request, project_obj, project_user_objs, allocations_added_to):
         domain_url = get_domain_url(self.request)
         project_url = "{}{}".format(domain_url, reverse("project-detail", kwargs={"pk": project_obj.pk}))
+        action_user = f"{request.user.first_name} {request.user.last_name}"
 
         template_context = {
             "center_name": EMAIL_CENTER_NAME,
             "project_title": project_obj.title,
             "project_users": project_user_objs,
-            "action_user": f"{request.user.first_name} {request.user.last_name}",
+            "action_user": action_user,
             "url": project_url,
             "signature": EMAIL_SIGNATURE,
         }
-        emails = [
-            project_user_obj.user.email
-            for project_user_obj in project_user_objs
-            if project_user_obj.enable_notifications
-        ]
-        emails.append(project_obj.pi.email)
+
+        # Managers (the PI and whoever added the users) receive an email with all added users.
+        manager_emails = [project_obj.pi.email]
+        if request.user.email and request.user.email not in manager_emails:
+            manager_emails.append(request.user.email)
+
         send_email_template(
-            "Added to Project", "email/project_added_users.txt", template_context, emails, EMAIL_TICKET_SYSTEM_ADDRESS
+            "Added to Project",
+            "email/project_added_users.txt",
+            template_context,
+            manager_emails,
+            EMAIL_TICKET_SYSTEM_ADDRESS,
         )
+
+        # Each added user receives an individual email with only their own information.
+        for project_user_obj in project_user_objs:
+            if not project_user_obj.enable_notifications:
+                continue
+
+            user_context = {
+                "center_name": EMAIL_CENTER_NAME,
+                "project_title": project_obj.title,
+                "action_user": action_user,
+                "url": project_url,
+                "signature": EMAIL_SIGNATURE,
+            }
+            send_email_template(
+                "Added to Project",
+                "email/project_added_user.txt",
+                user_context,
+                [project_user_obj.user.email],
+                EMAIL_TICKET_SYSTEM_ADDRESS,
+            )
 
         if allocations_added_to:
             for allocation, added_project_user_objs in allocations_added_to.items():
-                users = [
-                    project_user_obj.user
-                    for project_user_obj in added_project_user_objs
-                    if project_user_obj.enable_notifications
-                ]
-                emails = set(user.email for user in users)
-                if emails:
-                    emails.add(project_obj.pi.email)
-                    emails.add(request.user.email)
-                    send_added_user_email(request, allocation, users, emails)
+                # Managers receive an email with all users added to the allocation.
+                users = [project_user_obj.user for project_user_obj in added_project_user_objs]
+                send_added_user_email(request, allocation, users, list(manager_emails))
+
+                # Each added user receives an individual email with only their own information.
+                for project_user_obj in added_project_user_objs:
+                    if not project_user_obj.enable_notifications:
+                        continue
+                    send_added_user_email(
+                        request, allocation, [project_user_obj.user], [project_user_obj.user.email], individual=True
+                    )
 
     def log_add_users(self, request, project_obj, project_user_objs, allocations_added_to):
         if project_user_objs:

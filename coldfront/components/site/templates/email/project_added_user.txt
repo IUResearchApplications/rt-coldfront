@@ -1,0 +1,11 @@
+Dear {{ center_name }} user,
+
+You have been added to the project "{{ project_title }}" by {{ action_user }}.
+
+You can view the project here:
+{{ url }}
+
+Resource access is not automatically granted to project users, you must be added to an allocation as well.
+
+Thank you,
+{{ signature }}
