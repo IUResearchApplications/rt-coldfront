@@ -49,16 +49,12 @@ Project PI Change Request Details
 
       <dt class="col-sm-4 col-md-3">Request status</dt>
       <dd class="col-sm-8 col-md-9">
-        <span
-          class="badge {% if pi_change_user_request.request.status.name in 'Ready, Complete' %}bg-success{% elif pi_change_user_request.request.status.name in 'Blocked, Rejected' %}bg-danger{% else %}bg-secondary{% endif %}"
-        >{{ pi_change_user_request.request.status }}</span>
+        <span class="badge {{ pi_change_user_request.request.status|pi_change_request_status_badge_class }}">{{ pi_change_user_request.request.status }}</span>
       </dd>
 
       <dt class="col-sm-4 col-md-3">Your response</dt>
       <dd class="col-sm-8 col-md-9">
-        <span
-          class="badge {% if pi_change_user_request.status.name == 'Approved' %}bg-success{% elif pi_change_user_request.status.name == 'Denied' %}bg-danger{% else %}bg-secondary{% endif %}"
-        >{{ pi_change_user_request.status }}</span>
+        <span class="badge {{ pi_change_user_request.status|pi_change_approval_status_badge_class }}">{{ pi_change_user_request.status }}</span>
       </dd>
     </dl>
   </div>
@@ -105,11 +101,11 @@ Project PI Change Request Details
   </div>
   {% if can_respond %}
     <div class="card-footer">
-      <form method="post" class="user-response-form mb-3" action="{% url 'pi-change-request-user-approve' pi_change_user_request.pk %}">
+      <form method="post" class="user-response-form pi-change-guard-form mb-3" action="{% url 'pi-change-request-user-approve' pi_change_user_request.pk %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-success">Accept</button>
       </form>
-      <form method="post" class="user-response-form" action="{% url 'pi-change-request-user-deny' pi_change_user_request.pk %}">
+      <form method="post" class="user-response-form pi-change-guard-form" action="{% url 'pi-change-request-user-deny' pi_change_user_request.pk %}">
         {% csrf_token %}
         <label class="form-label" for="decline-reason"><strong>Reason for declining</strong></label>
         <textarea class="form-control mb-1" id="decline-reason" name="reason" rows="2" required></textarea>
@@ -138,13 +134,5 @@ Project PI Change Request Details
 
 {% block javascript %}
   {{ block.super }}
-  <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      // Disable the response buttons once either form is submitted so the action
-      // cannot be sent twice.
-      $(".user-response-form").on("submit", function() {
-        $(".user-response-form button[type=submit]").prop("disabled", true);
-      });
-    });
-  </script>
+  {% include "pi_change_request/form_guard_pi_change_request.html" %}
 {% endblock %}

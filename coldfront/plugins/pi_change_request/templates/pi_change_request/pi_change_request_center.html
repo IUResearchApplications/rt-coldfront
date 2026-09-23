@@ -52,17 +52,17 @@ Project PI Change Request Center
                 <td>{{ pending_pi_change_request.project.pi|full_name_with_username }}</td>
                 <td>{{ pending_pi_change_request.new_pi|full_name_with_username }}</td>
                 <td>
-                  <span class="badge {% if pending_pi_change_request.status.name in 'Ready, Complete' %}bg-success{% elif pending_pi_change_request.status.name in 'Blocked, Rejected' %}bg-danger{% else %}bg-secondary{% endif %}">{{ pending_pi_change_request.status.name }}</span>
+                  <span class="badge {{ pending_pi_change_request.status|pi_change_request_status_badge_class }}">{{ pending_pi_change_request.status.name }}</span>
                 </td>
                 <td>
                   {% if can_change_requests %}
                     {% if pending_pi_change_request.is_ready %}
-                      <form method="post" class="d-inline" action="{% url 'pi-change-request-approval' pending_pi_change_request.pk %}">
+                      <form method="post" class="d-inline pi-change-guard-form" action="{% url 'pi-change-request-approval' pending_pi_change_request.pk %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-success me-1" data-confirm="Are you sure you want to activate this PI change request? The project's PI will be changed immediately.">Activate</button>
                       </form>
                     {% endif %}
-                    <form method="post" class="d-inline" action="{% url 'pi-change-request-denial' pending_pi_change_request.pk %}">
+                    <form method="post" class="d-inline pi-change-guard-form" action="{% url 'pi-change-request-denial' pending_pi_change_request.pk %}">
                       {% csrf_token %}
                       <button type="submit" class="btn btn-danger me-1" data-confirm="Are you sure you want to deny this PI change request?">Deny</button>
                     </form>
@@ -111,10 +111,10 @@ Project PI Change Request Center
                 </td>
                 <td>{{ approval.resource }}</td>
                 <td>
-                  <span class="badge {% if approval.request.status.name in 'Ready, Complete' %}bg-success{% elif approval.request.status.name in 'Blocked, Rejected' %}bg-danger{% else %}bg-secondary{% endif %}">{{ approval.request.status.name }}</span>
+                  <span class="badge {{ approval.request.status|pi_change_request_status_badge_class }}">{{ approval.request.status.name }}</span>
                 </td>
                 <td>
-                  <form method="post" class="d-inline" action="{% url 'pi-change-request-resource-approve' approval.pk %}">
+                  <form method="post" class="d-inline pi-change-guard-form" action="{% url 'pi-change-request-resource-approve' approval.pk %}">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-success me-1" data-confirm="Are you sure you want to approve this resource for this PI change request?">Approve</button>
                   </form>
@@ -171,16 +171,5 @@ Project PI Change Request Center
 
 {% block javascript %}
 {{ block.super }}
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    $("form").on("submit", function(event) {
-      var confirmMessage = $(this).find("button[data-confirm]").data("confirm");
-      if (confirmMessage && !confirm(confirmMessage)) {
-        event.preventDefault();
-        return;
-      }
-      $(this).find("button[type=submit]").prop("disabled", true);
-    });
-  });
-</script>
+{% include "pi_change_request/form_guard_pi_change_request.html" %}
 {% endblock %}

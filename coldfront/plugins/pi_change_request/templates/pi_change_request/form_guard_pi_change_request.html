@@ -1,0 +1,15 @@
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    // Guard the plugin's action forms: confirm submissions that opt in via
+    // data-confirm, and disable every guarded form's buttons once one is
+    // submitted so the action cannot be sent twice.
+    $("form.pi-change-guard-form").on("submit", function(event) {
+      var confirmMessage = $(this).find("button[data-confirm]").data("confirm");
+      if (confirmMessage && !confirm(confirmMessage)) {
+        event.preventDefault();
+        return;
+      }
+      $("form.pi-change-guard-form button[type=submit]").prop("disabled", true);
+    });
+  });
+</script>

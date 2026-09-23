@@ -72,7 +72,7 @@ class ProjectPiChangeRequestResourceApprovalAdmin(admin.ModelAdmin):
     list_display = ("pk", "resource", "status", "handler")
     list_filter = ("status", "resource")
     search_fields = ("handler__username", "handler__first_name", "handler__last_name", "request__project__title")
-    raw_id_fields = ("handler",)
+    raw_id_fields = ("request", "resource", "handler")
 
 
 @admin.register(ProjectPiChangeRequestResourceApprovalStatusChoice)
@@ -95,6 +95,7 @@ class ProjectPiChangeRequestUserApprovalAdmin(admin.ModelAdmin):
     list_display = ("pk", "request", "user", "status")
     list_filter = ("status",)
     search_fields = ("user__username", "user__first_name", "user__last_name")
+    raw_id_fields = ("request", "user")
 
 
 @admin.register(ProjectPiChangeRequestUserApprovalStatusChoice)

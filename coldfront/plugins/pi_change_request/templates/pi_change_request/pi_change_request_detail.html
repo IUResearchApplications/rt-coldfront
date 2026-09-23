@@ -35,13 +35,13 @@ Project PI Change Request Details
       </div>
       <div class="card-footer">
         {% if can_activate %}
-          <form method="post" class="d-inline" action="{% url 'pi-change-request-approval' pi_change_request.pk %}">
+          <form method="post" class="d-inline pi-change-guard-form" action="{% url 'pi-change-request-approval' pi_change_request.pk %}">
             {% csrf_token %}
             <button type="submit" class="btn btn-success me-1" data-confirm="Are you sure you want to activate this PI change request? The project's PI will be changed immediately.">Activate</button>
           </form>
         {% endif %}
         {% if can_deny %}
-          <form method="post" class="d-inline" action="{% url 'pi-change-request-denial' pi_change_request.pk %}">
+          <form method="post" class="d-inline pi-change-guard-form" action="{% url 'pi-change-request-denial' pi_change_request.pk %}">
             {% csrf_token %}
             <button type="submit" class="btn btn-danger me-1" data-confirm="Are you sure you want to deny this PI change request?">Deny</button>
           </form>
@@ -74,7 +74,7 @@ Project PI Change Request Details
                       <small class="text-muted d-block">Reason: {{ approval.reason }}</small>
                     {% endif %}
                   </div>
-                  <span class="badge {% if approval.status.name == "Approved" %}bg-success{% elif approval.status.name == "Denied" %}bg-danger{% else %}bg-secondary{% endif %}">{{ approval.status }}</span>
+                  <span class="badge {{ approval.status|pi_change_approval_status_badge_class }}">{{ approval.status }}</span>
                 </li>
               {% endfor %}
             </ul>
@@ -96,7 +96,7 @@ Project PI Change Request Details
                       <small class="text-muted d-block">Reason: {{ approval.reason }}</small>
                     {% endif %}
                   </div>
-                  <span class="badge {% if approval.status.name == "Approved" %}bg-success{% elif approval.status.name == "Denied" %}bg-danger{% else %}bg-secondary{% endif %}">{{ approval.status }}</span>
+                  <span class="badge {{ approval.status|pi_change_approval_status_badge_class }}">{{ approval.status }}</span>
                 </li>
               {% endfor %}
             </ul>
@@ -114,16 +114,5 @@ Project PI Change Request Details
 
 {% block javascript %}
 {{ block.super }}
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    $("form").on("submit", function(event) {
-      var confirmMessage = $(this).find("button[data-confirm]").data("confirm");
-      if (confirmMessage && !confirm(confirmMessage)) {
-        event.preventDefault();
-        return;
-      }
-      $(this).find("button[type=submit]").prop("disabled", true);
-    });
-  });
-</script>
+{% include "pi_change_request/form_guard_pi_change_request.html" %}
 {% endblock %}

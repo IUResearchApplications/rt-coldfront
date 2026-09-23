@@ -26,6 +26,7 @@ from coldfront.core.test_helpers.factories import (
 )
 from coldfront.plugins.pi_change_request.admin import ProjectPiChangeRequestAdmin
 from coldfront.plugins.pi_change_request.models import (
+    PI_CHANGE_DISALLOWED_PROJECT_STATUSES,
     ProjectPiChangeRequest,
     ProjectPiChangeRequestResourceApproval,
     ProjectPiChangeRequestResourceApprovalSetting,
@@ -48,7 +49,10 @@ from coldfront.plugins.pi_change_request.signals import (
 from coldfront.plugins.pi_change_request.templatetags.pi_change_request_tags import (
     active_pi_change_request,
     full_name_with_username,
+    pi_change_approval_status_badge_class,
     pi_change_pending_approvals_count,
+    pi_change_request_allowed,
+    pi_change_request_status_badge_class,
     pi_change_user_approval,
 )
 from coldfront.plugins.pi_change_request.utils import send_email
@@ -400,6 +404,48 @@ class ProjectPiChangeRequestModelTests(PiChangeRequestTestBase):
         approval.status = ProjectPiChangeRequestResourceApprovalStatusChoice.objects.get_by_natural_key("Approved")
         approval.save()
         self.assertEqual(pi_change_pending_approvals_count(self.superuser), 0)
+
+
+class PiChangeRequestTemplateFilterTests(PiChangeRequestTestBase):
+    """The badge and eligibility filters centralize status-to-HTML mapping for the templates."""
+
+    def test_request_status_badge_class(self):
+        cases = [
+            ("New", "bg-secondary"),
+            ("Awaiting Approvals", "bg-secondary"),
+            ("Ready", "bg-success"),
+            ("Complete", "bg-success"),
+            ("Blocked", "bg-danger"),
+            ("Rejected", "bg-danger"),
+        ]
+        for name, expected in cases:
+            with self.subTest(name=name):
+                self.assertEqual(pi_change_request_status_badge_class(name), expected)
+
+    def test_approval_status_badge_class(self):
+        cases = [
+            ("Pending", "bg-secondary"),
+            ("Approved", "bg-success"),
+            ("Denied", "bg-danger"),
+            ("Cancelled", "bg-secondary"),
+        ]
+        for name, expected in cases:
+            with self.subTest(name=name):
+                self.assertEqual(pi_change_approval_status_badge_class(name), expected)
+
+    def test_badge_filters_accept_status_objects(self):
+        request_status = ProjectPiChangeRequestStatusChoice.objects.get_by_natural_key("Ready")
+        approval_status = ProjectPiChangeRequestUserApprovalStatusChoice.objects.get_by_natural_key("Denied")
+        self.assertEqual(pi_change_request_status_badge_class(request_status), "bg-success")
+        self.assertEqual(pi_change_approval_status_badge_class(approval_status), "bg-danger")
+
+    def test_pi_change_request_allowed(self):
+        self.assertTrue(pi_change_request_allowed(self.project))
+
+        for name in PI_CHANGE_DISALLOWED_PROJECT_STATUSES:
+            with self.subTest(name=name):
+                self.project.status = ProjectStatusChoiceFactory(name=name)
+                self.assertFalse(pi_change_request_allowed(self.project))
 
 
 class CenterHistoryFilterTests(PiChangeRequestTestBase):

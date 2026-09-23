@@ -17,7 +17,7 @@ Deny Resource Approval
       for project <strong>{{ approval.request.project.title }}</strong> (Project ID: {{ approval.request.project.pk }})?
     </p>
     <p class="text-muted">Denying this resource will block the PI change request.</p>
-    <form method="post" action="{% url 'pi-change-request-resource-deny' approval.pk %}">
+    <form method="post" class="pi-change-guard-form" action="{% url 'pi-change-request-resource-deny' approval.pk %}">
       {% csrf_token %}
       <label class="form-label" for="deny-reason">Reason <span class="text-muted">(optional)</span></label>
       <textarea class="form-control mb-3" id="deny-reason" name="reason" rows="2"
@@ -31,12 +31,5 @@ Deny Resource Approval
 
 {% block javascript %}
   {{ block.super }}
-  <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      // Disable the submit button once the form is sent so the denial cannot be posted twice.
-      $("form").on("submit", function() {
-        $(this).find("button[type=submit]").prop("disabled", true);
-      });
-    });
-  </script>
+  {% include "pi_change_request/form_guard_pi_change_request.html" %}
 {% endblock %}

@@ -10,6 +10,6 @@
   <button type="button" class="btn btn-primary" disabled aria-disabled="true" title="A PI change request is already in progress for this project.">
     <i class="fa-solid fa-clock" aria-hidden="true"></i> PI Change In Progress
   </button>
-{% elif not project.status.name in 'Archived, Denied, Expired, Renewal Denied' %}
+{% elif project|pi_change_request_allowed %}
   <a class="btn btn-primary" href="{% url 'pi-change-request' project.pk %}"><i class="fa fa-user-pen" aria-hidden="true"></i> Change Project PI</a>
 {% endif %}
