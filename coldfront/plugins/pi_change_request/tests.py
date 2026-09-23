@@ -33,6 +33,7 @@ from coldfront.plugins.pi_change_request.models import (
     ProjectPiChangeRequestResourceApprovalStatusChoice,
     ProjectPiChangeRequestReviewGroupTicketEmail,
     ProjectPiChangeRequestStatusChoice,
+    ProjectPiChangeRequestUserApproval,
     ProjectPiChangeRequestUserApprovalStatusChoice,
 )
 from coldfront.plugins.pi_change_request.permissions import (
@@ -462,6 +463,19 @@ class CenterHistoryFilterTests(PiChangeRequestTestBase):
         kept = list(ProjectPiChangeRequestCenterView().get_status_changed_records(records))
         self.assertEqual([record.history_type for record in kept], ["+", "~"])
         self.assertEqual(kept[-1].status.name, "Ready")
+
+    def test_auto_approved_initiator_leaves_no_history_entry(self):
+        """The initiator's approval is recorded at creation, so it never produces a status-change
+        record; only the request creation entry appears for it in the center history."""
+        request_obj = self.create_request()  # initiator = project PI; their approval starts approved
+        pi_approval = request_obj.user_approvals.get(user=self.project.pi)
+        self.assertEqual(pi_approval.status.name, "Approved")
+
+        approval_records = ProjectPiChangeRequestUserApproval.history.filter(history_type="~").order_by(
+            "id", "history_id"
+        )
+        self.assertEqual(list(ProjectPiChangeRequestCenterView().get_status_changed_records(approval_records)), [])
+        self.assertFalse(pi_approval.history.filter(history_type="~").exists())
 
 
 @SILENT
@@ -1597,6 +1611,18 @@ class PiChangeRequestEmailTests(PiChangeRequestTestBase):
         bodies = "\n".join(message.body for message in mail.outbox)
         self.assertIn(f"{self.project.pi.get_full_name()} ({self.project.pi.username})", bodies)
         self.assertIn(f"{self.new_pi.get_full_name()} ({self.new_pi.username})", bodies)
+
+    def test_creation_emails_skips_approver_without_email(self):
+        self.new_pi.email = ""
+        self.new_pi.save()
+
+        self.client.force_login(self.project.pi)
+        self.client.post(self.create_url, {"new_pi": self.new_pi.pk, "justification": "PI is stepping down"})
+
+        # the ticket system still hears about the request, but the new PI cannot be emailed
+        subjects = [message.subject for message in mail.outbox]
+        self.assertTrue(any("New Project PI Change Request" in subject for subject in subjects))
+        self.assertFalse(any("Action Required: PI Change Request for" in subject for subject in subjects))
 
     def test_ready_email_sent_when_request_becomes_ready(self):
         request_obj = self.create_request()  # project PI initiated; their approval starts approved

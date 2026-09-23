@@ -21,6 +21,9 @@ from coldfront.plugins.pi_change_request.signals import (
 @admin.register(ProjectPiChangeRequest)
 class ProjectPiChangeRequestAdmin(admin.ModelAdmin):
     fields_add = ("project", "new_pi", "justification")
+    # The change form is a deliberate escape hatch for repairing a request's state by hand.
+    # Setting "status" here bypasses the center actions: in particular, flipping a request to
+    # "Complete" does NOT apply the PI change (apply_pi_change only runs in the activation view).
     fields_change = ("project", "new_pi", "justification", "status", "resources")
     list_display = ("pk", "project_title", "new_pi", "status")
     list_filter = ("status", "resources")

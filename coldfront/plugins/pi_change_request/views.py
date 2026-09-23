@@ -212,9 +212,9 @@ class ProjectPiChangeRequestCenterView(SuperuserOrPermissionRequiredMixin, Templ
             .order_by("id", "history_id")
         )
 
-        managed_resource_ids = self.managed_resource_ids
-        if managed_resource_ids is not None:
-            approval_history = approval_history.filter(resource_id__in=managed_resource_ids)
+        managed_ids = self.managed_resource_ids
+        if managed_ids is not None:
+            approval_history = approval_history.filter(resource_id__in=managed_ids)
 
         entries = [
             self.get_request_history_entry(record) for record in self.get_status_changed_records(request_history)

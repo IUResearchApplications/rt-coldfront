@@ -90,15 +90,15 @@ class ProjectPiChangeRequest(TimeStampedModel):
         )
 
     def create_resource_approvals(self):
-        settings = ProjectPiChangeRequestResourceApprovalSetting.objects.filter(
+        approval_settings = ProjectPiChangeRequestResourceApprovalSetting.objects.filter(
             resource__in=self.resources.all(), requires_approval=True
         ).select_related("resource")
         approvals = []
-        for setting in settings:
+        for approval_setting in approval_settings:
             approvals.append(
                 ProjectPiChangeRequestResourceApproval.objects.create(
                     request=self,
-                    resource=setting.resource,
+                    resource=approval_setting.resource,
                     status=ProjectPiChangeRequestResourceApprovalStatusChoice.objects.get_by_natural_key("Pending"),
                 )
             )
