@@ -1,7 +1,5 @@
 {% extends "common/base.html" %}
-{% load crispy_forms_tags %}
 {% load pi_change_request_tags %}
-{% load static %}
 
 
 {% block title %}
@@ -20,7 +18,7 @@ Project PI Change Request Details
       </div>
       <div class="card-body">
         <div class="row">
-          <div class="col"><p class="card-text"><strong>Project: </strong>{{ pi_change_request.project.title }}</p></div>
+          <div class="col"><p class="card-text"><strong>Project: </strong><a href="{{ pi_change_request.project.get_absolute_url }}">{{ pi_change_request.project.title }} ({{ pi_change_request.project.pk }})</a></p></div>
           <div class="col"><p class="card-text"><strong>Current PI: </strong>{{ pi_change_request.current_pi|full_name_with_username }}</p></div>
         </div>
         <div class="row">

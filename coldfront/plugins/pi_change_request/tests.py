@@ -1071,6 +1071,11 @@ class PiChangeRequestDetailViewTests(PiChangeRequestTestBase):
         response = self.client.get(reverse("pi-change-request-details", kwargs={"pk": self.request_obj.pk + 100}))
         self.assertEqual(response.status_code, 404)
 
+    def test_page_links_to_project(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.detail_url)
+        self.assertContains(response, self.project.get_absolute_url())
+
     def test_page_lists_request_details_and_user_approvals(self):
         self.client.force_login(self.superuser)
         response = self.client.get(self.detail_url)
