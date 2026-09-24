@@ -685,6 +685,16 @@ class PiChangeRequestUserResponseViewTests(PiChangeRequestTestBase):
         self.assertContains(response, 'id="decline-reason"')
         self.assertContains(response, 'name="reason"')
 
+    def test_response_forms_are_guarded(self):
+        self.client.force_login(self.project.pi)
+        response = self.client.get(self.pi_detail_url)
+        accept_form = f'class="user-response-form pi-change-guard-form mb-3" action="{self.pi_approve_url}"'
+        decline_form = f'class="user-response-form pi-change-guard-form" action="{self.pi_deny_url}"'
+        self.assertContains(response, accept_form)
+        self.assertContains(response, decline_form)
+        # the guard script itself is on the page
+        self.assertContains(response, 'form.pi-change-guard-form").on("submit"')
+
     def test_declined_reason_shown_after_response(self):
         self.client.force_login(self.project.pi)
         self.client.post(self.pi_deny_url, {"reason": "Not this quarter"})
@@ -769,6 +779,13 @@ class PiChangeRequestResourceApprovalViewTests(PiChangeRequestTestBase):
         self.assertContains(response, 'name="reason"')
         self.assertContains(response, "Confirm Deny")
         self.assertContains(response, "Denying this resource will block the PI change request.")
+
+    def test_deny_form_is_guarded(self):
+        self.client.force_login(self.reviewer)
+        response = self.client.get(self.deny_url)
+        self.assertContains(response, f'class="pi-change-guard-form" action="{self.deny_url}"')
+        # the guard script itself is on the page
+        self.assertContains(response, 'form.pi-change-guard-form").on("submit"')
 
     def test_deny_without_reason_still_blocks(self):
         self.client.force_login(self.reviewer)
@@ -1015,6 +1032,18 @@ class PiChangeRequestCenterViewTests(PiChangeRequestTestBase):
         self.assertContains(response, 'name="csrfmiddlewaretoken"')
         self.assertNotContains(response, "post-link")
 
+    def test_action_forms_are_guarded(self):
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.center_url)
+        # every action form opts into the confirm/double-submit guard
+        approval = self.request_obj.resource_approvals.get()
+        deny_url = reverse("pi-change-request-denial", kwargs={"pk": self.request_obj.pk})
+        approve_url = reverse("pi-change-request-resource-approve", kwargs={"pk": approval.pk})
+        self.assertContains(response, f'class="d-inline pi-change-guard-form" action="{deny_url}"')
+        self.assertContains(response, f'class="d-inline pi-change-guard-form" action="{approve_url}"')
+        # the guard script itself is on the page
+        self.assertContains(response, 'form.pi-change-guard-form").on("submit"')
+
     def test_navbar_shows_pending_approvals_count(self):
         self.client.force_login(self.superuser)
         response = self.client.get(self.center_url)
@@ -1168,6 +1197,18 @@ class PiChangeRequestDetailViewTests(PiChangeRequestTestBase):
         self.mark_request_ready()
         response = self.client.get(self.detail_url)
         self.assertContains(response, 'data-confirm="Are you sure you want to activate')
+
+    def test_action_forms_are_guarded(self):
+        self.mark_request_ready()
+        self.client.force_login(self.superuser)
+        response = self.client.get(self.detail_url)
+        # both action forms opt into the confirm/double-submit guard
+        activate_url = reverse("pi-change-request-approval", kwargs={"pk": self.request_obj.pk})
+        deny_url = reverse("pi-change-request-denial", kwargs={"pk": self.request_obj.pk})
+        self.assertContains(response, f'class="d-inline pi-change-guard-form" action="{activate_url}"')
+        self.assertContains(response, f'class="d-inline pi-change-guard-form" action="{deny_url}"')
+        # the guard script itself is on the page
+        self.assertContains(response, 'form.pi-change-guard-form").on("submit"')
 
     def test_viewers_see_no_action_buttons(self):
         viewer = UserFactory()
