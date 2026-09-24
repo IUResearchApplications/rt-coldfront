@@ -505,6 +505,13 @@ class PiChangeRequestCreationViewTests(PiChangeRequestTestBase):
         self.assertContains(response, "recorded automatically when you submit")
         self.assertContains(response, "remains a manager of the project")
 
+    def test_creation_form_is_guarded(self):
+        self.client.force_login(self.project.pi)
+        response = self.client.get(self.url)
+        self.assertContains(response, '<form method="post" class="pi-change-guard-form">')
+        # the guard script itself is on the page
+        self.assertContains(response, 'form.pi-change-guard-form").on("submit"')
+
     def test_creates_request_with_approvals(self):
         self.set_requires_approval(self.resource, True)
         response = self.post_creation(self.project.pi, self.new_pi)
