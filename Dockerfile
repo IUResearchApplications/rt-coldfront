@@ -3,6 +3,7 @@ FROM ubuntu:24.04 AS base
 FROM base AS cfimage
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        tzdata \
         libldap2 \
         libsasl2-2 \
         libmariadb3 \
@@ -17,6 +18,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
 FROM cfimage AS builder
 
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y \
+        tzdata \
         gcc \
         cmake \
         pkg-config \
@@ -66,7 +68,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         --extra mysql \
         --extra aa \
         --extra cas \
-        --extra ccr
+        --extra ccr \
+        --extra oidc
 
 
 FROM base AS oracle-client
