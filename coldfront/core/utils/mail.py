@@ -127,9 +127,23 @@ def send_allocation_admin_email(allocation_obj, subject, template_name, url_path
 
 
 def send_allocation_customer_email(
-    request, allocation_obj, subject, template_name, url_path="", domain_url="", addtl_context=None
+    request,
+    allocation_obj,
+    subject,
+    template_name,
+    url_path="",
+    domain_url="",
+    addtl_context=None,
+    only_project_managers=False,
 ):
-    """Send allocation customer emails"""
+    """Send allocation customer emails
+
+    Args:
+        only_project_managers: When True, send the email to the project's active managers
+            with notifications enabled instead of the allocation's users.
+
+    The PI is always added to the receiver list.
+    """
     if not url_path:
         url_path = reverse("allocation-detail", kwargs={"pk": allocation_obj.pk})
 
@@ -147,11 +161,22 @@ def send_allocation_customer_email(
     if addtl_context:
         ctx.update(addtl_context)
 
-    allocation_users = allocation_obj.allocationuser_set.exclude(status__name__in=["Removed", "Error"])
-    email_receiver_list = []
-    for allocation_user in allocation_users:
-        if allocation_user.allocation.project.projectuser_set.get(user=allocation_user.user).enable_notifications:
-            email_receiver_list.append(allocation_user.user.email)
+    if only_project_managers:
+        email_receiver_list = list(
+            project_obj.projectuser_set.filter(
+                role__name="Manager", status__name="Active", enable_notifications=True
+            ).values_list("user__email", flat=True)
+        )
+    else:
+        email_receiver_list = []
+        allocation_users = allocation_obj.allocationuser_set.exclude(status__name__in=["Removed", "Error"])
+        for allocation_user in allocation_users:
+            if allocation_user.allocation.project.projectuser_set.get(user=allocation_user.user).enable_notifications:
+                email_receiver_list.append(allocation_user.user.email)
+
+    # The PI is always included in allocation emails.
+    if project_obj.pi.email and project_obj.pi.email not in email_receiver_list:
+        email_receiver_list.append(project_obj.pi.email)
 
     send_email_template(subject, template_name, ctx, email_receiver_list)
 

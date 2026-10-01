@@ -1,0 +1,8 @@
+Dear {{ center_name }} user,
+
+You have been removed from project "{{ project_title }}" by {{ action_user }}. You no longer have access to any allocations in this project.
+{% if removed_users_breakdown %}Resources you no longer have access to:
+{% spaceless %}{% for allocation, identifiers in removed_users_breakdown %}{{ allocation }}{% if identifiers %}: {% for identifier in identifiers %}{{ identifier }},{% endfor %}{% endif %}
+{% endfor %}{% endspaceless %}{% endif %}
+Thank you,
+{{ signature }}

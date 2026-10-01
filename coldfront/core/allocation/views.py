@@ -365,6 +365,7 @@ class AllocationDetailView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
                     "Allocation Denied",
                     "email/allocation_denied.txt",
                     domain_url=get_domain_url(self.request),
+                    only_project_managers=True,
                 )
                 messages.success(request, "Allocation Denied!")
             elif allocation_obj.status.name == "Revoked":
@@ -2003,6 +2004,7 @@ class AllocationChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, FormVi
                 "Allocation Change Denied",
                 "email/allocation_change_denied.txt",
                 domain_url=get_domain_url(self.request),
+                only_project_managers=True,
             )
 
             logger.info(

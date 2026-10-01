@@ -1,0 +1,15 @@
+Dear {{ center_name }} user,
+
+You have been added to an allocation for {{ resource }} in project "{{ project_title }}" by {{ action_user }}.
+Additional Info:
+Project PI: {{ project_pi }}
+Project URL: {{ project_url }}
+Allocation URL: {{ allocation_url }}
+{% for type, value in allocation_identifiers %}{{ type }}: {{ value }}{% endfor %}{% spaceless %}
+{% if allocation_status not in 'Active, Renewal Requested' %}
+Note: This allocation has not been approved yet and is not currently providing access.
+{% endif %}
+{% endspaceless %}
+
+Thank you,
+{{ signature }}
