@@ -15,7 +15,6 @@ coldfront_configs = [
     "logging.py",
     "core.py",
     "email.py",
-    "plugins/cas_login.py",
 ]
 
 # ColdFront plugin settings
