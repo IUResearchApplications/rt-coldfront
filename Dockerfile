@@ -56,7 +56,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         --extra oidc \
         --extra mysql \
         --extra aa \
-        --extra cas \
         --extra ccr
 COPY . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -67,7 +66,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         --extra oidc \
         --extra mysql \
         --extra aa \
-        --extra cas \
         --extra ccr \
         --extra oidc
 
