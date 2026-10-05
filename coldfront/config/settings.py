@@ -43,6 +43,7 @@ plugin_configs = {
     "PLUGIN_HELP": "plugins/help.py",
     "PLUGIN_REQUEST_FORMS": "plugins/request_forms.py",
     "PLUGIN_LDAP_MISC": "plugins/ldap_misc.py",
+    "PLUGIN_OTEL": "plugins/otel.py",
 }
 
 # This allows plugins to be enabled via environment variables. Can alternatively
