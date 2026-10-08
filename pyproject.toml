@@ -88,6 +88,13 @@ aa = [
 ccr = [
     "coldfront-custom-resources",
 ]
+otel = [
+    "opentelemetry-instrumentation-django>=0.66b0",
+    "opentelemetry-instrumentation-dbapi>=0.66b0",
+    "opentelemetry-instrumentation-redis>=0.66b0",
+    "opentelemetry-sdk>=1.45.0",
+    "opentelemetry-exporter-otlp-proto-http>=1.45.0",
+]
 
 [dependency-groups]
 dev = [

@@ -2,10 +2,9 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-import django_cas_ng.views
 from django.conf import settings
 from django.contrib.auth.views import LoginView, LogoutView
-from django.urls import path, reverse_lazy
+from django.urls import path
 
 import coldfront.core.user.views as user_views
 from coldfront.config.env import ENV
@@ -30,6 +29,8 @@ urlpatterns = [
 
 
 if ENV.bool("PLUGIN_CAS", default=True):
+    import django_cas_ng.views
+
     urlpatterns += [
         path("login", django_cas_ng.views.LoginView.as_view(), name="login"),
         path("logout", django_cas_ng.views.LogoutView.as_view(), name="logout"),

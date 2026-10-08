@@ -56,8 +56,8 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         --extra oidc \
         --extra mysql \
         --extra aa \
-        --extra cas \
-        --extra ccr
+        --extra ccr \
+        --extra otel
 COPY . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
   uv sync \
@@ -67,9 +67,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         --extra oidc \
         --extra mysql \
         --extra aa \
-        --extra cas \
         --extra ccr \
-        --extra oidc
+        --extra oidc \
+        --extra otel
 
 
 FROM base AS oracle-client
