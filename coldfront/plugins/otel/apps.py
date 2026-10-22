@@ -15,6 +15,7 @@ class OtelConfig(AppConfig):
         from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
         from opentelemetry.instrumentation.dbapi import trace_integration
         from opentelemetry.instrumentation.django import DjangoInstrumentor
+        from opentelemetry.instrumentation.logging import LoggingInstrumentor
         from opentelemetry.instrumentation.redis import RedisInstrumentor
         from opentelemetry.sdk.resources import Resource
         from opentelemetry.sdk.trace import TracerProvider
@@ -24,6 +25,7 @@ class OtelConfig(AppConfig):
         trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
 
         DjangoInstrumentor().instrument()
+        LoggingInstrumentor().instrument(inject_trace_context=True, enable_log_auto_instrumentation=False)
         RedisInstrumentor().instrument()
 
         if importlib.util.find_spec("MySQLdb") is not None:

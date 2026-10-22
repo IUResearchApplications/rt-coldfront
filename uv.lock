@@ -337,6 +337,7 @@ otel = [
     { name = "opentelemetry-exporter-otlp-proto-http" },
     { name = "opentelemetry-instrumentation-dbapi" },
     { name = "opentelemetry-instrumentation-django" },
+    { name = "opentelemetry-instrumentation-logging" },
     { name = "opentelemetry-instrumentation-redis" },
     { name = "opentelemetry-sdk" },
 ]
@@ -399,6 +400,7 @@ requires-dist = [
     { name = "opentelemetry-exporter-otlp-proto-http", marker = "extra == 'otel'", specifier = ">=1.45.0" },
     { name = "opentelemetry-instrumentation-dbapi", marker = "extra == 'otel'", specifier = ">=0.66b0" },
     { name = "opentelemetry-instrumentation-django", marker = "extra == 'otel'", specifier = ">=0.66b0" },
+    { name = "opentelemetry-instrumentation-logging", marker = "extra == 'otel'", specifier = ">=0.66b0" },
     { name = "opentelemetry-instrumentation-redis", marker = "extra == 'otel'", specifier = ">=0.66b0" },
     { name = "opentelemetry-sdk", marker = "extra == 'otel'", specifier = ">=1.45.0" },
     { name = "oracledb", marker = "extra == 'aa'", specifier = ">=4.0.1" },
@@ -433,7 +435,7 @@ docs = [
 
 [[package]]
 name = "coldfront-custom-resources"
-version = "1.4.6"
+version = "1.5.0"
 source = { directory = "coldfront-custom-resources" }
 dependencies = [
     { name = "coldfront" },
@@ -1515,6 +1517,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d6/11/17700f8c7c6cc4421f4c2f969e84a8c66373f7107f83615cd2d89876e577/opentelemetry_instrumentation_django-0.66b0.tar.gz", hash = "sha256:f65802e8c689e4bf7089435b9293561f929c441a2a277b58a206062419debe04", size = 25234, upload-time = "2026-09-25T12:35:57.986Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f0/32/856eaa3d057689d1967fc990e5ac781f8a0f79cd370947979aff373c0785/opentelemetry_instrumentation_django-0.66b0-py3-none-any.whl", hash = "sha256:cb4b8911a14678164e679f82be82524c38d8c481525483d734e68300b7513434", size = 18914, upload-time = "2026-09-25T12:35:08.746Z" },
+]
+
+[[package]]
+name = "opentelemetry-instrumentation-logging"
+version = "0.66b0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "opentelemetry-api" },
+    { name = "opentelemetry-instrumentation" },
+    { name = "opentelemetry-semantic-conventions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e0/f9/33a587a00c83e13d46a4570cb8ccb63129dfd803171a6ae173eb88cd9217/opentelemetry_instrumentation_logging-0.66b0.tar.gz", hash = "sha256:e3516fd5dbff7a93bb159e72802bb8f96ab92645c5bd81488d240b6f23a6df59", size = 20351, upload-time = "2026-09-25T12:36:05.072Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c3/93/c9ee99835a67711d2115e1cb9335e7f96736f6103b3368653fbd1d11399f/opentelemetry_instrumentation_logging-0.66b0-py3-none-any.whl", hash = "sha256:3b580f15f8b7874e58c835230571f1a46cc156399bedd77279d7e7510f76df43", size = 15928, upload-time = "2026-09-25T12:35:17.602Z" },
 ]
 
 [[package]]

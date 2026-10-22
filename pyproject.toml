@@ -90,6 +90,7 @@ ccr = [
 ]
 otel = [
     "opentelemetry-instrumentation-django>=0.66b0",
+    "opentelemetry-instrumentation-logging>=0.66b0",
     "opentelemetry-instrumentation-dbapi>=0.66b0",
     "opentelemetry-instrumentation-redis>=0.66b0",
     "opentelemetry-sdk>=1.45.0",
