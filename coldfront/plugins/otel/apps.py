@@ -37,3 +37,29 @@ class OtelConfig(AppConfig):
                 "mysql",
                 connection_attributes={"database": "db", "host": "host", "user": "user", "port": "port"},
             )
+
+        try:
+            from ldap3.core.connection import Connection as LdapConnection
+            from ldap3.core.connection import SyncStrategy as LdapSyncStrategy
+        except ImportError:
+            LdapConnection = None
+
+        if (
+            LdapConnection is not None
+            and LdapConnection.search.__name__ == "search"
+            and LdapSyncStrategy.open.__name__ == "open"
+        ):
+            _tracer = trace.get_tracer(__name__)
+            _original_open = LdapSyncStrategy.open
+            _original_search = LdapConnection.search
+
+            def _traced_open(self, *args, **kwargs):
+                with _tracer.start_as_current_span("ldap3.connect"):
+                    return _original_open(self, *args, **kwargs)
+
+            def _traced_search(self, *args, **kwargs):
+                with _tracer.start_as_current_span("ldap3.search"):
+                    return _original_search(self, *args, **kwargs)
+
+            LdapSyncStrategy.open = _traced_open
+            LdapConnection.search = _traced_search
