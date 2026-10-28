@@ -5,6 +5,7 @@ on:
   pull_request:
     branches:
       - main
+      - stable/1.1.x
 
 jobs:
   build:

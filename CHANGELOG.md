@@ -1,5 +1,13 @@
 # ColdFront Changelog
 
+## [1.1.10] - 2026-10-03
+
+- Bump deps
+- Migrate bibtexparser to 2.x [#1036](https://github.com/coldfront/coldfront/pull/1036)
+- Fix n+1 SQL queries for REST API [#1025](https://github.com/coldfront/coldfront/pull/1025)
+- Fix render allocation renewal url in allocation expiring email template [#1026](https://github.com/coldfront/coldfront/pull/1026)
+- Fix validating nonexistent inputs [#1032](https://github.com/coldfront/coldfront/pull/1032)
+
 ## [1.1.9] - 2026-07-24
 
 - Bump deps
@@ -198,4 +206,5 @@
 [1.1.7]: https://github.com/coldfront/coldfront/releases/tag/v1.1.7
 [1.1.8]: https://github.com/coldfront/coldfront/releases/tag/v1.1.8
 [1.1.9]: https://github.com/coldfront/coldfront/releases/tag/v1.1.9
-[Unreleased]: https://github.com/coldfront/coldfront/compare/v1.1.9...HEAD
+[1.1.10]: https://github.com/coldfront/coldfront/releases/tag/v1.1.10
+[Unreleased]: https://github.com/coldfront/coldfront/compare/v1.1.10...HEAD

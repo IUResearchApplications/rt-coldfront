@@ -6,8 +6,7 @@ import contextlib
 import itertools
 from unittest.mock import Mock, patch, sentinel
 
-import bibtexparser.bibdatabase
-import bibtexparser.bparser
+import bibtexparser
 import doi2bib
 from django.test import TestCase
 
@@ -156,23 +155,16 @@ class TestDataRetrieval(TestCase):
             crossref = Mock(spec_set=doi2bib.crossref)
             crossref.get_bib.side_effect = mock_get_bib
 
-            def mock_parse(thing_to_parse):
+            def mock_parse_str(thing_to_parse):
                 # ensure bib_str from get_bib() is used
                 if thing_to_parse is sentinel.bib_str:
-                    bibdatabase_cls = Mock(spec_set=bibtexparser.bibdatabase.BibDatabase)
-                    db = bibdatabase_cls()
-                    db.entries = [self._bibdatabase_first_entry.copy()]
-                    return db
-
-            bibtexparser_cls = Mock(spec_set=bibtexparser.bparser.BibTexParser)
-            bibtexparser_cls.return_value.parse.side_effect = mock_parse
-
-            as_text = Mock(spec_set=bibtexparser.bibdatabase.as_text)
-            as_text.side_effect = lambda bib_entry: "as_text({})".format(bib_entry)
+                    library_cls = Mock(spec_set=bibtexparser.Library)
+                    library = library_cls()
+                    library.entries = [self._bibdatabase_first_entry.copy()]
+                    return library
 
             self.crossref = crossref
-            self.bibtexparser_cls = bibtexparser_cls
-            self.as_text = as_text
+            self.mock_parse_str = mock_parse_str
 
         @contextlib.contextmanager
         def patch(self):
@@ -182,9 +174,8 @@ class TestDataRetrieval(TestCase):
 
             with contextlib.ExitStack() as stack:
                 patches = [
-                    patch(dotpath("BibTexParser"), new=self.bibtexparser_cls),
+                    patch("bibtexparser.parse_string", new=self.mock_parse_str),
                     patch(dotpath("crossref"), new=self.crossref),
-                    patch(dotpath("as_text"), new=self.as_text),
                 ]
                 for p in patches:
                     stack.enter_context(p)
@@ -239,21 +230,6 @@ class TestDataRetrieval(TestCase):
 
             # need to transform our expected data to check mock calls
             expected_data = testdata.copy()
-            mock_as_text = mocks.as_text.side_effect
-
-            # we expect `as_text` to be run on...
-            as_text_expected_on = ["author", "title", "year"]
-            if not is_nojournal_test:
-                as_text_expected_on.append("journal")
-
-            for key in as_text_expected_on:
-                transformed = mock_as_text(expected_data[key])
-
-                # check assumptions: the transformation is meaningful
-                assert transformed
-                assert transformed != expected_data[key]
-
-                expected_data[key] = transformed
 
             # for no-journal tests, we expect a special string
             if is_nojournal_test:

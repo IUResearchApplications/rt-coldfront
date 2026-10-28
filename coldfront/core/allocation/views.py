@@ -2013,6 +2013,12 @@ class AllocationChangeDetailView(LoginRequiredMixin, UserPassesTestMixin, FormVi
             )
             return HttpResponseRedirect(reverse("allocation-change-detail", kwargs={"pk": pk}))
 
+        if action == "update" and allocation_change_obj.status.name != "Pending":
+            allocation_change_obj.notes = notes
+            allocation_change_obj.save()
+            messages.success(request, "Allocation change request updated!")
+            return HttpResponseRedirect(reverse("allocation-change-detail", kwargs={"pk": pk}))
+
         if not allocation_change_form.is_valid() or (allocation_attributes_to_change and not formset.is_valid()):
             for error in allocation_change_form.errors:
                 messages.error(request, error)

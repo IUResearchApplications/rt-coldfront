@@ -16,12 +16,17 @@ ColdFront requires Python 3+
 
 ## Installation Methods
 
-### Install via uv (recommended)
+### Install from source
 
 The recommended way of installing ColdFront is via [uv](https://docs.astral.sh/uv/):
 
 ```
-$ uv tool install coldfront[ldap,freeipa,oidc]
+$ git clone https://github.com/coldfront/coldfront.git
+$ cd coldfront
+$ git checkout stable/1.1.x
+
+# Add any extra's depending on your needs
+$ uv sync --extra ldap --extra freeipa --extra pg --extra mysql
 ```
 
 ### Install via pip
@@ -39,14 +44,6 @@ We recommend you install ColdFront in a test environment first;
 however, if you want to jump right to instructions for installing and deploying
 in a production environment, [go here](deploy.md)
 
-### Install from source
-
-```
-$ git clone https://github.com/coldfront/coldfront.git
-$ cd coldfront
-$ git checkout stable/1.1.x
-$ uv sync --group dev
-```
 
 ## Configuring ColdFront
 
