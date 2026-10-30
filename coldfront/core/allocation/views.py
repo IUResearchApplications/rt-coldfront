@@ -851,7 +851,7 @@ class AllocationAddUsersView(LoginRequiredMixin, UserPassesTestMixin, TemplateVi
             "Paid",
         ]:
             message = f"You cannot add users to an allocation with status {allocation_obj.status.name}."
-        elif allocation_obj.get_parent_resource.name == "ResDB Account":
+        elif allocation_obj.get_parent_resource.name in ["ResDB Account", "Geode-Project"]:
             message = f"You cannot add users to a {allocation_obj.get_parent_resource.name} allocation."
         if message:
             messages.error(request, message)
@@ -1012,7 +1012,7 @@ class AllocationRemoveUsersView(LoginRequiredMixin, UserPassesTestMixin, Templat
             "Renewal Requested",
         ]:
             message = f"You cannot remove users from a allocation with status {allocation_obj.status.name}."
-        elif allocation_obj.get_parent_resource.name == "ResDB Account":
+        elif allocation_obj.get_parent_resource.name in ["ResDB Account", "Geode-Project"]:
             message = f"You cannot remove users from a {allocation_obj.get_parent_resource.name} allocation."
         if message:
             messages.error(request, message)
