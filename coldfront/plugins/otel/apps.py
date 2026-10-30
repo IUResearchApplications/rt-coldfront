@@ -25,6 +25,10 @@ class OtelConfig(AppConfig):
         from opentelemetry.sdk.trace import TracerProvider
         from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
+        from coldfront.plugins.otel.sanitization import redact_request_hook
+
+        LoggingInstrumentor().instrument(inject_trace_context=True, enable_log_auto_instrumentation=False)
+
         resource = Resource.create()
         trace.set_tracer_provider(TracerProvider(resource=resource))
         trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
@@ -32,8 +36,7 @@ class OtelConfig(AppConfig):
             MeterProvider(resource=resource, metric_readers=[PeriodicExportingMetricReader(OTLPMetricExporter())])
         )
 
-        DjangoInstrumentor().instrument()
-        LoggingInstrumentor().instrument(inject_trace_context=True, enable_log_auto_instrumentation=False)
+        DjangoInstrumentor().instrument(request_hook=redact_request_hook)
         RedisInstrumentor().instrument()
 
         if importlib.util.find_spec("MySQLdb") is not None:
