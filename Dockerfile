@@ -2,6 +2,7 @@ FROM ubuntu:24.04 AS base
 
 FROM base AS cfimage
 
+ARG TARGETARCH
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         tzdata \
         libldap2 \
@@ -13,11 +14,15 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
         libglib2.0-0 \
         libdbus-1-3 \
         libaio1t64 && \
-    ln -s /usr/lib/x86_64-linux-gnu/libaio.so.1t64 /usr/lib/x86_64-linux-gnu/libaio.so.1
+    case "$TARGETARCH" in \
+        arm64) ln -s /usr/lib/aarch64-linux-gnu/libaio.so.1t64 /usr/lib/aarch64-linux-gnu/libaio.so.1 ;; \
+        *) ln -s /usr/lib/x86_64-linux-gnu/libaio.so.1t64 /usr/lib/x86_64-linux-gnu/libaio.so.1 ;; \
+    esac && \
+    rm -rf /var/lib/apt/lists/*
 
 FROM cfimage AS builder
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get install -y \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         tzdata \
         gcc \
         cmake \
@@ -68,7 +73,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         --extra mysql \
         --extra aa \
         --extra ccr \
-        --extra oidc \
         --extra otel
 
 
@@ -78,7 +82,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
         unzip \
         wget && \
-    wget -q https://download.oracle.com/otn_software/linux/instantclient/2326200v2/instantclient-basic-linux.x64-23.26.2.0.0.zip -O /tmp/oracle.zip && \
+    wget -q https://download.oracle.com/otn_software/linux/instantclient/2326400/instantclient-basiclite-linux.x64-23.26.4.0.0.zip -O /tmp/oracle.zip && \
     unzip /tmp/oracle.zip -d /opt/oracle && \
     rm /tmp/oracle.zip && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -89,7 +93,8 @@ FROM cfimage
 COPY --from=oracle-client /opt/oracle/instantclient_23_26 /opt/oracle/instantclient_23_26
 RUN sh -c "echo /opt/oracle/instantclient_23_26 > /etc/ld.so.conf.d/oracle-instantclient.conf" && ldconfig && \
     groupadd -g 1001 coldfrontgroup && useradd -u 1001 -g coldfrontgroup -d /app -s /bin/false coldfrontuser && \
-    mkdir -p /data/static /data/slurm/slurm_dump /data/slate_projects/incoming
+    mkdir -p /data/static /data/slurm/slurm_dump /data/slate_projects/incoming && \
+    chown -R coldfrontuser:coldfrontgroup /data
 COPY --from=builder --chown=1001:1001 /python /python
 COPY --from=builder --chown=1001:1001 /app /app
 ENV PATH="/app/.venv/bin:$PATH"

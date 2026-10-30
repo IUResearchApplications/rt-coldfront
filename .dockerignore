@@ -27,8 +27,16 @@
 */.*_cache
 **/.github
 */docs
+docs/
 .readthedocs.y*ml
 **/*.db
 **/pyrightconfig.json
 **/local_settings.py
 **/local_urls.py
+*.tar.gz
+*.log
+.ruff_cache
+env/
+maintenance_mode.txt
+coldfront/components/site/static/images/
+**/pyrefly.toml
