@@ -19,6 +19,7 @@ class OtelConfig(AppConfig):
         from opentelemetry.instrumentation.django import DjangoInstrumentor
         from opentelemetry.instrumentation.logging import LoggingInstrumentor
         from opentelemetry.instrumentation.redis import RedisInstrumentor
+        from opentelemetry.instrumentation.requests import RequestsInstrumentor
         from opentelemetry.sdk.metrics import MeterProvider
         from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
         from opentelemetry.sdk.resources import Resource
@@ -38,6 +39,7 @@ class OtelConfig(AppConfig):
 
         DjangoInstrumentor().instrument(request_hook=redact_request_hook)
         RedisInstrumentor().instrument()
+        RequestsInstrumentor().instrument()
 
         if importlib.util.find_spec("MySQLdb") is not None:
             import MySQLdb
@@ -69,21 +71,59 @@ class OtelConfig(AppConfig):
             _original_open = LdapSyncStrategy.open
             _original_search = LdapConnection.search
 
-            def _traced(operation, original):
+            def _server_attributes(target, args=None, kwargs=None):
+                # SyncStrategy.open runs on the strategy object, whose connection is exposed as `.connection`.
+                connection = getattr(target, "connection", target)
+                server = getattr(connection, "server", None)
+                attributes = {}
+                if server is not None:
+                    if server.host:
+                        attributes["net.peer.name"] = server.host
+                    if server.port:
+                        attributes["net.peer.port"] = server.port
+                return attributes
+
+            def _base_dn_attributes(connection, args, kwargs):
+                base_dn = args[0] if args else kwargs.get("search_base")
+                return {"ldap.base_dn": base_dn} if base_dn else {}
+
+            def _traced(operation, original, request_attributes=None, result_attributes=None):
                 def wrapper(self, *args, **kwargs):
                     attributes = {"operation": operation}
                     start = time.perf_counter()
                     try:
-                        with _tracer.start_as_current_span(f"ldap3.{operation}"):
-                            return original(self, *args, **kwargs)
-                    except Exception:
-                        ldap_operations_total.add(1, {**attributes, "status": "error"})
-                        raise
+                        with _tracer.start_as_current_span(f"ldap3.{operation}", attributes=attributes) as span:
+                            if request_attributes is not None:
+                                try:
+                                    span.set_attributes(request_attributes(self, args, kwargs))
+                                except Exception:
+                                    pass
+                            try:
+                                result = original(self, *args, **kwargs)
+                            except Exception:
+                                ldap_operations_total.add(1, {**attributes, "status": "error"})
+                                raise
+                            if result_attributes is not None:
+                                try:
+                                    span.set_attributes(result_attributes(self, result))
+                                except Exception:
+                                    pass
+                            ldap_operations_total.add(1, {**attributes, "status": "success"})
+                            return result
                     finally:
                         ldap_operation_duration_seconds.record(time.perf_counter() - start, attributes)
-                    ldap_operations_total.add(1, {**attributes, "status": "success"})
 
                 return wrapper
 
-            LdapSyncStrategy.open = _traced("connect", _original_open)
-            LdapConnection.search = _traced("search", _original_search)
+            # The search filter is intentionally not recorded; it can contain user identifiers.
+            LdapSyncStrategy.open = _traced(
+                "connect",
+                _original_open,
+                request_attributes=_server_attributes,
+            )
+            LdapConnection.search = _traced(
+                "search",
+                _original_search,
+                request_attributes=_base_dn_attributes,
+                result_attributes=lambda connection, result: {"ldap.result.count": len(connection.entries)},
+            )
