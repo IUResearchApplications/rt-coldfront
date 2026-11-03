@@ -420,7 +420,6 @@ otel = [
     { name = "opentelemetry-instrumentation-dbapi" },
     { name = "opentelemetry-instrumentation-django" },
     { name = "opentelemetry-instrumentation-logging" },
-    { name = "opentelemetry-instrumentation-redis" },
     { name = "opentelemetry-instrumentation-requests" },
     { name = "opentelemetry-sdk" },
 ]
@@ -485,7 +484,6 @@ requires-dist = [
     { name = "opentelemetry-instrumentation-dbapi", marker = "extra == 'otel'", specifier = ">=0.66b0" },
     { name = "opentelemetry-instrumentation-django", marker = "extra == 'otel'", specifier = ">=0.66b0" },
     { name = "opentelemetry-instrumentation-logging", marker = "extra == 'otel'", specifier = ">=0.66b0" },
-    { name = "opentelemetry-instrumentation-redis", marker = "extra == 'otel'", specifier = ">=0.66b0" },
     { name = "opentelemetry-instrumentation-requests", marker = "extra == 'otel'", specifier = ">=0.66b0" },
     { name = "opentelemetry-sdk", marker = "extra == 'otel'", specifier = ">=1.45.0" },
     { name = "oracledb", marker = "extra == 'aa'", specifier = ">=4.0.1" },
@@ -1734,21 +1732,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e0/f9/33a587a00c83e13d46a4570cb8ccb63129dfd803171a6ae173eb88cd9217/opentelemetry_instrumentation_logging-0.66b0.tar.gz", hash = "sha256:e3516fd5dbff7a93bb159e72802bb8f96ab92645c5bd81488d240b6f23a6df59", size = 20351, upload-time = "2026-09-25T12:36:05.072Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c3/93/c9ee99835a67711d2115e1cb9335e7f96736f6103b3368653fbd1d11399f/opentelemetry_instrumentation_logging-0.66b0-py3-none-any.whl", hash = "sha256:3b580f15f8b7874e58c835230571f1a46cc156399bedd77279d7e7510f76df43", size = 15928, upload-time = "2026-09-25T12:35:17.602Z" },
-]
-
-[[package]]
-name = "opentelemetry-instrumentation-redis"
-version = "0.66b0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "opentelemetry-api" },
-    { name = "opentelemetry-instrumentation" },
-    { name = "opentelemetry-semantic-conventions" },
-    { name = "wrapt" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/6a/d2/ac8e525b50860f75cc679d317db56880922d0e166e42b4e96e588e66f093/opentelemetry_instrumentation_redis-0.66b0.tar.gz", hash = "sha256:6f3f23ac607f25b4d596faeface0f1c6a6c71b014ce4a45d6f4c5ef34c822e2a", size = 18059, upload-time = "2026-09-25T12:36:12.471Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/1e/d6/50ce74de78d05725065222a0fc6976c601ccc51038d8d7c6ff1b19a1af56/opentelemetry_instrumentation_redis-0.66b0-py3-none-any.whl", hash = "sha256:1256c48b4999f30297824a41f3e9106d0350b55e98489c189573b307bf4ee1e5", size = 14885, upload-time = "2026-09-25T12:35:27.304Z" },
 ]
 
 [[package]]

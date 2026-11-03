@@ -18,7 +18,6 @@ class OtelConfig(AppConfig):
         from opentelemetry.instrumentation.dbapi import trace_integration
         from opentelemetry.instrumentation.django import DjangoInstrumentor
         from opentelemetry.instrumentation.logging import LoggingInstrumentor
-        from opentelemetry.instrumentation.redis import RedisInstrumentor
         from opentelemetry.instrumentation.requests import RequestsInstrumentor
         from opentelemetry.sdk.metrics import MeterProvider
         from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
@@ -38,7 +37,6 @@ class OtelConfig(AppConfig):
         )
 
         DjangoInstrumentor().instrument(request_hook=redact_request_hook)
-        RedisInstrumentor().instrument()
         RequestsInstrumentor().instrument()
 
         if importlib.util.find_spec("MySQLdb") is not None:
