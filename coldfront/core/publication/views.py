@@ -36,7 +36,7 @@ MANUAL_SOURCE = "manual"
 
 
 def publication_gallery(request):
-    static_dir = settings.SITE_STATIC
+    static_dir = settings.STATIC_ROOT
     image_dir = os.path.join(static_dir, "images")
     context = {}
     imgs, lnks, titles = [], [], []
@@ -80,7 +80,7 @@ def publication_gallery(request):
 
 
 def publication_catalogue(request):
-    static_dir = settings.SITE_STATIC
+    static_dir = settings.STATIC_ROOT
 
     context = {}
     with open(os.path.join(static_dir, "apa.txt"), "r") as f:
