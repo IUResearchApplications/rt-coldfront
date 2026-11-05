@@ -13,7 +13,8 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
         libgssapi-krb5-2 \
         libglib2.0-0 \
         libdbus-1-3 \
-        libaio1t64 && \
+        libaio1t64 \
+        openssh-client && \
     case "$TARGETARCH" in \
         arm64) ln -s /usr/lib/aarch64-linux-gnu/libaio.so.1t64 /usr/lib/aarch64-linux-gnu/libaio.so.1 ;; \
         *) ln -s /usr/lib/x86_64-linux-gnu/libaio.so.1t64 /usr/lib/x86_64-linux-gnu/libaio.so.1 ;; \
