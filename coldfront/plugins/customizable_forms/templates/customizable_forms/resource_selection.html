@@ -34,7 +34,11 @@ Choose a Resource for Your Allocation
                   {% endif %}
                   <div class="float-end">
                     {% if not resource.rule_result.passed %}
-                      {{ resource.rule_result.title|safe }}
+                      {% if resource.rule_result.link_url %}
+                        <a href="{{ resource.rule_result.link_url }}" target="_blank" rel="noopener noreferrer">{{ resource.rule_result.title }}</a>
+                      {% else %}
+                        {{ resource.rule_result.title }}
+                      {% endif %}
                       <button
                         type="button"
                         class="p-0 bg-transparent border-0"
