@@ -59,7 +59,7 @@ Allocation Detail
   </div>
   <div class="card-body">
     {% if not allocation.status.name in 'Denied, Expired, Renewal Denied, Removed, Revoked' and is_allowed_to_update_project %}
-      {% if not allocation.get_parent_resource.name in 'ResDB Account, Geode-Project' %}
+      {% if not allocation.get_parent_resource.name in 'ResDB Account, Geode-Project, REALLMS Service Account' %}
         <a class="btn btn-success" href="{% url 'allocation-add-users' allocation.pk %}" aria-label="Add users to this allocation">
           <i class="fas fa-user-plus" aria-hidden="true"></i> Add Users
         </a>
@@ -250,7 +250,11 @@ Allocation Detail
 </div>
 
 {% if allocation.get_parent_resource.name in 'REALLMS API, REALLMS Commercial API' %}
-  {% include "service/reallms_api/reallms_api_key_div.html" %}
+  {% include "service/reallms/reallms_api_key_div.html" %}
+{% endif %}
+
+{% if allocation.get_parent_resource.name == 'REALLMS Service Account' and request.user.pk == allocation.project.pi_id %}
+  {% include "service/reallms/reallms_service_account_key_div.html" %}
 {% endif %}
 
 {% if eulas %}
@@ -416,7 +420,7 @@ Allocation Detail
     <span class="badge text-bg-secondary">{{allocation_users.count}}</span>
     <div class="float-end">
       {% if is_allowed_to_update_project and not allocation.status.name in 'Denied, Expired, Renewal Denied, Removed, Revoked' %}
-        {% if not allocation.get_parent_resource.name in 'ResDB Account, Geode-Project' %}
+        {% if not allocation.get_parent_resource.name in 'ResDB Account, Geode-Project, REALLMS Service Account' %}
           <a class="btn btn-success" href="{% url 'allocation-add-users' allocation.pk %}">
             <i class="fas fa-user-plus" aria-hidden="true"></i> Add Users
           </a>
