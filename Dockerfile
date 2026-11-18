@@ -13,8 +13,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
         libgssapi-krb5-2 \
         libglib2.0-0 \
         libdbus-1-3 \
-        libaio1t64 \
-        openssh-client && \
+        libaio1t64 && \
     case "$TARGETARCH" in \
         arm64) ln -s /usr/lib/aarch64-linux-gnu/libaio.so.1t64 /usr/lib/aarch64-linux-gnu/libaio.so.1 ;; \
         *) ln -s /usr/lib/x86_64-linux-gnu/libaio.so.1t64 /usr/lib/x86_64-linux-gnu/libaio.so.1 ;; \
@@ -94,7 +93,7 @@ FROM cfimage
 COPY --from=oracle-client /opt/oracle/instantclient_23_26 /opt/oracle/instantclient_23_26
 RUN sh -c "echo /opt/oracle/instantclient_23_26 > /etc/ld.so.conf.d/oracle-instantclient.conf" && ldconfig && \
     groupadd -g 1001 coldfrontgroup && useradd -u 1001 -g coldfrontgroup -d /app -s /bin/false coldfrontuser && \
-    mkdir -p /data/static /data/slurm/slurm_dump /data/slate_projects/incoming && \
+    mkdir -p /data/static /data/slurm/slurm_dump && \
     chown -R coldfrontuser:coldfrontgroup /data
 COPY --from=builder --chown=1001:1001 /python /python
 COPY --from=builder --chown=1001:1001 /app /app
