@@ -43,10 +43,7 @@ class AllocationRemovalRequestView(LoginRequiredMixin, UserPassesTestMixin, Temp
             return super().dispatch(request, *args, **kwargs)
 
         allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get("pk"))
-        if allocation_obj.status.name not in [
-            "Active",
-            "Billing Information Submitted",
-        ]:
+        if allocation_obj.status.name not in ["Active", "Billing Information Submitted", "Expired"]:
             messages.error(request, f'Cannot remove an allocation with status "{allocation_obj.status}"')
             return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": allocation_obj.pk}))
 
@@ -134,7 +131,12 @@ class AllocationRemoveView(LoginRequiredMixin, UserPassesTestMixin, TemplateView
             return super().dispatch(request, *args, **kwargs)
 
         allocation_obj = get_object_or_404(Allocation, pk=self.kwargs.get("pk"))
-        if allocation_obj.status.name not in ["Active", "Billing Information Submitted", "Removal Requested"]:
+        if allocation_obj.status.name not in [
+            "Active",
+            "Billing Information Submitted",
+            "Removal Requested",
+            "Expired",
+        ]:
             messages.error(request, f'Cannot remove an allocation with status "{allocation_obj.status}"')
             return HttpResponseRedirect(reverse("allocation-detail", kwargs={"pk": allocation_obj.pk}))
 
