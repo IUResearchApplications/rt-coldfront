@@ -28,6 +28,7 @@ Allocation Review Pending Removal Requests
           <th scope="col">PI</th>
           <th scope="col">Requestor</th>
           <th scope="col">Resource</th>
+          <th scope="col">Info</th>
           <th scope="col">Actions</th>
         </tr>
       </thead>
@@ -49,6 +50,7 @@ Allocation Review Pending Removal Requests
               ({{allocation_removal.requestor.username}})
             </td>
             <td>{{allocation_removal.allocation.get_parent_resource}}</td>
+            <td>{{allocation_removal.allocation.get_information}}</td>
             <td class="text-nowrap">
               <a href="{% url 'allocation_removal_requests:allocation-approve-removal-request' allocation_removal.pk %}" class="btn btn-success me-1">Approve</a>
               <a href="{% url 'allocation_removal_requests:allocation-deny-removal-request' allocation_removal.pk %}" class="btn btn-danger me-1">Deny</a>
