@@ -21,7 +21,7 @@ Allocation Review New and Pending Requests
 <h2>New Allocation Requests</h2>
 {% if allocation_list %}
   <div class="table-responsive">
-    <table id="allocation_request_table" class="table table-sm">
+    <table id="allocation_request_table" class="table table-sm datatable">
       <caption class="visually-hidden">Allocation requests</caption>
       <thead>
         <tr>
@@ -98,7 +98,7 @@ Allocation Review New and Pending Requests
 <h2>Allocation Renewal Requests</h2>
 {% if allocation_renewal_list %}
   <div class="table-responsive">
-    <table id="allocation_renewal_table" class="table table-sm">
+    <table id="allocation_renewal_table" class="table table-sm datatable">
       <caption class="visually-hidden">List of allocation renewal requests</caption>
       <thead>
         <tr>
@@ -175,25 +175,7 @@ Allocation Review New and Pending Requests
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     $(document).on('click', '.confirm-activate', function(){
-        return confirm('Are you sure you want to activate this allocation request without setting any allocation attributes?');
-    })
-  
-    $(document).ready(function() {
-      $("#allocation_request_table").DataTable({
-        iDisplayLength: 15,
-        'aoColumnDefs': [{
-          'bSortable': false,
-          'aTargets': ['nosort']
-        }]
-      });
-  
-      $("#allocation_renewal_table").DataTable({
-        iDisplayLength: 15,
-        'aoColumnDefs': [{
-          'bSortable': false,
-          'aTargets': ['nosort']
-        }]
-      });
+      return confirm('Are you sure you want to activate this allocation request without setting any allocation attributes?');
     })
   });
 </script>

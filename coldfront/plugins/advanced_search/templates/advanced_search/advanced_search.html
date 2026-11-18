@@ -130,7 +130,7 @@ Advanced Search
       <div class="alert alert-info">No results yet. Open the filters above and run a search.</div>
     {% endif %}
     <div class="table-responsive">
-      <table id="results_table" class="table table-hover">
+      <table id="results_table" class="table table-hover datatable">
         <caption class="visually-hidden">Search results</caption>
         <thead>
           <tr>
@@ -260,10 +260,6 @@ Advanced Search
         form_count++;
         $(`#id_${group_prefix}attribute-TOTAL_FORMS`).val(form_count);
       });
-    }
-  
-    if (columns.length) {
-      $("#results_table").DataTable({ searching: false });
     }
 
     bindSelectAll("project_search", "project_displays");
