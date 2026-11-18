@@ -38,7 +38,7 @@ Allocation Review Pending Removal Requests
             <td>{{ allocation_removal.pk }}</td>
             <td>
               <a href="{% url 'project-detail' allocation_removal.allocation.project.pk %}">
-                {{allocation_removal.allocation.project.title|truncatechars:50}}
+                {{allocation_removal.allocation.project.title|truncatechars:20}}
               </a>
             </td>
             <td>
