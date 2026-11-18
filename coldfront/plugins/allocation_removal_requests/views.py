@@ -96,7 +96,11 @@ class AllocationRemovalRequestView(LoginRequiredMixin, UserPassesTestMixin, Temp
             "Allocation Removal Request",
             "allocation_removal_requests/new_allocation_removal_request.txt",
             url_path=reverse("allocation_removal_requests:allocation-removal-request-list"),
-            addtl_context={"requestor": self.request.user, "project": allocation_obj.project},
+            addtl_context={
+                "requestor": self.request.user,
+                "project": allocation_obj.project,
+                "info": allocation_obj.get_identifiers,
+            },
         )
         allocation_removal_request.send(
             sender=self.__class__, allocation_removal_request_pk=allocation_removal_request_obj.pk
