@@ -36,7 +36,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
         libglib2.0-dev \
         libsasl2-dev
 
-COPY --from=ghcr.io/astral-sh/uv:0.9.13 /uv /bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.13.9 /uv /bin/uv
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 ENV UV_PYTHON_INSTALL_DIR=/python
